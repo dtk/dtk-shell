@@ -9,5 +9,5 @@ def dtk_nested_require(dir,*files_x)
   files.each{|f|require File.expand_path("#{dir}/#{f}",caller_dir)}
 end
 def dtk_require_dtk_common(common_library)
-  dtk_require("../../common/lib/#{util_library}")
+  dtk_require("../../common/lib/#{common_library}")
 end
