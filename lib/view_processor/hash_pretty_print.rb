@@ -1,7 +1,6 @@
 module DTK
   module Client
     class ViewProcHashPrettyPrint < ViewProcessor
-      include XYZ
       include Aux
       def render(hash)
         object_def = get_top_def()
