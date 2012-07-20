@@ -1,6 +1,6 @@
 module DTK::Client
-  class UserCommand < CommandBaseThor
-    desc "add-pub-key [PATH-TO-PUB-KEY]","Adds to DTK server a ssh rsa public key"
+  class AdminCommand < CommandBaseThor
+    desc "add-pub-key [PATH-TO-PUB-KEY]","Adds a ssh rsa public key for user. Default PATH-TO-PUB-KEY is <user-home-dir>/.ssh/id_rsa.pub"
     def add_pub_key(path_to_key=nil)
       path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
       unless File.file?(path_to_key)
