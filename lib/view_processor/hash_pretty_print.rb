@@ -1,5 +1,3 @@
-dtk_require_util_library("hash_object") 
-
 module DTK
   module Client
     class ViewProcHashPrettyPrint < ViewProcessor
@@ -94,7 +92,7 @@ module DTK
         end
       end
     end
-    class ViewPrettyPrintHash < ::XYZ::PrettyPrintHash
+    class ViewPrettyPrintHash < PrettyPrintHash
       def initialize(object_type=nil)
         super()
         @object_type = object_type

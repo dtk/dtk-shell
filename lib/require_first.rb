@@ -8,7 +8,6 @@ def dtk_nested_require(dir,*files_x)
   caller_dir = caller.first.gsub(/\/[^\/]+$/,"")
   files.each{|f|require File.expand_path("#{dir}/#{f}",caller_dir)}
 end
-#TODO: these utils shoudl be common gems
-def dtk_require_util_library(util_library)
-  dtk_require("../../utils/internal/#{util_library}")
+def dtk_require_dtk_common(common_library)
+  dtk_require("../../common/lib/#{util_library}")
 end
