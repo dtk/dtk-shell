@@ -3,6 +3,12 @@ def dtk_require(*files_x)
   caller_dir = caller.first.gsub(/\/[^\/]+$/,"")
   files.each{|f|require File.expand_path(f,caller_dir)}
 end
+
+def dtk_require_from_base(*files_x)
+  #different than just calling dtk_require because of change to context give by caller
+  dtk_require(*files_x)
+end
+
 def dtk_nested_require(dir,*files_x)
   files = (files_x.first.kind_of?(Array) ? files_x.first : files_x) 
   caller_dir = caller.first.gsub(/\/[^\/]+$/,"")

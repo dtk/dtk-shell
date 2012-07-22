@@ -1,6 +1,8 @@
 #TODO: may be consistent on whether component module id or componnet module name used as params
+dtk_require_from_base('ssh_processing')
 module DTK::Client
   class ModuleCommand < CommandBaseThor
+    include SshProcessing
     def self.pretty_print_cols()
       [:display_name, :id, :version]
     end
@@ -30,10 +32,9 @@ module DTK::Client
       post rest_url("component_module/import"), post_body
     end
 
-
     desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def add_direct_access(path_to_key=nil)
-      path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
+      path_to_key ||= default_rsa_pub_key_path()
       unless File.file?(path_to_key)
         raise Error.new("No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)")
       end
@@ -41,8 +42,14 @@ module DTK::Client
       post_body = {
         :rsa_pub_key => rsa_pub_key.chomp
       }
-      post rest_url("component_module/add_user_direct_access"), post_body
+      response = post(rest_url("component_module/add_user_direct_access"),post_body)
+      return response unless response.ok?
+      repo_manager_footprint = response.data.delete("repo_manager_footprint")
+      repo_manager_dns = response.data.delete("repo_manager_dns")
+      update_ssh_known_hosts(repo_manager_dns,repo_manager_footprint)
+      response
     end
+
     desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def remove_direct_access(path_to_key=nil)
       path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
