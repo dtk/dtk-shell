@@ -63,6 +63,10 @@ module DTK::Client
       post rest_url("component_module/remove_user_direct_access"), post_body
     end
 
+    desc "clone COMPONENT-MODULE-ID", "Clone into client the component module files"
+    def clone(component_module_id)
+      reponse = get rest_url("component_module/repo_manager_info/#{component_module_id.to_s}")
+    end
 
     desc "update-library COMPONENT-MODULE-ID", "Updates library module with workspace module"
     def update_library(component_module_id)
