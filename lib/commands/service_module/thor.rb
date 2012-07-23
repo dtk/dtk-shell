@@ -1,4 +1,6 @@
 #TODO: may be consistent on whether service module id or service module name used as params
+dtk_require_from_base('command_helpers/ssh_processing')
+dtk_require_from_base('command_helpers/git_repo')
 module DTK::Client
   class ServiceModuleCommand < CommandBaseThor
     def self.pretty_print_cols()
@@ -90,10 +92,14 @@ module DTK::Client
 
     desc "create-jenkins-project SERVICE-MODULE-ID", "Create Jenkins project for service module"
     def create_jenkins_project(service_module_id)
+      #require put here so dont necessarily have to install jenkins client gems
+      dtk_require_from_base('command_helpers/jenkins_client')
       response = get rest_url("service_module/workspace_branch_info/#{service_module_id.to_s}")
       return response unless response.ok?
-      pp [:response_data,response.data]
+      pp [:response_data,response.data] #TODO just for debugging
       module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
+      JenkinsClient.createJenkins_project(service_module_id,module_name,repo_url,branch)
+      #TODO: right now JenkinsClient wil throw error if problem; better to create an error response
       response
     end
   end
