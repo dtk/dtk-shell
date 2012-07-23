@@ -1,8 +1,10 @@
 #TODO: may be consistent on whether component module id or componnet module name used as params
-dtk_require_from_base('ssh_processing')
+dtk_require_from_base('command_helpers/ssh_processing')
+dtk_require_from_base('command_helpers/git_repo')
 module DTK::Client
   class ModuleCommand < CommandBaseThor
     include SshProcessing
+    include GitRepo
     def self.pretty_print_cols()
       [:display_name, :id, :version]
     end
@@ -44,8 +46,7 @@ module DTK::Client
       }
       response = post(rest_url("component_module/add_user_direct_access"),post_body)
       return response unless response.ok?
-      repo_manager_footprint = response.data.delete("repo_manager_footprint")
-      repo_manager_dns = response.data.delete("repo_manager_dns")
+      repo_manager_footprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_footprint,:repo_manager_dns)
       update_ssh_known_hosts(repo_manager_dns,repo_manager_footprint)
       response
     end
@@ -65,7 +66,11 @@ module DTK::Client
 
     desc "clone COMPONENT-MODULE-ID", "Clone into client the component module files"
     def clone(component_module_id)
-      reponse = get rest_url("component_module/repo_manager_info/#{component_module_id.to_s}")
+      response = get rest_url("component_module/repo_manager_info/#{component_module_id.to_s}")
+      return response unless response.ok?
+      component_module_name,repo_url,branch = response.data_ret_and_remove!(:component_module_name,:repo_url,:branch)
+      create_clone_with_branch(component_module_name,repo_url,branch)
+      response
     end
 
     desc "update-library COMPONENT-MODULE-ID", "Updates library module with workspace module"

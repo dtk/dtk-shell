@@ -80,6 +80,7 @@ module DTK
       end
       def set_defaults()
         self[:server_port] = 7000
+        self[:component_modules_dir] = "#{ENV["HOME"]}/component_modules"
       end
       ConfigFile = "/etc/dtk/client.conf"
       def load_config_file()
