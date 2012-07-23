@@ -34,7 +34,7 @@ module DTK::Client
 
     desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def add_direct_access(path_to_key=nil)
-      path_to_key ||= default_rsa_pub_key_path()
+      path_to_key ||= SshProcessing.default_rsa_pub_key_path()
       unless File.file?(path_to_key)
         raise Error.new("No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)")
       end

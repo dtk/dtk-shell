@@ -10,7 +10,7 @@ module DTK; module Client
       adapter_class().clone(target_repo_dir,repo_url)
     end
     private
-    def adapter_class()
+    def self.adapter_class()
       Common::GritAdapter
     end
   end
