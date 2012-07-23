@@ -7,7 +7,7 @@ module DTK; module Client
         Dir.mkdir(component_modules_dir)
       end
       target_repo_dir = "#{component_modules_dir}/#{component_module_name}"
-      adapter_class().clone(target_repo_dir,repo_url)
+      adapter_class().clone(target_repo_dir,repo_url,:branch => branch)
     end
     private
     def self.adapter_class()
