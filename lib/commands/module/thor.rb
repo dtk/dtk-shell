@@ -64,10 +64,10 @@ module DTK::Client
 
     desc "clone COMPONENT-MODULE-ID", "Clone into client the component module files"
     def clone(component_module_id)
-      response = get rest_url("component_module/repo_manager_info/#{component_module_id.to_s}")
+      response = get rest_url("component_module/workspace_branch_info/#{component_module_id.to_s}")
       return response unless response.ok?
-      component_module_name,repo_url,branch = response.data_ret_and_remove!(:component_module_name,:repo_url,:branch)
-      GitRepo.create_clone_with_branch(component_module_name,repo_url,branch)
+      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
+      GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch)
       response
     end
 
