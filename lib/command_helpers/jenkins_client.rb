@@ -8,7 +8,7 @@ module DTK; module Client
 
       jenkins_username = "rich" #TODO: stubbed: must be replaced
       jenkins_password = "test" #TODO: stubbed: must be replaced
-      jenkins_server_url = "http://ec2-23-20-124-30.compute-1.amazonaws.com:8080" #TODO: stubbed: must be replaced
+      jenkins_server_url = "http://ec2-50-19-5-150.compute-1.amazonaws.com:8080" #TODO: stubbed: must be replaced
       set_connection(jenkins_username,jenkins_password,jenkins_server_url)
 
       jenkins_project_name = module_name
