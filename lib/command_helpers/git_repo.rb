@@ -12,12 +12,12 @@ module DTK; module Client
     def self.process_push_changes(type,module_name,branch)
       repo = create(type,module_name,branch)
       status = repo.status()
+
+      #TODO: this must also caheck if anything to push
       return status unless status.any_changes?()
 
       if status[:untracked]
-        status[:untracked].each do |untracked_file|
-          #TODO: add untracked
-        end
+        status[:untracked].each{|untracked_file_path|repo.add_file_command(untracked_file_path)}
         status.shift_untracked_to_added!()
       end
 
