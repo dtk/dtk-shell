@@ -1,7 +1,7 @@
 require 'erubis'
 class DTK::Client::JenkinsClient
-  module GenerateConfigMixin
-    def generate_config(repo_url,module_id,branch)
+  module ConfigXML
+    def self.generate(repo_url,module_id,branch)
       #TODO: not using branch argument
       #TODO: did not put in module_id yet
       template_bindings = {
