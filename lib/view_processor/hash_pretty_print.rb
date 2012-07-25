@@ -91,7 +91,7 @@ module DTK
         end
       end
     end
-    class ViewPrettyPrintHash < PrettyPrintHash
+    class ViewPrettyPrintHash < Common::PrettyPrintHash
       def initialize(object_type=nil)
         super()
         @object_type = object_type
