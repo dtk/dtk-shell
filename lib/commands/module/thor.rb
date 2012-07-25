@@ -76,10 +76,10 @@ module DTK::Client
       response = get rest_url("component_module/workspace_branch_info/#{component_module_id.to_s}")
       return response unless response.ok?
       module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
-      repo_status = GitRepo.process_push_changes(:component_module,module_name,branch) 
-      if repo_status.any_changes?()
+      repo_diffs_summary = GitRepo.process_push_changes(:component_module,module_name,branch) 
+      if repo_diffs_summary.any_diffs?()
         #TODO: make call to server with changes
-        pp repo_status #TODO: remove; for debugging
+        pp repo_diffs_summary #TODO: remove; for debugging
       end
       response
     end

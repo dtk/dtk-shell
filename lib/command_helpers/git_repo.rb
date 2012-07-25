@@ -1,36 +1,47 @@
 dtk_require_dtk_common('grit_adapter') #only one adapter now
 module DTK; module Client
-  class GitRepo
-    def self.create_clone_with_branch(type,module_name,repo_url,branch)
+  class GitRepo; class << self
+    def create_clone_with_branch(type,module_name,repo_url,branch)
       modules_dir = modules_dir(type)
       Dir.mkdir(modules_dir) unless File.directory?(modules_dir)
       target_repo_dir = local_repo_dir(type,module_name,modules_dir)
       adapter_class().clone(target_repo_dir,repo_url,:branch => branch)
     end
 
-    #returns status indicating what changed
-    def self.process_push_changes(type,module_name,branch)
+    #returns diffs_summary indicating what is different between lcoal and fetched remote branch
+    def process_push_changes(type,module_name,branch)
       repo = create(type,module_name,branch)
+      
+      #add any file that is untracked
       status = repo.status()
-
-      #TODO: this must also caheck if anything to push
-      return status unless status.any_changes?()
-
       if status[:untracked]
         status[:untracked].each{|untracked_file_path|repo.add_file_command(untracked_file_path)}
-        status.shift_untracked_to_added!()
       end
 
-      #TODO: commit
-      #TODO: fetch, do a diff to look for conflicts and push changes
-      status
+      repo.fetch_branch(remote())
+
+      #see if any diffs between fetched remote and local branch
+      diffs = repo.diff(branch,remote_branch(branch)).ret_summary()
+      return diffs unless diffs.any_diffs?()
+
+      repo.commit("Pushing changes from client") #TODO: make more descriptive
+
+      #TODO: look for conflicts and push changes
+      diffs
     end
    private
-    def self.create(type,module_name,branch)
+    def remote()
+      "origin"
+    end
+    def remote_branch(branch)
+      "remotes/#{remote()}/branch"
+    end
+
+    def create(type,module_name,branch)
       adapter_class().new(local_repo_dir(type,module_name),branch)
     end
 
-    def self.modules_dir(type)
+    def modules_dir(type)
       case type
       when :component_module
         Config[:component_modules_dir]
@@ -41,15 +52,15 @@ module DTK; module Client
       end
     end
 
-    def self.local_repo_dir(type,module_name,modules_dir=nil)
+    def local_repo_dir(type,module_name,modules_dir=nil)
       modules_dir ||= modules_dir(type)
       "#{modules_dir}/#{module_name}"
     end
 
-    def self.adapter_class()
+    def adapter_class()
       Common::GritAdapter::FileAccess
     end
-  end
+  end; end
 end; end
 
 
