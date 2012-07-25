@@ -20,11 +20,12 @@ module DTK; module Client
 
       repo.fetch_branch(remote())
 
-      #see if any diffs between fetched remote and local branch
-      diffs = repo.diff(branch,remote_branch(branch)).ret_summary()
-      return diffs unless diffs.any_diffs?()
-
       repo.commit("Pushing changes from client") #TODO: make more descriptive
+
+      #see if any diffs between fetched remote and local branch
+      #this has be done after commit
+      diffs = repo.diff(remote_branch(branch),branch).ret_summary()
+      return diffs unless diffs.any_diffs?()
 
       #TODO: look for conflicts and push changes
       diffs
@@ -34,7 +35,7 @@ module DTK; module Client
       "origin"
     end
     def remote_branch(branch)
-      "remotes/#{remote()}/branch"
+      "remotes/#{remote()}/#{branch}"
     end
 
     def create(type,module_name,branch)
