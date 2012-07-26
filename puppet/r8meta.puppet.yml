@@ -1,0 +1,18 @@
+--- !omap 
+- dtk_client: !omap 
+    - display_name: dtk_client
+    - description: DTK client
+    - external_ref: 
+        class_name: dtk_client
+        type: puppet_class
+    - basic_type: service
+    - component_type: dtk_client
+    - attribute: !omap 
+        - server_hostname: !omap 
+            - display_name: server_hostname
+            - description: DTK server hostname
+            - data_type: string
+            - required: true
+            - external_ref: 
+                type: puppet_attribute
+                path: node[dtk_client][server_hostname]
