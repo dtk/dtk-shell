@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+require File.expand_path('../lib/client', File.dirname(__FILE__))
+require 'shellwords'
+$stdout.print 'dtk:/> '
+
+$stdin.each_line do |line|
+  pid = fork {
+    argv = Shellwords.split(line)
+    cmd = argv.shift
+    top_level_execute(cmd,argv)
+  }
+
+  Process.wait pid
+  $stdout.print 'dtk:/> '
+end
+

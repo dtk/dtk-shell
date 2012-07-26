@@ -7,8 +7,9 @@ require 'pp'
 #TODO: for testing; fix by pass in commadn line argument
 #RestClient.log = STDOUT
 
-def top_level_execute(command=nil)
+def top_level_execute(command=nil,argv=nil)
   $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
+  argv ||= ARGV
   include DTK::Client
   include Aux
   command = command || $0.gsub(Regexp.new("^.+/"),"").gsub("-","_")
@@ -17,7 +18,7 @@ def top_level_execute(command=nil)
   conn = Conn.new()
 
   command_class = DTK::Client.const_get "#{cap_form(command)}Command"
-  response_ruby_obj = command_class.execute_from_cli(conn,ARGV)
+  response_ruby_obj = command_class.execute_from_cli(conn,argv)
   #default_render_type = "hash_pretty_print"
   default_render_type = "augmented_simple_list" #TODO: doe not work for nested hashes
   if print = response_ruby_obj.render_data(default_render_type)
