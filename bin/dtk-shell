@@ -2,7 +2,8 @@
 require File.expand_path('../lib/client', File.dirname(__FILE__))
 require 'shellwords'
 $stdout.print 'dtk:/> '
-
+#TODO: put in outer layer context mechanism taht maitains context and translates the inputted CLI into the form with ids exepcted by Thor
+#want to modify Thor interactive help to output based on context. See also how we would do auto-complete 
 $stdin.each_line do |line|
   pid = fork {
     argv = Shellwords.split(line)
