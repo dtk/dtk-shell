@@ -9,7 +9,6 @@ module DTK
       end
 
       def self.execute_from_cli(conn,argv)
-        return conn.connection_error if conn.connection_error
         ret = start(argv,:conn => conn)
         ret.kind_of?(Response) ? ret : ResponseNoOp.new
       end
@@ -17,7 +16,10 @@ module DTK
       desc "help [SUBCOMMAND]", "Describes available subcommands or one specific subcommand"
       def help(*args)
         super
+        # we will print error in case configuration has reported error
+        @conn.print_warning if @conn.connection_error?
       end
+
     end
   end
 end

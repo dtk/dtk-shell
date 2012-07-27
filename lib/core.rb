@@ -145,7 +145,7 @@ module DTK
       attr_reader :connection_error
 
       #######
-      def rest_url(route)
+      def rest_url(route=nil)
         "http://#{Config[:server_host]}:#{Config[:server_port].to_s}/rest/#{route}"
       end
 
@@ -155,6 +155,24 @@ module DTK
 
       def post(command_class,url,body=nil)
         Response.new(command_class,json_parse_if_needed(post_raw(url,body)))
+      end
+
+      def connection_error?
+        return !@connection_error.nil?
+      end
+
+      ##
+      # Method will warn user that connection could not be established. User should check configuration
+      # to make sure that connection is properly set.
+      #
+      def print_warning
+        puts   "[WARNING] Unable to connection to server, please check you configuration."
+        puts   "========================== Configuration =========================="
+        printf "%15s %s\n", "REST endpoint:", rest_url
+        creds = get_credentials
+        printf "%15s %s\n", "Username:", "#{creds[:username]}"
+        printf "%15s %s\n", "Password:", "#{creds[:password]}"
+        puts   "==================================================================="
       end
 
       private

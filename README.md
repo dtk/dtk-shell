@@ -39,13 +39,14 @@ Configuration Setup
 - Create file <tt>etc/dtk/client.conf</tt> there you define server host e.g.
 
 ```
-server_host=ec2-54-247-191-95.eu-west-1.compute.amazonaws.com</tt>
+server_host=ec2-54-247-191-95.eu-west-1.compute.amazonaws.com
+server_host=ec2-54-247-191-95.eu-west-1.compute.amazonaws.com
 ```
 
 - Create file <tt>.dtkclient</tt> in you home dir (~/.) e.g. home/foo-user/.dtkclient
   there you will define user credentials e.g.
 
 ```
-  username=abh
-  password=r8server
+username=abh
+password=r8server
 ```
