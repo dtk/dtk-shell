@@ -18,9 +18,12 @@ module DTK; module Client
         status[:untracked].each{|untracked_file_path|repo.add_file_command(untracked_file_path)}
       end
 
-      repo.fetch_branch(remote())
+      if status.any_changes?() 
+        repo.commit("Pushing changes from client") #TODO: make more descriptive
+      end
 
-      repo.commit("Pushing changes from client") #TODO: make more descriptive
+
+      repo.fetch_branch(remote())
 
       #see if any diffs between fetched remote and local branch
       #this has be done after commit
