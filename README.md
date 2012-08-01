@@ -4,7 +4,7 @@ DEVELOPMENT SETUP - DTK Client
 Pre-requisites
 ----------------------
 
-- Make sure you are using Ruby 1.8.7 , use following command to check<tt>ruby -v</tt>
+- Make sure you are using Ruby 1.8.7 , use following command to check ruby version <tt>ruby -v</tt>
 
 Git setup
 ----------------------

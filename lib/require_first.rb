@@ -22,10 +22,29 @@ def dtk_nested_require(dir,*files_x)
 end
 
 def dtk_require_dtk_common(common_library)
-  dtk_require("../../" + determine_common_folder() + "/lib/#{common_library}")
+  # use gem if there, else common folder
+  if is_dtk_common_installed?
+    require common_library
+  else
+    dtk_require("../../" + determine_common_folder() + "/lib/#{common_library}")
+  end
 end
 
 private
+
+##
+# Check if dtk-common gem has been installed if so use common gem. If there is no gem
+# logic from dtk_require_dtk_common will try to find commond folder.
+# DEVELOPER NOTE: Uninstall dtk-common gem when changing dtk-common to avoid re-building gem.
+def is_dtk_common_installed?
+  begin
+    # if no exception gem is found
+    Gem::Specification::find_by_name('dtk-common')
+    return true
+  rescue Gem::LoadError
+    return false
+  end
+end
 
 ##
 # Checks for expected names of dtk-common folder and returns name of existing common folder
