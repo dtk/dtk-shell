@@ -1,25 +1,21 @@
 require 'rspec'
-require 'stringio'
 
 module SpecThor
 
-  RSpec.configure do |config|
-    config.before(:all, &:silence_output)
-    config.after(:all, &:enable_output)
-  end
+  ##
+  # Capturing stream and returning string
+  def capture(stream)
+    begin
+      stream = stream.to_s
+      eval "$#{stream} = StringIO.new"
+      yield
+      result = eval("$#{stream}").string
+    ensure
+      eval("$#{stream} = #{stream.upcase}")
+    end
 
-  # Redirects stderr and stdout to /dev/null.
-  def silence_output
-    $stderr = File.new('/dev/null', 'w')
-    $stdout = File.new('/dev/null', 'w')
+    result
   end
-
-  # Replace stdout and stderr so anything else is output correctly.
-  def enable_output
-    $stderr = STDOUT
-    $stdout = STDERR
-  end
-
 
   ##
   # Method work with classes that inherit Thor class. Method will take each task
@@ -32,13 +28,9 @@ module SpecThor
         # e.g. executue dtk assembly list
         command = "dtk #{get_task_name(clazz.name)} #{task.name}"
 
-        # test start
-            silence_output
         print ">> Surface test for #{command} ..."
-        enable_output
 
-        f = IO.popen(command)
-        output = f.readlines.join('')
+        output = `#{command}`
 
         it "should not have errors." do
           output.should_not include("[INTERNAL ERROR]")
@@ -49,6 +41,19 @@ module SpecThor
 
       end
     end
+  end
+
+
+  # Redirects stderr and stdout to /dev/null.
+  def silence_output
+    $stderr = File.new('/dev/null', 'w')
+    $stdout = File.new('/dev/null', 'w')
+  end
+
+  # Replace stdout and stderr so anything else is output correctly.
+  def enable_output
+    $stderr = STDOUT
+    $stdout = STDERR
   end
 
   private 
