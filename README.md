@@ -50,3 +50,7 @@ server_port=7000
 username=abh
 password=r8server
 ```
+Run Tests
+----------------------
+
+- From dtk-client project root run <tt>rdoc</tt>, this will run all unit tests

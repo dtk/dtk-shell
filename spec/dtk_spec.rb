@@ -1,10 +1,12 @@
-require File.expand_path('../lib/client', File.dirname(__FILE__))
+require 'lib/spec_thor'
+dtk_nested_require("../lib/commands/thor","dtk")
+include SpecThor
 
-require 'rspec'
-require 'stringio'
+describe DTK::Client::Dtk do
 
-# TODO Find smarter way to load dependencies and then use class variable
-describe 'DTK::Client::Dtk' do
+  # generic test for all task of Thor class
+  test_task_interface(DTK::Client::Dtk)
+
   context "Dtk CLI command" do
 
     f = IO.popen('dtk')

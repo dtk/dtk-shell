@@ -37,9 +37,14 @@ def top_level_execute(command=nil,argv=nil)
         end
       end
     end
+
+  rescue DTK::Client::DtkError => e
+    # this are expected application errors
+    PP.pp(e.message, STDOUT)
   rescue Exception => e
     # All errors for task will be handled here
     PP.pp("[INTERNAL ERROR] DTK has encountered an error: #{e.message}", STDOUT)
+    PP.pp e.backtrace
     # TODO add backtrace loging here
   end
 end
@@ -64,6 +69,10 @@ module DTK
       def self.error(msg)
         pp "error: #{msg}"
       end
+    end
+
+    # we use this to log application errors
+    class DtkError < Error
     end
 
     module ParseFile

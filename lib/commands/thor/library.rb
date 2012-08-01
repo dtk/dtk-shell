@@ -1,5 +1,5 @@
 module DTK::Client
-  class LibraryCommand < CommandBaseThor
+  class Library < CommandBaseThor
     def self.pretty_print_cols()
       [:display_name, :id, :description]
     end

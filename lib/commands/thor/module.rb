@@ -36,7 +36,7 @@ module DTK::Client
     def add_direct_access(path_to_key=nil)
       path_to_key ||= SshProcessing.default_rsa_pub_key_path()
       unless File.file?(path_to_key)
-        raise Error.new("No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)")
+        raise DTK::Client::DtkError, "No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
       end
       rsa_pub_key = File.open(path_to_key){|f|f.read}
       post_body = {
@@ -53,7 +53,7 @@ module DTK::Client
     def remove_direct_access(path_to_key=nil)
       path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
       unless File.file?(path_to_key)
-        raise Error.new("No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)")
+        raise DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
       end
       rsa_pub_key = File.open(path_to_key){|f|f.read}
       post_body = {

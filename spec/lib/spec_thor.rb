@@ -1,6 +1,11 @@
+require File.expand_path('../../lib/client', File.dirname(__FILE__))
+dtk_nested_require("../../lib/parser/adapters","thor")
+
 require 'rspec'
 
 module SpecThor
+
+  include DTK::Client::Aux
 
   ##
   # Capturing stream and returning string
@@ -22,13 +27,16 @@ module SpecThor
   # and just run it to check for any errors. In this case internal error.
   def test_task_interface(clazz)
 
+    # this will stop buffering of print method, for proper output
+    # STDOUT.sync = true
+
     clazz.all_tasks.each do |a,task|
       context "#{clazz.name} CLI command (#{task.name})" do
 
-        # e.g. executue dtk assembly list
+        # e.g. shell execute: dtk assembly list
         command = "dtk #{get_task_name(clazz.name)} #{task.name}"
 
-        print ">> Surface test for #{command} ..."
+        print ">> Surface test for #{command} ... "
 
         output = `#{command}`
 
@@ -36,8 +44,8 @@ module SpecThor
           output.should_not include("[INTERNAL ERROR]")
         end
 
-        # test finished
-        puts " OK"
+        # test finished (print OK! in green color)
+        puts "\e[32mOK!\e[0m"
 
       end
     end
@@ -62,7 +70,7 @@ module SpecThor
   # Method will take task name from class name
   # e.g. Dtk::Client::Assembly => assembly
   def get_task_name(clazz_name)
-    clazz_name.split('::').last.downcase
+    snake_form(clazz_name.split('::').last).downcase
   end
 
 

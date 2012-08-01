@@ -1,7 +1,5 @@
-require File.expand_path('../lib/client', File.dirname(__FILE__))
 require 'lib/spec_thor'
 
-dtk_nested_require("../lib/parser/adapters","thor")
 dtk_nested_require("../lib/commands/thor","module")
 
 include SpecThor
