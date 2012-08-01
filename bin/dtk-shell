@@ -1,18 +1,33 @@
 #!/usr/bin/env ruby
 require File.expand_path('../lib/client', File.dirname(__FILE__))
 require 'shellwords'
-$stdout.print 'dtk:/> '
-#TODO: put in outer layer context mechanism taht maitains context and translates the inputted CLI into the form with ids exepcted by Thor
-#want to modify Thor interactive help to output based on context. See also how we would do auto-complete 
-#basic loop idea take from http://jstorimer.com/2012/02/16/a-unix-shell-in-ruby.html
-$stdin.each_line do |line|
-  pid = fork {
+require 'readline'
+#ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
+LIST = 
+  [
+   'assembly', 
+   'converge',
+   'list', 
+   'library', 
+   'module',  
+   'node'      ,
+   'service-module', 
+   'stage', 
+   'target'
+].sort
+
+comp = proc { |s| LIST.grep( /^#{Regexp.escape(s)}/ ) }
+
+Readline.completion_append_character = " "
+Readline.completion_proc = comp
+prompt = 'dtk:/> '
+while line = Readline.readline(prompt, true)
+  begin
     argv = Shellwords.split(line)
     cmd = argv.shift
     top_level_execute(cmd,argv)
-  }
-
-  Process.wait pid
-  $stdout.print 'dtk:/> '
+   rescue Interrupt => e
+    system('stty', stty_save) # Restore
+    exit
+  end
 end
-
