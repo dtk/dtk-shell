@@ -1,5 +1,5 @@
 module DTK::Client
-  class NodeGroupCommand < CommandBaseThor
+  class NodeGroup < CommandBaseThor
     def self.pretty_print_cols()
       [:display_name, :type,:id, :description]
     end

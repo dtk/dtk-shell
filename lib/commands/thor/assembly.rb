@@ -1,5 +1,6 @@
 module DTK::Client
-  class AssemblyCommand < CommandBaseThor
+  class Assembly < CommandBaseThor
+
     def self.pretty_print_cols()
       [:display_name, :execution_status, :type, :id, :description, :external_ref]
     end

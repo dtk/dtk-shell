@@ -1,4 +1,5 @@
 #TODO: user common utils in DTK::Common::Rest
+
 require 'rubygems'
 require 'singleton'
 require 'restclient'
@@ -7,30 +8,47 @@ require 'pp'
 #TODO: for testing; fix by pass in commadn line argument
 #RestClient.log = STDOUT
 
-def top_level_execute(command=nil,argv=nil)
-  $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
-  argv ||= ARGV
-  include DTK::Client
-  include Aux
-  command = command || $0.gsub(Regexp.new("^.+/"),"").gsub("-","_")
-  load_command(command)
-  
-  conn = Conn.new()
 
-  command_class = DTK::Client.const_get "#{cap_form(command)}Command"
-  response_ruby_obj = command_class.execute_from_cli(conn,argv)
-  #default_render_type = "hash_pretty_print"
-  default_render_type = "augmented_simple_list" #TODO: doe not work for nested hashes
-  if print = response_ruby_obj.render_data(default_render_type)
-    print = [print] unless print.kind_of?(Array)
-    print.each do |el|
-      if el.kind_of?(String)
-        el.each_line{|l| STDOUT << l}
-      else
-        PP.pp(el,STDOUT)
+def top_level_execute(command=nil,argv=nil)
+  begin
+    $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
+    argv ||= ARGV
+
+    include DTK::Client::Aux
+
+    command = command || $0.gsub(Regexp.new("^.+/"),"")
+    command = command.gsub("-","_")
+
+    load_command(command)
+
+    conn = DTK::Client::Conn.new()
+
+    command_class = DTK::Client.const_get "#{cap_form(command)}"
+    response_ruby_obj = command_class.execute_from_cli(conn,argv)
+    #default_render_type = "hash_pretty_print"
+    default_render_type = "augmented_simple_list" #TODO: doe not work for nested hashes
+    if print = response_ruby_obj.render_data(default_render_type)
+      print = [print] unless print.kind_of?(Array)
+      print.each do |el|
+        if el.kind_of?(String)
+          el.each_line{|l| STDOUT << l}
+        else
+          PP.pp(el,STDOUT)
+        end
       end
     end
+  rescue Exception => e
+    # All errors for task will be handled here
+    PP.pp("[INTERNAL ERROR] DTK has encountered an error: #{e.message}", STDOUT)
+    # TODO add backtrace loging here
   end
+end
+
+def load_command(command_name)
+  parser_adapter = DTK::Client::Config[:cli_parser] || "thor"
+
+  dtk_nested_require("parser/adapters",parser_adapter)
+  dtk_nested_require("commands/#{parser_adapter}",command_name)
 end
 
 module DTK

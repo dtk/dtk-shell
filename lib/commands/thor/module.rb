@@ -2,7 +2,7 @@
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_from_base('command_helpers/git_repo')
 module DTK::Client
-  class ModuleCommand < CommandBaseThor
+  class Module < CommandBaseThor
     def self.pretty_print_cols()
       [:display_name, :id, :version]
     end

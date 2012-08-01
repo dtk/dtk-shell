@@ -1,5 +1,5 @@
 module DTK::Client
-  class TaskCommand < CommandBaseThor
+  class Task < CommandBaseThor
 
     desc "list","List tasks"
     def list()

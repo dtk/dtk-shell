@@ -1,10 +1,9 @@
-require '/home/haris/DTK/dtk-client/lib/commands/assembly/thor.rb'
 
 module DTK::Client
 
   # Following are descriptions of available commands 
 
-  class DtkCommand < CommandBaseThor
+  class Dtk < CommandBaseThor
     def self.pretty_print_cols()
       [:display_name, :id, :description]
     end
@@ -71,6 +70,7 @@ module DTK::Client
     def task
       # API descriptor
     end
+    
   end
 end
 

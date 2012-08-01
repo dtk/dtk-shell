@@ -1,5 +1,5 @@
 module DTK::Client
-  class DependencyCommand < CommandBaseThor
+  class Dependency < CommandBaseThor
     desc "add-component COMPONENT-ID OTHER-COMPONENT-ID","Add before/require constraint"
     def add_component(component_id,other_component_id)
       post_body = {

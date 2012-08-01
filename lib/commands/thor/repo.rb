@@ -1,5 +1,5 @@
 module DTK::Client
-  class RepoCommand < CommandBaseThor
+  class Repo < CommandBaseThor
     def self.pretty_print_cols()
       [:display_name, :id]
     end

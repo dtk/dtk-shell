@@ -15,7 +15,18 @@ module DTK
 
       desc "help [SUBCOMMAND]", "Describes available subcommands or one specific subcommand"
       def help(*args)
-        super
+        not_dtk_clazz = true
+
+        if defined?(DTK::Client::Dtk)
+          not_dtk_clazz = !self.class.eql?(DTK::Client::Dtk)
+        end
+
+        # we don't use subcommand print in case of root DTK class
+        # for other classes Assembly, Node, etc. we print subcommand
+        # this gives us console output:
+        # dtk assembly converge ASSEMBLY-ID
+        super(nil,not_dtk_clazz)
+
         # we will print error in case configuration has reported error
         @conn.print_warning if @conn.connection_error?
       end
