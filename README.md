@@ -1,3 +1,22 @@
+DTK Client user install
+==============================
+
+This is guide only for user installation, development setup is bellow.
+
+- Get the install script under <tt>https://github.com/rich-reactor8/dtk-client/blob/dtk_prefix/bundle/install_client.sh</tt>
+
+- Run script with <tt>sudo bash install_client.sh</tt>
+- When prompted use following values in wizard:
+
+```
+username=abh
+password=r8server
+server_host=ec2-54-247-191-95.eu-west-1.compute.amazonaws.com
+server_port=7000
+```
+
+- Type <tt>dtk</tt> or <tt>dtk-shell</tt> to start using the client
+
 DEVELOPMENT SETUP - DTK Client
 ==============================
 
@@ -36,21 +55,17 @@ export PATH=$PATH:/home/user/dtk-client/bin
 Configuration Setup
 ----------------------
 
-- Create file <tt>etc/dtk/client.conf</tt> there you define server host e.g.
-
-```
-server_host=ec2-54-247-191-95.eu-west-1.compute.amazonaws.com
-server_port=7000
-```
-
-- Create file <tt>.dtkclient</tt> in you home dir (~/.) e.g. home/foo-user/.dtkclient
+- Create file <tt>.dtkclient</tt> in you home dir (~/) e.g. home/foo-user/.dtkclient
   there you will define user credentials e.g.
 
 ```
 username=abh
 password=r8server
+server_host=ec2-54-247-191-95.eu-west-1.compute.amazonaws.com
+server_port=7000
 ```
 Run Tests
 ----------------------
 
 - From dtk-client project root run <tt>rdoc</tt>, this will run all unit tests
+
