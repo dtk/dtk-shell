@@ -21,7 +21,7 @@ function gem_exists {
 function check_for_ruby {
   ruby_output=`which ruby | grep ruby`
   if [[ $ruby_output = "" ]];then
-    echo "Ruby needed for installation, please install ruby before installing DTK CLI."
+    echo "Ruby needed for installation, please install ruby before installing DTK CLI. Example: sudo apt-get ruby1.8 "
     exit 0
   fi
 }
@@ -30,7 +30,7 @@ function check_for_ruby {
 function check_for_ruby_gems {
   gem_output=`which gem | grep gem`
   if [[ $gem_output = "" ]];then
-    echo "Ruby gems are needed for installation, please install ruby gems before installing DTK CLI."
+    echo "Ruby gems are needed for installation, please install ruby gems before installing DTK CLI. Example: sudo apt-get rubygems "
     exit 0
   fi
 }
