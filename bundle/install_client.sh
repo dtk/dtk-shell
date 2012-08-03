@@ -68,7 +68,7 @@ function add_abh_gem_repository {
 
   if [[ sources_output='' ]]; then
     # if there is no grep match there is no added repo
-    `gem add -a $abh_gem_repository`
+    `gem sources -a $abh_gem_repository`
   fi
 }
 
@@ -117,7 +117,7 @@ fi
 
 
 home_dir=`cd ~ && pwd`
-file_path="$home_dir/.dtkclient2"
+file_path="$home_dir/.dtkclient"
 
 # check if there is already configuration
 if [ -f $file_path ]; then
