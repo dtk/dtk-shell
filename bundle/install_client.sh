@@ -1,6 +1,10 @@
 #!bin/bash
 # This script clear terminal and starts installation process of dtk client.
 
+# GLOBAL VAR
+
+abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
+
 # FUNCTIONS BEGIN
 
 # check if gem exists sets global var $found_gem to true or false
@@ -34,9 +38,15 @@ function check_for_ruby_gems {
 # installs gem if not already installed
 function install_gem {
   gem_exists $1
+
   if $found_gem ; then
     echo "Gem $1 already installed."
   else
+    # special case for geminabox
+    if [[ $1 = "geminabox" ]]; then
+      echo "[NOTE] Please ignore error output (if it happens) when installing geminabox since that is known issue, this will not affect installation process."
+    fi
+
     echo "Installing gem $1 (please wait) ..."
     # install gem
     gem install $1
@@ -49,6 +59,16 @@ function install_gem {
       echo "There was a problem install gem $1, please review output and make sure that gem is in the same folder as install script."
       exit 0
     fi
+  fi
+}
+
+# method will add ABH gem repository if not alredy added
+function add_abh_gem_repository {
+  sources_output=`gem sources | grep $abh_gem_repository`
+
+  if [[ sources_output='' ]]; then
+    # if there is no grep match there is no added repo
+    `gem add -a $abh_gem_repository`
   fi
 }
 
@@ -67,6 +87,10 @@ check_for_ruby_gems
 
 echo "Wizard is installing necessery gems ..."
 
+# install geminabox
+install_gem "geminabox"
+
+# install dtk gems
 install_gem "dtk-common"                            
 install_gem "dtk-client"
 
