@@ -79,7 +79,7 @@ module DTK
       def parse_key_value_file(file)
         #adapted from mcollective config
         ret = Hash.new
-        raise Error.new("Config file (#{file}) does not exists") unless File.exists?(file)
+        raise DTK::Client::DtkError,"Config file (#{file}) does not exists" unless File.exists?(file)
         File.open(file).each do |line|
           # strip blank spaces, tabs etc off the end of all lines
           line.gsub!(/\s*$/, "")
@@ -110,15 +110,15 @@ module DTK
         self[:server_port] = 7000
         self[:component_modules_dir] = "#{ENV["HOME"]}/component_modules"
       end
-      ConfigFile = "/etc/dtk/client.conf"
+      CONFIG_FILE = File.expand_path("~/.dtkclient")
       def load_config_file()
-        parse_key_value_file(ConfigFile).each{|k,v|self[k]=v}
+        parse_key_value_file(CONFIG_FILE).each{|k,v|self[k]=v}
       end
-      RequiredKeys = [:server_host]
+      REQUIRED_KEYS = [:server_host]
       def validate
         #TODO: need to check for legal values
-        missing_keys = RequiredKeys - keys
-        raise Error.new("Missing config keys (#{missing_keys.join(",")})") unless missing_keys.empty?
+        missing_keys = REQUIRED_KEYS - keys
+        raise Dtk::Client::DtkError,"Missing config keys (#{missing_keys.join(",")})" unless missing_keys.empty?
       end
     end
 
@@ -215,9 +215,9 @@ module DTK
       end
       def get_credentials()
         cred_file = File.expand_path("~/.dtkclient")
-        raise Error.new("Credential file (#{cred_file}) does not exist") unless File.exists?(cred_file)
+        raise DTK::Client::DtkError,"Credential file (#{cred_file}) does not exist" unless File.exists?(cred_file)
         ret = parse_key_value_file(cred_file)
-        [:username,:password].each{|k|raise Error.new("cannot find #{k}") unless ret[k]}
+        [:username,:password].each{|k|raise DTK::Client::DtkError,"cannot find #{k}" unless ret[k]}
         ret
       end
 
