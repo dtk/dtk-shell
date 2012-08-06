@@ -90,6 +90,9 @@ echo "Wizard is installing necessery gems ..."
 # install geminabox
 install_gem "geminabox"
 
+# add ABH gem repository for dtk gems
+add_abh_gem_repository
+
 # install dtk gems
 install_gem "dtk-common"                            
 install_gem "dtk-client"
