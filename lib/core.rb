@@ -26,7 +26,7 @@ def top_level_execute(command=nil,argv=nil)
     command_class = DTK::Client.const_get "#{cap_form(command)}"
     response_ruby_obj = command_class.execute_from_cli(conn,argv)
     #default_render_type = "hash_pretty_print"
-    default_render_type = "augmented_simple_list" #TODO: doe not work for nested hashes
+    default_render_type = "augmented_simple_list" #TODO: does not work for nested hashes
     if print = response_ruby_obj.render_data(default_render_type)
       print = [print] unless print.kind_of?(Array)
       print.each do |el|
@@ -40,11 +40,11 @@ def top_level_execute(command=nil,argv=nil)
 
   rescue DTK::Client::DtkError => e
     # this are expected application errors
-    PP.pp(e.message, STDOUT)
+    puts e.message
   rescue Exception => e
     # All errors for task will be handled here
-    PP.pp("[INTERNAL ERROR] DTK has encountered an error: #{e.message}", STDOUT)
-    PP.pp e.backtrace
+    DtkLogger.instance.fatal("[INTERNAL ERROR] DTK has encountered an error #{e.class}: #{e.message}",true)
+    DtkLogger.instance.fatal(e.backtrace)
     # TODO add backtrace loging here
   end
 end
@@ -58,9 +58,6 @@ end
 
 module DTK
   module Client
-    class Error < NameError
-    end
-
     class Log
       #TODO Stubs
       def self.info(msg)
@@ -69,10 +66,6 @@ module DTK
       def self.error(msg)
         pp "error: #{msg}"
       end
-    end
-
-    # we use this to log application errors
-    class DtkError < Error
     end
 
     module ParseFile

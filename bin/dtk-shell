@@ -2,6 +2,7 @@
 require File.expand_path('../lib/client', File.dirname(__FILE__))
 require 'shellwords'
 require 'readline'
+require 'thor'
 #ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
 LIST = 
   [
@@ -13,8 +14,16 @@ LIST =
    'node'      ,
    'service-module', 
    'stage', 
+   'exit', 
    'target'
 ].sort
+
+class Thor
+  class << self
+
+  end
+end
+
 
 comp = proc { |s| LIST.grep( /^#{Regexp.escape(s)}/ ) }
 
@@ -23,9 +32,12 @@ Readline.completion_proc = comp
 prompt = 'dtk:/> '
 while line = Readline.readline(prompt, true)
   begin
-    argv = Shellwords.split(line)
-    cmd = argv.shift
-    top_level_execute(cmd,argv)
+    exit if line == 'exit'
+
+    args = Shellwords.split(line)
+    cmd = args.shift
+    
+    top_level_execute(cmd,args)
    rescue Interrupt => e
     system('stty', stty_save) # Restore
     exit

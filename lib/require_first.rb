@@ -1,3 +1,5 @@
+require File.expand_path('../lib/error', File.dirname(__FILE__))
+
 # we leave possibilites that folders user multiple names
 # when somebody takes fresh projects from git it is expected that
 # person will use dtk-common name
@@ -18,7 +20,16 @@ end
 def dtk_nested_require(dir,*files_x)
   files = (files_x.first.kind_of?(Array) ? files_x.first : files_x) 
   caller_dir = caller.first.gsub(/\/[^\/]+$/,"")
-  files.each{|f|require File.expand_path("#{dir}/#{f}",caller_dir)}
+
+  # invalid command will be send here as such needs to be handled.
+  # we will throw DtkClient error as invalid command
+  files.each do |f|
+    begin
+      require File.expand_path("#{dir}/#{f}",caller_dir)
+    rescue LoadError
+      raise DTK::Client::DtkError,"Command '#{f}' not found."
+    end
+  end
 end
 
 def dtk_require_dtk_common(common_library)
