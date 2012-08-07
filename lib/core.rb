@@ -186,7 +186,7 @@ module DTK
       # to make sure that connection is properly set.
       #
       def print_warning
-        puts   "[WARNING] Unable to connection to server, please check you configuration."
+        puts   "[WARNING] Unable to connect to server, please check you configuration."
         puts   "========================== Configuration =========================="
         printf "%15s %s\n", "REST endpoint:", rest_url
         creds = get_credentials
