@@ -97,6 +97,28 @@ add_abh_gem_repository
 install_gem "dtk-common"                            
 install_gem "dtk-client"
 
+# check if there is already configuration
+home_dir=`cd ~ && pwd`
+file_path="$home_dir/.dtkclient"
+
+if [ -f $file_path ]; then
+  # file exists!
+  choice=""
+  while [[ $choice != "y" ]] && [[ $choice != "n" ]]; do
+    printf "Configuration $file_path exists! Overwrite (y/n): "
+    read choice
+  done
+
+  if [ $choice = "n" ]; then
+    # if choice is "no" then exit installation script
+    echo "Exiting, DTL CLI Client will use existing configuration $file_path."
+    exit
+  else
+    # if choice is "yes" then delete previous configuration
+    rm $file_path
+  fi
+fi
+
 #: << 'END'
 # enter values
 echo "Please enter DTK server information."
@@ -116,29 +138,6 @@ read port
 # set default values
 if [ $port="" ]; then
   port="7000"
-fi
-
-
-home_dir=`cd ~ && pwd`
-file_path="$home_dir/.dtkclient"
-
-# check if there is already configuration
-if [ -f $file_path ]; then
-  # file exists!
-  choice=""
-  while [[ $choice != "y" ]] && [[ $choice != "n" ]]; do
-    printf "Configuration $file_path exists! Overwrite (y/n): "
-    read choice
-  done
-
-  if [ $choice = "n" ]; then
-    # if choice is "no" then exit installation script
-    echo "Exiting, DTL CLI Client will use existing configuration $file_path."
-    exit
-  else
-    # if choice is "yes" then delete previous configuration
-    rm $file_path
-  fi
 fi
 
 # print to file

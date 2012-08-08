@@ -23,5 +23,6 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'erubis','~> 2.7.0'
   gem.add_dependency 'grit','~> 2.5.0'
   gem.add_dependency 'dtk-common','~> 0.1.0'
+  gem.add_dependency 'jenkins-client','~> 0.0.1'
   
 end
