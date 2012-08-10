@@ -8,6 +8,8 @@ require 'pp'
 #TODO: for testing; fix by pass in commadn line argument
 #RestClient.log = STDOUT
 
+dtk_require_from_base('domain/response')
+
 
 def top_level_execute(command=nil,argv=nil)
   begin
@@ -23,11 +25,12 @@ def top_level_execute(command=nil,argv=nil)
 
     conn = DTK::Client::Conn.new()
 
+    # call proper thor class and task
     command_class = DTK::Client.const_get "#{cap_form(command)}"
     response_ruby_obj = command_class.execute_from_cli(conn,argv)
-    #default_render_type = "hash_pretty_print"
-    default_render_type = "augmented_simple_list" #TODO: does not work for nested hashes
-    if print = response_ruby_obj.render_data(default_render_type)
+
+    # this will find appropriate render adapter and give output, returns boolean
+    if print = response_ruby_obj.render_data() 
       print = [print] unless print.kind_of?(Array)
       print.each do |el|
         if el.kind_of?(String)
@@ -45,7 +48,8 @@ def top_level_execute(command=nil,argv=nil)
     # All errors for task will be handled here
     DtkLogger.instance.fatal("[INTERNAL ERROR] DTK has encountered an error #{e.class}: #{e.message}",true)
     DtkLogger.instance.fatal(e.backtrace)
-    # TODO add backtrace loging here
+    puts e.backtrace
+    
   end
 end
 
@@ -112,47 +116,6 @@ module DTK
         #TODO: need to check for legal values
         missing_keys = REQUIRED_KEYS - keys
         raise Dtk::Client::DtkError,"Missing config keys (#{missing_keys.join(",")})" unless missing_keys.empty?
-      end
-    end
-
-    class Response < Common::Rest::Response
-      def initialize(command_class=nil,hash={})
-        super(hash)
-        @command_class = command_class
-      end
-
-      def render_data(view_type)
-        if ok?()
-          ViewProcessor.render(@command_class,data,view_type)
-        else
-          hash_part()
-        end
-      end
-     private
-      def hash_part()
-        keys.inject(Hash.new){|h,k|h.merge(k => self[k])}
-      end
-    end
-
-    class ResponseError < Response
-      include Common::Rest::ResponseErrorMixin
-      def initialize(hash={})
-        super(nil,hash)
-      end
-    end
-
-    class ResponseBadParams < ResponseError
-      def initialize(bad_params_hash)
-        errors = bad_params_hash.map do |k,v|
-          {"code"=>"bad_parameter","message"=>"Parameter (#{k}) has a bad value: #{v}"}
-        end
-        hash = {"errors"=>errors, "status"=>"notok"}
-        super(hash)
-      end
-    end
-
-    class ResponseNoOp < Response
-      def render_data(view_type)
       end
     end
 

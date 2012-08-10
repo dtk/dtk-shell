@@ -1,14 +1,19 @@
 module DTK::Client
   class Task < CommandBaseThor
 
-    desc "list","List tasks"
+    desc "list [--list]","List tasks"
+    method_option :list, :type => :boolean, :default => false
     def list()
       #TODO: just hard coded params now
       search_hash = SearchHash.new()
       search_hash.cols = [:commit_message,:status,:id,:created_at,:started_at,:ended_at]
       search_hash.filter = [:eq, ":task_id", nil] #just top level tasks
       search_hash.set_order_by!(:created_at,"DESC")
-      post rest_url("task/list"), search_hash.post_body_hash()
+      response = post rest_url("task/list"), search_hash.post_body_hash()
+      
+      response.render_table! unless options.list?
+
+      return response
     end
 
     desc "status [TASK-ID]", "Return task status; if no TASK-ID then information about most recent task"

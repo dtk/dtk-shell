@@ -1,3 +1,6 @@
+
+
+
 module DTK::Client
   class Assembly < CommandBaseThor
 
@@ -36,15 +39,23 @@ module DTK::Client
     end
 
     #TODO: put in flag to control detail level
-    desc "list [library|target]","List asssemblies in library or target"
+    desc "list [library|target] [--list]","List asssemblies in library or target"
+    method_option :list, :type => :boolean, :default => false
     def list(parent="library")
+      response = ""
       case parent
         when "library":
-          post rest_url("assembly/list_from_library")
+          response = post rest_url("assembly/list_from_library")
         when "target":
-          post rest_url("assembly/list_from_target"), "detail_level" => ["attributes"]
-       else ResponseBadParams.new("assembly container" => parent)
+          response = post rest_url("assembly/list_from_target"), "detail_level" => ["attributes"]
+       else 
+        ResponseBadParams.new("assembly container" => parent)
       end
+
+      # set render view to be used
+      response.render_table! unless options.list?
+
+      return response
     end
 
     desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
@@ -56,10 +67,7 @@ module DTK::Client
     end
 
     desc "stage ASSEMBLY-TEMPLATE-ID", "Stage library assembly in target"
-    method_option "in-target",:aliases => "-t" ,
-      :type => :numeric, 
-      :banner => "TARGET-ID",
-      :desc => "Target (id) to create assembly in" 
+    method_option "in-target",:aliases => "-t" ,:type => :numeric, :banner => "TARGET-ID",:desc => "Target (id) to create assembly in" 
     def stage(assembly_template_id)
       post_body = {
         :assembly_template_id => assembly_template_id
@@ -89,10 +97,7 @@ module DTK::Client
     end
 
     desc "deploy ASSEMBLY-TEMPLATE-ID", "Deploy assembly from library"
-    method_option "in-target",:aliases => "-t" ,
-      :type => :numeric, 
-      :banner => "TARGET-ID",
-      :desc => "Target (id) to create assembly in" 
+    method_option "in-target",:aliases => "-t" ,:type => :numeric, :banner => "TARGET-ID", :desc => "Target (id) to create assembly in" 
     def deploy(assembly_template_id)
       post_body = {
         :assembly_template_id => assembly_template_id

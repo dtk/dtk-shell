@@ -46,7 +46,6 @@ module DTK::Client
     CLIParseOptions[:commit_changes_and_execute] = {
       :options =>[]
     }
-
   end
 end
 

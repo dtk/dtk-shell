@@ -1,11 +1,27 @@
 module DTK
   module Client
+    module RenderView
+      SIMPLE_LIST     = "simple_list"
+      TABLE           = "table_print"
+      PRETTY_PRINT    = "hash_pretty_print"
+      AUG_SIMPLE_LIST = "augmented_simple_list"
+    end
+
     class ViewProcessor
       class << self
         include Aux
         def render(command_class,ruby_obj,type,adapter=nil)
+          
           adapter ||= get_adapter(type,command_class)
-          if ruby_obj.kind_of?(Hash)
+
+          if type == RenderView::TABLE
+            # for table there is only one rendering, we use command class to
+            # determine output of the table
+            adapter.render(ruby_obj, command_class)
+
+            # saying no additional print needed (see core class)
+            return false
+          elsif ruby_obj.kind_of?(Hash)
             adapter.render(ruby_obj)
           elsif ruby_obj.kind_of?(Array)
             ruby_obj.map{|el|render(command_class,el,type,adapter)}

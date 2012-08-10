@@ -146,9 +146,6 @@ echo "password=$password"  >> $file_path
 echo "server_host=$server" >> $file_path
 echo "server_port=$port"   >> $file_path
 
-# check if gem exist if not install them
-#END
-
 
 echo "Installation successfuly finished! Configuration saved to $file_path."
 # END SCRIPT
