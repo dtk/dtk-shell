@@ -12,7 +12,6 @@ module DTK::Client
       response = post rest_url("task/list"), search_hash.post_body_hash()
       
       response.render_table! unless options.list?
-
       return response
     end
 

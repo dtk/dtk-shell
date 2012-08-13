@@ -51,10 +51,8 @@ module DTK::Client
        else 
         ResponseBadParams.new("assembly container" => parent)
       end
-
       # set render view to be used
       response.render_table! unless options.list?
-
       return response
     end
 

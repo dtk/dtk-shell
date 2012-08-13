@@ -7,15 +7,20 @@ module DTK::Client
       [:display_name, :id, :version]
     end
     desc "list [library|remote]","List library or remote component modules"
+    method_option :list, :type => :boolean, :default => false
     def list(parent="library")
       case parent
        when "library":
-         post rest_url("component_module/list_from_library")
+         response = post rest_url("component_module/list_from_library")
        when "remote":
-         post rest_url("component_module/list_remote")
+         response = post rest_url("component_module/list_remote")
        else 
          ResponseBadParams.new("module type" => parent)
       end
+
+      # set render view to be used
+      response.render_table! unless options.list?
+      return response
     end
 
     desc "import REMOTE-MODULE-NAME[,REMOTE-MODULE-NAME2..] [library_id]", "Import remote module(s) into library"

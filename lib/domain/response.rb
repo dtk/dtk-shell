@@ -58,7 +58,7 @@ module DTK
     end
 
     class ResponseNoOp < Response
-      def render_data(view_type)
+      def render_data
       end
     end
 

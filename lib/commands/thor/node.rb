@@ -6,6 +6,7 @@ module DTK::Client
     desc "list","List nodes"
     method_option "only-in-targets", :aliases => "-t", :type => :boolean
     method_option "only-in-libraries", :aliases => "-l", :type => :boolean
+    method_option :list, :type => :boolean, :default => false
     def list()
       types = nil
       add_cols = []
@@ -30,8 +31,12 @@ module DTK::Client
         else
           [:and,[:oneof, ":type", types]] + add_filters
         end
-      post rest_url("node/list"), search_hash.post_body_hash()
+      response = post rest_url("node/list"), search_hash.post_body_hash()
+      
+      response.render_table! unless options.list?
+      return response
     end
+
     LibraryTypes = ["image"]
     TargetTypes = ["staged","instance"]
 
