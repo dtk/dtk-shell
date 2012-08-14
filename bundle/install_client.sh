@@ -4,6 +4,8 @@
 # GLOBAL VAR
 
 abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
+log_file="/var/log/dtk-client.log"
+
 
 # FUNCTIONS BEGIN
 
@@ -66,17 +68,17 @@ function install_gem {
 function add_abh_gem_repository {
   sources_output=`gem sources | grep $abh_gem_repository`
 
-  if [[ sources_output='' ]]; then
+  if [[ $sources_output = "" ]]; then
     # if there is no grep match there is no added repo
-    `gem sources -a $abh_gem_repository`
+    output=`gem sources -a $abh_gem_repository`
   fi
+
 }
 
 # FUNCTIONS END
 
 # BEGIN SCRIPT
 clear
-
 
 # install gems
 echo "Welcome to DTK CLI Client installation!"
@@ -97,10 +99,25 @@ add_abh_gem_repository
 install_gem "dtk-common"                            
 install_gem "dtk-client"
 
+
+# check if there is log file if not create it
+if [ -f $log_file ]; then
+  echo "DTK client log file already exists $log_file. Continuing installation ..."
+else
+  `touch $log_file`
+  `chmod 666 $log_file`
+  if [ -f $log_file ]; then
+    echo "Created DTK Client log file $file_path!"
+  else
+    echo "[WARNING] Unable to create DTK Client log file at $file_path!"
+  fi
+fi
+
+exit
+
 # check if there is already configuration
 home_dir=`cd ~ && pwd`
 file_path="$home_dir/.dtkclient"
-
 if [ -f $file_path ]; then
   # file exists!
   choice=""

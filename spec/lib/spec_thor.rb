@@ -68,7 +68,7 @@ module SpecThor
 
   ##
   # Method will take task name from class name
-  # e.g. Dtk::Client::Assembly => assembly
+  # e.g. DTK::Client::Assembly => assembly
   def get_task_name(clazz_name)
     snake_form(clazz_name.split('::').last).downcase
   end
