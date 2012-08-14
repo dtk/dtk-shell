@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 # This script clear terminal and starts installation process of dtk client.
 
 # GLOBAL VAR
