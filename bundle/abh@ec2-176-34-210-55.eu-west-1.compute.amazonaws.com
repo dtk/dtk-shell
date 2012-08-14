@@ -113,6 +113,8 @@ else
   fi
 fi
 
+exit
+
 # check if there is already configuration
 home_dir=`cd ~ && pwd`
 file_path="$home_dir/.dtkclient"
