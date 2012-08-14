@@ -11,7 +11,6 @@ require 'ostruct'
 module DTK
   module Client
     class ViewProcTablePrint < ViewProcessor
-
       def render(data, command_class)
         TableFactory.print_table(data, command_class)
       end

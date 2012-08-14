@@ -26,8 +26,12 @@ def dtk_nested_require(dir,*files_x)
   files.each do |f|
     begin
       require File.expand_path("#{dir}/#{f}",caller_dir)
-    rescue LoadError
-      raise DTK::Client::DtkError,"Command '#{f}' not found."
+    rescue LoadError => e
+      if e.message.include? "#{dir}/#{f}"
+        raise DTK::Client::DtkError,"Command '#{f}' not found."
+      else
+        raise e
+      end
     end
   end
 end
@@ -65,5 +69,5 @@ def determine_common_folder
     return folder if File.directory?(path)
   end
 
-  raise "\nCommon directory not found, please make sure that you have cloned dtk-common folder!"
+  raise DTK::Client::DtkError,"Common directory not found, please make sure that you have cloned dtk-common folder!"
 end
