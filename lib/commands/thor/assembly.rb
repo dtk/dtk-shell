@@ -1,6 +1,3 @@
-
-
-
 module DTK::Client
   class Assembly < CommandBaseThor
 

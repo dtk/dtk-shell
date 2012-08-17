@@ -41,7 +41,7 @@ module DTK
         # for other classes Assembly, Node, etc. we print subcommand
         # this gives us console output:
         # dtk assembly converge ASSEMBLY-ID
-        super(nil,not_dtk_clazz)
+        super(args,not_dtk_clazz)
 
         # we will print error in case configuration has reported error
         @conn.print_warning if @conn.connection_error?
