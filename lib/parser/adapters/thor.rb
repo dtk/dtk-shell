@@ -9,8 +9,23 @@ module DTK
       end
 
       def self.execute_from_cli(conn,argv)
-        ret = start(argv,:conn => conn)
+        ret = start(arg_analyzer(argv),:conn => conn)
         ret.kind_of?(Response) ? ret : ResponseNoOp.new
+      end
+
+
+      # Method will check if there ID/Name before one of the commands if so
+      # it will route it properly by placing ID as last param
+      def self.arg_analyzer(argv)
+        task_names = all_tasks().map(&:first)
+        
+        # we are looking for case when task name is second options and ID/NAME is first
+        if (argv.size > 1 && task_names.include?(argv[1]))
+          # first element goes on the end
+          argv << argv.shift
+        end
+
+        argv
       end
 
       ##
@@ -41,7 +56,7 @@ module DTK
         # for other classes Assembly, Node, etc. we print subcommand
         # this gives us console output:
         # dtk assembly converge ASSEMBLY-ID
-        super(args,not_dtk_clazz)
+        super(args.empty? ? nil : args,not_dtk_clazz)
 
         # we will print error in case configuration has reported error
         @conn.print_warning if @conn.connection_error?
