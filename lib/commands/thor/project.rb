@@ -1,7 +1,7 @@
 module DTK::Client
   class Project < CommandBaseThor
     def self.pretty_print_cols()
-      [:display_name, :id, :description]
+      PPColumns::PROJECT
     end
     desc "list","List projects"
     def list()

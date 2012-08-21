@@ -1,7 +1,7 @@
 module DTK::Client
   class Repo < CommandBaseThor
     def self.pretty_print_cols()
-      [:display_name, :id]
+      PPColumns::REPO
     end
     desc "list","List repos"
     def list()

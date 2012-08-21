@@ -1,7 +1,8 @@
 module DTK::Client
   class Library < CommandBaseThor
+
     def self.pretty_print_cols()
-      [:display_name, :id, :description]
+      PPColumns::LIBRARY
     end
     
     desc "[LIBRARY-ID/LIBRARY-NAME] list [type]","List libraries, or if type specified type those types in library"
@@ -9,10 +10,7 @@ module DTK::Client
       search_hash = SearchHash.new()
       search_hash.cols = pretty_print_cols()
 
-      # TODO: Pretty print collumns need to be group into static method to hold them as constants.
-      # problem is when searching library, node, components, assemblies we will not have the same columns.
-
-      if library_id.nil?
+        if library_id.nil?
         # there is no library id
         response = post rest_url("library/list"), search_hash.post_body_hash
       else
@@ -21,11 +19,14 @@ module DTK::Client
 
         response = case selected_type
         when "nodes"
+          search_hash.cols = PPColumns::NODE
           post rest_url("node/list"),search_hash.post_body_hash
         when "components"
+          search_hash.cols = PPColumns::COMPONENT
           post rest_url("component/list"),search_hash.post_body_hash
         when "assemblies"
           # TODO: Filter libraries via assemblie is not working need to talk to Rich
+          search_hash.cols = PPColumns::ASSEMBLY
           post rest_url("assembly/list_from_library"),search_hash.post_body_hash
         else
           raise DTK::Client::DtkError, "Not supported type '#{selected_type}' for given command."

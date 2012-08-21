@@ -4,7 +4,7 @@ dtk_require_from_base('command_helpers/git_repo')
 module DTK::Client
   class ServiceModule < CommandBaseThor
     def self.pretty_print_cols()
-      [:display_name, :id, :version]
+      PPColumns::SERVICE_MODULE
     end
     desc "list [library|remote]","List library, workspace,or remote service modules"
     def list(parent="library")

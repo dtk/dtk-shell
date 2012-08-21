@@ -1,7 +1,7 @@
 module DTK::Client
   class NodeGroup < CommandBaseThor
     def self.pretty_print_cols()
-      [:display_name, :type,:id, :description]
+      PPColumns::NODE_GROUP
     end
     desc "list","List Node groups"
     def list()

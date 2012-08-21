@@ -2,7 +2,7 @@ module DTK::Client
   class Assembly < CommandBaseThor
 
     def self.pretty_print_cols()
-      [:display_name, :execution_status, :type, :id, :description, :external_ref]
+      PPColumns::ASSEMBLY
     end
 
     desc "export ASSEMBLY-ID", "Exports assembly instance or template"

@@ -1,8 +1,9 @@
 module DTK::Client
   class Node < CommandBaseThor
     def self.pretty_print_cols()
-      [:display_name, :os_type, :type, :id, :description, :external_ref]
+      PPColumns::NODE
     end
+    
     desc "list","List nodes"
     method_option "only-in-targets", :aliases => "-t", :type => :boolean
     method_option "only-in-libraries", :aliases => "-l", :type => :boolean

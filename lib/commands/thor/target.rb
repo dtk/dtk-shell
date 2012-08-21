@@ -1,7 +1,7 @@
 module DTK::Client
   class Target < CommandBaseThor
     def self.pretty_print_cols()
-      [:display_name, :id, :description, :type, :iaas_type]
+      PPColumns::TARGET
     end
     desc "list","List targets"
     method_option :list, :type => :boolean, :default => false

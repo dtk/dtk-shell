@@ -4,9 +4,6 @@ module DTK::Client
   # Following are descriptions of available commands 
 
   class Dtk < CommandBaseThor
-    def self.pretty_print_cols()
-      [:display_name, :id, :description]
-    end
 
     # NOTE
     # Following methods are just api descriptors, invocation happens at "bin/dtk" entry point
