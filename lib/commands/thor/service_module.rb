@@ -18,6 +18,7 @@ module DTK::Client
       end
     end
 
+    # TODO: Duplicate of library import ... should we delete this one?
     desc "import REMOTE-SERVICE-MODULE-NAME [library_id]", "Import remote service module into library"
     def import(service_module_name,library_id=nil)
       post_body = {
@@ -43,6 +44,7 @@ module DTK::Client
       post rest_url("service_module/list_assemblies"), post_body
     end
 
+    # TODO: Check to see if we are deleting this
     desc "create MODULE-NAME [library_id]", "Create an empty service module in library"
     def create(module_name,library_id=nil)
       post_body = {

@@ -19,6 +19,11 @@ module DTK
 
       def render_data
         if ok?()
+          # checks if response is empty
+          if data.empty?
+            raise DTK::Client::DtkError, "Server response is empty, please check your server configuration or contact us."
+          end
+
           # sending raw data from response
           ViewProcessor.render(@command_class, data, @render_view)
         else

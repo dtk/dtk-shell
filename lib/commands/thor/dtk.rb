@@ -5,11 +5,19 @@ module DTK::Client
 
   class Dtk < CommandBaseThor
 
+    # we do not need help here
+    remove_task("help")
+
     # NOTE
     # Following methods are just api descriptors, invocation happens at "bin/dtk" entry point
 
     desc "assembly help","Part of dtk client used for assembly manipulation."
     def assembly
+      # API descriptor
+    end
+
+    desc "assembly-template help","Work with assembly templates."
+    def assembly_template
       # API descriptor
     end
 
@@ -28,6 +36,11 @@ module DTK::Client
       # API descriptor
     end
 
+    desc "module-component help", "Work with module component templates."
+    def module_component
+      # API descriptor
+    end
+
     desc "node help", "Add/Destroy/List available nodes."
     def node
       # API descriptor
@@ -36,7 +49,17 @@ module DTK::Client
     desc "node-group help", "Add/Destroy/List available groups of nodes."
     def node_group
       # API descriptor
-    end    
+    end
+
+    desc "node-template help", "Work with node templates."
+    def node_template
+      # API descriptor
+    end
+
+    desc "component-template help","Work with component templates."
+    def component_template
+      # API descriptor
+    end
 
     desc "repo help", "Part of dtk client which enables us to sync, destroy, view available repos."
     def repo

@@ -1,4 +1,6 @@
 require 'thor'
+require 'thor/group'
+
 module DTK
   module Client
     class CommandBaseThor < Thor
@@ -20,12 +22,30 @@ module DTK
         task_names = all_tasks().map(&:first)
         
         # we are looking for case when task name is second options and ID/NAME is first
-        if (argv.size > 1 && task_names.include?(argv[1]))
+        # we replace '-' -> '_' due to thor defining task with '_' and invoking them with '-'
+        if (argv.size > 1 && task_names.include?(argv[1].gsub('-','_')))
+
+          # Check if required params have been met, see UnboundMethod#arity
+          method_definition = self.instance_method(argv[1].gsub('-','_').to_sym)
+          # number two indicates here library id, taks name
+          required_params = (method_definition.arity + 1).abs + 2
+
+          if (argv.size < required_params)
+            raise DTK::Client::DtkError, "Method 'dtk #{argv[1]}' requires at least #{required_params-argv.size} argument."
+          end
+
           # first element goes on the end
           argv << argv.shift
         end
 
         argv
+      end
+
+      no_tasks do 
+        # Method not implemented error
+        def not_implemented
+          raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
+        end
       end
 
       ##
@@ -54,8 +74,7 @@ module DTK
 
         # we don't use subcommand print in case of root DTK class
         # for other classes Assembly, Node, etc. we print subcommand
-        # this gives us console output:
-        # dtk assembly converge ASSEMBLY-ID
+        # this gives us console output: dtk assembly converge ASSEMBLY-ID
         super(args.empty? ? nil : args,not_dtk_clazz)
 
         # we will print error in case configuration has reported error

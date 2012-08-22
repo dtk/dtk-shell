@@ -23,6 +23,7 @@ module DTK::Client
       return response
     end
 
+    # TODO: See if we are deleting this
     desc "import REMOTE-MODULE-NAME[,REMOTE-MODULE-NAME2..] [library_id]", "Import remote module(s) into library"
     def import(module_name_x,library_id=nil)
       module_names = module_name_x.split(",")
@@ -105,6 +106,7 @@ module DTK::Client
       post rest_url("component_module/revert_workspace"), post_body
     end
 
+    # TODO: Check to see if we are deleting this
     desc "delete COMPONENT-MODULE-ID", "Delete component module and all items contained in it"
     def delete(component_module_id)
       post_body = {
