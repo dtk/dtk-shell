@@ -15,7 +15,6 @@ module DTK
         ret.kind_of?(Response) ? ret : ResponseNoOp.new
       end
 
-
       # Method will check if there ID/Name before one of the commands if so
       # it will route it properly by placing ID as last param
       def self.arg_analyzer(argv)
@@ -23,19 +22,21 @@ module DTK
         
         # we are looking for case when task name is second options and ID/NAME is first
         # we replace '-' -> '_' due to thor defining task with '_' and invoking them with '-'
-        if (argv.size > 1 && task_names.include?(argv[1].gsub('-','_')))
+        unless argv.first == 'help'
+          if (argv.size > 1 && task_names.include?(argv[1].gsub('-','_')))
 
-          # Check if required params have been met, see UnboundMethod#arity
-          method_definition = self.instance_method(argv[1].gsub('-','_').to_sym)
-          # number two indicates here library id, taks name
-          required_params = (method_definition.arity + 1).abs + 2
+            # Check if required params have been met, see UnboundMethod#arity
+            method_definition = self.instance_method(argv[1].gsub('-','_').to_sym)
+            # number two indicates here library id, taks name
+            required_params = (method_definition.arity + 1).abs + 2
 
-          if (argv.size < required_params)
-            raise DTK::Client::DtkError, "Method 'dtk #{argv[1]}' requires at least #{required_params-argv.size} argument."
+            if (argv.size < required_params)
+              raise DTK::Client::DtkError, "Method 'dtk #{argv[1]}' requires at least #{required_params-argv.size} argument."
+            end
+
+            # first element goes on the end
+            argv << argv.shift
           end
-
-          # first element goes on the end
-          argv << argv.shift
         end
 
         argv

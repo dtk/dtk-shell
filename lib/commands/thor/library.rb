@@ -35,7 +35,7 @@ module DTK::Client
       not_implemented
     end
     
-    desc "[LIBRARY ID/NAME] list [TYPE]","List libraries, or if type specified type those types in library"
+    desc "[LIBRARY ID/NAME] list [TYPE]","List libraries, or if type specified type those types in library, possible values nodes, components, assemblies"
     def list(selected_type='none', library_id=nil)
       search_hash = SearchHash.new()
       search_hash.cols = pretty_print_cols()
@@ -47,7 +47,7 @@ module DTK::Client
         # we include library id in search
         search_hash.filter = [:eq, ":library_library_id", library_id ]
 
-        response = case selected_type
+        response = case selected_type.downcase
         when "nodes"
           search_hash.cols = PPColumns::NODE
           post rest_url("node/list"),search_hash.post_body_hash

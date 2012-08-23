@@ -1,174 +1,111 @@
 require 'hirb'
 require 'ostruct'
 
-  ##
-  # Since hirb is not very flexible to way is creates tables with data
-  # we will use following class as container for the response. Via this
-  # class we are going to manipulate data structure so we get desired 
-  # console table output (via hirb).
-  #
+# we override String here to give power to our mutators defined in TableDefintions
+class String
+  def get_date
+    DateTime.parse(self).strftime('%H:%M:%S %d/%m/%y') unless self.nil?
+  end
+end
 
 module DTK
   module Client
     class ViewProcTablePrint < ViewProcessor
-      def render(data, command_class)
-        TableFactory.print_table(data, command_class)
+      def render(data, command_clazz)
+        DtkResponse.new(data, command_clazz).print
       end
-    end
-
-    ##
-    # Factory pattern to sellect appopriate containers per command class. 
-    # We will need to extend it if there is a need to have per task containment.
-    # This approach produces a lot of code (container classes) but this is best way
-    # I found to use hirb in desired way.
-    #
-    class TableFactory
-      def self.print_table(data, command_class)
-
-        # Would be better to use class directly but that way we need to ensure that all classes are loaded.
-        # We can check if they are loaded before checking class but this is faster solution.
-        case command_class.to_s
-          when "DTK::Client::Assembly"
-            DtkResponse.new(data, DtkAssemblyElement).print
-          when "DTK::Client::Task"
-            DtkResponse.new(data, DtkTaskElement).print         
-          when "DTK::Client::Target"
-            DtkResponse.new(data, DtkTargetElement).print          
-          when "DTK::Client::Module"
-            DtkResponse.new(data, DtkModuleElement).print
-          when "DTK::Client::Node"
-            DtkResponse.new(data, DtkNodeElement).print
-          else
-            raise DTK::Client::DtkError,"Missing table implementation for #{command_class}."
-          end
-      end
-    end
-
-
-    def create_struct(element)
-      arr = element.each do |k, v|
-        case v
-        when Hash
-          [k, v.to_ostruct]
-        when Array
-          [k, v.map { |el| Hash === el ? el.to_ostruct : el }]
-        else
-          [k, v]
-        end
-      end
-      OpenStruct.new(arr)
     end
 
     private
+
+    # when adding class to table view you need to define mapping and order to be displayed in table
+    # this can be fixed with facets, but that is todo for now TODO: use facets with ordered hashes
+    class TableDefinitions
+      ASSEMBLY       = { :assembly_id=>"dtk_id", :assembly_name => "display_name", :nodes => "nodes.size", :components => "nodes.first['components'].join(', ')" }
+      ASSEMBLY_ORDER = [ :assembly_id, :assembly_name, :nodes, :components ]
+      TASK           = { :task_id => "dtk_id", :status => "status.upcase", :created => "created_at.get_date", :start => "started_at.get_date", :end => "ended_at.get_date"}
+      TASK_ORDER     = [ :task_id,:status, :created, :start, :end ]
+      NODE           = { :node_id => "dtk_id", :name => "display_name", :node_type => "dtk_type", :region => "external_ref.region", :ami_type => "external_ref.dtk_type", :size => "external_ref.size.split('.').last", :zone => "external_ref.availability_zone", :os => "os_type" }
+      NODE_ORDER     = [ :node_id, :name, :node_type, :region, :ami_type, :size, :zone, :os ]
+      MODULE         = { :module_id => "dtk_id", :name => "display_name", :version => "version" }
+      MODULE_ORDER   = [ :module_id, :name, :version ]
+      TARGET         = { :target_id => "dtk_id", :target_type => "dtk_type", :iaas => "iaas_type", :description => "description"}
+      TARGET_ORDER   = [ :target_id, :target_type, :iaas, :description]
+    end
 
     class DtkResponse
 
       include Hirb::Console
 
-      attr_accessor :elements, :element_clazz
+      attr_accessor :command_name, :order_defintion, :evaluated_data
 
-      def initialize(data, data_clazz)
-        @elements, @element_clazz = [], data_clazz
+      def initialize(data, command_clazz)
+        puts data.size
 
-        data.each do |element|
-          @elements << data_clazz.new(element)
+        # e.g. Dtk::Client::Assembly => ASSEMBLY
+        @command_name     = command_clazz.to_s.split('::').last.upcase
+        # e.g. ASSEMBLY => TableDefintions::ASSEMBLY
+        table_defintion   = get_table_defintion(@command_name)
+        # e.g. ASSEMBLY => TableDefintions::ASSEMBLY_ORDER
+        @order_definition = get_table_defintion("#{@command_name}_ORDER")
+
+        # if one defintion is missing we stop the execution
+        if table_defintion.nil? || @order_definition.nil?
+          raise DTK::Client::DtkError,"Missing table definition(s) for #{command_clazz}."
         end
 
+        # transforms data to OpenStruct
+        structured_data = []
+        data.each do |data_element|
+          structured_data << to_ostruct(data_element)
+        end
+
+        # we use array of OpenStruct to hold our evaluated values
+        @evaluated_data = []
+        structured_data.each do |structured_element|
+          evaluated_element = OpenStruct.new
+          # based on mappign we set key = eval(value)
+          table_defintion.each do |k,v|
+            eval "evaluated_element.#{k}=structured_element.#{v}"
+          end
+          @evaluated_data << evaluated_element
+        end
+      end
+
+      def to_ostruct(data)
+        arr = data.map do |k, v|
+          k = safe_name(k)
+          case v
+          when Hash
+            [k, to_ostruct(v)]
+          when Array
+            [k, v.each { |el| Hash === el ? to_ostruct(el) : el }]
+          else
+            [k,v]
+          end
+        end
+        OpenStruct.new(arr)
+      end
+
+      def safe_name(identifier)
+        (identifier == 'id' || identifier  == 'type') ? "dtk_#{identifier}" : identifier
+      end
+
+      def get_table_defintion(name)
+        begin
+          TableDefinitions.const_get(name)
+        rescue NameError => e
+          return nil
+        end
       end
 
       def print
-        table @elements,:fields => @element_clazz::FIELDS
+        # hirb print out of our evaluated data in order defined
+        table @evaluated_data,:fields => @order_definition
       end
 
     end
 
-    class DtkTaskElement
-      FIELDS = [:id,:status, :created, :start, :end]
-      FIELDS.each { |field| attr_accessor field }
-
-      def initialize(element)
-        @status   = element['status'].upcase
-        @id       = element['id']
-        @created  = get_date element['created_at']
-        @start    = get_date element['started_at']
-        @end      = get_date element['ended_at']
-      end
-
-      private
-
-      def get_date(string_date)
-        DateTime.parse(string_date).strftime('%H:%M:%S %d/%m/%y') unless string_date.nil?
-      end
-
-    end
-
-    class DtkModuleElement
-      FIELDS = [:id,:name, :version ]
-      FIELDS.each { |field| attr_accessor field }
-
-      def initialize(element)
-        @id         = element['id']
-        @name       = element['display_name']
-        @version    = element['version']
-      end
-    end
-
-    class DtkNodeElement
-      FIELDS = [:id,:name, :type, :region, :ami_type, :size, :zone, :os ]
-      FIELDS.each { |field| attr_accessor field }
-
-      def initialize(element)
-        @id         = element['id']
-        @type       = element['type']
-        @name       = element['display_name']
-        @os         = element['os_type']
-        @size       = element['external_ref']['size'].split('.').last
-        @ami_type   = element['external_ref']['type']
-        @region     = element['external_ref']['region']
-        @zone       = element['external_ref']['availability_zone']
-      end
-    end
-
-    class DtkTargetElement
-      FIELDS = [:id, :type, :iaas, :description]
-      FIELDS.each { |field| attr_accessor field }
-
-      def initialize(element)
-        puts element.inspect
-        @id          = element['id']
-        @type        = element['type']
-        @iaas        = element['iaas_type']
-        @description = element['description']
-      end
-
-    end
-
-    class DtkAssemblyElement
-
-      FIELDS = [:assembly_id, :assembly_name, :nodes, :components]
-      FIELDS.each { |field| attr_accessor field }
-
-      def initialize(element)
-        @assembly_id    = element['id']
-        @assembly_name  = element['display_name']
-        @nodes          = element['nodes'].size
-        
-        all_components  = []
-        element['nodes'].each { |node| all_components << node['components']}
-        @components = all_components.uniq
-      end
-    end
-
-    class DtkNode
-      attr_accessor :node_id, :node_name, :components, :region, :size
-      def initialize(element)
-        @node_id    = element['node_id']
-        @node_name  = element['node_name']
-        @size       = element['external_ref']['size']
-        @region     = element['external_ref']['region']
-        @components = element['components`']
-      end
-    end
   end
 end
 
