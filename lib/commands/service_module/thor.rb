@@ -96,9 +96,8 @@ module DTK::Client
       dtk_require_from_base('command_helpers/jenkins_client')
       response = get rest_url("service_module/workspace_branch_info/#{service_module_id.to_s}")
       return response unless response.ok?
-      pp [:response_data,response.data] #TODO just for debugging
       module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
-      JenkinsClient.createJenkins_project(service_module_id,module_name,repo_url,branch)
+      JenkinsClient.createJenkins_project?(service_module_id,module_name,repo_url,branch)
       #TODO: right now JenkinsClient wil throw error if problem; better to create an error response
       response
     end
