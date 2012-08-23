@@ -62,7 +62,7 @@ ConfigXMLTemplate = Erubis::Eruby.new <<eos
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>@unix shell command perfomed with each build@</command>
+      <command>ruby /var/lib/jenkins/r8_e2e.rb</command>
     </hudson.tasks.Shell>
   </builders>
     <publishers>
