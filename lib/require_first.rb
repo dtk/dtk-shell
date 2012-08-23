@@ -54,7 +54,7 @@ private
 def is_dtk_common_installed?
   begin
     # if no exception gem is found
-    Gem::Specification::find_by_name('dtk-common')
+    gem 'dtk-common'
     return true
   rescue Gem::LoadError
     return false
