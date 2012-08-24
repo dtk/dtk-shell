@@ -3,18 +3,33 @@ module DTK; module Client
   class JenkinsClient
     require File.expand_path('jenkins_client/config_xml', File.dirname(__FILE__))
 
-    def self.createJenkins_project(module_id,module_name,repo_url,branch)
+    def self.create_service_module_project(module_id,module_name,repo_url,branch)
       jenkins_project_name = module_name
-      config_xml_contents = ConfigXML.generate(repo_url,module_id,branch)
+      config_xml_contents = ConfigXML.generate_service_module_project(repo_url,module_id,branch)
       connection().create_job(jenkins_project_name,config_xml_contents)
     end
 
-    def self.createJenkins_project?(module_id,module_name,repo_url,branch)
+    def self.create_service_module_project?(module_id,module_name,repo_url,branch)
       jenkins_project_name = module_name
       jobs = get_jobs()||[]
-      #no op if job exsits already
+      #no op if job exists already
       unless jobs.find{|j|j["name"] == jenkins_project_name}
-        createJenkins_project(module_id,module_name,repo_url,branch)
+        create_service_module_project(module_id,module_name,repo_url,branch)
+      end
+    end
+
+    def self.create_assembly_project(assembly_name,assembly_id)
+      jenkins_project_name = assembly_name.gsub(/::/,"-")
+      config_xml_contents = ConfigXML.generate_assembly_project(assembly_id)
+      connection().create_job(jenkins_project_name,config_xml_contents)
+    end
+
+    def self.create_assembly_project?(assembly_name,assembly_id)
+      jenkins_project_name = assembly_name.gsub(/::/,"-")
+      jobs = get_jobs()||[]
+      #no op if job exists already
+      unless jobs.find{|j|j["name"] == jenkins_project_name}
+        create_assembly_project(assembly_name,assembly_id)
       end
     end
 

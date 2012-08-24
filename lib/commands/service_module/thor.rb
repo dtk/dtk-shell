@@ -97,7 +97,7 @@ module DTK::Client
       response = get rest_url("service_module/workspace_branch_info/#{service_module_id.to_s}")
       return response unless response.ok?
       module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
-      JenkinsClient.createJenkins_project?(service_module_id,module_name,repo_url,branch)
+      JenkinsClient.create_service_module_project?(service_module_id,module_name,repo_url,branch)
       #TODO: right now JenkinsClient wil throw error if problem; better to create an error response
       response
     end
