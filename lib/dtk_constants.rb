@@ -13,3 +13,21 @@ class PPColumns
   TARGET         = [:display_name, :id, :description, :type, :iaas_type]
   COMPONENT      = [:display_name, :id, :type, :version, :library]
 end
+
+#
+# ID for data types
+#
+
+class DataType
+  ASSEMBLY       = "ASSEMBLY"
+  LIBRARY        = "LIBRARY"
+  NODE           = "NODE"
+  NODE_GROUP     = "NODE_GROUP"
+  MODULE         = "MODULE"
+  PROJECT        = "PROJECT"
+  REPO           = "REPO"  
+  SERVICE_MODULE = "SERVICE_MODULE"
+  TARGET         = "TARGET"       
+  COMPONENT      = "COMPONENT"
+  TASK           = "TASK"
+end

@@ -4,7 +4,7 @@ dtk_require_from_base('command_helpers/git_repo')
 module DTK::Client
   class Module < CommandBaseThor
     def self.pretty_print_cols()
-      PPColumns::Module
+      PPColumns::MODULE
     end
     desc "list [library|remote]","List library or remote component modules"
     method_option :list, :type => :boolean, :default => false
@@ -19,7 +19,7 @@ module DTK::Client
       end
 
       # set render view to be used
-      response.render_table! unless options.list?
+      response.render_table(DataType::MODULE) unless options.list?
       return response
     end
 

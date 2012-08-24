@@ -25,7 +25,7 @@ module DTK
           end
 
           # sending raw data from response
-          ViewProcessor.render(@command_class, data, @render_view)
+          ViewProcessor.render(@command_class, data, @render_view,@render_data_type)
         else
           hash_part()
         end
@@ -35,7 +35,8 @@ module DTK
         @render_view = RenderView::AUG_SIMPLE_LIST
       end
 
-      def render_table!
+      def render_table(data_type)
+        @render_data_type   = data_type
         @render_view = RenderView::TABLE
       end
 

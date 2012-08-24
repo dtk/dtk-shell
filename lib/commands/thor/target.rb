@@ -10,7 +10,7 @@ module DTK::Client
       search_hash.cols = pretty_print_cols()
       response = post rest_url("target/list"), search_hash.post_body_hash()
 
-      response.render_table! unless options.list?
+      response.render_table(DataType::TARGET) unless options.list?
       return response
     end
     

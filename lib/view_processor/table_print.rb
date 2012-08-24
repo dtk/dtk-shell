@@ -11,8 +11,8 @@ end
 module DTK
   module Client
     class ViewProcTablePrint < ViewProcessor
-      def render(data, command_clazz)
-        DtkResponse.new(data, command_clazz).print
+      def render(data, command_clazz, data_type_clazz)
+        DtkResponse.new(data, data_type_clazz).print
       end
     end
 
@@ -21,16 +21,20 @@ module DTK
     # when adding class to table view you need to define mapping and order to be displayed in table
     # this can be fixed with facets, but that is todo for now TODO: use facets with ordered hashes
     class TableDefinitions
-      ASSEMBLY       = { :assembly_id=>"dtk_id", :assembly_name => "display_name", :nodes => "nodes.size", :components => "nodes.first['components'].join(', ')" }
-      ASSEMBLY_ORDER = [ :assembly_id, :assembly_name, :nodes, :components ]
-      TASK           = { :task_id => "dtk_id", :status => "status.upcase", :created => "created_at.get_date", :start => "started_at.get_date", :end => "ended_at.get_date"}
-      TASK_ORDER     = [ :task_id,:status, :created, :start, :end ]
-      NODE           = { :node_id => "dtk_id", :name => "display_name", :node_type => "dtk_type", :region => "external_ref.region", :ami_type => "external_ref.dtk_type", :size => "external_ref.size.split('.').last", :zone => "external_ref.availability_zone", :os => "os_type" }
-      NODE_ORDER     = [ :node_id, :name, :node_type, :region, :ami_type, :size, :zone, :os ]
-      MODULE         = { :module_id => "dtk_id", :name => "display_name", :version => "version" }
-      MODULE_ORDER   = [ :module_id, :name, :version ]
-      TARGET         = { :target_id => "dtk_id", :target_type => "dtk_type", :iaas => "iaas_type", :description => "description"}
-      TARGET_ORDER   = [ :target_id, :target_type, :iaas, :description]
+      ASSEMBLY        = { :assembly_id=>"dtk_id", :assembly_name => "display_name", :nodes => "nodes.size", :components => "nodes.first['components'].join(', ')" }
+      ASSEMBLY_ORDER  = [ :assembly_id, :assembly_name, :nodes, :components ]
+      TASK            = { :task_id => "dtk_id", :status => "status.upcase", :created => "created_at.get_date", :start => "started_at.get_date", :end => "ended_at.get_date"}
+      TASK_ORDER      = [ :task_id,:status, :created, :start, :end ]
+      NODE            = { :node_id => "dtk_id", :name => "display_name", :node_type => "dtk_type", :region => "external_ref.region", :ami_type => "external_ref.dtk_type", :size => "external_ref.size.split('.').last", :zone => "external_ref.availability_zone", :os => "os_type" }
+      NODE_ORDER      = [ :node_id, :name, :node_type, :region, :ami_type, :size, :zone, :os ]
+      MODULE          = { :module_id => "dtk_id", :name => "display_name", :version => "version" }
+      MODULE_ORDER    = [ :module_id, :name, :version ]
+      TARGET          = { :target_id => "dtk_id", :target_type => "dtk_type", :iaas => "iaas_type", :description => "description"}
+      TARGET_ORDER    = [ :target_id, :target_type, :iaas, :description]
+      LIBRARY         = { :library_id => "dtk_id", :library_name => "display_name" }
+      LIBRARY_ORDER   = [ :library_id, :library_name ]      
+      COMPONENT       = { :component_id => "dtk_id", :name => "display_name", :component_type => "dtk_type", :version=>"version", :library => "library.display_name", :library_id => "library_library_id" }
+      COMPONENT_ORDER = [ :component_id, :name, :component_type, :version, :library, :library_id ]
     end
 
     class DtkResponse
@@ -39,11 +43,12 @@ module DTK
 
       attr_accessor :command_name, :order_defintion, :evaluated_data
 
-      def initialize(data, command_clazz)
-        puts data.size
+      def initialize(data, data_type)
+        # use this to see data structure
+        # puts data.first.inspect
 
-        # e.g. Dtk::Client::Assembly => ASSEMBLY
-        @command_name     = command_clazz.to_s.split('::').last.upcase
+        # e.g. data type ASSEMBLY
+        @command_name     = data_type
         # e.g. ASSEMBLY => TableDefintions::ASSEMBLY
         table_defintion   = get_table_defintion(@command_name)
         # e.g. ASSEMBLY => TableDefintions::ASSEMBLY_ORDER
@@ -51,7 +56,7 @@ module DTK
 
         # if one defintion is missing we stop the execution
         if table_defintion.nil? || @order_definition.nil?
-          raise DTK::Client::DtkError,"Missing table definition(s) for #{command_clazz}."
+          raise DTK::Client::DtkError,"Missing table definition(s) for data type #{data_type}."
         end
 
         # transforms data to OpenStruct
@@ -66,7 +71,16 @@ module DTK
           evaluated_element = OpenStruct.new
           # based on mappign we set key = eval(value)
           table_defintion.each do |k,v|
-            eval "evaluated_element.#{k}=structured_element.#{v}"
+            begin
+              eval "evaluated_element.#{k}=structured_element.#{v}"
+            rescue NoMethodError => e
+              unless e.message.include? "nil:NilClass"
+                # when chaining comands there are situations where more complex strcture
+                # e.g. external_ref.region will not be there. So we are handling that case
+                # make sure when in development to disable this TODO: better solution needed
+                raise e
+              end
+            end 
           end
           @evaluated_data << evaluated_element
         end

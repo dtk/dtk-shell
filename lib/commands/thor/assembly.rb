@@ -51,7 +51,7 @@ module DTK::Client
 
       # set render view to be used
       unless options.list?
-        response.render_table! if DTK::Client::Response === response
+        response.render_table(DataType::ASSEMBLY) if DTK::Client::Response === response
       end
       
       return response
