@@ -54,21 +54,6 @@ module DTK::Client
       post rest_url("assembly/list_smoketests"), post_body
     end
 
-    desc "stage ASSEMBLY-TEMPLATE-ID", "Stage library assembly in target"
-    method_option "in-target",:aliases => "-t" ,
-      :type => :numeric, 
-      :banner => "TARGET-ID",
-      :desc => "Target (id) to create assembly in" 
-    def stage(assembly_template_id)
-      post_body = {
-        :assembly_template_id => assembly_template_id
-      }
-      if target_id = options["in-target"]
-        post_body.merge!(:target_id => target_id)
-      end
-      post rest_url("assembly/stage"), post_body
-    end
-
     desc "info ASSEMBLY-ID [template]", "Return info about assembly instance or template"
     def info(assembly_id,template_keyword=nil)
       post_body = {
@@ -97,17 +82,46 @@ module DTK::Client
       post rest_url("assembly/set_attributes"), post_body
     end
 
-    desc "deploy ASSEMBLY-TEMPLATE-ID", "Deploy assembly from library"
+    desc "stage ASSEMBLY-TEMPLATE-ID", "Stage library assembly in target"
     method_option "in-target",:aliases => "-t" ,
       :type => :numeric, 
       :banner => "TARGET-ID",
       :desc => "Target (id) to create assembly in" 
+    method_option "name",:aliases => "-n" ,
+      :type => :string, 
+      :banner => "NAME",
+      :desc => "Name for assembly instance"
+    def stage(assembly_template_id)
+      post_body = {
+        :assembly_template_id => assembly_template_id
+      }
+      if target_id = options["in-target"]
+        post_body.merge!(:target_id => target_id)
+      end
+      if name = options["name"]
+        post_body.merge!(:name => name)
+      end
+      post rest_url("assembly/stage"), post_body
+    end
+
+    desc "deploy ASSEMBLY-TEMPLATE-ID", "Deploy assembly from library"
+    method_option "in-target",:aliases => "-t" ,
+      :type => :numeric, 
+      :banner => "TARGET-ID",
+      :desc => "Target (id) to create assembly in"
+    method_option "name",:aliases => "-n" ,
+      :type => :string, 
+      :banner => "NAME",
+      :desc => "Name for assembly instance" 
     def deploy(assembly_template_id)
       post_body = {
         :assembly_template_id => assembly_template_id
       }
       if target_id = options["in-target"]
         post_body.merge!(:target_id => target_id)
+      end
+      if name = options["name"]
+        post_body.merge!(:name => name)
       end
       response = post(rest_url("assembly/stage"),post_body)
       return response unless response.ok?
