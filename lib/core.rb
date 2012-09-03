@@ -29,6 +29,12 @@ def top_level_execute(command=nil,argv=nil)
     command_class = DTK::Client.const_get "#{cap_form(command)}"
     response_ruby_obj = command_class.execute_from_cli(conn,argv)
 
+    # check for errors in response
+    unless response_ruby_obj["errors"].nil?
+      DtkLogger.instance.error("Response Error: #{response_ruby_obj['errors']}")
+      raise DTK::Client::DtkError, "Server has encountered internal error, please contact DTK team. See error log for more details."
+    end
+
     # this will find appropriate render adapter and give output, returns boolean
     if print = response_ruby_obj.render_data() 
       print = [print] unless print.kind_of?(Array)

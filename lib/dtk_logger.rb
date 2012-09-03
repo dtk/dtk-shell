@@ -7,9 +7,10 @@ require 'logger'
 class DtkLogger
 
   #
-  LOG_FILE_NAME                = 'dtk-client.log'
+  LOG_FILE_NAME           = 'dtk-client.log'
   LOG_MB_SIZE             = 2
   LOG_NUMBER_OF_OLD_FILES = 10
+  DEVELOPMENT_MODE        = false
 
   include Singleton
 
@@ -25,27 +26,27 @@ class DtkLogger
   end
 
   def debug(log_text, sttdout_out=false)
-    puts log_text if sttdout_out
+    puts log_text if sttdout_out || DEVELOPMENT_MODE
     @logger.debug(log_text) if log_created?
   end
 
   def info(log_text, sttdout_out=false)
-    puts log_text if sttdout_out
+    puts log_text if sttdout_out || DEVELOPMENT_MODE
     @logger.info(log_text) if log_created?
   end
 
   def warn(log_text, sttdout_out=false)
-    puts log_text if sttdout_out
+    puts log_text if sttdout_out || DEVELOPMENT_MODE
     @logger.warn(log_text) if log_created?
   end
 
   def error(log_text, sttdout_out=false)
-    puts log_text if sttdout_out
+    puts log_text if sttdout_out || DEVELOPMENT_MODE
     @logger.error(log_text) if log_created?
   end
 
   def fatal(log_text, sttdout_out=false)
-    puts log_text if sttdout_out
+    puts log_text if sttdout_out || DEVELOPMENT_MODE
     @logger.fatal(log_text) if log_created?
   end
 

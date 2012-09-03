@@ -1,30 +1,6 @@
 module DTK::Client
 
-  # Import subtasks are handled this way
-  class ImportTask < CommandBaseThor
-    namespace :import
-
-    desc  "[LIBRARY-ID/LIBRARY-NAME] import-service-module REMOTE-SERVICE-MODULE[,...]", "Import remote service module into library"
-    def service_module(service_modules, library_id=nil)
-      post_body = {
-       :remote_module_name => service_modules
-      }
-      post_body.merge!(:library_id => library_id) if library_id
-      post rest_url("service_module/import"), post_body
-    end
-
-    def self.banner(task, namespace = true, subcommand = false)
-      "#{basename} #{task.formatted_usage(self, true, subcommand)}"
-    end
-  end
-
-
   class Library < CommandBaseThor
-
-    # TODO: Talk with Rich to see if we should use this since it has a bug
-    # when using
-    # Import sub tasking as mentioned above 
-    # register(DTK::Client::ImportTask, 'import','import <command>','Import remote service/module module into library')
 
     def self.pretty_print_cols()
       PPColumns::LIBRARY
