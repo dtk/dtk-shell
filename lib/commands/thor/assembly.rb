@@ -77,10 +77,20 @@ module DTK::Client
       post rest_url("assembly/stage"), post_body
     end
 
-    desc "delete ASSEMBLY-ID", "Delete assembly"
-    def delete(assembly_id)
+    desc "info ASSEMBLY-ID [template]", "Return info about assembly instance or template"
+    def info(assembly_id,template_keyword=nil)
       post_body = {
-        :assembly_id => assembly_id
+        :assembly_id => assembly_id,
+        :subtype => template_keyword ? :template : :instance
+      }
+      post rest_url("assembly/info"), post_body
+    end
+
+    desc "delete ASSEMBLY-ID [template]", "Delete assembly instance or template"
+    def delete(assembly_id,template_keyword=nil)
+      post_body = {
+        :assembly_id => assembly_id,
+        :subtype => template_keyword ? :template : :instance
       }
       post rest_url("assembly/delete"), post_body
     end
@@ -108,6 +118,22 @@ module DTK::Client
       return response unless response.ok?
       assembly_id = response.data["assembly_id"]
       converge(assembly_id)
+    end
+
+    desc "create-jenkins-project ASSEMBLY-TEMPLATE-NAME/ID", "Create Jenkins project for assembly template"
+    def create_jenkins_project(assembly_nid)
+      #require put here so dont necessarily have to install jenkins client gems
+      dtk_require_from_base('command_helpers/jenkins_client')
+      post_body = {
+        :assembly_id => assembly_nid,
+        :subtype => :template
+      }
+      response = post(rest_url("assembly/info"),post_body)
+      return response unless response.ok?
+      assembly_id,assembly_name = response.data_ret_and_remove!(:id,:display_name)
+      JenkinsClient.create_assembly_project?(assembly_name,assembly_id)
+      #TODO: right now JenkinsClient wil throw error if problem; better to create an error response
+      nil
     end
   end
 end

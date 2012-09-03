@@ -98,6 +98,7 @@ module DTK::Client
 
       dtk_require_from_base('command_helpers/jenkins_client')
       response = get rest_url("service_module/workspace_branch_info/#{service_module_id.to_s}")
+<<<<<<< HEAD:lib/commands/thor/service_module.rb
 
       unless response.ok?
         errors_message = ''
@@ -108,6 +109,12 @@ module DTK::Client
       module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
       JenkinsClient.createJenkins_project(service_module_id,module_name,repo_url,branch)
       #TODO: right now JenkinsClient wil throw error if problem; better to create an error resonse
+=======
+      return response unless response.ok?
+      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
+      JenkinsClient.create_service_module_project?(service_module_id,module_name,repo_url,branch)
+      #TODO: right now JenkinsClient wil throw error if problem; better to create an error response
+>>>>>>> 70785b20297d802df4b9349359223ace91149001:lib/commands/service_module/thor.rb
       response
     end
   end

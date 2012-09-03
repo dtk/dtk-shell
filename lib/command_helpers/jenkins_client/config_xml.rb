@@ -1,15 +1,26 @@
+#TODO: should haev separet file sfor each template
 require 'erubis'
 class DTK::Client::JenkinsClient
   module ConfigXML
-    def self.generate(repo_url,module_id,branch)
+    #TODO: this is not working now
+    def self.generate_service_module_project(repo_url,module_id,branch)
       #TODO: not using branch argument
       #TODO: did not put in module_id yet
       template_bindings = {
         :repo_url => repo_url
       }
-      ConfigXMLTemplate.result(template_bindings)
+      ConfigXMLTemplateServiceModule.result(template_bindings)
     end
-ConfigXMLTemplate = Erubis::Eruby.new <<eos
+    def self.generate_assembly_project(assembly_id)
+      #TODO: not using branch argument
+      #TODO: did not put in module_id yet
+      template_bindings = {
+        :assembly_id => assembly_id
+      }
+      ConfigXMLTemplateAssembly.result(template_bindings)
+    end
+
+ConfigXMLTemplateServiceModule = Erubis::Eruby.new <<eos
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <actions/>
@@ -62,7 +73,7 @@ ConfigXMLTemplate = Erubis::Eruby.new <<eos
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>@unix shell command perfomed with each build@</command>
+      <command>ruby /var/lib/jenkins/r8_e2e.rb</command>
     </hudson.tasks.Shell>
   </builders>
     <publishers>
@@ -109,6 +120,31 @@ ConfigXMLTemplate = Erubis::Eruby.new <<eos
       <attachmentsPattern></attachmentsPattern>
     </hudson.plugins.emailext.ExtendedEmailPublisher>
   </publishers>
+  <buildWrappers/>
+</project>
+eos
+
+
+ConfigXMLTemplateAssembly = Erubis::Eruby.new <<eos
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>ruby /var/lib/jenkins/run_assembly_smoketest.rb <%= assembly_id %></command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
   <buildWrappers/>
 </project>
 eos
