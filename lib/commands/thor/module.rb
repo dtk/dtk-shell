@@ -11,15 +11,17 @@ module DTK::Client
     def list(parent="library")
       case parent
        when "library":
+         data_type = DataType::MODULE
          response = post rest_url("component_module/list_from_library")
        when "remote":
+         data_type = DataType::REMOTE_MODULE
          response = post rest_url("component_module/list_remote")
        else 
          ResponseBadParams.new("module type" => parent)
       end
 
       # set render view to be used
-      response.render_table(DataType::MODULE) unless options.list?
+      response.render_table(data_type) unless options.list?
       return response
     end
 

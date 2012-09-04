@@ -7,6 +7,7 @@ class PPColumns
   NODE           = [:display_name, :os_type, :type, :id, :description, :external_ref]
   NODE_GROUP     = [:display_name, :type,:id, :description]
   MODULE         = [:display_name, :id, :version]
+  REMOTE_MODULE  = [:display_name, :version]
   PROJECT        = [:display_name, :id, :description]
   REPO           = [:display_name, :id]
   SERVICE_MODULE = [:display_name, :id, :version]
@@ -24,6 +25,7 @@ class DataType
   NODE           = "NODE"
   NODE_GROUP     = "NODE_GROUP"
   MODULE         = "MODULE"
+  REMOTE_MODULE  = "REMOTE_MODULE"
   PROJECT        = "PROJECT"
   REPO           = "REPO"  
   SERVICE_MODULE = "SERVICE_MODULE"
