@@ -32,7 +32,8 @@ Readline.completion_proc = comp
 prompt = 'dtk:/> '
 while line = Readline.readline(prompt, true)
   begin
-    exit if line == 'exit'
+    exit  if line == 'exit'
+    next  if line.empty?
 
     args = Shellwords.split(line)
     cmd = args.shift
