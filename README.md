@@ -67,5 +67,5 @@ server_port=7000
 Run Tests
 ----------------------
 
-- From dtk-client project root run <tt>rdoc</tt>, this will run all unit tests
+- From dtk-client project root run <tt>rspec</tt>, this will run all unit tests
 

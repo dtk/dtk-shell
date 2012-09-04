@@ -28,7 +28,7 @@ module DTK::Client
       post rest_url("service_module/import"), post_body
     end
 
-    desc "export LIBRARY-SERVICE-MODULE-ID", "Export library service module to remote repo"
+    desc "export SERVICE-MODULE-NAME/ID", "Export service module to remote repo"
     def export(service_module_id,library_id=nil)
       post_body = {
        :service_module_id => service_module_id

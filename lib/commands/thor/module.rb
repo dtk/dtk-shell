@@ -40,6 +40,14 @@ module DTK::Client
       post rest_url("component_module/import"), post_body
     end
 
+    desc "export COMPONENT-MODULE-NAME/ID", "Export component module to remote repo"
+    def export(component_module_id,library_id=nil)
+      post_body = {
+       :component_module_id => component_module_id
+      }
+      post rest_url("component_module/export"), post_body
+    end
+
     desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def add_direct_access(path_to_key=nil)
       path_to_key ||= SshProcessing.default_rsa_pub_key_path()
