@@ -31,7 +31,8 @@ def top_level_execute(command=nil,argv=nil)
 
     # check for errors in response
     unless response_ruby_obj["errors"].nil?
-      DtkLogger.instance.error("Response Error: #{response_ruby_obj['errors']}")
+      error_msg = response_ruby_obj['errors'].map{|e|e["message"].gsub(/\.$/,"")}.join(". ")
+      DtkLogger.instance.error("Response Error: #{error_msg}.")
       raise DTK::Client::DtkError, "Server has encountered internal error, please contact DTK team. See error log for more details."
     end
 
