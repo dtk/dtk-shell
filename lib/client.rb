@@ -12,6 +12,7 @@ dtk_require("dtk_constants")
 dtk_require("commands")
 dtk_require("view_processor")
 dtk_require("search_hash")
+dtk_require("config/configuration")
 dtk_require("dtk_logger")
 
 
