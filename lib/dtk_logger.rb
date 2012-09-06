@@ -10,7 +10,7 @@ class DtkLogger
   LOG_FILE_NAME           = 'dtk-client.log'
   LOG_MB_SIZE             = 2
   LOG_NUMBER_OF_OLD_FILES = 10
-  DEVELOPMENT_MODE        = false
+  DEVELOPMENT_MODE        = true
 
   include Singleton
 

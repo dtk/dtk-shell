@@ -44,7 +44,7 @@ module DTK::Client
         when "library":
           response = post rest_url("assembly/list_from_library")
         when "target":
-          response = post rest_url("assembly/list_from_target"), "detail_level" => ["attributes"]
+          response = post rest_url("assembly/list_from_target"), {"detail_level" => ["attributes"]}
        else 
         ResponseBadParams.new("assembly container" => parent)
       end
