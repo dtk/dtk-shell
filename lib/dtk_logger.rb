@@ -10,16 +10,18 @@ class DtkLogger
   LOG_FILE_NAME           = 'dtk-client.log'
   LOG_MB_SIZE             = 2
   LOG_NUMBER_OF_OLD_FILES = 10
-  DEVELOPMENT_MODE        = Config::Configuration.instance.get(:application,:development_mode)
+  DEVELOPMENT_MODE        = Config::Configuration.get(:application,:development_mode)
 
   include Singleton
 
   def initialize
     begin
-
+            
       home_dir = `cd ~;pwd`.chomp
       file = File.open("/var/log/#{LOG_FILE_NAME}", "a")
       @logger = Logger.new(file, LOG_NUMBER_OF_OLD_FILES, LOG_MB_SIZE * 1024000)
+
+
 
     rescue SystemCallError => e
       no_log_found

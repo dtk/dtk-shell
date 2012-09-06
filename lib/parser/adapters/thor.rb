@@ -27,10 +27,12 @@ module DTK
 
             # Check if required params have been met, see UnboundMethod#arity
             method_definition = self.instance_method(argv[1].gsub('-','_').to_sym)
-            # number two indicates here library id, taks name
-            required_params = (method_definition.arity + 1).abs + 2
 
-            if (argv.size < required_params)
+            # if negative it means that it has optional parameters, required number is negative value + 1
+            required_params = (method_definition.arity < 0) ? method_definition.arity+1 : method_definition.arity
+
+            # number 1 indicates here TASK NAME
+            if (argv.size < required_params + 1)
               raise DTK::Client::DtkError, "Method 'dtk #{argv[1]}' requires at least #{required_params-argv.size} argument."
             end
 

@@ -13,45 +13,65 @@ module DTK::Client
       post rest_url("assembly/export"), post_body
     end
 
-    desc "converge ASSEMBLY-ID", "Converges assembly instance"
+    desc "ASSEMBLY-NAME/ID converge", "Converges assembly instance"
     def converge(assembly_id)
       post_body = {
         :assembly_id => assembly_id
       }
+      # create
       response = post rest_url("assembly/create_task"), post_body
       return response unless response.ok?
+      # execute
       task_id = response.data["task_id"]
       post rest_url("task/execute"), "task_id" => task_id
     end
 
-    desc "run-smoketests ASSEMBLY-ID", "Run smoketests associated with assembly instance"
+    desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
     def run_smoketests(assembly_id)
       post_body = {
         :assembly_id => assembly_id
       }
+      # create smoke test
       response = post rest_url("assembly/create_smoketests_task"), post_body
       return response unless response.ok?
+      # execute
       task_id = response.data["task_id"]
       post rest_url("task/execute"), "task_id" => task_id
     end
 
     #TODO: put in flag to control detail level
-    desc "list [library|target] [--list]","List asssemblies in library or target"
+    desc "[ASSEMBLY-NAME/ID] list [nodes|components|tasks] [FILTER] [--list]","List asssemblies, or nodes, components, tasks from their assemblies."
     method_option :list, :type => :boolean, :default => false
-    def list(parent="library")
+    def list(about="none",filter=nil,assembly_id=nil)
       response = ""
-      case parent
-        when "library":
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :subtype     => 'instance',
+        :about       => about,
+        :filter      => filter
+      }
+
+      case about
+        when "none":
+          data_type = DataType::ASSEMBLY
           response = post rest_url("assembly/list_from_library")
-        when "target":
-          response = post rest_url("assembly/list_from_target"), "detail_level" => ["attributes"]
-       else 
-        ResponseBadParams.new("assembly container" => parent)
+        when "nodes":
+          data_type = DataType::NODE
+          response = post rest_url("assembly/list")
+        when "components":
+          data_type = DataType::COMPONENT
+          response = post rest_url("assembly/list")
+        when "tasks":
+          data_type = DataType::TASK
+          response = post rest_url("assembly/list")
+        else
+          raise DTK::Client::DtkError, "Not supported type '#{selected_type}' for given command."
       end
 
       # set render view to be used
       unless options.list?
-        response.render_table(DataType::ASSEMBLY) if DTK::Client::Response === response
+        response.render_table(data_type)
       end
       
       return response
@@ -77,11 +97,11 @@ module DTK::Client
       post rest_url("assembly/stage"), post_body
     end
 
-    desc "info ASSEMBLY-ID [template]", "Return info about assembly instance or template"
-    def info(assembly_id,template_keyword=nil)
+    desc "ASSEMBLY-NAME/ID info", "Return info about assembly instance identified by name/id"
+    def info(assembly_id)
       post_body = {
         :assembly_id => assembly_id,
-        :subtype => template_keyword ? :template : :instance
+        :subtype => :instance
       }
       post rest_url("assembly/info"), post_body
     end
@@ -95,8 +115,8 @@ module DTK::Client
       post rest_url("assembly/delete"), post_body
     end
 
-    desc "set ASSEMBLY-ID ATTRIBUTE-PATTERN VALUE", "set target assembly attributes"
-    def set(assembly_id,pattern,value)
+    desc "ASSEMBLY-NAME/ID set ATTRIBUTE-PATTERN VALUE", "Set target assembly attributes"
+    def set(pattern,value,assembly_id)
       post_body = {
         :assembly_id => assembly_id,
         :pattern => pattern,
@@ -166,6 +186,15 @@ module DTK::Client
       JenkinsClient.create_assembly_project?(assembly_name,assembly_id)
       #TODO: right now JenkinsClient wil throw error if problem; better to create an error response
       nil
+    end
+
+    desc "ASSEMBLY-NAME/ID remove-component COMPONENT-ID","Removes component from targeted assembly."
+    def remove_component(component_id,assembly_id)
+      post_body = {
+        :assembly_id  => assembly_id,
+        :component_id => component_id
+      }
+      response = post(rest_url("assembly/info"),post_body)
     end
   end
 end

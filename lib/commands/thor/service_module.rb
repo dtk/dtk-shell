@@ -6,16 +6,37 @@ module DTK::Client
     def self.pretty_print_cols()
       PPColumns::SERVICE_MODULE
     end
-    desc "list [library|remote]","List library, workspace,or remote service modules"
-    def list(parent="library")
-      case parent
-       when "library":
-         post rest_url("service_module/list_from_library")
-       when "remote":
-         post rest_url("service_module/list_remote")
+
+
+    desc "SERVICE-MODULE-NAME/ID info", "Provides information about specified service module"
+    def info(service_module_id)
+      post_body = {
+       :component_module_id => service_module_id
+      }
+      response = post rest_url('service_module/info')
+    end
+
+    desc "[SERVICE-MODULE-NAME/ID] list [assemblies]","Listr emote service modules or assemblies associated to it."
+    method_option :list, :type => :boolean, :default => false
+    def list(about="none",service_module_id=nil)
+      post_body = {
+       :service_module_id => service_module_id,
+      }
+
+      case about
+       when "none":
+         response = post rest_url("service_module/list")
+         data_type = DataType::MODULE
+       when "assemblies":
+         response = post rest_url("service_module/list_assemblies"),post_body
+         data_type = DataType::ASSEMBLY
        else 
-         ResponseBadParams.new("module type" => parent)
+         raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
+
+      response.render_table(data_type) unless options.list?
+
+      return response
     end
 
     # TODO: Duplicate of library import ... should we delete this one?
@@ -28,20 +49,28 @@ module DTK::Client
       post rest_url("service_module/import"), post_body
     end
 
-    desc "export SERVICE-MODULE-NAME/ID", "Export service module to remote repo"
-    def export(service_module_id,library_id=nil)
+    desc "SERVICE-MODULE-NAME/ID  export", "Export service module to remote repo"
+    def export(service_module_id)
       post_body = {
-       :service_module_id => service_module_id
+       :component_module_id => service_module_id
       }
       post rest_url("service_module/export"), post_body
     end
 
-    desc "list-assemblies SERVICE-MODULE-ID","List assemblies in the service module"
-    def list_assemblies(service_module_id)
+    desc "SERVICE-MODULE-NAME/ID push-to-remote", "DESCRIPTION NEEDED!"
+    def push_to_remote(service_module_id)
       post_body = {
-       :service_module_id => service_module_id
+       :component_module_id => service_module_id
       }
-      post rest_url("service_module/list_assemblies"), post_body
+      post rest_url("service_module/push_to_remote"), post_body
+    end
+
+    desc "SERVICE-MODULE-NAME/ID pull-from-remote", "DESCRIPTION NEEDED!"
+    def push_to_remote(service_module_id)
+      post_body = {
+       :component_module_id => service_module_id
+      }
+      post rest_url("service_module/pull_from_remote"), post_body
     end
 
     # TODO: Check to see if we are deleting this
