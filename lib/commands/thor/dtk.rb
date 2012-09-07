@@ -2,7 +2,6 @@
 module DTK::Client
 
   # Following are descriptions of available commands 
-
   class Dtk < CommandBaseThor
 
     

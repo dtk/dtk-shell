@@ -3,6 +3,7 @@ require File.expand_path('../lib/client', File.dirname(__FILE__))
 require File.expand_path('../lib/parser/adapters/thor', File.dirname(__FILE__))
 require File.expand_path('../lib/commands/thor/dtk', File.dirname(__FILE__))
 require File.expand_path('../lib/error', File.dirname(__FILE__))
+require File.expand_path('../lib/shell/context', File.dirname(__FILE__))
 
 require 'shellwords'
 require 'readline'
@@ -15,7 +16,13 @@ require 'thor'
 # all dtk commands + client commands
 CLIENT_COMMANDS   = ['cc','exit']
 DTK_COMMANDS      = DTK::Client::Dtk.task_names
+TASKS             = ['assembly']
 
+a = DTK::Shell::Context.new
+puts ">>>>>>>>>>>>>>>"
+a.sub_tasks_names(TASKS)
+
+exit
 
 # METHODS
 def change_context(args)
