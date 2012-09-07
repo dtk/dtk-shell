@@ -1,4 +1,4 @@
-#TODO: deprecate
+#TODO: deprecate after making sure move/change wants necessary to module-component; coudl also consider making 'module' alias for 'module-component'
 #TODO: may be consistent on whether component module id or componnet module name used as params
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_from_base('command_helpers/git_repo')
