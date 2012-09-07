@@ -19,9 +19,10 @@ module DTK
 
       def render_data
         if ok?()
+
           # if response is empty, response status is ok but no data is passed back
           if data.empty?
-            data = {'Status' => 'OK'}
+            set_data({'Status' => 'OK'})
           end
 
           # sending raw data from response
