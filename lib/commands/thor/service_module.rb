@@ -6,16 +6,37 @@ module DTK::Client
     def self.pretty_print_cols()
       PPColumns::SERVICE_MODULE
     end
-    desc "list [library|remote]","List library, workspace,or remote service modules"
-    def list(parent="library")
-      case parent
-       when "library":
-         post rest_url("service_module/list_from_library")
-       when "remote":
-         post rest_url("service_module/list_remote")
+
+
+    desc "SERVICE-MODULE-NAME/ID info", "Provides information about specified service module"
+    def info(service_module_id)
+      post_body = {
+       :component_module_id => service_module_id
+      }
+      response = post rest_url('service_module/info')
+    end
+
+    desc "[SERVICE-MODULE-NAME/ID] list [assemblies]","Listr emote service modules or assemblies associated to it."
+    method_option :list, :type => :boolean, :default => false
+    def list(about="none",service_module_id=nil)
+      post_body = {
+       :service_module_id => service_module_id,
+      }
+
+      case about
+       when "none":
+         response = post rest_url("service_module/list")
+         data_type = DataType::MODULE
+       when "assemblies":
+         response = post rest_url("service_module/list_assemblies"),post_body
+         data_type = DataType::ASSEMBLY
        else 
-         ResponseBadParams.new("module type" => parent)
+         raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
+
+      response.render_table(data_type) unless options.list?
+
+      return response
     end
 
     # TODO: Duplicate of library import ... should we delete this one?
@@ -28,20 +49,28 @@ module DTK::Client
       post rest_url("service_module/import"), post_body
     end
 
-    desc "export LIBRARY-SERVICE-MODULE-ID", "Export library service module to remote repo"
-    def export(service_module_id,library_id=nil)
+    desc "SERVICE-MODULE-NAME/ID  export", "Export service module to remote repo"
+    def export(service_module_id)
       post_body = {
-       :service_module_id => service_module_id
+       :component_module_id => service_module_id
       }
       post rest_url("service_module/export"), post_body
     end
 
-    desc "list-assemblies SERVICE-MODULE-ID","List assemblies in the service module"
-    def list_assemblies(service_module_id)
+    desc "SERVICE-MODULE-NAME/ID push-to-remote", "DESCRIPTION NEEDED!"
+    def push_to_remote(service_module_id)
       post_body = {
-       :service_module_id => service_module_id
+       :component_module_id => service_module_id
       }
-      post rest_url("service_module/list_assemblies"), post_body
+      post rest_url("service_module/push_to_remote"), post_body
+    end
+
+    desc "SERVICE-MODULE-NAME/ID pull-from-remote", "DESCRIPTION NEEDED!"
+    def push_to_remote(service_module_id)
+      post_body = {
+       :component_module_id => service_module_id
+      }
+      post rest_url("service_module/pull_from_remote"), post_body
     end
 
     # TODO: Check to see if we are deleting this
@@ -98,23 +127,14 @@ module DTK::Client
 
       dtk_require_from_base('command_helpers/jenkins_client')
       response = get rest_url("service_module/workspace_branch_info/#{service_module_id.to_s}")
-<<<<<<< HEAD:lib/commands/thor/service_module.rb
-
       unless response.ok?
         errors_message = ''
         response['errors'].each { |error| errors_message += ", reason='#{error['code']}' message='#{error['message']}'" }
         raise DTK::Client::DtkError, "Invalid jenkins response#{errors_message}"
       end
-      pp [:response_data,response.data] #TODO just for debugging
-      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
-      JenkinsClient.createJenkins_project(service_module_id,module_name,repo_url,branch)
-      #TODO: right now JenkinsClient wil throw error if problem; better to create an error resonse
-=======
-      return response unless response.ok?
       module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
       JenkinsClient.create_service_module_project?(service_module_id,module_name,repo_url,branch)
-      #TODO: right now JenkinsClient wil throw error if problem; better to create an error response
->>>>>>> 70785b20297d802df4b9349359223ace91149001:lib/commands/service_module/thor.rb
+      #TODO: right now JenkinsClient wil throw error if problem; better to create an error resonse
       response
     end
   end

@@ -11,15 +11,17 @@ module DTK::Client
     def list(parent="library")
       case parent
        when "library":
+         data_type = DataType::MODULE
          response = post rest_url("component_module/list_from_library")
        when "remote":
+         data_type = DataType::REMOTE_MODULE
          response = post rest_url("component_module/list_remote")
        else 
          ResponseBadParams.new("module type" => parent)
       end
 
       # set render view to be used
-      response.render_table(DataType::MODULE) unless options.list?
+      response.render_table(data_type) unless options.list?
       return response
     end
 
@@ -36,6 +38,14 @@ module DTK::Client
       }
       post_body.merge!(:library_id => library_id) if library_id
       post rest_url("component_module/import"), post_body
+    end
+
+    desc "export COMPONENT-MODULE-NAME/ID", "Export component module to remote repo"
+    def export(component_module_id,library_id=nil)
+      post_body = {
+       :component_module_id => component_module_id
+      }
+      post rest_url("component_module/export"), post_body
     end
 
     desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"

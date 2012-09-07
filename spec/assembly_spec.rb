@@ -20,11 +20,11 @@ describe DTK::Client::Assembly do
     process_status = $?
 
     it "should have assembly converge listing" do
-      output.should include("dtk assembly converge")
+      output.should include("converge")
     end
 
     it "should have assembly export listing" do
-      output.should include("dtk assembly export")
+      output.should include("export")
     end
 
   end

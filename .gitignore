@@ -1,2 +1,3 @@
+lib/config/local_configuration.yml
 dtk*.gem
 test.rb

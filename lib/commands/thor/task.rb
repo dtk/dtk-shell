@@ -64,20 +64,26 @@ module DTK::Client
       end
       response
     end
+
     desc "converge-nodes", "(Re)Converge nodes"
     def converge_nodes()
       converge_node(nil)
     end
+
   private
+  
     @@count = 0
-   def task_complete(response)
-     return true unless response.ok?
-     @@count += 1
-     return true if (@@count * TASK_STATUS_POLLING_INTERVAL) > TASK_STATUS_MAX_TIME
-     %w{succeeded failed}.include?(response.data["status"])
-   end
-   TASK_STATUS_POLLING_INTERVAL = 3
-   TASK_STATUS_MAX_TIME = 60
+
+    TASK_STATUS_POLLING_INTERVAL = 3
+    TASK_STATUS_MAX_TIME = 60
+
+    def task_complete(response)
+      return true unless response.ok?
+      @@count += 1
+      return true if (@@count * TASK_STATUS_POLLING_INTERVAL) > TASK_STATUS_MAX_TIME
+      %w{succeeded failed}.include?(response.data["status"])
+    end
+
   end
 end
 

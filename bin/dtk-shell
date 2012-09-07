@@ -1,45 +1,92 @@
 #!/usr/bin/env ruby
 require File.expand_path('../lib/client', File.dirname(__FILE__))
+require File.expand_path('../lib/parser/adapters/thor', File.dirname(__FILE__))
+require File.expand_path('../lib/commands/thor/dtk', File.dirname(__FILE__))
+require File.expand_path('../lib/commands/thor/assembly_template', File.dirname(__FILE__))
+require File.expand_path('../lib/error', File.dirname(__FILE__))
+require File.expand_path('../lib/shell/context', File.dirname(__FILE__))
+
 require 'shellwords'
 require 'readline'
 require 'thor'
+
+# read all commands for thor folder, this way we do not have to do it manually
+
+
 #ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
-LIST = 
-  [
-   'assembly', 
-   'converge',
-   'list', 
-   'library', 
-   'module',  
-   'node'      ,
-   'service-module', 
-   'stage', 
-   'exit', 
-   'target'
-].sort
+# all dtk commands + client commands
+CLIENT_COMMANDS   = ['cc','exit']
+DTK_COMMANDS      = DTK::Client::Dtk.task_names
+TASKS             = ['assembly']
 
-class Thor
-  class << self
+@current_cc = nil
 
+
+a = DTK::Shell::Context.new.sub_tasks_names
+puts a
+
+exit
+
+
+# METHODS
+def change_context(args)
+  return if args.empty?
+
+  @current_cc = []
+
+  # first command is the one we take context from
+  command = args.first
+
+  # check if command is valid for current context
+  unless @current_context.include? command
+    raise DTK::Shell::Error, "Context '#{command}' not present for current tier."
   end
+
+  @current_cc << command
+
+  # take second args if present and command ID/NAME
+  if args.size > 1
+    @current_cc << args[1]
+  end
+
+  return "dtk:/#{@current_cc.join('/')}>"
+end
+
+def load_context(commands)
+  @current_context = commands
+  Readline.completion_append_character = " "
+  comp = proc { |s| CLIENT_COMMANDS.concat(commands).sort.grep( /^#{Regexp.escape(s)}/ ) }
+  Readline.completion_proc = comp
 end
 
 
-comp = proc { |s| LIST.grep( /^#{Regexp.escape(s)}/ ) }
 
-Readline.completion_append_character = " "
-Readline.completion_proc = comp
+
+
+# load tier 1 context 
+load_context(DTK_COMMANDS)
+
 prompt = 'dtk:/> '
 while line = Readline.readline(prompt, true)
   begin
-    exit if line == 'exit'
+    exit  if line == 'exit'
+    next  if line.empty?
 
     args = Shellwords.split(line)
     cmd = args.shift
-    
-    top_level_execute(cmd,args)
+
+
+    if ('cc' == cmd)
+      prompt = change_context(args)
+    else
+      top_level_execute(cmd,args)
+    end
+   
+   rescue DTK::Shell::Error => e
+    puts e.message
    rescue Interrupt => e
     system('stty', stty_save) # Restore
     exit
   end
 end
+

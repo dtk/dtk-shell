@@ -2,11 +2,9 @@
 module DTK::Client
 
   # Following are descriptions of available commands 
-
   class Dtk < CommandBaseThor
 
-    # we do not need help here
-    remove_task("help")
+    
 
     # NOTE
     # Following methods are just api descriptors, invocation happens at "bin/dtk" entry point
@@ -91,6 +89,9 @@ module DTK::Client
       # API descriptor
     end
     
+    # we do not need help here
+    remove_task(:help,{:undefine => false})
+
   end
 end
 
