@@ -13,14 +13,20 @@ module DTK
       def initialize
         @context = {}
 
+        @context.store('dtk',ALL_TASKS.sort)
+
         ALL_TASKS.each do |task_name|
           next if task_name.eql? "help"
 
           file_name = task_name.gsub('-','_')
           require File.expand_path("../commands/thor/#{file_name}", File.dirname(__FILE__))
           
-          @context.store(task_name, get_command_class(file_name).task_names)
+          @context.store(task_name, get_command_class(file_name).task_names.sort)
         end
+      end
+
+      def dtk_tasks
+        @context['dtk']
       end
 
       def sub_tasks_names(name=nil)
