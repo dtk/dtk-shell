@@ -21,7 +21,8 @@ module DTK
         if ok?()
           # checks if response is empty
           if data.empty?
-            raise DTK::Client::DtkError, "Server response is empty, please check your server configuration or contact us."
+            puts "Status: OK!"
+            #DtkLogger.instance.info("Status: OK!")
           end
 
           # sending raw data from response

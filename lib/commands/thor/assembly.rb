@@ -66,7 +66,7 @@ module DTK::Client
           data_type = DataType::TASK
           response = post rest_url("assembly/list")
         else
-          raise DTK::Client::DtkError, "Not supported type '#{selected_type}' for given command."
+          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
 
       # set render view to be used
