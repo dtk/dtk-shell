@@ -16,6 +16,8 @@ require 'thor'
 CLIENT_COMMANDS   = ['cc','exit']
 DTK_COMMANDS      = DTK::Client::Dtk.task_names
 
+@current_cc = nil
+
 
 # METHODS
 def change_context(args)
@@ -31,7 +33,7 @@ def change_context(args)
     raise DTK::Shell::Error, "Context '#{command}' not present for current tier."
   end
 
-   @current_cc << command
+  @current_cc << command
 
   # take second args if present and command ID/NAME
   if args.size > 1
