@@ -16,8 +16,9 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-    desc "[SERVICE-MODULE-NAME/ID] list [assemblies]","Listr emote service modules or assemblies associated to it."
+    desc "[SERVICE-MODULE-NAME/ID] list [assemblies] [--remote]","List local or remote service modules or assemblies associated to it."
     method_option :list, :type => :boolean, :default => false
+    method_option :remote, :type => :boolean, :default => false
     def list(about="none",service_module_id=nil)
       post_body = {
        :service_module_id => service_module_id,
@@ -25,9 +26,14 @@ module DTK::Client
 
       case about
        when "none":
-         response = post rest_url("service_module/list")
+         action = (options.remote? ? "list_remote" : "list")
+         response = post rest_url("service_module/#{action}")
          data_type = DataType::MODULE
        when "assemblies":
+         if options.remote?
+           #TODO: this is temp; will shortly support this
+           raise DTK::Client::DtkError, "Not supported '--remote' option when listing service moduel assemblies"
+         end
          response = post rest_url("service_module/list_assemblies"),post_body
          data_type = DataType::ASSEMBLY
        else 

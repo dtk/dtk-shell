@@ -6,18 +6,16 @@ module DTK::Client
     def self.pretty_print_cols()
       PPColumns::MODULE
     end
-    desc "list [library|remote]","List library or remote component modules"
+    desc "list [--remote]","List library or remote component modules"
     method_option :list, :type => :boolean, :default => false
-    def list(parent="library")
-      case parent
-       when "library":
-         data_type = DataType::MODULE
-         response = post rest_url("component_module/list_from_library")
-       when "remote":
-         data_type = DataType::REMOTE_MODULE
-         response = post rest_url("component_module/list_remote")
-       else 
-         ResponseBadParams.new("module type" => parent)
+    method_option :remote, :type => :boolean, :default => false
+    def list()
+      if options.remote?
+        data_type = DataType::REMOTE_MODULE
+        response = post rest_url("component_module/list_remote")
+      else
+        data_type = DataType::MODULE
+        response = post rest_url("component_module/list_from_library")
       end
 
       # set render view to be used
