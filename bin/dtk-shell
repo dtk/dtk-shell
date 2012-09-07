@@ -16,22 +16,16 @@ require 'thor'
 #ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
 # all dtk commands + client commands
 CLIENT_COMMANDS   = ['cc','exit']
-DTK_COMMANDS      = DTK::Client::Dtk.task_names
-TASKS             = ['assembly']
 
-@current_cc = nil
+@context    = DTK::Shell::Context.new
+@current_cc = []
 
-
-a = DTK::Shell::Context.new.sub_tasks_names
-puts a
-
-exit
 
 
 # METHODS
 def change_context(args)
   return if args.empty?
-
+  # resets cc for commands
   @current_cc = []
 
   # first command is the one we take context from
@@ -49,22 +43,21 @@ def change_context(args)
     @current_cc << args[1]
   end
 
+  # loads context for given command
+  load_context(@current_cc.first)
+
   return "dtk:/#{@current_cc.join('/')}>"
 end
 
-def load_context(commands)
-  @current_context = commands
+def load_context(command_name)
+  @current_context = @context.sub_tasks_names(command_name)
   Readline.completion_append_character = " "
-  comp = proc { |s| CLIENT_COMMANDS.concat(commands).sort.grep( /^#{Regexp.escape(s)}/ ) }
+  comp = proc { |s| CLIENT_COMMANDS.concat(@current_context).sort.grep( /^#{Regexp.escape(s)}/ ) }
   Readline.completion_proc = comp
 end
 
-
-
-
-
 # load tier 1 context 
-load_context(DTK_COMMANDS)
+load_context('dtk')
 
 prompt = 'dtk:/> '
 while line = Readline.readline(prompt, true)
@@ -75,12 +68,31 @@ while line = Readline.readline(prompt, true)
     args = Shellwords.split(line)
     cmd = args.shift
 
+    temp_dev_flag = true
 
     if ('cc' == cmd)
       prompt = change_context(args)
     else
+      # if there is no set context no need to pre-process command
+      unless @current_cc.empty?
+        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
+        # command goes as first argument
+        args.unshift(cmd)
+        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
+        # main command is first one from @current_cc
+        cmd  = @current_cc.first
+        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
+        # in case there is second cc it means it is ID and goes as first arg
+        args.unshift(@current_cc.last) if @current_cc.size > 1
+        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
+      end
+
+      puts "Command > #{cmd} #{args.join(' ')}" if temp_dev_flag
+
+      # execute command via Thor
       top_level_execute(cmd,args)
     end
+
    
    rescue DTK::Shell::Error => e
     puts e.message
