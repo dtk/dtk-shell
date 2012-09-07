@@ -8,7 +8,6 @@ module DTK
   puts " >> #{class_name}"
   require File.expand_path("../lib/commands/thor/#{class_name.gsub('-','_')}", File.dirname(__FILE__))
   
-end
       end
 
       def sub_tasks_names

@@ -19,16 +19,26 @@ DTK_COMMANDS      = DTK::Client::Dtk.task_names
 
 # METHODS
 def change_context(args)
-  context = []
+  return if args.empty?
 
-  args.each do |command|
-    unless @current_context.include? command
-      raise DTK::Shell::Error, "Context '#{command}' not present for current tier."
-    end
-    context << command 
+  @current_cc = []
+
+  # first command is the one we take context from
+  command = args.first
+
+  # check if command is valid for current context
+  unless @current_context.include? command
+    raise DTK::Shell::Error, "Context '#{command}' not present for current tier."
   end
 
-  return "dtk:/#{context}>"
+   @current_cc << command
+
+  # take second args if present and command ID/NAME
+  if args.size > 1
+    @current_cc << args[1]
+  end
+
+  return "dtk:/#{@current_cc.join('/')}>"
 end
 
 def load_context(commands)
