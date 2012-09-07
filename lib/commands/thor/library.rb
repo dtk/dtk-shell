@@ -59,8 +59,8 @@ module DTK::Client
       post rest_url("service_module/import"), post_body
     end
 
-    desc "[LIBRARY ID/NAME] import-service-component REMOTE-SERVICE-COMPONENT[,...]", "Import remote service component into library"
-    def import_service_component(service_components, library_id=nil)
+    desc "[LIBRARY ID/NAME] import-component-module REMOTE-SERVICE-COMPONENT[,...]", "Import remote component module into library"
+    def import_component_module(service_components, library_id=nil)
       post_body = {
        :remote_module_name => service_components
       }
