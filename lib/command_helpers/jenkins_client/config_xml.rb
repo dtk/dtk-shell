@@ -131,7 +131,9 @@ ConfigXMLTemplateAssembly = Erubis::Eruby.new <<eos
   <actions/>
   <description></description>
   <keepDependencies>false</keepDependencies>
-  <properties/>
+  <properties>
+    <com.gmail.ikeike443.PlayAutoTestJobProperty/>
+  </properties>
   <scm class="hudson.scm.NullSCM"/>
   <canRoam>true</canRoam>
   <disabled>false</disabled>
@@ -141,10 +143,126 @@ ConfigXMLTemplateAssembly = Erubis::Eruby.new <<eos
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>ruby /var/lib/jenkins/run_assembly_smoketest.rb <%= assembly_id %></command>
+      <command>#!/usr/bin/env ruby
+
+require &apos;rubygems&apos;
+require &apos;rest_client&apos;
+require &apos;pp&apos;
+require &apos;json&apos;
+
+STDOUT.sync = true
+
+ENDPOINT = &apos;http://ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:7000&apos;
+ASSEMBLY_ID = &apos;<%= assembly_id %>&apos;
+
+# controling &apos;pretty-print&apos; in log file
+JSON_OUTPUT_ENABLED = false
+
+# Method for deleting assembly instances
+def deleteAssembly(assemblyId)
+	responseAssemblyDelete = RestClient.post(ENDPOINT + &apos;/rest/assembly/delete&apos;, &apos;assembly_id&apos; =&gt; assemblyId)
+	puts &quot;Assembly has been deleted! Response: #{responseAssemblyDelete}&quot;
+end
+
+#
+# Method for pretty print of json responses
+def json_print(json)
+	pp json if JSON_OUTPUT_ENABLED
+end
+
+pp &quot;Script has been started!&quot;
+
+puts &quot;Using template ID: #{ASSEMBLY_ID}&quot; 
+
+# Stage the assembly
+stageAssembly = RestClient.post(ENDPOINT + &apos;/rest/assembly/stage&apos;, &apos;assembly_template_id&apos; =&gt; ASSEMBLY_ID) 
+assemblyId = JSON.parse(stageAssembly)[&quot;data&quot;][&quot;assembly_id&quot;]
+
+puts &quot;Using stage assembly ID: #{assemblyId}&quot; 
+
+# Create a task for the cloned assembly instance
+responseTask = RestClient.post(ENDPOINT + &apos;/rest/assembly/create_task&apos;, &apos;assembly_id&apos; =&gt; assemblyId)
+# Extract task id
+taskId = JSON.parse(responseTask)[&quot;data&quot;][&quot;task_id&quot;]
+# Execute the task
+puts &quot;Starting task id: #{taskId}&quot;
+responseTaskExecute = RestClient.post(ENDPOINT + &apos;/rest/task/execute&apos;, &apos;task_id&apos; =&gt; taskId)
+
+taskStatus = &apos;executing&apos;
+
+while taskStatus.include? &apos;executing&apos;
+	sleep 20
+	responseTaskStatus = RestClient.post(ENDPOINT + &apos;/rest/task/status&apos;, &apos;task_id &apos;=&gt; taskId)
+	taskFullResponse = JSON.parse(responseTaskStatus)
+	taskStatus = taskFullResponse[&quot;data&quot;][&quot;status&quot;]
+	puts &quot;Task status: #{taskStatus}&quot;
+	json_print JSON.parse(responseTaskStatus)
+end
+
+if taskStatus.include? &apos;fail&apos; 
+	# Print error response from the service
+	puts &quot;Smoke test failed, response: &quot;
+	pp taskFullResponse
+	# Delete the cloned assembly&apos;s instance
+	deleteAssembly(assemblyId)
+	abort(&quot;Task with ID #{taskId} failed!&quot;)
+else
+	puts &quot;Task with ID #{taskId} success!&quot;
+end
+
+
+#Create a task for the smoke test
+responseSmokeTest = RestClient.post(ENDPOINT + &apos;/rest/assembly/create_smoketests_task&apos;, &apos;assembly_id&apos; =&gt; assemblyId)
+json_print responseSmokeTest
+
+#Extract task id
+smokeTestId = JSON.parse(responseSmokeTest)[&quot;data&quot;][&quot;task_id&quot;]
+puts &quot;Created smoke test task with ID: #{smokeTestId}&quot;
+#Execute the task
+responseSmokeExecute = RestClient.post(ENDPOINT + &apos;/rest/task/execute&apos;, &apos;task_id&apos; =&gt; smokeTestId)
+
+json_print JSON.parse(responseSmokeExecute)
+
+puts &quot;Starting smoke test task with ID: #{smokeTestId}&quot;
+
+smokeStatus = &apos;executing&apos;
+
+while smokeStatus.include? &apos;executing&apos;
+  sleep 20
+  responseSmokeStatus = RestClient.post(ENDPOINT + &apos;/rest/task/status&apos;, &apos;task_id &apos;=&gt; smokeTestId)
+	fullResponse = JSON.parse(responseSmokeStatus)
+  smokeStatus = fullResponse[&quot;data&quot;][&quot;status&quot;]
+  puts &quot;Smoke test status: #{smokeStatus}&quot;
+end
+
+if smokeStatus.include? &apos;failed&apos;
+	# Delete the cloned assembly&apos;s instance
+	puts &quot;Smoke test failed, response: &quot;
+	pp fullResponse
+
+	# Getting log files for failed jobs
+	task_log_response = RestClient.post(ENDPOINT + &apos;/rest/task/get_logs&apos;, &apos;task_id &apos;=&gt; smokeTestId)
+	puts &quot;Logs response:&quot;	
+	pp JSON.parse(task_log_response)
+
+	deleteAssembly(assemblyId)
+	abort(&quot;Smoke test failed.&quot;) 
+end
+
+# Delete the cloned assembly&apos;s instance, this is the must!
+#deleteAssembly(assemblyId)
+
+#abort(&quot;Testing failure mail report.&quot;)
+</command>
     </hudson.tasks.Shell>
   </builders>
-  <publishers/>
+  <publishers>
+    <hudson.tasks.Mailer>
+      <recipients>r8-jenkins@atlantbh.com</recipients>
+      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
+      <sendToIndividuals>false</sendToIndividuals>
+    </hudson.tasks.Mailer>
+  </publishers>
   <buildWrappers/>
 </project>
 eos

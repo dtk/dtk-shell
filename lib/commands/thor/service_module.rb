@@ -11,7 +11,7 @@ module DTK::Client
     desc "SERVICE-MODULE-NAME/ID info", "Provides information about specified service module"
     def info(service_module_id)
       post_body = {
-       :component_module_id => service_module_id
+       :service_module_id => service_module_id
       }
       response = post rest_url('service_module/info')
     end
@@ -52,7 +52,7 @@ module DTK::Client
     desc "SERVICE-MODULE-NAME/ID  export", "Export service module to remote repo"
     def export(service_module_id)
       post_body = {
-       :component_module_id => service_module_id
+       :service_module_id => service_module_id
       }
       post rest_url("service_module/export"), post_body
     end
@@ -60,7 +60,7 @@ module DTK::Client
     desc "SERVICE-MODULE-NAME/ID push-to-remote", "DESCRIPTION NEEDED!"
     def push_to_remote(service_module_id)
       post_body = {
-       :component_module_id => service_module_id
+       :service_module_id => service_module_id
       }
       post rest_url("service_module/push_to_remote"), post_body
     end
@@ -68,7 +68,7 @@ module DTK::Client
     desc "SERVICE-MODULE-NAME/ID pull-from-remote", "DESCRIPTION NEEDED!"
     def push_to_remote(service_module_id)
       post_body = {
-       :component_module_id => service_module_id
+       :service_module_id => service_module_id
       }
       post rest_url("service_module/pull_from_remote"), post_body
     end
