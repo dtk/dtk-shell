@@ -13,3 +13,10 @@ module DTK
     end
   end
 end
+
+module DTK
+  module Shell
+    class Error < DTK::Client::Error
+    end
+  end
+end

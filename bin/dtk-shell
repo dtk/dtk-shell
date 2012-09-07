@@ -1,34 +1,50 @@
 #!/usr/bin/env ruby
 require File.expand_path('../lib/client', File.dirname(__FILE__))
+require File.expand_path('../lib/parser/adapters/thor', File.dirname(__FILE__))
+require File.expand_path('../lib/commands/thor/dtk', File.dirname(__FILE__))
+require File.expand_path('../lib/error', File.dirname(__FILE__))
+
 require 'shellwords'
 require 'readline'
 require 'thor'
+
+# read all commands for thor folder, this way we do not have to do it manually
+
+
 #ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
-LIST = 
-  [
-   'assembly', 
-   'converge',
-   'list', 
-   'library', 
-   'module',  
-   'node'      ,
-   'service-module', 
-   'stage', 
-   'exit', 
-   'target'
-].sort
+# all dtk commands + client commands
+CLIENT_COMMANDS   = ['cc','exit']
+DTK_COMMANDS      = DTK::Client::Dtk.task_names
 
-class Thor
-  class << self
 
+# METHODS
+def change_context(args)
+  context = []
+
+  args.each do |command|
+    unless @current_context.include? command
+      raise DTK::Shell::Error, "Context '#{command}' not present for current tier."
+    end
+    context << command 
   end
+
+  return "dtk:/#{context}>"
+end
+
+def load_context(commands)
+  @current_context = commands
+  Readline.completion_append_character = " "
+  comp = proc { |s| CLIENT_COMMANDS.concat(commands).sort.grep( /^#{Regexp.escape(s)}/ ) }
+  Readline.completion_proc = comp
 end
 
 
-comp = proc { |s| LIST.grep( /^#{Regexp.escape(s)}/ ) }
 
-Readline.completion_append_character = " "
-Readline.completion_proc = comp
+
+
+# load tier 1 context 
+load_context(DTK_COMMANDS)
+
 prompt = 'dtk:/> '
 while line = Readline.readline(prompt, true)
   begin
@@ -37,10 +53,19 @@ while line = Readline.readline(prompt, true)
 
     args = Shellwords.split(line)
     cmd = args.shift
-    
-    top_level_execute(cmd,args)
+
+
+    if ('cc' == cmd)
+      prompt = change_context(args)
+    else
+      top_level_execute(cmd,args)
+    end
+   
+   rescue DTK::Shell::Error => e
+    puts e.message
    rescue Interrupt => e
     system('stty', stty_save) # Restore
     exit
   end
 end
+

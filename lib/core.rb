@@ -18,6 +18,7 @@ def top_level_execute(command=nil,argv=nil)
 
     include DTK::Client::Aux
 
+
     command = command || $0.gsub(Regexp.new("^.+/"),"")
     command = command.gsub("-","_")
 

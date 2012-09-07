@@ -18,12 +18,11 @@ module DTK
       # Method will check if there ID/Name before one of the commands if so
       # it will route it properly by placing ID as last param
       def self.arg_analyzer(argv)
-        task_names = all_tasks().map(&:first)
+        all_task_names = task_names()
         
         # we are looking for case when task name is second options and ID/NAME is first
-        # we replace '-' -> '_' due to thor defining task with '_' and invoking them with '-'
         unless argv.first == 'help'
-          if (argv.size > 1 && task_names.include?(argv[1].gsub('-','_')))
+          if (argv.size > 1 && all_task_names.include?(argv[1]))
 
             # Check if required params have been met, see UnboundMethod#arity
             method_definition = self.instance_method(argv[1].gsub('-','_').to_sym)
@@ -42,6 +41,11 @@ module DTK
         end
 
         argv
+      end
+
+      # returns all task names for given thor class with use friendly names (with '-' instead '_')
+      def self.task_names
+        task_names = all_tasks().map(&:first).collect { |item| item.gsub('_','-')}
       end
 
       no_tasks do 
