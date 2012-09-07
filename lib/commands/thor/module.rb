@@ -1,3 +1,4 @@
+#TODO: deprecate
 #TODO: may be consistent on whether component module id or componnet module name used as params
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_from_base('command_helpers/git_repo')
