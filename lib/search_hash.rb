@@ -20,7 +20,6 @@ module DTK
       end
 
       def post_body_hash()
-        puts JSON.generate(self)
         {:search => JSON.generate(self)}
       end
     end

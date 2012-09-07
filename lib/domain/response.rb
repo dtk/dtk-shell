@@ -19,9 +19,9 @@ module DTK
 
       def render_data
         if ok?()
-          # checks if response is empty
+          # if response is empty, response status is ok but no data is passed back
           if data.empty?
-            raise DTK::Client::DtkError, "Server response is empty, please check your server configuration or contact us."
+            data = {'Status' => 'OK'}
           end
 
           # sending raw data from response
