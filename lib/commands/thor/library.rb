@@ -7,7 +7,7 @@ module DTK::Client
     end
 
     desc "[LIBRARY ID/NAME] info","Info for given library based on specified identifier."
-    def info(library_id)
+    def info(library_id=nil)
       not_implemented
     end
     

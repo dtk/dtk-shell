@@ -40,7 +40,23 @@ module DTK::Client
       return response
     end
 
-    desc "COMPONENT-MODULE-NAME/ID export", "Export component module."
+    #TODO: may also provide an optional library argument to create in new library
+    desc "COMPONENT-MODULE-NAME/ID promote-to-library [NEW-VERSION]", "Update or create new version of workspace module in library"
+    def promote_to_library(*args)
+    #TODO: working around bug where arguments shifted; need to check if shiftingin right direction if size >=3
+      component_module_id,new_version = args +[args.shift]
+
+      post_body = {
+        :component_module_id => component_module_id
+      }
+      if new_version
+        post_body.merge!(:new_version => new_version)
+      end
+
+      post rest_url("component_module/promote_to_library"), post_body
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID export", "Export component module remote repository."
     def export(component_module_id)
       post_body = {
         :component_module_id => component_module_id
