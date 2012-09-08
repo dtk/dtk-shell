@@ -5,14 +5,6 @@ module DTK::Client
       PPColumns::ASSEMBLY
     end
 
-    desc "export ASSEMBLY-ID", "Exports assembly instance or template"
-    def export(assembly_id)
-      post_body = {
-        :assembly_id => assembly_id
-      }
-      post rest_url("assembly/export"), post_body
-    end
-
     desc "ASSEMBLY-NAME/ID converge", "Converges assembly instance"
     def converge(assembly_id)
       post_body = {
