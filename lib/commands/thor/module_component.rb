@@ -40,6 +40,14 @@ module DTK::Client
       return response
     end
 
+    desc "COMPONENT-MODULE-NAME/ID delete", "Delete component module and all items contained in it"
+    def delete(component_module_id)
+      post_body = {
+       :component_module_id => component_module_id
+      }
+      post rest_url("component_module/delete"), post_body
+    end
+
     #TODO: may also provide an optional library argument to create in new library
     desc "COMPONENT-MODULE-NAME/ID promote-to-library [NEW-VERSION]", "Update or create new version of workspace module in library"
     def promote_to_library(*args)

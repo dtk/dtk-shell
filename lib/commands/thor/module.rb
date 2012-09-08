@@ -114,15 +114,6 @@ module DTK::Client
       }
       post rest_url("component_module/revert_workspace"), post_body
     end
-
-    # TODO: Check to see if we are deleting this
-    desc "delete COMPONENT-MODULE-ID", "Delete component module and all items contained in it"
-    def delete(component_module_id)
-      post_body = {
-       :component_module_id => component_module_id
-      }
-      post rest_url("component_module/delete"), post_body
-    end
   end
 end
 
