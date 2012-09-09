@@ -50,9 +50,9 @@ module DTK::Client
 
     #TODO: may also provide an optional library argument to create in new library
     desc "COMPONENT-MODULE-NAME/ID promote-to-library [NEW-VERSION]", "Update or create new version of workspace module in library"
-    def promote_to_library(*args)
+    def promote_to_library(*rotated_args)
       #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
-      component_module_id,new_version = [args.last] + args[0..args.size-2]
+      component_module_id,new_version = rotate_args(rotated_args)
 
       post_body = {
         :component_module_id => component_module_id

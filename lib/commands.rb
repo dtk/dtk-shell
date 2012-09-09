@@ -1,6 +1,11 @@
 module DTK
   module Client
     module CommandBase
+      #TODO: temp workaround
+      def rotate_args(rotated_args)
+        [rotated_args_args.last] + rotated_args_args[0..rotated_args_args.size-2]
+      end
+
       def self.execute_from_cli(conn,argv)
         ret = start(argv,:conn => conn)
         ret.kind_of?(Response) ? ret : ResponseNoOp.new
