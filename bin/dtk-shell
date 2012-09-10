@@ -9,6 +9,8 @@ require File.expand_path('../lib/shell/context', File.dirname(__FILE__))
 require 'shellwords'
 require 'readline'
 require 'thor'
+require 'rubygems'
+require 'active_support/core_ext/string/inflections'
 
 #ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
 
@@ -81,6 +83,16 @@ def load_context(command_name)
 end
 
 # RUNTIME PART
+def reverse_commands(cmd, args)
+  @current_context.each do |current|
+    command_singular=args.first.singularize
+    if current.eql?(command_singular)
+      cmd, args = command_singular, [cmd]
+    end
+  end
+
+  return cmd, args
+end
 
 # load tier 1 context 
 load_context('dtk')
@@ -93,6 +105,12 @@ while line = Readline.readline(prompt, true)
 
     args = Shellwords.split(line)
     cmd = args.shift
+
+    # if e.g "list libraries" is sent instead of "library list" we reverse commands
+    # and still search for 'library list'
+    unless args.empty?
+      cmd, args = reverse_commands(cmd, args)
+    end
 
     temp_dev_flag = true
 
