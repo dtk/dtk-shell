@@ -48,20 +48,35 @@ module DTK::Client
       post rest_url("component_module/delete"), post_body
     end
 
-    #TODO: may also provide an optional library argument to create in new library
-    desc "COMPONENT-MODULE-NAME/ID promote-to-library [NEW-VERSION]", "Update or create new version of workspace module in library"
-    def promote_to_library(*rotated_args)
-      #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
-      component_module_id,new_version = rotate_args(rotated_args)
+    desc "COMPONENT-MODULE-NAME/ID promote-to-library [VERSION]", "Update library module with chyanges from workspace"
+    def promote_to_library(arg1,arg2=nil)
+      #component_module_id is in last position, which coudl be arg1 or arg2
+      component_module_id,version = (arg2 ? [arg2,arg1] : [arg1])
 
       post_body = {
         :component_module_id => component_module_id
       }
-      if new_version
-        post_body.merge!(:new_version => new_version)
-      end
+      post_body.merge!(:version => version) if version
 
       post rest_url("component_module/promote_to_library"), post_body
+    end
+
+    #TODO: may also provide an optional library argument to create in new library
+    desc "COMPONENT-MODULE-NAME/ID create-new-version [EXISTING-VERSION] NEW-VERSION", "Create new version of module in library from workspace"
+    def create_new_version(arg1,arg2,arg3=nil)
+      #component_module_id is in last position
+      component_module_id,new_version,existing_version = 
+        (arg3 ? [arg3,arg2,arg1] : [arg2,arg1])
+
+      post_body = {
+        :component_module_id => component_module_id,
+        :new_version => new_version
+      }
+      if existing_version
+        post_body.merge!(:existing_version => existing_version)
+      end
+
+      post rest_url("component_module/create_new_version"), post_body
     end
 
     desc "COMPONENT-MODULE-NAME/ID export", "Export component module remote repository."
