@@ -54,7 +54,7 @@ module DTK::Client
         when "none":
           data_type = DataType::ASSEMBLY
            #TODO: change to post rest_url("assembly/list when update on server side
-          response = post rest_url("assembly/list_from_target"), post_body
+          response = post rest_url("assembly/list_from_library"), post_body
         when "nodes":
           data_type = DataType::NODE
           response = post rest_url("assembly/list"), post_body

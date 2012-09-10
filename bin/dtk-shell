@@ -15,7 +15,7 @@ require 'active_support/core_ext/string/inflections'
 #ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
 
 # client commands
-CLIENT_COMMANDS   = ['cc','exit']
+CLIENT_COMMANDS   = ['cc','exit','clear']
 DTK_ROOT_PROMPT   = "dtk:/>"
 @context    = DTK::Shell::Context.new
 @current_cc = []
@@ -100,8 +100,9 @@ load_context('dtk')
 prompt = 'dtk:/> '
 while line = Readline.readline(prompt, true)
   begin
-    exit  if line == 'exit'
-    next  if line.empty?
+    exit if line == 'exit'
+    next if line.empty?
+    system('clear'); next if line == 'clear'
 
     args = Shellwords.split(line)
     cmd = args.shift
