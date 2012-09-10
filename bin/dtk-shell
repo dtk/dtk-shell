@@ -10,51 +10,77 @@ require 'shellwords'
 require 'readline'
 require 'thor'
 
-# read all commands for thor folder, this way we do not have to do it manually
-
-
 #ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
-# all dtk commands + client commands
-CLIENT_COMMANDS   = ['cc','exit']
 
+# client commands
+CLIENT_COMMANDS   = ['cc','exit']
+DTK_ROOT_PROMPT   = "dtk:/>"
 @context    = DTK::Shell::Context.new
 @current_cc = []
 
-
-
 # METHODS
+
 def change_context(args)
-  return if args.empty?
-  # resets cc for commands
-  @current_cc = []
+  return DTK_ROOT_PROMPT if args.empty?
+
+  # if separated by spaces join them with '/' so we support spaces and slashes
+  if args.instance_of?(Array) && args.size > 1
+    args = args.join('/')
+  end
 
   # first command is the one we take context from
   command = args.first
 
-  # check if command is valid for current context
-  unless @current_context.include? command
-    raise DTK::Shell::Error, "Context '#{command}' not present for current tier."
+  # check for root of context
+  if '/'.eql?(command[0,1])
+    @current_cc = []
+    return change_context(command[1,command.size])
   end
 
-  @current_cc << command
+  # for multi context e.g. `cc library/public`
+  if command.include?('/')
+    context_commands = command.split('/')
+    # last command will continue to run in this flow
+    command = context_commands.pop
+    # use recursion to load all other commands first, second, ...
+    context_commands.each { |context_comm| change_context(context_comm) }
+    # flow will continue with last command left to load
+  end
 
-  # take second args if present and command ID/NAME
-  if args.size > 1
-    @current_cc << args[1]
+  if '..'.eql?(command)
+    # backtracing context
+    @current_cc.pop
+    command = @current_cc.last
+  else 
+    # set commnad to context
+    @current_cc << command
+  end
+
+  # check if command is valid for current context, only on tier 1 commands
+  # unfortunatly we need to stop there since there is no way to detect if 
+  # ID/NAME is valid for now
+  if @tier_1
+    unless @current_context.include? command
+      raise DTK::Shell::Error, "Context '#{command}' not present for current tier."
+    end
   end
 
   # loads context for given command
-  load_context(@current_cc.first)
+  load_context(command)
 
   return "dtk:/#{@current_cc.join('/')}>"
 end
 
 def load_context(command_name)
-  @current_context = @context.sub_tasks_names(command_name)
+  @tier_1 = (command_name == 'dtk')
+  # default to existing context if there is no new one
+  @current_context = @context.sub_tasks_names(command_name) || @current_context
   Readline.completion_append_character = " "
   comp = proc { |s| CLIENT_COMMANDS.concat(@current_context).sort.grep( /^#{Regexp.escape(s)}/ ) }
   Readline.completion_proc = comp
 end
+
+# RUNTIME PART
 
 # load tier 1 context 
 load_context('dtk')

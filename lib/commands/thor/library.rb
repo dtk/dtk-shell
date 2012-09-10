@@ -11,7 +11,7 @@ module DTK::Client
       not_implemented
     end
     
-    desc "[LIBRARY ID/NAME] list [TYPE]","List libraries, or if type specified type those types in library, possible values nodes, components, assemblies"
+    desc "[LIBRARY ID/NAME] list [nodes|components|assemblies]","List libraries, or if type specified type those types in library, possible values nodes, components, assemblies"
     method_option :list, :type => :boolean, :default => false
     def list(selected_type='none', library_id=nil)
       # sets data type to be used when printing table

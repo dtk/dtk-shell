@@ -21,6 +21,7 @@ module DTK
           file_name = task_name.gsub('-','_')
           require File.expand_path("../commands/thor/#{file_name}", File.dirname(__FILE__))
           
+          # gets thor command class and then all the task names for that command
           @context.store(task_name, get_command_class(file_name).task_names.sort)
         end
       end
@@ -30,12 +31,10 @@ module DTK
       end
 
       def sub_tasks_names(name=nil)
-
         return @context[name.to_s] unless name.nil?
 
-        all_tasks = []
-        @context.each_value { |v| all_tasks.concat(v)}
-        return all_tasks.uniq.sort
+        # returns root tasks
+        dtk_tasks
       end
 
       private
