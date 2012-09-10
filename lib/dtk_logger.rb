@@ -21,8 +21,6 @@ class DtkLogger
       file = File.open("/var/log/#{LOG_FILE_NAME}", "a")
       @logger = Logger.new(file, LOG_NUMBER_OF_OLD_FILES, LOG_MB_SIZE * 1024000)
 
-
-
     rescue SystemCallError => e
       no_log_found
     end
