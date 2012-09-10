@@ -107,17 +107,17 @@ while line = Readline.readline(prompt, true)
     args = Shellwords.split(line)
     cmd = args.shift
 
-    # if e.g "list libraries" is sent instead of "library list" we reverse commands
-    # and still search for 'library list'
-    unless args.empty?
-      cmd, args = reverse_commands(cmd, args)
-    end
-
-    temp_dev_flag = true
+    temp_dev_flag = false
 
     if ('cc' == cmd)
       prompt = change_context(args)
     else
+      # if e.g "list libraries" is sent instead of "library list" we reverse commands
+      # and still search for 'library list'
+      unless args.empty?
+        cmd, args = reverse_commands(cmd, args)
+      end
+
       # if there is no set context no need to pre-process command
       unless @current_cc.empty?
         puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
@@ -137,6 +137,7 @@ while line = Readline.readline(prompt, true)
       # execute command via Thor
       top_level_execute(cmd,args)
     end
+
 
    
    rescue DTK::Shell::Error => e
