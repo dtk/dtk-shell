@@ -34,7 +34,13 @@ module DTK::Client
     #TODO: put in flag to control detail level
     desc "[ASSEMBLY-NAME/ID] list [nodes|components|tasks] [FILTER] [--list]","List asssemblies, or nodes, components, tasks from their assemblies."
     method_option :list, :type => :boolean, :default => false
-    def list(about="none",filter=nil,assembly_id=nil)
+    def list(*rotated_args)
+      #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
+      assembly_id,about,filter = rotate_args(rotated_args)
+      about ||= "none"
+      #TODO: need to detect if two args given by list [nodes|components|tasks FILTER
+      #can make sure that first arg is not one of [nodes|components|tasks] but these could be names of assembly (although unlikely); so would then need to
+      #look at form of FILTER
       response = ""
 
       post_body = {
@@ -47,16 +53,17 @@ module DTK::Client
       case about
         when "none":
           data_type = DataType::ASSEMBLY
-          response = post rest_url("assembly/list_from_library")
+           #TODO: change to post rest_url("assembly/list when update on server side
+          response = post rest_url("assembly/list_from_target"), post_body
         when "nodes":
           data_type = DataType::NODE
-          response = post rest_url("assembly/list")
+          response = post rest_url("assembly/list"), post_body
         when "components":
           data_type = DataType::COMPONENT
-          response = post rest_url("assembly/list")
+          response = post rest_url("assembly/list"), post_body
         when "tasks":
           data_type = DataType::TASK
-          response = post rest_url("assembly/list")
+          response = post rest_url("assembly/list"), post_body
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
