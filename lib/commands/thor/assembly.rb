@@ -54,16 +54,16 @@ module DTK::Client
         when "none":
           data_type = DataType::ASSEMBLY
            #TODO: change to post rest_url("assembly/list when update on server side
-           response = post rest_url("assembly/list_from_target"), {}
+           response = post rest_url("assembly/list"), {:subtype  => 'instance'}
         when "nodes":
           data_type = DataType::NODE
-          response = post rest_url("assembly/list"), post_body
+          response = post rest_url("assembly/info_about"), post_body
         when "components":
           data_type = DataType::COMPONENT
-          response = post rest_url("assembly/list"), post_body
+          response = post rest_url("assembly/info_about"), post_body
         when "tasks":
           data_type = DataType::TASK
-          response = post rest_url("assembly/list"), post_body
+          response = post rest_url("assembly/info_about"), post_body
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
