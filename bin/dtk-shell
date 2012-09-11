@@ -102,7 +102,7 @@ while line = Readline.readline(prompt, true)
   begin
     exit if line == 'exit'
     next if line.empty?
-    system('clear'); next if line == 'clear'
+    system('clear') and next if line == 'clear'
 
     args = Shellwords.split(line)
     cmd = args.shift
