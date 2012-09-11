@@ -78,10 +78,8 @@ def load_context(command_name)
 
   # defa ult to existing context if there is no new one
   @current_context = @context.sub_tasks_names(command_name) || @current_context
-
   Readline.completion_append_character = " "
-  comp = proc { |s| CLIENT_COMMANDS.concat(@current_context).sort.grep( /^#{Regexp.escape(s)}/ ) }
-  puts comp.inspect
+  comp = proc { |s| @current_context.concat(CLIENT_COMMANDS).sort.grep( /^#{Regexp.escape(s)}/ ) }
   Readline.completion_proc = comp
 end
 
