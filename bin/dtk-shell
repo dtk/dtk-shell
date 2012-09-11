@@ -49,7 +49,7 @@ def change_context(args)
     # flow will continue with last command left to load
   end
 
-  if '..'.eql?(command)
+  if command.match(/\.\.[\/]?/)
     # backtracing context
     @current_cc.pop
     command = @current_cc.last
@@ -74,16 +74,20 @@ def change_context(args)
 end
 
 def load_context(command_name)
-  @tier_1 = (command_name == 'dtk')
-  # default to existing context if there is no new one
+  @tier_1 = command_name.eql?('dtk')
+
+  # defa ult to existing context if there is no new one
   @current_context = @context.sub_tasks_names(command_name) || @current_context
+
   Readline.completion_append_character = " "
   comp = proc { |s| CLIENT_COMMANDS.concat(@current_context).sort.grep( /^#{Regexp.escape(s)}/ ) }
+  puts comp.inspect
   Readline.completion_proc = comp
 end
 
-# RUNTIME PART
 def reverse_commands(cmd, args)
+  # changes command and argument if argument is plural of one of 
+  # the possible commands on tier1 e.g. libraries, assemblies
   @current_context.each do |current|
     command_singular=args.first.singularize
     if current.eql?(command_singular)
@@ -93,6 +97,8 @@ def reverse_commands(cmd, args)
 
   return cmd, args
 end
+
+# RUNTIME PART
 
 # load tier 1 context 
 load_context('dtk')
@@ -120,16 +126,12 @@ while line = Readline.readline(prompt, true)
 
       # if there is no set context no need to pre-process command
       unless @current_cc.empty?
-        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
         # command goes as first argument
         args.unshift(cmd)
-        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
         # main command is first one from @current_cc
         cmd  = @current_cc.first
-        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
         # in case there is second cc it means it is ID and goes as first arg
         args.unshift(@current_cc.last) if @current_cc.size > 1
-        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
       end
 
       puts "Command > #{cmd} #{args.join(' ')}" if temp_dev_flag
