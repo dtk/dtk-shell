@@ -21,30 +21,36 @@ module DTK::Client
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID list [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
+    desc "[ASSEMBLY-NAME/ID] list [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
     method_option :list, :type => :boolean, :default => false
-    def list(targets='none', assembly_id=nil)
+    def list(arg1=nil,arg2=nil)
+      about, assembly_id = 
+        if arg1.nil? then ['none']
+        elsif arg2.nil? then ['none',arg1]
+        else [arg1,arg2]
+      end
+
       post_body = {
         :assembly_id => assembly_id,
         :subtype => 'template',
-        :about => targets
+        :about => about
       }
 
-      case targets
+      case about
       when 'none'
-        response = post rest_url("assembly/list")
+        response = post rest_url("assembly/list"), {:subtype => 'template'}
         data_type = DataType::ASSEMBLY
       when 'nodes'
-        response = post rest_url("assembly/list"), post_body
+        response = post rest_url("assembly/info_about"), post_body
         data_type = DataType::ASSEMBLY
       when 'components'
-        response = post rest_url("assembly/list"), post_body
+        response = post rest_url("assembly/info_about"), post_body
         data_type = DataType::ASSEMBLY
       when 'targets'
-        response = post rest_url("assembly/list"), post_body
+        response = post rest_url("assembly/info_about"), post_body
         data_type = DataType::ASSEMBLY
       else
-        raise DTK::Client::DtkError, "Not supported type '#{targets}' for given command."
+        raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
 
       response.render_table(data_type) unless options.list?
