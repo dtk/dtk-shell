@@ -14,11 +14,7 @@ module DTK::Client
         :assembly_id => assembly_id,
         :subtype => 'template',
       }
-      response = post rest_url("assembly/info"), post_body
-
-      response.render_table(data_type) unless options.list?
-
-      return response
+      post rest_url("assembly/info"), post_body
     end
 
     desc "[ASSEMBLY-NAME/ID] list [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
@@ -42,13 +38,13 @@ module DTK::Client
         data_type = DataType::ASSEMBLY
       when 'nodes'
         response = post rest_url("assembly/info_about"), post_body
-        data_type = DataType::ASSEMBLY
+        data_type = DataType::NODE
       when 'components'
         response = post rest_url("assembly/info_about"), post_body
-        data_type = DataType::ASSEMBLY
+        data_type = DataType::COMPONENT
       when 'targets'
         response = post rest_url("assembly/info_about"), post_body
-        data_type = DataType::ASSEMBLY
+        data_type = DataType::TARGET
       else
         raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
