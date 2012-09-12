@@ -54,27 +54,23 @@ module DTK::Client
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID stage TARGET-NAME/ID", "Stage indentified target for given assembly template."
+    desc "ASSEMBLY-TEMPLATE-NAME/ID stage [INSTANCE-NAME]", "Stage assembly template in target."
     method_option :list, :type => :boolean, :default => false
+    method_option "in-target",:aliases => "-t" ,
+      :type => :numeric, 
+      :banner => "TARGET-ID",
+      :desc => "Target (id) to create assembly in" 
     def stage(arg1,arg2=nil)
-      assembly_id, target_id = (arg2.nil? ? [arg1] : [arg2,arg1])
-      data_type = DataType::ASSEMBLY
+      assembly_id,name = (arg2.nil? ? [arg1] : [arg2,arg1])
 
       post_body = {
         :assembly_id => assembly_id
       }
-
-      unless target_id.nil?
-        post_body.merge!({:target_id => target_id})
-      end
+      post_body.merge!(:target_id => options["in-target"]) if options["in-target"]
+      post_body.merge!(:name => name) if name
       
-      response = post rest_url("assembly/stage"), post_body
-
-      response.render_table(data_type) unless options.list?
-
-      return response
+      post rest_url("assembly/stage"), post_body
     end
-
   end
 end
 

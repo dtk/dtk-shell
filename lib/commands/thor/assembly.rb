@@ -113,10 +113,6 @@ module DTK::Client
     end
 
     desc "stage ASSEMBLY-TEMPLATE-ID", "Stage library assembly in target"
-    method_option "in-target",:aliases => "-t" ,
-      :type => :numeric, 
-      :banner => "TARGET-ID",
-      :desc => "Target (id) to create assembly in" 
     method_option "name",:aliases => "-n" ,
       :type => :string, 
       :banner => "NAME",
@@ -125,12 +121,6 @@ module DTK::Client
       post_body = {
         :assembly_template_id => assembly_template_id
       }
-      if target_id = options["in-target"]
-        post_body.merge!(:target_id => target_id)
-      end
-      if name = options["name"]
-        post_body.merge!(:name => name)
-      end
       post rest_url("assembly/stage"), post_body
     end
 
