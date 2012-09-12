@@ -96,8 +96,10 @@ module DTK::Client
       def self.valid_id?(value, conn)
         @conn = conn if @conn.nil?
         response = post rest_url("library/list")
-        response['data'].each do |element|
-          return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+        unless response.nil?
+          response['data'].each do |element|
+            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+          end
         end
         return false
       end

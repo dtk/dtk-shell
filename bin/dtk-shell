@@ -32,7 +32,7 @@ def validate_command(command)
   else
     # at the moment this is tier 2
     unless @context.valid_id?(@current_cc.first,command)
-      raise DTK::Shell::Error, "#{@current_cc.first.capitalize} identifier '#{command} is not valid."
+      raise DTK::Shell::Error, "#{@current_cc.first.capitalize} identifier '#{command}' is not valid."
     end
   end
 end
