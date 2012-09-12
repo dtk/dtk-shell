@@ -93,11 +93,11 @@ module DTK::Client
       post rest_url("assembly/info"), post_body
     end
 
-    desc "delete ASSEMBLY-ID [template]", "Delete assembly instance or template"
-    def delete(assembly_id,template_keyword=nil)
+    desc "delete-and-destroy ASSEMBLY-ID", "Delete assembly instance, termining any nodes taht have been spun up"
+    def delete_and_destroy(assembly_id)
       post_body = {
         :assembly_id => assembly_id,
-        :subtype => template_keyword ? :template : :instance
+        :subtype => :instance
       }
       post rest_url("assembly/delete"), post_body
     end
@@ -173,6 +173,7 @@ module DTK::Client
       }
       response = post(rest_url("assembly/info"),post_body)
     end
+    
   end
 end
 

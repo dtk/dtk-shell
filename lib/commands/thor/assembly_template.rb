@@ -71,6 +71,15 @@ module DTK::Client
       
       post rest_url("assembly/stage"), post_body
     end
+
+    desc "delete ASSEMBLY-ID", "Delete assembly template"
+    def delete(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id,
+        :subtype => :template
+      }
+      post rest_url("assembly/delete"), post_body
+    end
   end
 end
 
