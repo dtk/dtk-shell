@@ -26,6 +26,7 @@ module DTK
       end
 
      private
+
       def pretty_print_cols()
         self.class.pretty_print_cols()
       end

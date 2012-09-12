@@ -2,7 +2,7 @@ module DTK
   module Client
     module Aux
       def cap_form(x)
-        x.to_s.split("_").map{|t|t.capitalize}.join("")
+        x.gsub('-','_').to_s.split("_").map{|t|t.capitalize}.join("")
       end
 
       def snake_form(command_class,seperator="_")

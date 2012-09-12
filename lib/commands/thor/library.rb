@@ -89,6 +89,20 @@ module DTK::Client
       post rest_url("component_module/delete"), post_body
     end
 
+    # we make valid methods to make sure that when context changing
+    # we allow change only for valid ID/NAME
+
+    no_tasks do
+      def self.valid_id?(value, conn)
+        @conn = conn if @conn.nil?
+        response = post rest_url("library/list")
+        response['data'].each do |element|
+          return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+        end
+        return false
+      end
+    end
+
   end
 end
 

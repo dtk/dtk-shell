@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
-require File.expand_path('../lib/client', File.dirname(__FILE__))
-require File.expand_path('../lib/parser/adapters/thor', File.dirname(__FILE__))
-require File.expand_path('../lib/commands/thor/dtk', File.dirname(__FILE__))
+require File.expand_path('../lib/client',                          File.dirname(__FILE__))
+require File.expand_path('../lib/parser/adapters/thor',            File.dirname(__FILE__))
+require File.expand_path('../lib/commands/thor/dtk',               File.dirname(__FILE__))
 require File.expand_path('../lib/commands/thor/assembly_template', File.dirname(__FILE__))
-require File.expand_path('../lib/error', File.dirname(__FILE__))
-require File.expand_path('../lib/shell/context', File.dirname(__FILE__))
+require File.expand_path('../lib/error',                           File.dirname(__FILE__))
+require File.expand_path('../lib/shell/context',                   File.dirname(__FILE__))
 
 require 'shellwords'
 require 'readline'
@@ -22,6 +22,28 @@ DTK_ROOT_PROMPT   = "dtk:/>"
 
 # METHODS
 
+ # check if command is valid for current context, only on tier 1 commands
+ # also checks is ID/NAME valid
+def validate_command(command)
+
+  if @current_cc.empty?
+    unless @current_context.include? command
+      raise DTK::Shell::Error, "Context '#{command}' not present for current tier."
+    end
+  else
+    # at the moment this is tier 2
+    unless @context.valid_id?(@current_cc.first,command)
+      raise DTK::Shell::Error, "#{@current_cc.first.capitalize} identifier '#{command} is not valid."
+    end
+  end
+end
+
+def reset_context
+  @current_cc = []
+  load_context
+end
+
+
 def change_context(args)
   return DTK_ROOT_PROMPT if args.empty?
 
@@ -35,8 +57,9 @@ def change_context(args)
 
   # check for root of context
   if '/'.eql?(command[0,1])
-    @current_cc = []
-    return change_context(command[1,command.size])
+    reset_context()
+    next_command = command[1,command.size]
+    return change_context(next_command)
   end
 
   # for multi context e.g. `cc library/public`
@@ -46,25 +69,18 @@ def change_context(args)
     command = context_commands.pop
     # use recursion to load all other commands first, second, ...
     context_commands.each { |context_comm| change_context(context_comm) }
-    # flow will continue with last command left to load
+    # flow will continue with last command left to load (see above)
   end
-
+    
   if command.match(/\.\.[\/]?/)
     # backtracing context
     @current_cc.pop
     command = @current_cc.last
   else 
-    # set commnad to context
+    # validates command
+    validate_command(command)
+    # set command to context
     @current_cc << command
-  end
-
-  # check if command is valid for current context, only on tier 1 commands
-  # unfortunatly we need to stop there since there is no way to detect if 
-  # ID/NAME is valid for now
-  if @tier_1
-    unless @current_context.include? command
-      raise DTK::Shell::Error, "Context '#{command}' not present for current tier."
-    end
   end
 
   # loads context for given command
@@ -73,9 +89,7 @@ def change_context(args)
   return "dtk:/#{@current_cc.join('/')}>"
 end
 
-def load_context(command_name)
-  @tier_1 = command_name.eql?('dtk')
-
+def load_context(command_name=nil)
   # defa ult to existing context if there is no new one
   @current_context = @context.sub_tasks_names(command_name) || @current_context
   Readline.completion_append_character = " "
@@ -117,20 +131,26 @@ while line = Readline.readline(prompt, true)
       prompt = change_context(args)
     else
       # if e.g "list libraries" is sent instead of "library list" we reverse commands
-      # and still search for 'library list'
-      unless args.empty?
+      # and still search for 'library list', this happens only on root
+      if !args.empty? && @current_cc.empty?
         cmd, args = reverse_commands(cmd, args)
       end
 
       # if there is no set context no need to pre-process command
       unless @current_cc.empty?
         # command goes as first argument
+        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
         args.unshift(cmd)
+        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
         # main command is first one from @current_cc
         cmd  = @current_cc.first
+
+        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
         # in case there is second cc it means it is ID and goes as first arg
         args.unshift(@current_cc.last) if @current_cc.size > 1
+        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
       end
+
 
       puts "Command > #{cmd} #{args.join(' ')}" if temp_dev_flag
 

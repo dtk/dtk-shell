@@ -5,6 +5,8 @@ module DTK
   module Client
     class CommandBaseThor < Thor
       include CommandBase
+      extend  CommandBase
+      
       def initialize(args, opts, config)
         @conn = config[:conn]
         super
@@ -24,7 +26,7 @@ module DTK
         unless argv.first == 'help'
           if (argv.size > 1 && all_task_names.include?(argv[1]))
 
-            # Check if required params have been met, see UnboundMethod#arity
+            # check if required params have been met, see UnboundMethod#arity
             method_definition = self.instance_method(argv[1].gsub('-','_').to_sym)
 
             # if negative it means that it has optional parameters, required number is negative value + 1

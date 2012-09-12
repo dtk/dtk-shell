@@ -4,14 +4,13 @@ require File.expand_path('../auxiliary', File.dirname(__FILE__))
 module DTK
   module Shell
     class Context
-
       include DTK::Client::Aux
 
       ALL_TASKS = DTK::Client::Dtk.task_names
       
-
       def initialize
         @context = {}
+        @conn    = DTK::Client::Conn.new()
 
         @context.store('dtk',ALL_TASKS.sort)
 
@@ -37,10 +36,23 @@ module DTK
         dtk_tasks
       end
 
+      # calls 'valid_id?' method in Thor class to validate ID/NAME
+      def valid_id?(thor_command_name,value)
+        command_clazz = get_command_class(thor_command_name)
+        if command_clazz.respond_to?(:valid_id?)
+          return command_clazz.valid_id?(value,@conn)
+        end
+
+        # if not implemented we are going to let it in the context
+        # TODO: Removed this 'put' after this has been implemented where needed
+        puts "[DEV] Implement 'valid_id?' method for thor command class: #{thor_command_name} "
+        return false
+      end
+
       private
 
-      def get_command_class(file_name)
-        Object.const_get('DTK').const_get('Client').const_get(cap_form(file_name))
+      def get_command_class(command_name)
+        Object.const_get('DTK').const_get('Client').const_get(cap_form(command_name))
       end
 
     end
