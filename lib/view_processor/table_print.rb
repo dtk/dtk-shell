@@ -27,8 +27,8 @@ module DTK
       TASK_ORDER          = [ :task_id,:status, :created, :start, :end ]
       NODE                = { :node_id => "dtk_id", :name => "display_name", :node_type => "external_ref.dtk_type", :region => "external_ref.region", :instance_id => "external_ref.instance_id", :size => "external_ref.size.split('.').last", :zone => "external_ref.availability_zone", :os => "os_type", :dns_name => "external_ref.dns_name" }
       NODE_ORDER          = [ :node_id, :name, :node_type, :region, :instance_id, :size, :zone, :os, :dns_name ]
-      NODE_TEMPLATE       = { :node_template_id => "dtk_id", :name => "display_name", :template_type => "template_type", :size => "size.split('.').last", :os => "os_type" }
-      NODE_TEMPLATE_ORDER = [ :node_template_id, :name, :template_type, :size, :os]
+      NODE_TEMPLATE       = { :name => "display_name", :template_name => "template_name", :template_type => "template_type", :size => "size.split('.').last", :os => "os_type" }
+      NODE_TEMPLATE_ORDER = [ :name, :template_name, :os, :template_type, :size]
       REMOTE_MODULE       = { :name => "display_name", :version => "version" }
       REMOTE_MODULE_ORDER = [:name, :version ]
       MODULE              = { :module_id => "dtk_id", :name => "display_name", :version => "version" }
