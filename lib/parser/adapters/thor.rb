@@ -12,7 +12,8 @@ module DTK
         super
       end
 
-      def self.execute_from_cli(conn,argv)
+      def self.execute_from_cli(conn,argv,shell_execution=false)
+        @@shell_execution = shell_execution
         ret = start(arg_analyzer(argv),:conn => conn)
         ret.kind_of?(Response) ? ret : ResponseNoOp.new
       end
@@ -81,10 +82,13 @@ module DTK
           not_dtk_clazz = !self.class.eql?(DTK::Client::Dtk)
         end
 
-        # we don't use subcommand print in case of root DTK class
+        # not_dtk_clazz - we don't use subcommand print in case of root DTK class
         # for other classes Assembly, Node, etc. we print subcommand
         # this gives us console output: dtk assembly converge ASSEMBLY-ID
-        super(args.empty? ? nil : args,not_dtk_clazz)
+        #
+        # @@shell_execution - if we run from shell we don't want subcommand output
+        #
+        super(args.empty? ? nil : args, not_dtk_clazz && !@@shell_execution)
 
         # we will print error in case configuration has reported error
         @conn.print_warning if @conn.connection_error?

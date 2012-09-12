@@ -2,7 +2,6 @@
 require File.expand_path('../lib/client',                          File.dirname(__FILE__))
 require File.expand_path('../lib/parser/adapters/thor',            File.dirname(__FILE__))
 require File.expand_path('../lib/commands/thor/dtk',               File.dirname(__FILE__))
-require File.expand_path('../lib/commands/thor/assembly_template', File.dirname(__FILE__))
 require File.expand_path('../lib/error',                           File.dirname(__FILE__))
 require File.expand_path('../lib/shell/context',                   File.dirname(__FILE__))
 
@@ -118,14 +117,17 @@ load_context('dtk')
 prompt = 'dtk:/> '
 while line = Readline.readline(prompt, true)
   begin
+    # some special cases
     exit if line == 'exit'
     next if line.empty?
     system('clear') and next if line == 'clear'
+    # when using help on root this is needed
+    line = 'dtk' if (line == 'help' && @current_cc.empty?)
 
     args = Shellwords.split(line)
     cmd = args.shift
 
-    temp_dev_flag = false
+    temp_dev_flag = true
 
     if ('cc' == cmd)
       prompt = change_context(args)
@@ -155,7 +157,7 @@ while line = Readline.readline(prompt, true)
       puts "Command > #{cmd} #{args.join(' ')}" if temp_dev_flag
 
       # execute command via Thor
-      top_level_execute(cmd,args)
+      top_level_execute(cmd,args,true)
     end
 
 
