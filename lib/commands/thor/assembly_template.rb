@@ -56,7 +56,8 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID stage TARGET-NAME/ID", "Stage indentified target for given assembly template."
     method_option :list, :type => :boolean, :default => false
-    def stage(target_id, assembly_id=nil)
+    def stage(arg1,arg2=nil)
+      assembly_id, target_id = (arg2.nil? ? [arg1] : [arg2,arg1])
       data_type = DataType::ASSEMBLY
 
       post_body = {
