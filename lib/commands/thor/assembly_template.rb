@@ -38,7 +38,7 @@ module DTK::Client
         data_type = DataType::ASSEMBLY
       when 'nodes'
         response = post rest_url("assembly/info_about"), post_body
-        data_type = DataType::NODE
+        data_type = DataType::NODE_TEMPLATE
       when 'components'
         response = post rest_url("assembly/info_about"), post_body
         data_type = DataType::COMPONENT
