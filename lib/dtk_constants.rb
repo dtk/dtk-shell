@@ -4,7 +4,7 @@
 class PPColumns
   ASSEMBLY       = [:display_name, :execution_status, :type, :id, :description, :external_ref]
   LIBRARY        = [:display_name, :id, :description]
-  NODE           = [:display_name, :os_type, :id, :description, :external_ref]
+  NODE           = [:display_name, :os_type, :id, :description, :node_status, :external_ref]
   NODE_TEMPLATE  = [:display_name, :os_type, :id, :description, :template_name, :template_type, :size]
   NODE_GROUP     = [:display_name, :type,:id, :description]
   MODULE         = [:display_name, :id, :version]
