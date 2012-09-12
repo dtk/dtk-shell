@@ -54,16 +54,16 @@ module DTK::Client
         when "none":
           data_type = DataType::ASSEMBLY
            #TODO: change to post rest_url("assembly/list when update on server side
-           response = post rest_url("assembly/list"), {}
+           response = post rest_url("assembly/list"), {:subtype  => 'instance'}
         when "nodes":
           data_type = DataType::NODE
-          response = post rest_url("assembly/list"), post_body
+          response = post rest_url("assembly/info_about"), post_body
         when "components":
           data_type = DataType::COMPONENT
-          response = post rest_url("assembly/list"), post_body
+          response = post rest_url("assembly/info_about"), post_body
         when "tasks":
           data_type = DataType::TASK
-          response = post rest_url("assembly/list"), post_body
+          response = post rest_url("assembly/info_about"), post_body
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
@@ -84,18 +84,6 @@ module DTK::Client
       post rest_url("assembly/list_smoketests"), post_body
     end
 
-    desc "stage ASSEMBLY-TEMPLATE-ID", "Stage library assembly in target"
-    method_option "in-target",:aliases => "-t" ,:type => :numeric, :banner => "TARGET-ID",:desc => "Target (id) to create assembly in" 
-    def stage(assembly_template_id)
-      post_body = {
-        :assembly_template_id => assembly_template_id
-      }
-      if target_id = options["in-target"]
-        post_body.merge!(:target_id => target_id)
-      end
-      post rest_url("assembly/stage"), post_body
-    end
-
     desc "ASSEMBLY-NAME/ID info", "Return info about assembly instance identified by name/id"
     def info(assembly_id)
       post_body = {
@@ -105,11 +93,11 @@ module DTK::Client
       post rest_url("assembly/info"), post_body
     end
 
-    desc "delete ASSEMBLY-ID [template]", "Delete assembly instance or template"
-    def delete(assembly_id,template_keyword=nil)
+    desc "delete-and-destroy ASSEMBLY-ID", "Delete assembly instance, termining any nodes taht have been spun up"
+    def delete_and_destroy(assembly_id)
       post_body = {
         :assembly_id => assembly_id,
-        :subtype => template_keyword ? :template : :instance
+        :subtype => :instance
       }
       post rest_url("assembly/delete"), post_body
     end
@@ -125,10 +113,6 @@ module DTK::Client
     end
 
     desc "stage ASSEMBLY-TEMPLATE-ID", "Stage library assembly in target"
-    method_option "in-target",:aliases => "-t" ,
-      :type => :numeric, 
-      :banner => "TARGET-ID",
-      :desc => "Target (id) to create assembly in" 
     method_option "name",:aliases => "-n" ,
       :type => :string, 
       :banner => "NAME",
@@ -137,12 +121,6 @@ module DTK::Client
       post_body = {
         :assembly_template_id => assembly_template_id
       }
-      if target_id = options["in-target"]
-        post_body.merge!(:target_id => target_id)
-      end
-      if name = options["name"]
-        post_body.merge!(:name => name)
-      end
       post rest_url("assembly/stage"), post_body
     end
 
@@ -195,6 +173,7 @@ module DTK::Client
       }
       response = post(rest_url("assembly/info"),post_body)
     end
+    
   end
 end
 

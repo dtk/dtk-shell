@@ -25,9 +25,11 @@ module DTK
       ASSEMBLY_ORDER      = [ :assembly_id, :assembly_name, :nodes, :components ]
       TASK                = { :task_id => "dtk_id", :status => "status.upcase", :created => "created_at.get_date", :start => "started_at.get_date", :end => "ended_at.get_date"}
       TASK_ORDER          = [ :task_id,:status, :created, :start, :end ]
-      NODE                = { :node_id => "dtk_id", :name => "display_name", :node_type => "dtk_type", :region => "external_ref.region", :ami_type => "external_ref.dtk_type", :size => "external_ref.size.split('.').last", :zone => "external_ref.availability_zone", :os => "os_type" }
-      NODE_ORDER          = [ :node_id, :name, :node_type, :region, :ami_type, :size, :zone, :os ]
-      REMOTE_MODULE           = { :name => "display_name", :version => "version" }
+      NODE                = { :node_id => "dtk_id", :name => "display_name", :node_type => "node_type", :region => "external_ref.region", :instance_id => "external_ref.instance_id", :size => "external_ref.size.split('.').last", :zone => "external_ref.availability_zone", :os => "os_type", :dns_name => "external_ref.dns_name" }
+      NODE_ORDER          = [ :node_id, :name, :node_type, :region, :instance_id, :size, :zone, :os, :dns_name ]
+      NODE_TEMPLATE       = { :name => "display_name", :template_name => "template_name", :template_type => "template_type", :size => "size.split('.').last", :os => "os_type" }
+      NODE_TEMPLATE_ORDER = [ :name, :template_name, :os, :template_type, :size]
+      REMOTE_MODULE       = { :name => "display_name", :version => "version" }
       REMOTE_MODULE_ORDER = [:name, :version ]
       MODULE              = { :module_id => "dtk_id", :name => "display_name", :version => "version" }
       MODULE_ORDER        = [ :module_id, :name, :version ]
