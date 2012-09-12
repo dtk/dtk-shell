@@ -22,11 +22,15 @@ module DTK
 
           # if response is empty, response status is ok but no data is passed back
           if data.empty?
-            set_data({'Status' => 'OK'})
+            @render_view = RenderView::SIMPLE_LIST
+            set_data(
+              {'Status' => 'OK'},
+              {'Message' => "There are no #{@render_data_type.downcase.pluralize} available at the moment."}
+            )
           end
 
           # sending raw data from response
-          ViewProcessor.render(@command_class, data, @render_view,@render_data_type)
+          ViewProcessor.render(@command_class, data, @render_view, @render_data_type)
         else
           hash_part()
         end
