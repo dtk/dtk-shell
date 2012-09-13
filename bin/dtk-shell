@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
-require File.expand_path('../lib/client',                          File.dirname(__FILE__))
-require File.expand_path('../lib/parser/adapters/thor',            File.dirname(__FILE__))
-require File.expand_path('../lib/commands/thor/dtk',               File.dirname(__FILE__))
-require File.expand_path('../lib/commands/thor/assembly_template', File.dirname(__FILE__))
-require File.expand_path('../lib/error',                           File.dirname(__FILE__))
-require File.expand_path('../lib/shell/context',                   File.dirname(__FILE__))
+require File.expand_path('../lib/client',                  File.dirname(__FILE__))
+require File.expand_path('../lib/parser/adapters/thor',    File.dirname(__FILE__))
+require File.expand_path('../lib/commands/thor/dtk',       File.dirname(__FILE__))
+require File.expand_path('../lib/error',                   File.dirname(__FILE__))
+require File.expand_path('../lib/shell/context',           File.dirname(__FILE__))
+require File.expand_path('../lib/shell/help_monkey_patch', File.dirname(__FILE__))
 
 require 'shellwords'
 require 'readline'
@@ -19,6 +19,7 @@ CLIENT_COMMANDS   = ['cc','exit','clear']
 DTK_ROOT_PROMPT   = "dtk:/>"
 @context    = DTK::Shell::Context.new
 @current_cc = []
+
 
 # METHODS
 
@@ -118,14 +119,15 @@ load_context('dtk')
 prompt = 'dtk:/> '
 while line = Readline.readline(prompt, true)
   begin
+    # some special cases
     exit if line == 'exit'
     next if line.empty?
     system('clear') and next if line == 'clear'
+    # when using help on root this is needed
+    line = 'dtk' if (line == 'help' && @current_cc.empty?)
 
     args = Shellwords.split(line)
     cmd = args.shift
-
-    temp_dev_flag = false
 
     if ('cc' == cmd)
       prompt = change_context(args)
@@ -139,23 +141,31 @@ while line = Readline.readline(prompt, true)
       # if there is no set context no need to pre-process command
       unless @current_cc.empty?
         # command goes as first argument
-        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
         args.unshift(cmd)
-        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
         # main command is first one from @current_cc
         cmd  = @current_cc.first
-
-        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
         # in case there is second cc it means it is ID and goes as first arg
         args.unshift(@current_cc.last) if @current_cc.size > 1
-        puts "CC: #{@current_cc}, CMD: #{cmd}, ARGS: #{args}" if temp_dev_flag
       end
 
-
+      temp_dev_flag = true
       puts "Command > #{cmd} #{args.join(' ')}" if temp_dev_flag
 
+      # special case when we are doing help for context we need to remove
+      # context paramter
+      if @current_cc.size > 1
+        if args.last == 'help'
+          # we remove ID/NAME in order for help command to work
+          # e.g. library public help => library help
+          args.shift
+        end
+      end
+
+      # send monkey patch class information about context
+      Thor.set_context(@current_cc)
+
       # execute command via Thor
-      top_level_execute(cmd,args)
+      top_level_execute(cmd,args,true)
     end
 
 

@@ -7,7 +7,7 @@ module DTK
         @conn = conn
       end
 
-      def self.execute_from_cli(conn,argv)
+      def self.execute_from_cli(conn,argv,shell_execute=false)
         return conn.connection_error if conn.connection_error
         method, args_hash = OptionParser.parse_options(self,argv)
         instance = new(conn)
