@@ -14,10 +14,10 @@ module DTK; module Client
     end
 
     def push_changes(type,opts={})
-      Response.wrap_helper_actions(:internal) do
+      Response.wrap_helper_actions() do
         local_repo_dirs(type).map do |repo_dir|
           repo_name = repo_dir.split("/").last
-          branch = nil #menaing to use the default branch
+          branch = nil #meaning to use the default branch
           diffs = push_repo_changes(type,repo_dir,branch,opts)
           {repo_name => diffs.inspect}
         end
@@ -43,6 +43,8 @@ module DTK; module Client
       unless opts[:no_fetch]
         repo.fetch_branch(remote())
       end
+
+      #TODO: check if local ahead ....
 
       #see if any diffs between fetched remote and local branch
       #this has be done after commit

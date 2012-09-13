@@ -17,7 +17,7 @@ module DTK
         @render_view = RenderView::AUG_SIMPLE_LIST 
       end
 
-      def self.wrap_helper_actions(error_type=nil,&block)
+      def self.wrap_helper_actions(&block)
         begin
           results = yield
           ResponseOk.new(results)
@@ -25,10 +25,10 @@ module DTK
           error_hash =  {
             "message"=> e.to_s
           }
-          if error_type == :internal 
-            ResponseError::Internal.new(error_hash) 
+          if e.kind_of?(ErrorUsage)
+            ResponseError::Usage.new(error_hash) 
           else
-            ResponseError::Usage.new(error_hash)
+             ResponseError::Internal.new(error_hash)
           end
         end
       end
