@@ -9,16 +9,27 @@ module DTK; module Client
         Dir.mkdir(modules_dir) unless File.directory?(modules_dir)
         target_repo_dir = local_repo_dir(type,module_name,version,modules_dir)
         adapter_class().clone(target_repo_dir,repo_url,:branch => branch)
-
         {"module_directory" => target_repo_dir}
       end
     end
 
+    def push_changes(type,opts={})
+      Response.wrap_helper_actions(:internal) do
+        local_repo_dirs(type).map do |repo_dir|
+          repo_name = repo_dir.split("/").last
+          branch = nil #menaing to use the default branch
+          diffs = push_repo_changes(type,repo_dir,branch,opts)
+          {repo_name => diffs.inspect}
+        end
+      end
+    end
+
+   private
     #returns diffs_summary indicating what is different between lcoal and fetched remote branch
-    def process_push_changes(type,module_name,branch)
-      #TODO: use Response.wrap_helper_actions
-      repo = create(type,module_name,branch)
-      
+    def push_repo_changes(type,repo_dir,branch=nil,opts={})
+      repo = create(repo_dir,branch)
+      branch ||= repo.branch #branch gets filled in if left as nil
+
       #add any file that is untracked
       status = repo.status()
       if status[:untracked]
@@ -29,7 +40,9 @@ module DTK; module Client
         repo.commit("Pushing changes from client") #TODO: make more descriptive
       end
       
-      repo.fetch_branch(remote())
+      unless opts[:no_fetch]
+        repo.fetch_branch(remote())
+      end
 
       #see if any diffs between fetched remote and local branch
       #this has be done after commit
@@ -40,7 +53,6 @@ module DTK; module Client
       diffs
     end
 
-   private
     def remote()
       "origin"
     end
@@ -48,8 +60,8 @@ module DTK; module Client
       "remotes/#{remote()}/#{branch}"
     end
 
-    def create(type,module_name,branch,version=nil)
-      adapter_class().new(local_repo_dir(type,module_name,version),branch)
+    def create(repo_dir,branch=nil)
+      adapter_class().new(repo_dir,branch)
     end
 
     def modules_dir(type)
@@ -61,6 +73,10 @@ module DTK; module Client
       else
         raise Error.new("Unexpected module type (#{type})")
       end
+    end
+
+    def local_repo_dirs(type)
+      Dir["#{modules_dir(type)}/*/"].map{|d|d.gsub(Regexp.new("/$"),"")}
     end
 
     def local_repo_dir(type,module_name,version=nil,modules_dir=nil)

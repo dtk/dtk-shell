@@ -47,16 +47,9 @@ module DTK::Client
       post rest_url("component_module/export"), post_body
     end
 
-    desc "push-changes COMPONENT-MODULE-ID", "Push changes from local copy of module to server"
-    def push_changes(component_module_id)
-      response = get rest_url("component_module/workspace_branch_info/#{component_module_id.to_s}")
-      return response unless response.ok?
-      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
-      repo_diffs_summary = GitRepo.process_push_changes(:component_module,module_name,branch) 
-      if repo_diffs_summary.any_diffs?()
-        #TODO: make call to server with changes
-        pp repo_diffs_summary #TODO: remove; for debugging
-      end
+    desc "push-changes", "Push changes from local copy of module to server"
+    def push_changes()
+      response = GitRepo.push_changes(:component_module)
       response
     end
 
