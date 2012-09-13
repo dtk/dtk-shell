@@ -93,7 +93,6 @@ module DTK
         # we will print error in case configuration has reported error
         @conn.print_warning if @conn.connection_error?
       end
-
     end
   end
 end
