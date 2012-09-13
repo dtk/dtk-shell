@@ -14,7 +14,6 @@ require 'rubygems'
 #ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
 @context    = DTK::Shell::Context.new
 
-
 # METHODS
 
 def change_context(args)
@@ -77,7 +76,7 @@ while line = Readline.readline(prompt, true)
     next if line.empty?
     system('clear') and next if line == 'clear'
     # when using help on root this is needed
-    line = 'dtk' if (line == 'help' && @context.active_commands.empty?)
+    line = 'dtk' if (line == 'help' && @context.root?)
 
     args = Shellwords.split(line)
     cmd = args.shift
