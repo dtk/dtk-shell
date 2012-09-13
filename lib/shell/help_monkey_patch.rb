@@ -1,10 +1,10 @@
 class Thor
   class << self
 
-    @@shell_current_context = []
+    @@shell_context = nil
 
     def set_context(context)
-      @@shell_current_context = context
+      @@shell_context = context
     end
 
     def help(shell, subcommand = false)
@@ -15,22 +15,18 @@ class Thor
       list.sort!{ |a,b| a[0] <=> b[0] }
 
       # monkey patching here => START
-      unless @@shell_current_context.empty?
-        command=@@shell_current_context.first.upcase
+      unless @@shell_context.root?
+        command=@@shell_context.tier_1_command.upcase
         filtered_list = []
-
-        # Tier 1 = dtk:/library> 
-        # Tier 2 = dtk:/library/public> 
-        is_tier_1 = (@@shell_current_context.size == 1)
 
         list.each do |help_item|
           # matches identifiers for ID/NAME
           matched_data = help_item.first.match(/\s\[?#{command}.?(NAME\/ID|ID\/NAME)\]?\s/)
           if matched_data.nil?
             # not found and tier 1 we add it to help list
-            filtered_list << help_item if is_tier_1
+            filtered_list << help_item if @@shell_context.tier_1?
           else
-            unless is_tier_1
+            unless @@shell_context.tier_1?
               # found and tier 2 we add it to list and remove ID/NAME part of desc
               filtered_list << help_item.first.gsub(matched_data[0],'')
             else
@@ -45,7 +41,7 @@ class Thor
 
 
       if list.empty?
-        shell.say "No tasks for current context '#{@@shell_current_context.join('/')}'." 
+        shell.say "No tasks for current context '#{@@shell_context.active_commands.join('/')}'." 
       else  
         shell.say "Tasks:"
       end

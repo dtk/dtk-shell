@@ -10,43 +10,14 @@ require 'shellwords'
 require 'readline'
 require 'thor'
 require 'rubygems'
-require 'active_support/core_ext/string/inflections'
 
 #ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
-
-# client commands
-CLIENT_COMMANDS   = ['cc','exit','clear']
-DTK_ROOT_PROMPT   = "dtk:/>"
 @context    = DTK::Shell::Context.new
-@current_cc = []
-
 
 # METHODS
 
- # check if command is valid for current context, only on tier 1 commands
- # also checks is ID/NAME valid
-def validate_command(command)
-
-  if @current_cc.empty?
-    unless @current_context.include? command
-      raise DTK::Shell::Error, "Context '#{command}' not present for current tier."
-    end
-  else
-    # at the moment this is tier 2
-    unless @context.valid_id?(@current_cc.first,command)
-      raise DTK::Shell::Error, "#{@current_cc.first.capitalize} identifier '#{command}' is not valid."
-    end
-  end
-end
-
-def reset_context
-  @current_cc = []
-  load_context
-end
-
-
 def change_context(args)
-  return DTK_ROOT_PROMPT if args.empty?
+  return DTK::Shell::Context::DTK_ROOT_PROMPT if args.empty?
 
   # if separated by spaces join them with '/' so we support spaces and slashes
   if args.instance_of?(Array) && args.size > 1
@@ -58,65 +29,46 @@ def change_context(args)
 
   # check for root of context
   if '/'.eql?(command[0,1])
-    reset_context()
+    @context.reset()
     next_command = command[1,command.size]
     return change_context(next_command)
   end
 
   # for multi context e.g. `cc library/public`
   if command.include?('/')
-    context_commands = command.split('/')
+    multiple_commands = command.split('/')
     # last command will continue to run in this flow
-    command = context_commands.pop
+    command = multiple_commands.pop
     # use recursion to load all other commands first, second, ...
-    context_commands.each { |context_comm| change_context(context_comm) }
     # flow will continue with last command left to load (see above)
+    multiple_commands.each { |m_command| change_context(m_command) }
+    # ...
   end
     
   if command.match(/\.\.[\/]?/)
     # backtracing context
-    @current_cc.pop
-    command = @current_cc.last
+    @context.remove_last_command
+    # since we support two level max this will be tier 1 command or root
+    command = @context.tier_1_command
   else 
     # validates command
-    validate_command(command)
+    @context.command_valid?(command)
     # set command to context
-    @current_cc << command
+    @context.insert_active_command(command)
   end
 
   # loads context for given command
-  load_context(command)
+  @context.load_context(command)
 
-  return "dtk:/#{@current_cc.join('/')}>"
+  return @context.shell_prompt
 end
 
-def load_context(command_name=nil)
-  # defa ult to existing context if there is no new one
-  @current_context = @context.sub_tasks_names(command_name) || @current_context
-  Readline.completion_append_character = " "
-  comp = proc { |s| @current_context.concat(CLIENT_COMMANDS).sort.grep( /^#{Regexp.escape(s)}/ ) }
-  Readline.completion_proc = comp
-end
+# RUNTIME PART - STARTS HERE
 
-def reverse_commands(cmd, args)
-  # changes command and argument if argument is plural of one of 
-  # the possible commands on tier1 e.g. libraries, assemblies
-  @current_context.each do |current|
-    command_singular=args.first.singularize
-    if current.eql?(command_singular)
-      cmd, args = command_singular, [cmd]
-    end
-  end
+# loads root context 
+@context.load_context()
 
-  return cmd, args
-end
-
-# RUNTIME PART
-
-# load tier 1 context 
-load_context('dtk')
-
-prompt = 'dtk:/> '
+prompt = DTK::Shell::Context::DTK_ROOT_PROMPT
 while line = Readline.readline(prompt, true)
   begin
     # some special cases
@@ -124,7 +76,7 @@ while line = Readline.readline(prompt, true)
     next if line.empty?
     system('clear') and next if line == 'clear'
     # when using help on root this is needed
-    line = 'dtk' if (line == 'help' && @current_cc.empty?)
+    line = 'dtk' if (line == 'help' && @context.root?)
 
     args = Shellwords.split(line)
     cmd = args.shift
@@ -134,26 +86,26 @@ while line = Readline.readline(prompt, true)
     else
       # if e.g "list libraries" is sent instead of "library list" we reverse commands
       # and still search for 'library list', this happens only on root
-      if !args.empty? && @current_cc.empty?
-        cmd, args = reverse_commands(cmd, args)
+      if !args.empty? && @context.active_commands.empty?
+        cmd, args = @context.reverse_commands(cmd, args)
       end
 
-      # if there is no set context no need to pre-process command
-      unless @current_cc.empty?
+      # we only pre-process commands on Tier 1, Tier 2 on root there is no need
+      unless @context.root?
         # command goes as first argument
         args.unshift(cmd)
-        # main command is first one from @current_cc
-        cmd  = @current_cc.first
+        # main command is first one from @context.active_commands
+        cmd  = @context.tier_1_command()
         # in case there is second cc it means it is ID and goes as first arg
-        args.unshift(@current_cc.last) if @current_cc.size > 1
+        args.unshift(@context.tier_2_command()) if @context.tier_2?
       end
 
-      temp_dev_flag = true
+      temp_dev_flag = false
       puts "Command > #{cmd} #{args.join(' ')}" if temp_dev_flag
 
       # special case when we are doing help for context we need to remove
       # context paramter
-      if @current_cc.size > 1
+      if @context.tier_2?
         if args.last == 'help'
           # we remove ID/NAME in order for help command to work
           # e.g. library public help => library help
@@ -162,19 +114,17 @@ while line = Readline.readline(prompt, true)
       end
 
       # send monkey patch class information about context
-      Thor.set_context(@current_cc)
+      Thor.set_context(@context)
 
       # execute command via Thor
       top_level_execute(cmd,args,true)
     end
 
-
-   
-   rescue DTK::Shell::Error => e
-    puts e.message
-   rescue Interrupt => e
-    system('stty', stty_save) # Restore
-    exit
+    rescue DTK::Shell::Error => e
+      puts e.message
+    rescue Interrupt => e
+      system('stty', stty_save) # Restore
+      exit
   end
 end
 
