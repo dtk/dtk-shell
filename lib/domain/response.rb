@@ -20,7 +20,7 @@ module DTK
       def self.wrap_helper_actions(&block)
         begin
           results = yield
-          Response.new(nil,{}).set_data(results)
+          ResponseOk.new(results)
          rescue => e
           error_hash =  {
             "message"=> e.to_s
@@ -61,6 +61,12 @@ module DTK
      private
       def hash_part()
         keys.inject(Hash.new){|h,k|h.merge(k => self[k])}
+      end
+    end
+
+    class ResponseOk < Response
+      def initialize(data={})
+        super(nil,{"data"=> data, "status" => "ok"})
       end
     end
 

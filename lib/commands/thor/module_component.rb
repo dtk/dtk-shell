@@ -131,7 +131,8 @@ module DTK::Client
 
       module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
       dtk_require_from_base('command_helpers/git_repo')
-      GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+      response = GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+      response
     end
 
     #TODO: add-direct-access and remove-direct-access should be removed as commands and instead add-direct-access 
