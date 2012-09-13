@@ -17,6 +17,18 @@ module DTK
         @render_view = RenderView::AUG_SIMPLE_LIST 
       end
 
+      def self.wrap_helper_actions(&block)
+        begin
+          results = yield
+          Response.new(nil,{}).set_data(results)
+         rescue => e
+          error_hash =  {
+            "message"=> e.to_s
+          }
+          ResponseError::Usage.new(error_hash)
+        end
+      end
+
       def render_data
         if ok?()
 
@@ -55,17 +67,19 @@ module DTK
     class ResponseError < Response
       include Common::Rest::ResponseErrorMixin
       def initialize(hash={})
-        super(nil,hash)
+        super(nil,{"errors" => [hash]})
       end
-    end
-
-    class ResponseBadParams < ResponseError
-      def initialize(bad_params_hash)
-        errors = bad_params_hash.map do |k,v|
-          {"code"=>"bad_parameter","message"=>"Parameter (#{k}) has a bad value: #{v}"}
+      
+      class Usage < self
+        def initialize(hash={})
+          super({"code" => "error"}.merge(hash))
         end
-        hash = {"errors"=>errors, "status"=>"notok"}
-        super(hash)
+      end
+      
+      class Internal < self
+        def initialize(hash={})
+          super({"code" => "error"}.merge(hash).merge("internal" => true))
+        end
       end
     end
 
