@@ -5,7 +5,7 @@ module DTK::Client
       PPColumns::ASSEMBLY
     end
 
-    desc "ASSEMBLY-NAME/ID info", "Get information about given assembly template."
+    desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."
     method_option :list, :type => :boolean, :default => false
     def info(assembly_id=nil)
       data_type = DataType::ASSEMBLY
@@ -17,7 +17,7 @@ module DTK::Client
       post rest_url("assembly/info"), post_body
     end
 
-    desc "[ASSEMBLY-NAME/ID] list [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
+    desc "[ASSEMBLY-TEMPLATE-NAME/ID] list [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
     method_option :list, :type => :boolean, :default => false
     def list(arg1=nil,arg2=nil)
       about, assembly_id = 
