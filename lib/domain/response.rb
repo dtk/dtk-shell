@@ -24,8 +24,6 @@ module DTK
           if data.empty?
             @render_view = RenderView::SIMPLE_LIST
             if data.kind_of?(Array)
-              #TODO: too below out because @render_data_type may be null and method pluralize does not exist
-              # {'Message' => "There are no #{@render_data_type.downcase.pluralize} available at the moment."}
               set_data('Message' => "Empty list")
             else #data.kind_of?(Hash)
               set_data('Status' => 'OK')

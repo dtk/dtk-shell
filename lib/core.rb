@@ -34,17 +34,16 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
     unless response_ruby_obj["errors"].nil?
       error_msg      = response_ruby_obj['errors'].map{|e| e["message"].gsub(/\.$/,"") unless e["message"].nil?}.join(". ")
       error_internal = response_ruby_obj['errors'].map{|e| e["internal"] unless e["internal"].nil?}
-
-      if error_internal.eql?(true)
-        # if internal error occured
-        # store details to log
+      
+      # if error_internal.first == true
+      if error_internal.first
+        # if internal error occured, store details to log
         DtkLogger.instance.error("Response Error Message: #{error_msg}.")
         # and display message to console
-        #TODO not sure what message should be displayed, in ticket it said that descriptive error should be printed out
+        #TODO not sure what message should be displayed, in jirra ticket it said that descriptive error should be printed out
         raise DTK::Client::DtkError, "Server has encountered internal error, please contact DTK team. See error log for more details."
       else
-        # if usage error occured
-        # display message to console and display that same message to log
+        # if usage error occured, display message to console and display that same message to log
         DtkLogger.instance.error("Usage error occured. Error message: #{error_msg}")
         raise DTK::Client::DtkError, "Usage error occured. Error message: #{error_msg}" 
       end
