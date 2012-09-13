@@ -29,7 +29,6 @@ module DTK
               set_data('Message' => "Empty list")
             else #data.kind_of?(Hash)
               set_data('Status' => 'OK')
-              
             end
           end
 
