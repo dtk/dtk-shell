@@ -114,7 +114,7 @@ module DTK::Client
       }
       post_body.merge!(:version => version) if version
 
-      response = post(rest_url("component_module/workspace_branch_info"),post_body)
+      response = post(rest_url("component_module/create_workspace_branch"),post_body)
       return response unless response.ok?
 
       module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
