@@ -106,6 +106,23 @@ module DTK::Client
       post rest_url("component_module/pull_from_remote"), post_body
     end
 
+    desc "COMPONENT-MODULE-NAME/ID clone [VERSION]", "Clone into client the component module files"
+    def clone(arg1,arg2=nil)
+      component_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1]) 
+      post_body = {
+        :component_module_id => component_module_id
+      }
+      post_body.merge!(:version => version) if version
+
+      response = post(rest_url("component_module/workspace_branch_info"),post_body)
+      return response unless response.ok?
+
+      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
+      GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+      response
+    end
+
+
     # we make valid methods to make sure that when context changing
     # we allow change only for valid ID/NAME
 

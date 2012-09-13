@@ -77,15 +77,6 @@ module DTK::Client
       post rest_url("component_module/remove_user_direct_access"), post_body
     end
 
-    desc "clone COMPONENT-MODULE-ID", "Clone into client the component module files"
-    def clone(component_module_id)
-      response = get rest_url("component_module/workspace_branch_info/#{component_module_id.to_s}")
-      return response unless response.ok?
-      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
-      GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch)
-      response
-    end
-
     desc "push-changes COMPONENT-MODULE-ID", "Push changes from local copy of module to server"
     def push_changes(component_module_id)
       response = get rest_url("component_module/workspace_branch_info/#{component_module_id.to_s}")
