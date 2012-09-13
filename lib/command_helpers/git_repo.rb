@@ -1,10 +1,12 @@
 dtk_require_dtk_common('grit_adapter') #only one adapter now
+dtk_require_dtk_common('errors') 
+dtk_require_dtk_common('log') 
 module DTK; module Client
   class GitRepo; class << self
-    def create_clone_with_branch(type,module_name,repo_url,branch)
+    def create_clone_with_branch(type,module_name,repo_url,branch,version=nil)
       modules_dir = modules_dir(type)
       Dir.mkdir(modules_dir) unless File.directory?(modules_dir)
-      target_repo_dir = local_repo_dir(type,module_name,modules_dir)
+      target_repo_dir = local_repo_dir(type,module_name,version,modules_dir)
       adapter_class().clone(target_repo_dir,repo_url,:branch => branch)
     end
 
@@ -21,7 +23,6 @@ module DTK; module Client
       if status.any_changes?() 
         repo.commit("Pushing changes from client") #TODO: make more descriptive
       end
-
 
       repo.fetch_branch(remote())
 
@@ -41,8 +42,8 @@ module DTK; module Client
       "remotes/#{remote()}/#{branch}"
     end
 
-    def create(type,module_name,branch)
-      adapter_class().new(local_repo_dir(type,module_name),branch)
+    def create(type,module_name,branch,version=nil)
+      adapter_class().new(local_repo_dir(type,module_name,version),branch)
     end
 
     def modules_dir(type)
@@ -56,9 +57,9 @@ module DTK; module Client
       end
     end
 
-    def local_repo_dir(type,module_name,modules_dir=nil)
+    def local_repo_dir(type,module_name,version=nil,modules_dir=nil)
       modules_dir ||= modules_dir(type)
-      "#{modules_dir}/#{module_name}"
+      "#{modules_dir}/#{module_name}#{version && "-#{version}"}"
     end
 
     def adapter_class()
