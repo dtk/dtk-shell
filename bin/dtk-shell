@@ -94,6 +94,7 @@ while line = Readline.readline(prompt, true)
       # command goes as first argument
       args.unshift(cmd)
       # main command is first one from 
+      cmd  = @context.tier_1_command()
       # in case there is second cc it means it is ID and goes as first arg
       args.unshift(@context.tier_2_command()) if @context.tier_2?
     end
