@@ -27,6 +27,7 @@ module DTK; module Client
    private
     #returns diffs_summary indicating what is different between lcoal and fetched remote branch
     def push_repo_changes(type,repo_dir,branch=nil,opts={})
+      diffs = Hash.new
       repo = create(repo_dir,branch)
       branch ||= repo.branch #branch gets filled in if left as nil
 
@@ -41,25 +42,37 @@ module DTK; module Client
       end
       
       unless opts[:no_fetch]
-        repo.fetch_branch(remote())
+        repo.fetch(remote())
       end
 
-      #TODO: check if local ahead ....
+      remote_branch = remote_branch(branch)
 
-      #see if any diffs between fetched remote and local branch
-      #this has be done after commit
-      diffs = repo.diff(remote_branch(branch),branch).ret_summary()
-      return diffs unless diffs.any_diffs?()
+      #check if merge needed
+      merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch)
+      pp [:debug,pp_module(repo),:merge_rel,merge_rel]
+      if merge_rel == :equal
+        diffs
+      elsif [:branchpoint,:local_behind].include?(merge_rel)
+        raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to server")
+      elsif merge_rel == :local_ahead
+        #see if any diffs between fetched remote and local branch
+        #this has be done after commit
+        diffs = repo.diff("remotes/#{remote_branch}",branch).ret_summary()
+        return diffs unless diffs.any_diffs?()
 
-      #TODO: look for conflicts and push changes
-      diffs
+        repo.push()
+
+        diffs
+      else
+        raise Error.new("Unexpected merge_rel (#{merge_rel})")
+      end
     end
 
     def remote()
       "origin"
     end
     def remote_branch(branch)
-      "remotes/#{remote()}/#{branch}"
+      "#{remote()}/#{branch}"
     end
 
     def create(repo_dir,branch=nil)
@@ -88,6 +101,10 @@ module DTK; module Client
 
     def adapter_class()
       Common::GritAdapter::FileAccess
+    end
+
+    def pp_module(repo)
+      repo.repo_dir.gsub(Regexp.new("/$"),"").split("/").last
     end
   end; end
 end; end
