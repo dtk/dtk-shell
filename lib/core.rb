@@ -32,10 +32,10 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
 
     # check for errors in response
     unless response_ruby_obj["errors"].nil?
+      error_internal = false
       error_msg      = response_ruby_obj['errors'].map{|e| e["message"].gsub(/\.$/,"") unless e["message"].nil?}.join(". ")
       error_internal = response_ruby_obj['errors'].map{|e| e["internal"] unless e["internal"].nil?}
 
-      error_internal = false
       response_ruby_obj["errors"].each do |e|
         error_internal ||= e["internal"]
       end
