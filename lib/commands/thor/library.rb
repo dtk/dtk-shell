@@ -59,18 +59,6 @@ module DTK::Client
       post rest_url("service_module/import"), post_body
     end
 
-    desc "[LIBRARY ID/NAME] import-component-module REMOTE-MODULE[,...]", "Import remote component module(s) into library"
-    #TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
-    #if multiple items and failire; stops on first failure
-    def import_component_module(remote_modules, library_id=nil)
-      post_body = {
-       :remote_module_names => remote_modules.split(",")
-      }
-      post_body.merge!(:library_id => library_id) if library_id
-
-      post rest_url("component_module/import"), post_body
-    end
-
     desc "[LIBRARY ID/NAME] create-service-component SERVICE-MODULE-NAME", "Create an empty service module in library"
     def create(module_name,library_id=nil)
       post_body = {

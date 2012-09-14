@@ -40,6 +40,18 @@ module DTK::Client
       return response
     end
 
+    desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
+    #TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
+    #if multiple items and failire; stops on first failure
+    def import(remote_modules, library_id=nil)
+      post_body = {
+       :remote_module_names => remote_modules.split(",")
+      }
+      post_body.merge!(:library_id => library_id) if library_id
+
+      post rest_url("component_module/import"), post_body
+    end
+
     desc "COMPONENT-MODULE-NAME/ID delete", "Delete component module and all items contained in it"
     def delete(component_module_id)
       post_body = {
@@ -114,12 +126,12 @@ module DTK::Client
       }
       post_body.merge!(:version => version) if version
 
-      response = post(rest_url("component_module/workspace_branch_info"),post_body)
+      response = post(rest_url("component_module/create_workspace_branch"),post_body)
       return response unless response.ok?
 
       module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
       dtk_require_from_base('command_helpers/git_repo')
-      GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+      response = GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
       response
     end
 
