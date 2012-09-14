@@ -139,7 +139,7 @@ module DTK
       def validate
         #TODO: need to check for legal values
         missing_keys = REQUIRED_KEYS - keys
-        raise DTK::Client::DtkError,"Missing config keys (#{missing_keys.join(",")})" unless missing_keys.empty?
+        raise DTK::Client::DtkError,"Missing config keys (#{missing_keys.join(",")}). Please check your configuration file #{CONFIG_FILE} for required keys!" unless missing_keys.empty?
       end
     end
 
@@ -151,7 +151,6 @@ module DTK
       end
       attr_reader :connection_error
 
-      #######
       def rest_url(route=nil)
         "http://#{Config[:server_host]}:#{Config[:server_port].to_s}/rest/#{route}"
       end
