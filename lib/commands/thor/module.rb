@@ -49,8 +49,10 @@ module DTK::Client
 
     desc "push-changes", "Push changes from local copy of module to server"
     def push_changes()
-      response = GitRepo.push_changes(:component_module)
-      response
+      diffs = GitRepo.push_changes(:component_module)
+      #TODO: if any changes tell the server to synchronize the mode with that 
+      #post to component_module/update_meta_info"
+      diffs
     end
 
     desc "update-library COMPONENT-MODULE-ID", "Updates library module with workspace module"
