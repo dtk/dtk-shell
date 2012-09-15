@@ -14,77 +14,83 @@ module DTK::Client
       # API descriptor
     end
 
-    desc "assembly-template","Work with assembly templates."
+    desc "assembly-template","Commands to stage or launch new assemblies and query assembly templates."
     def assembly_template
       # API descriptor
     end
 
-    desc "dependency","DESCRIPTION TO BE ADDED."
-    def dependency
-      # API descriptor
-    end
+    #TODO: not exposed 
+    #desc "dependency","DESCRIPTION TO BE ADDED."
+    #def dependency
+    #  # API descriptor
+    #end
 
-    desc "library", "Provides list of all libraries being used."
+    desc "library", "Commands to list and query libraries."
     def library
       # API descriptor
     end
 
-    desc "module", "Part of dtk client used for module manipulation."
+    #TODO: remove
+    desc "module", "Legacy command for testing."
     def module
       # API descriptor
     end
 
-    desc "module-component", "Work with module component templates."
+    desc "module-component", "Commands to create, query, import and export component modules."
     def module_component
       # API descriptor
     end
 
-    desc "node", "Add/Destroy/List available nodes."
+    desc "node", "Commands to list, query, and delete/destroy node instances."
     def node
       # API descriptor
     end    
 
-    desc "node-group", "Add/Destroy/List available groups of nodes."
-    def node_group
-      # API descriptor
-    end
+    #TODO: not supported yet
+    #desc "node-group", "Add/Destroy/List available groups of nodes."
+    #def node_group
+    #  # API descriptor
+    #end
 
-    desc "node-template", "Work with node templates."
+    desc "node-template", "Commands to list and query node templates."
     def node_template
       # API descriptor
     end
 
-    desc "component-template","Work with component templates."
+    desc "component-template","Commands to list and query component templates."
     def component_template
       # API descriptor
     end
 
-    desc "repo", "Part of dtk client which enables us to sync, destroy, view available repos."
-    def repo
-      # API descriptor
-    end    
+    #TODO: remove
+    #desc "repo", "Part of dtk client which enables us to sync, destroy, view available repos."
+    #def repo
+    #  # API descriptor
+    #end    
 
-    desc "project", "View available projects."
-    def project
-      # API descriptor
-    end
+    #TODO: not supported yet
+    #desc "project", "View available projects."
+    #def project
+    #  # API descriptor
+    #end
 
-    desc "service-module", "Part of dtk client used for manipulation of service modules."
+    desc "service-module", "Commands to create, query, import and export component modules."
     def service_module
       # API descriptor
     end
 
-    desc "state-change",  "Follow the progress for given tasks."
-    def state_change
-      # API descriptor
-    end
+    #TODO: not supported yet
+    #desc "state-change",  "Commands to query what has been changed."
+    #def state_change
+    #  # API descriptor
+    #end
 
-    desc "target", "Form assembly template based on information on targted cluster."
+    desc "target", "Commands to list and query targets."
     def target
       # API descriptor
     end
 
-    desc "task", "Part of client used to view progress of task."
+    desc "task", "Commands to list and view current and past tasks."
     def task
       # API descriptor
     end
