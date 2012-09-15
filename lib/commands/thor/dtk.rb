@@ -9,7 +9,7 @@ module DTK::Client
     # NOTE
     # Following methods are just api descriptors, invocation happens at "bin/dtk" entry point
 
-    desc "assembly","Part of dtk client used for assembly manipulation."
+    desc "assembly","Commands to execute, query and manipulate assembly instances."
     def assembly
       # API descriptor
     end

@@ -1,6 +1,34 @@
 module DTK::Client
   class ModuleComponent < CommandBaseThor
 
+    #### create and delete commands ###
+    desc "delete COMPONENT-MODULE-NAME/ID", "Delete component module and all items contained in it"
+    def delete(component_module_id)
+      post_body = {
+       :component_module_id => component_module_id
+      }
+      post rest_url("component_module/delete"), post_body
+      #TODO: deelte localclone if it exists
+    end
+
+    desc "create COMPONENT-MODULE-NAME [LIBRARY-NAME/ID]", "Create new module from local clone"
+    def create(arg1,arg2=nil)
+      component_module_name, library_id = (arg2.nil? ? [arg1] : [arg2,arg1])
+
+      #first make call to server to create an empty repo
+      post_body = {
+       :component_module_name => component_module_name
+      }
+      post_body.merge!(:library_id => library_id) if library_id
+      response = post rest_url("component_module/create_empty"), post_body
+      #TODO: use git help to make local directory into git clone and push changes
+      #then call server to add meta data
+#      post rest_url("component_module/add_meta_data"),{:component_module_id => component_module_id}
+    end
+
+    #### end: create and delete commands ###
+
+    #### list and info commands ###
     desc "COMPONENT-MODULE-NAME/ID info", "Get information about given component module."
     def info(component_module_id)
       post_body = {
@@ -40,6 +68,9 @@ module DTK::Client
       return response
     end
 
+    #### end: list and info commands ###
+
+    #### commands to interact with remote repo ###
     desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     #TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     #if multiple items and failire; stops on first failure
@@ -50,45 +81,6 @@ module DTK::Client
       post_body.merge!(:library_id => library_id) if library_id
 
       post rest_url("component_module/import"), post_body
-    end
-
-    desc "COMPONENT-MODULE-NAME/ID delete", "Delete component module and all items contained in it"
-    def delete(component_module_id)
-      post_body = {
-       :component_module_id => component_module_id
-      }
-      post rest_url("component_module/delete"), post_body
-    end
-
-    desc "COMPONENT-MODULE-NAME/ID promote-to-library [VERSION]", "Update library module with chyanges from workspace"
-    def promote_to_library(arg1,arg2=nil)
-      #component_module_id is in last position, which coudl be arg1 or arg2
-      component_module_id,version = (arg2 ? [arg2,arg1] : [arg1])
-
-      post_body = {
-        :component_module_id => component_module_id
-      }
-      post_body.merge!(:version => version) if version
-
-      post rest_url("component_module/promote_to_library"), post_body
-    end
-
-    #TODO: may also provide an optional library argument to create in new library
-    desc "COMPONENT-MODULE-NAME/ID create-new-version [EXISTING-VERSION] NEW-VERSION", "Create new version of module in library from workspace"
-    def create_new_version(arg1,arg2,arg3=nil)
-      #component_module_id is in last position
-      component_module_id,new_version,existing_version = 
-        (arg3 ? [arg3,arg2,arg1] : [arg2,arg1])
-
-      post_body = {
-        :component_module_id => component_module_id,
-        :new_version => new_version
-      }
-      if existing_version
-        post_body.merge!(:existing_version => existing_version)
-      end
-
-      post rest_url("component_module/create_new_version"), post_body
     end
 
     desc "COMPONENT-MODULE-NAME/ID export", "Export component module remote repository."
@@ -117,6 +109,42 @@ module DTK::Client
 
       post rest_url("component_module/pull_from_remote"), post_body
     end
+
+    #### end: commands to interact with remote repo ###
+
+    #### commands to manage workspace and promote changes from workspace to library ###
+    desc "COMPONENT-MODULE-NAME/ID promote-to-library [VERSION]", "Update library module with changes from workspace"
+    def promote_to_library(arg1,arg2=nil)
+      #component_module_id is in last position, which coudl be arg1 or arg2
+      component_module_id,version = (arg2 ? [arg2,arg1] : [arg1])
+
+      post_body = {
+        :component_module_id => component_module_id
+      }
+      post_body.merge!(:version => version) if version
+
+      post rest_url("component_module/promote_to_library"), post_body
+    end
+
+    #TODO: may also provide an optional library argument to create in new library
+    desc "COMPONENT-MODULE-NAME/ID promote-new-version [EXISTING-VERSION] NEW-VERSION", "Promote workspace module as new version of module in library from workspace"
+    def promote_new_version(arg1,arg2,arg3=nil)
+      #component_module_id is in last position
+      component_module_id,new_version,existing_version = 
+        (arg3 ? [arg3,arg2,arg1] : [arg2,arg1])
+
+      post_body = {
+        :component_module_id => component_module_id,
+        :new_version => new_version
+      }
+      if existing_version
+        post_body.merge!(:existing_version => existing_version)
+      end
+
+      post rest_url("component_module/promote_as_new_version"), post_body
+    end
+
+    #### end: commands to manage workspace and promote changes from workspace to library ###
 
     desc "COMPONENT-MODULE-NAME/ID clone [VERSION]", "Clone into client the component module files"
     def clone(arg1,arg2=nil)
