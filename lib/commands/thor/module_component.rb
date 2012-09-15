@@ -13,14 +13,27 @@ module DTK::Client
 
     desc "create COMPONENT-MODULE-NAME [LIBRARY-NAME/ID]", "Create new module from local clone"
     def create(arg1,arg2=nil)
-      component_module_name, library_id = (arg2.nil? ? [arg1] : [arg2,arg1])
+      module_name, library_id = (arg2.nil? ? [arg1] : [arg2,arg1])
+
+      dtk_require_from_base('command_helpers/git_repo')
+
+      #first check that there is a directory there and it is not already a git repo
+      response = GitRepo.check_local_dir_exists(:component_module,module_name)
+      return response unless response.ok?
 
       #first make call to server to create an empty repo
       post_body = {
-       :component_module_name => component_module_name
+       :component_module_name => module_name
       }
       post_body.merge!(:library_id => library_id) if library_id
-      response = post rest_url("component_module/create_empty"), post_body
+      response = post rest_url("component_module/create_empty_repo"), post_body
+      return response unless response.ok?
+
+      repo_url = response.data["repo_url"]
+      branch = response.data["branch"]
+      response = GitRepo.initialize_repo_and_push(:component_module,module_name,branch,repo_url)
+
+      pp response
       #TODO: use git help to make local directory into git clone and push changes
       #then call server to add meta data
 #      post rest_url("component_module/add_meta_data"),{:component_module_id => component_module_id}

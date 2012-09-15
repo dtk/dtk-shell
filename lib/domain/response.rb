@@ -28,7 +28,8 @@ module DTK
           if e.kind_of?(ErrorUsage)
             ResponseError::Usage.new(error_hash) 
           else
-             ResponseError::Internal.new(error_hash)
+            error_hash.merge!("backtrace" => e.backtrace)
+            ResponseError::Internal.new(error_hash)
           end
         end
       end

@@ -18,15 +18,35 @@ module DTK; module Client
         local_repo_dirs(type).map do |repo_dir|
           repo_name = repo_dir.split("/").last
           branch = nil #meaning to use the default branch
-          diffs = push_repo_changes(type,repo_dir,branch,opts)
+          diffs = push_repo_changes(repo_dir,branch,opts)
           {repo_name => diffs.inspect}
         end
       end
     end
 
+    def check_local_dir_exists(type,module_name,version=nil)
+      Response.wrap_helper_actions() do
+        ret = Hash.new
+        local_repo_dir = local_repo_dir(type,module_name,version)
+        unless File.directory?(local_repo_dir)
+          raise ErrorUsage.new("The content for module (#{module_name}) should be put in directory (#{local_repo_dir})")
+        end
+        ret
+      end
+    end
+
+    def initialize_repo_and_push(type,module_name,branch,repo_url)
+       Response.wrap_helper_actions() do
+        ret = Hash.new
+        repo_dir = local_repo_dir(type,module_name)
+        create_or_init(type,repo_dir,branch)      
+        ret
+      end
+    end
+
    private
     #returns diffs_summary indicating what is different between lcoal and fetched remote branch
-    def push_repo_changes(type,repo_dir,branch=nil,opts={})
+    def push_repo_changes(repo_dir,branch=nil,opts={})
       diffs = Hash.new
       repo = create(repo_dir,branch)
       branch ||= repo.branch #branch gets filled in if left as nil
@@ -75,8 +95,13 @@ module DTK; module Client
       "#{remote()}/#{branch}"
     end
 
-    def create(repo_dir,branch=nil)
-      adapter_class().new(repo_dir,branch)
+    def create_or_init(type,repo_dir,branch)
+      create_opts = (local_repo_dirs(type).include?(repo_dir) ? {} : {:init => true})
+      create(repo_dir,branch,create_opts)
+    end
+
+    def create(repo_dir,branch,opts={})
+      adapter_class().new(repo_dir,branch,opts)
     end
 
     def modules_dir(type)
@@ -91,7 +116,7 @@ module DTK; module Client
     end
 
     def local_repo_dirs(type)
-      Dir["#{modules_dir(type)}/*/"].map{|d|d.gsub(Regexp.new("/$"),"")}
+      Dir["/root/component_modules/*/.git"].map{|d|d.gsub(Regexp.new("/\.git$"),"")}
     end
 
     def local_repo_dir(type,module_name,version=nil,modules_dir=nil)
