@@ -60,7 +60,7 @@ module DTK; module Client
         #push changes
 
         #remove lib branch
-        repo_lib_branch.remove_branch?(lib_branch)
+        repo_ws_branch.remove_branch?(lib_branch)
         ret
       end
     end
