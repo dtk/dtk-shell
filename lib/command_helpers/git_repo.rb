@@ -35,15 +35,33 @@ module DTK; module Client
       end
     end
 
-    def initialize_repo_and_push(type,module_name,branch,repo_url)
+    def initialize_repo_and_push(type,module_name,ws_branch,repo_url)
        Response.wrap_helper_actions() do
         ret = Hash.new
+        #TODO: should have server give library branch name
+        lib_branch = "master"
+        if lib_branch == ws_branch
+          raise Error.new("Unexpected that library and workspaces branches are equal")
+        end
+        ret = Hash.new
         repo_dir = local_repo_dir(type,module_name)
-        repo = create_or_init(type,repo_dir,branch)      
-        repo.add_or_update_remote(remote(),repo_url)
-        repo.add_file_command(".")
-        repo.commit("Adding files during initialization")
-        repo.push()
+
+        #first create library branch then workspace branch then remove local branch to library
+        repo_lib_branch = create_or_init(type,repo_dir,lib_branch)      
+        repo_lib_branch.add_or_update_remote(remote(),repo_url)
+        repo_lib_branch.add_file_command(".")
+        repo_lib_branch.commit("Adding files during initialization")
+        repo_lib_branch.push()
+
+        #create and commit workspace branch
+        repo_lib_branch.add_branch?(ws_branch)
+        repo_ws_branch = create(repo_dir,ws_branch)
+        repo_ws_branch.push()
+        #push changes
+
+        #remove lib branch
+        repo_lib_branch.remove_branch?(lib_branch)
+        ret
       end
     end
 
