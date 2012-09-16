@@ -8,7 +8,7 @@ module DTK::Client
        :component_module_id => component_module_id
       }
       post rest_url("component_module/delete"), post_body
-      #TODO: deelte localclone if it exists
+      #TODO: delete localclone if it exists
     end
 
     desc "create COMPONENT-MODULE-NAME [LIBRARY-NAME/ID]", "Create new module from local clone"
@@ -28,7 +28,6 @@ module DTK::Client
       post_body.merge!(:library_id => library_id) if library_id
       response = post rest_url("component_module/create_empty_repo"), post_body
       return response unless response.ok?
-
       repo_url = response.data["repo_url"]
       branch = response.data["branch"]
       response = GitRepo.initialize_repo_and_push(:component_module,module_name,branch,repo_url)

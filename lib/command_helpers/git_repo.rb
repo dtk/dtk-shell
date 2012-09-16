@@ -17,8 +17,8 @@ module DTK; module Client
       Response.wrap_helper_actions() do
         local_repo_dirs(type).map do |repo_dir|
           repo_name = repo_dir.split("/").last
-          branch = nil #meaning to use the default branch
-          diffs = push_repo_changes(repo_dir,branch,opts)
+          repo = create(repo_dir)
+          diffs = push_repo_changes(repo,opts)
           {repo_name => diffs.inspect}
         end
       end
@@ -39,17 +39,18 @@ module DTK; module Client
        Response.wrap_helper_actions() do
         ret = Hash.new
         repo_dir = local_repo_dir(type,module_name)
-        create_or_init(type,repo_dir,branch)      
-        ret
+        repo = create_or_init(type,repo_dir,branch)      
+        repo.add_or_update_remote(remote(),repo_url)
+        repo.add_file_command(".")
+        repo.commit("Adding files during initialization")
+        repo.push()
       end
     end
 
    private
-    #returns diffs_summary indicating what is different between lcoal and fetched remote branch
-    def push_repo_changes(repo_dir,branch=nil,opts={})
+    def push_repo_changes_aux(repo,opts={})
       diffs = Hash.new
-      repo = create(repo_dir,branch)
-      branch ||= repo.branch #branch gets filled in if left as nil
+      branch = repo.branch 
 
       #add any file that is untracked
       status = repo.status()
