@@ -1,1 +1,136 @@
-{"components":{"mapping":{"library_id":"library_library_id","version":"version","component_id":"dtk_id","library":"library.display_name","component_type":"dtk_type","name":"display_name"},"order":["component_id","name","component_type","version","library","library_id"]},"node_template":{"mapping":{"template_type":"template_type","size":"size.split('.').last","name":"display_name","template_name":"template_name","os":"os_type"},"order":["name","template_name","os","template_type","size"]},"assembly":{"mapping":{"components":"nodes.first['components'].join(', ')","assembly_id":"dtk_id","assembly_name":"display_name","nodes":"nodes.size"},"order":["assembly_id","assembly_name","nodes","components"]},"task":{"mapping":{"status":"status.upcase","end":"ended_at.get_date","start":"started_at.get_date","created":"created_at.get_date","task_id":"dtk_id"},"order":["task_id","status","created","start","end"]},"remote_module":{"mapping":{"version":"version","name":"display_name"},"order":["name","version"]},"module":{"mapping":{"version":"version","module_id":"dtk_id","name":"display_name"},"order":["module_id","name","version"]},"node":{"mapping":{"node_id":"dtk_id","zone":"external_ref.availability_zone","node_type":"node_type","region":"external_ref.region","size":"external_ref.size.split('.').last","instance_id":"external_ref.instance_id","name":"display_name","dns_name":"external_ref.dns_name","os":"os_type"},"order":["node_id","name","node_type","region","instance_id","size","zone","os","dns_name"]},"library":{"mapping":{"library_name":"display_name","library_id":"dtk_id"},"order":["library_id","library_name"]},"target":{"mapping":{"iaas":"iaas_type","description":"description","target_id":"dtk_id","target_type":"dtk_type"},"order":["target_id","target_type","iaas","description"]}}
+{
+  "node": {
+    "order": [
+      "node_id",
+      "name",
+      "node_type",
+      "region",
+      "instance_id",
+      "size",
+      "zone",
+      "os",
+      "dns_name"
+    ],
+    "mapping": {
+      "name": "display_name",
+      "region": "external_ref.region",
+      "dns_name": "external_ref.dns_name",
+      "size": "external_ref.size.split('.').last",
+      "instance_id": "external_ref.instance_id",
+      "node_type": "node_type",
+      "zone": "external_ref.availability_zone",
+      "os": "os_type",
+      "node_id": "dtk_id"
+    }
+  },
+  "component": {
+    "order": [
+      "component_id",
+      "name",
+      "component_type",
+      "version",
+      "library",
+      "library_id"
+    ],
+    "mapping": {
+      "name": "display_name",
+      "version": "version",
+      "library": "library.display_name",
+      "component_id": "dtk_id",
+      "library_id": "library_library_id",
+      "component_type": "dtk_type"
+    }
+  },
+  "module": {
+    "order": [
+      "module_id",
+      "name",
+      "version"
+    ],
+    "mapping": {
+      "name": "display_name",
+      "module_id": "dtk_id",
+      "version": "version"
+    }
+  },
+  "node_template": {
+    "order": [
+      "name",
+      "template_name",
+      "os",
+      "template_type",
+      "size"
+    ],
+    "mapping": {
+      "name": "display_name",
+      "template_type": "template_type",
+      "size": "size.split('.').last",
+      "os": "os_type",
+      "template_name": "template_name"
+    }
+  },
+  "library": {
+    "order": [
+      "library_id",
+      "library_name"
+    ],
+    "mapping": {
+      "library_name": "display_name",
+      "library_id": "dtk_id"
+    }
+  },
+  "remote_module": {
+    "order": [
+      "name",
+      "version"
+    ],
+    "mapping": {
+      "name": "display_name",
+      "version": "version"
+    }
+  },
+  "task": {
+    "order": [
+      "task_id",
+      "status",
+      "created",
+      "start",
+      "end"
+    ],
+    "mapping": {
+      "task_id": "dtk_id",
+      "end": "ended_at.get_date",
+      "start": "started_at.get_date",
+      "status": "status.upcase",
+      "created": "created_at.get_date"
+    }
+  },
+  "target": {
+    "order": [
+      "target_id",
+      "target_type",
+      "iaas",
+      "description"
+    ],
+    "mapping": {
+      "iaas": "iaas_type",
+      "target_id": "dtk_id",
+      "description": "description",
+      "target_type": "dtk_type"
+    }
+  },
+  "assembly": {
+    "order": [
+      "assembly_id",
+      "assembly_name",
+      "nodes",
+      "components"
+    ],
+    "mapping": {
+      "components": "nodes.first['components'].join(', ')",
+      "nodes": "nodes.size",
+      "assembly_name": "display_name",
+      "assembly_id": "dtk_id"
+    }
+  }
+}
