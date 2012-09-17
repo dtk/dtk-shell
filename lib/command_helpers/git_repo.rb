@@ -49,6 +49,7 @@ module DTK; module Client
         #first create library branch then workspace branch then remove local branch to library
         repo_lib_branch = create_or_init(type,repo_dir,lib_branch)      
         repo_lib_branch.add_or_update_remote(remote(),repo_url)
+        repo_lib_branch.fetch(remote())
         repo_lib_branch.add_file_command(".")
         repo_lib_branch.commit("Adding files during initialization")
         repo_lib_branch.push()
