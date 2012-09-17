@@ -35,14 +35,12 @@ module DTK; module Client
       end
     end
 
-    def initialize_repo_and_push(type,module_name,ws_branch,repo_url)
+    def initialize_repo_and_push(type,module_name,branch_info,repo_url)
        Response.wrap_helper_actions() do
         ret = Hash.new
-        #TODO: should have server give library branch name
-        lib_branch = "master"
-        if lib_branch == ws_branch
-          raise Error.new("Unexpected that library and workspaces branches are equal")
-        end
+        lib_branch = branch_info[:library]
+        ws_branch = branch_info[:workspace]
+
         ret = Hash.new
         repo_dir = local_repo_dir(type,module_name)
 

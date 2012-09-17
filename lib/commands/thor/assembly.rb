@@ -159,9 +159,9 @@ module DTK::Client
       }
       response = post(rest_url("assembly/info"),post_body)
       return response unless response.ok?
-      assembly_id,assembly_name = response.data_ret_and_remove!(:id,:display_name)
+      assembly_id,assembly_name = response.data_ret!(:id,:display_name)
+      #TODO: modify JenkinsClient to use response wrapper
       JenkinsClient.create_assembly_project?(assembly_name,assembly_id)
-      #TODO: right now JenkinsClient wil throw error if problem; better to create an error response
       nil
     end
 

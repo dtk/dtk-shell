@@ -15,7 +15,7 @@ module DTK
       def self.execute_from_cli(conn,argv,shell_execution=false)
         @@shell_execution = shell_execution
         ret = start(arg_analyzer(argv),:conn => conn)
-        ret.kind_of?(Response) ? ret : ResponseNoOp.new
+        ret.kind_of?(Response) ? ret : Response::NoOp.new
       end
 
       # Method will check if there ID/Name before one of the commands if so

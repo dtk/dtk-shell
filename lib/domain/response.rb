@@ -1,4 +1,4 @@
-dtk_require_dtk_common("rest_client_wrapper")
+dtk_require_dtk_common("response")
 
 # This is wrapper for holding rest response information as well as 
 # passing selection of ViewProcessor from Thor selection to render view 
@@ -6,7 +6,8 @@ dtk_require_dtk_common("rest_client_wrapper")
 
 module DTK
   module Client
-    class Response < Common::Rest::Response
+    #TODO: should make higher level class be above whether it is 'rest'
+    class Response < Common::Response
 
       attr_accessor :render_view
 
@@ -20,15 +21,15 @@ module DTK
       def self.wrap_helper_actions(&block)
         begin
           results = yield
-          ResponseOk.new(results)
+          Ok.new(results)
          rescue ErrorUsage => e
-          ResponseError::Usage.new("message"=> e.to_s)
+          Error::Usage.new("message"=> e.to_s)
          rescue => e
           error_hash =  {
             "message"=> e.to_s,
             "backtrace" => e.backtrace
             }
-          ResponseError::Internal.new(error_hash)
+          Error::Internal.new(error_hash)
         end
       end
 
@@ -61,41 +62,40 @@ module DTK
         @render_view = RenderView::TABLE
       end
 
-     private
       def hash_part()
         keys.inject(Hash.new){|h,k|h.merge(k => self[k])}
       end
-    end
+      private :hash_part
 
-    class ResponseOk < Response
-      def initialize(data={})
-        super(nil,{"data"=> data, "status" => "ok"})
-      end
-    end
-
-    class ResponseError < Response
-      include Common::Rest::ResponseErrorMixin
-      def initialize(hash={})
-        super(nil,{"errors" => [hash]})
-      end
-      
-      class Usage < self
-        def initialize(hash={})
-          super({"code" => "error"}.merge(hash))
+      class Ok < self
+        def initialize(data={})
+          super(nil,{"data"=> data, "status" => "ok"})
         end
       end
-      
-      class Internal < self
+
+      class Error < self
+        include Common::Response::ErrorMixin
         def initialize(hash={})
-          super({"code" => "error"}.merge(hash).merge("internal" => true))
+          super(nil,{"errors" => [hash]})
+        end
+        
+        class Usage < self
+          def initialize(hash={})
+            super({"code" => "error"}.merge(hash))
+          end
+        end
+      
+        class Internal < self
+          def initialize(hash={})
+            super({"code" => "error"}.merge(hash).merge("internal" => true))
+          end
+        end
+
+        class NoOp < self
+          def render_data
+          end
         end
       end
     end
-
-    class ResponseNoOp < Response
-      def render_data
-      end
-    end
-
   end
 end
