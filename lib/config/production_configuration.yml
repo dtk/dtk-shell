@@ -1,2 +1,4 @@
 application:
   development_mode: false
+caching_url:
+  meta_table_ttl:   7200000   # time to live (ms)

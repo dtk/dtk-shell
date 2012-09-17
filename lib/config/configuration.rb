@@ -21,21 +21,20 @@ module Config
     end
     
     def initialize
-      configuration_file = get_configuration_file()
-      @cache = YAML::load_file(File.expand_path("../#{configuration_file}",__FILE__))
+      @cache = YAML::load_file(File.expand_path("../#{PRODUCTION_CONF}",__FILE__))
+
+      if File.exist?(File.expand_path("../#{DEVELOPMENT_CONF}",__FILE__))
+        local_configuration = YAML::load_file(File.expand_path("../#{DEVELOPMENT_CONF}",__FILE__))
+        # we override only values from local configuration
+        # that way developer does not have updates its local configuration all the time
+        @cache.merge!(local_configuration)
+      end
+
     end
 
     def get(group, name, default=nil)
       return @cache[group.to_s][name.to_s] || default
     end
-    
-    private
 
-    def get_configuration_file
-      return DEVELOPMENT_CONF if File.exist?(File.expand_path("../#{DEVELOPMENT_CONF}",__FILE__))
-
-      return PRODUCTION_CONF
-    end
-  
   end
 end
