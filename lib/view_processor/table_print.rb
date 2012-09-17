@@ -1,6 +1,8 @@
 require 'hirb'
 require 'ostruct'
 
+dtk_require("../config/disk_cacher")
+
 # we override String here to give power to our mutators defined in TableDefintions
 class String
   def get_date
@@ -16,47 +18,27 @@ module DTK
       end
     end
 
-    private
-
-    # when adding class to table view you need to define mapping and order to be displayed in table
-    # this can be fixed with facets, but that is todo for now TODO: use facets with ordered hashes
-    class TableDefinitions
-      ASSEMBLY            = { :assembly_id=>"dtk_id", :assembly_name => "display_name", :nodes => "nodes.size", :components => "nodes.first['components'].join(', ')" }
-      ASSEMBLY_ORDER      = [ :assembly_id, :assembly_name, :nodes, :components ]
-      TASK                = { :task_id => "dtk_id", :status => "status.upcase", :created => "created_at.get_date", :start => "started_at.get_date", :end => "ended_at.get_date"}
-      TASK_ORDER          = [ :task_id,:status, :created, :start, :end ]
-      NODE                = { :node_id => "dtk_id", :name => "display_name", :node_type => "node_type", :region => "external_ref.region", :instance_id => "external_ref.instance_id", :size => "external_ref.size.split('.').last", :zone => "external_ref.availability_zone", :os => "os_type", :dns_name => "external_ref.dns_name" }
-      NODE_ORDER          = [ :node_id, :name, :node_type, :region, :instance_id, :size, :zone, :os, :dns_name ]
-      NODE_TEMPLATE       = { :name => "display_name", :template_name => "template_name", :template_type => "template_type", :size => "size.split('.').last", :os => "os_type" }
-      NODE_TEMPLATE_ORDER = [ :name, :template_name, :os, :template_type, :size]
-      REMOTE_MODULE       = { :name => "display_name", :version => "version" }
-      REMOTE_MODULE_ORDER = [:name, :version ]
-      MODULE              = { :module_id => "dtk_id", :name => "display_name", :version => "version" }
-      MODULE_ORDER        = [ :module_id, :name, :version ]
-      TARGET              = { :target_id => "dtk_id", :target_type => "dtk_type", :iaas => "iaas_type", :description => "description"}
-      TARGET_ORDER        = [ :target_id, :target_type, :iaas, :description]
-      LIBRARY             = { :library_id => "dtk_id", :library_name => "display_name" }
-      LIBRARY_ORDER       = [ :library_id, :library_name ]      
-      COMPONENT           = { :component_id => "dtk_id", :name => "display_name", :component_type => "dtk_type", :version=>"version", :library => "library.display_name", :library_id => "library_library_id" }
-      COMPONENT_ORDER     = [ :component_id, :name, :component_type, :version, :library, :library_id ]
-    end
-
     class DtkResponse
 
       include Hirb::Console
 
       attr_accessor :command_name, :order_defintion, :evaluated_data
 
+      # when adding class to table view you need to define mapping and order to be displayed in table
+      # this can be fixed with facets, but that is todo for now TODO: use facets with ordered hashes
+
       def initialize(data, data_type)
         # use this to see data structure
         # puts data.first.inspect
+
+        @table_defintions = get_metadata()     
 
         # e.g. data type ASSEMBLY
         @command_name     = data_type
         # e.g. ASSEMBLY => TableDefintions::ASSEMBLY
         table_defintion   = get_table_defintion(@command_name)
         # e.g. ASSEMBLY => TableDefintions::ASSEMBLY_ORDER
-        @order_definition = get_table_defintion("#{@command_name}_ORDER")
+        @order_definition = get_table_defintion(@command_name, true)
 
         # if one defintion is missing we stop the execution
         if table_defintion.nil? || @order_definition.nil?
@@ -90,6 +72,17 @@ module DTK
         end
       end
 
+      def get_metadata
+        # TODO: replace this with proper call, 1200000 is age of the request in this case 20 mins
+        content = DiskCacher.new.fetch("http://localhost/mockup/get_table_metadata", 1200000)
+        #FakeWeb.register_uri(:get, "http://localhost/mockup/get_table_metadata", :body => "Hello World!")
+        #response = Net::HTTP.get(URI.parse("http://localhost/mockup/get_table_metadata"))
+        #content = File.open(File.expand_path('../../test.json',File.dirname(__FILE__)),'rb').read
+        raise DTK::Client::DtkError, "Table metadata is empty, please contact DTK team." if content.empty?
+        return JSON.parse(content)
+      end
+
+
       def to_ostruct(data)
         arr = data.map do |k, v|
           k = safe_name(k)
@@ -109,9 +102,9 @@ module DTK
         (identifier == 'id' || identifier  == 'type') ? "dtk_#{identifier}" : identifier
       end
 
-      def get_table_defintion(name)
+      def get_table_defintion(name,is_order=false)
         begin
-          TableDefinitions.const_get(name)
+          @table_defintions[name.downcase][(is_order ? 'order' : 'mapping')]
         rescue NameError => e
           return nil
         end
