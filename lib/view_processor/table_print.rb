@@ -74,7 +74,7 @@ module DTK
 
       def get_metadata
         # TODO: replace this with proper call, 1200000 is age of the request in this case 20 mins
-        content = DiskCacher.new.fetch("http://localhost/mockup/get_table_metadata", 1200000)
+        content = DiskCacher.new.fetch("http://localhost/mockup/get_table_metadata", ::Config::Configuration.get(:caching_url,:meta_table_ttl))
         #FakeWeb.register_uri(:get, "http://localhost/mockup/get_table_metadata", :body => "Hello World!")
         #response = Net::HTTP.get(URI.parse("http://localhost/mockup/get_table_metadata"))
         #content = File.open(File.expand_path('../../test.json',File.dirname(__FILE__)),'rb').read
