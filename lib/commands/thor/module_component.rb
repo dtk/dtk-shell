@@ -30,14 +30,17 @@ module DTK::Client
 pp [:debug, response]
       return response unless response.ok?
 
-      repo_url,workspace_branch = response.data_ret_and_remove!(:repo_url,:workspace_branch)
+      repo_url,workspace_branch,repo_id,library_id = response.data_ret_and_remove!(:repo_url,:workspace_branch,:repo_id,:library_id)
       #TODO: pass in also library_branch
       response = GitRepo.initialize_repo_and_push(:component_module,module_name,workspace_branch,repo_url)
+      return response unless response.ok?
 
-      pp response
-      #TODO: use git help to make local directory into git clone and push changes
-      #then call server to add meta data
-#      post rest_url("component_module/add_meta_data"),{:component_module_id => component_module_id}
+      post_body = {
+        :repo_id => repo_id,
+        :library_id => library_id,
+        :module_name => module_name
+      }
+      post rest_url("component_module/update_repo_and_add_meta_data"), post_body
     end
 
     #### end: create and delete commands ###
