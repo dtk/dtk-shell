@@ -21,16 +21,14 @@ module DTK
         begin
           results = yield
           ResponseOk.new(results)
+         rescue ErrorUsage => e
+          ResponseError::Usage.new("message"=> e.to_s)
          rescue => e
           error_hash =  {
-            "message"=> e.to_s
-          }
-          if e.kind_of?(ErrorUsage)
-            ResponseError::Usage.new(error_hash) 
-          else
-            error_hash.merge!("backtrace" => e.backtrace)
-            ResponseError::Internal.new(error_hash)
-          end
+            "message"=> e.to_s,
+            "backtrace" => e.backtrace
+            }
+          ResponseError::Internal.new(error_hash)
         end
       end
 

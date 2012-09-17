@@ -18,7 +18,7 @@ module DTK; module Client
         local_repo_dirs(type).map do |repo_dir|
           repo_name = repo_dir.split("/").last
           repo = create(repo_dir)
-          diffs = push_repo_changes(repo,opts)
+          diffs = push_repo_changes_aux(repo,opts)
           {repo_name => diffs.inspect}
         end
       end
@@ -120,7 +120,7 @@ module DTK; module Client
       create(repo_dir,branch,create_opts)
     end
 
-    def create(repo_dir,branch,opts={})
+    def create(repo_dir,branch=nil,opts={})
       adapter_class().new(repo_dir,branch,opts)
     end
 
