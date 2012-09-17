@@ -138,7 +138,7 @@ module DTK::Client
         response['errors'].each { |error| errors_message += ", reason='#{error['code']}' message='#{error['message']}'" }
         raise DTK::Client::DtkError, "Invalid jenkins response#{errors_message}"
       end
-      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
+      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:workspace_branch)
       JenkinsClient.create_service_module_project?(service_module_id,module_name,repo_url,branch)
       #TODO: right now JenkinsClient wil throw error if problem; better to create an error resonse
       response

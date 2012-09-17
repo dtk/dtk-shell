@@ -27,10 +27,12 @@ module DTK::Client
       }
       post_body.merge!(:library_id => library_id) if library_id
       response = post rest_url("component_module/create_empty_repo"), post_body
+pp [:debug, response]
       return response unless response.ok?
-      repo_url = response.data["repo_url"]
-      branch = response.data["branch"]
-      response = GitRepo.initialize_repo_and_push(:component_module,module_name,branch,repo_url)
+
+      repo_url,workspace_branch = response.data_ret_and_remove!(:repo_url,:workspace_branch)
+      #TODO: pass in also library_branch
+      response = GitRepo.initialize_repo_and_push(:component_module,module_name,workspace_branch,repo_url)
 
       pp response
       #TODO: use git help to make local directory into git clone and push changes
@@ -169,7 +171,7 @@ module DTK::Client
       response = post(rest_url("component_module/create_workspace_branch"),post_body)
       return response unless response.ok?
 
-      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:branch)
+      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:workspace_branch)
       dtk_require_from_base('command_helpers/git_repo')
       response = GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
       response
