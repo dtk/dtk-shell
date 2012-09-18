@@ -186,7 +186,7 @@ module DTK
       def login()
         creds = get_credentials()
         response = post_raw rest_url("user/process_login"),creds
-        if response.kind_of?(Common::Rest::Response) and not response.ok?
+        if response.kind_of?(Common::Response) and not response.ok?
           @connection_error = response
         else
           @cookies = response.cookies
@@ -201,16 +201,17 @@ module DTK
       end
 
       ####
-      DefaultRestOpts = {:timeout => 20, :open_timeout => 0.5, :error_response_class => Client::ResponseError}
+      RestClientWrapper = Common::Response::RestClientWrapper
+      DefaultRestOpts = {:timeout => 20, :open_timeout => 0.5, :error_response_class => Client::Response::Error}
       def get_raw(url)
-        Common::Rest::ClientWrapper.get_raw(url,DefaultRestOpts.merge(:cookies => @cookies))
+        RestClientWrapper.get_raw(url,DefaultRestOpts.merge(:cookies => @cookies))
       end
       def post_raw(url,body)
-        Common::Rest::ClientWrapper.post_raw(url,body,DefaultRestOpts.merge(:cookies => @cookies))
+        RestClientWrapper.post_raw(url,body,DefaultRestOpts.merge(:cookies => @cookies))
       end
 
       def json_parse_if_needed(item)
-        Common::Rest::ClientWrapper.json_parse_if_needed(item)
+        RestClientWrapper.json_parse_if_needed(item)
       end
     end
   end

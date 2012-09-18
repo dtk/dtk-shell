@@ -30,9 +30,12 @@ module DTK::Client
 pp [:debug, response]
       return response unless response.ok?
 
-      repo_url,workspace_branch,repo_id,library_id = response.data_ret_and_remove!(:repo_url,:workspace_branch,:repo_id,:library_id)
-      #TODO: pass in also library_branch
-      response = GitRepo.initialize_repo_and_push(:component_module,module_name,workspace_branch,repo_url)
+      repo_url,repo_id,library_id = response.data_ret(:repo_url,:repo_id,:library_id)
+      branch_info = {
+        :workspace => response.data_ret(:workspace_branch),
+        :library => response.data_ret(:library_branch)
+      }
+      response = GitRepo.initialize_repo_and_push(:component_module,module_name,branch_info,repo_url)
       return response unless response.ok?
 
       post_body = {
@@ -174,7 +177,7 @@ pp [:debug, response]
       response = post(rest_url("component_module/create_workspace_branch"),post_body)
       return response unless response.ok?
 
-      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:workspace_branch)
+      module_name,repo_url,branch = response.data_ret(:module_name,:repo_url,:workspace_branch)
       dtk_require_from_base('command_helpers/git_repo')
       response = GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
       response
