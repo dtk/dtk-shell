@@ -90,12 +90,13 @@ module DTK
             super({"code" => "error"}.merge(hash).merge("internal" => true))
           end
         end
+      end
 
-        class NoOp < self
-          def render_data
-          end
+      class NoOp < self
+        def render_data
         end
       end
     end
   end
 end
+
