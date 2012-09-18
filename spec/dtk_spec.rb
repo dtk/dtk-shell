@@ -20,13 +20,13 @@ describe DTK::Client::Dtk do
       output.should include("dtk node")
     end
 
-    it "should have repo listing" do
-      output.should include("dtk repo")
-    end
+    # it "should have repo listing" do
+    #   output.should include("dtk repo")
+    # end
 
     it "should have task listing" do
       output.should include("dtk task")
     end
-
   end
+    
 end
