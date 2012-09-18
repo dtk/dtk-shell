@@ -5,7 +5,15 @@ include SpecThor
 describe DTK::Client::Task do
 
   # generic test for all task of Thor class
-  test_task_interface(DTK::Client::Task)
+  #test_task_interface(DTK::Client::Task)
+
+  context "#list" do
+  	command = "dtk task list"
+  	output  = `#{command}`
+
+  	it "should list all tasks" do
+  		output.should include("task")
+  	end
+  end
 
 end
-

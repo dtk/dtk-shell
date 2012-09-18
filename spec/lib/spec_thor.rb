@@ -1,5 +1,6 @@
 require File.expand_path('../../lib/client', File.dirname(__FILE__))
 dtk_nested_require("../../lib/parser/adapters","thor")
+require 'active_support/core_ext/string/inflections'
 
 require 'rspec'
 
