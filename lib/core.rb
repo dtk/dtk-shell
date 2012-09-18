@@ -32,25 +32,27 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
 
     # check for errors in response
     unless response_ruby_obj["errors"].nil?
-      error_internal = false
-      error_msg      = response_ruby_obj['errors'].map{|e| e["message"].gsub(/\.$/,"") unless e["message"].nil?}.join(". ")
-      error_internal = response_ruby_obj['errors'].map{|e| e["internal"] unless e["internal"].nil?}
+      error_internal  = false
+      error_backtrace = nil
 
-      response_ruby_obj["errors"].each do |e|
-        error_internal ||= e["internal"]
+      error_msg      = response_ruby_obj['errors'].map{|e| e["message"].gsub(/\.$/,"") unless e["message"].nil?}.join(". ")
+      
+      response_ruby_obj["errors"].each do |e| 
+        error_internal  ||= e["internal"]
+        error_backtrace ||= e["backtrace"]
       end
+
+      # normalize it for display
+      error_msg = error_msg.empty? ? '' : ": #{error_msg}"
       
       # if error_internal.first == true
       if error_internal
-        # if internal error occured, store details to log
-        DtkLogger.instance.error("Response Error Message: #{error_msg}.")
-        # and display message to console
-        #TODO not sure what message should be displayed, in jirra ticket it said that descriptive error should be printed out
-        raise DTK::Client::DtkError, "Server has encountered internal error, please contact DTK team. See error log for more details."
+        DtkLogger.instance.error("Internal error#{error_msg}, backtrace: #{error_backtrace}") unless error_backtrace.nil?
+        #TODO not sure what message should be displayed, in jira ticket it said that descriptive error should be printed out
+        raise DTK::Client::DtkError, "Server has encountered internal error#{error_msg}, please contact DTK team. See DTK log for more details."
       else
         # if usage error occured, display message to console and display that same message to log
-        DtkLogger.instance.error("Usage error occured. Error message: #{error_msg}")
-        raise DTK::Client::DtkError, "Usage error occured. Error message: #{error_msg}" 
+        raise DTK::Client::DtkError, "Server has encountered usage error#{error_msg}, see DTK log for details." 
       end
     end
 
