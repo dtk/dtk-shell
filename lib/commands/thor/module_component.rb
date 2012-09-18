@@ -103,6 +103,15 @@ pp [:debug, response]
       post rest_url("component_module/import"), post_body
     end
 
+    desc "delete-remote REMOTE-MODULE", "Delete remote component module"
+    def delete_remote(remote_module_name)
+      post_body = {
+       :remote_module_name => remote_module_name
+      }
+      post rest_url("component_module/delete_remote"), post_body
+    end
+
+
     desc "COMPONENT-MODULE-NAME/ID export", "Export component module remote repository."
     def export(component_module_id)
       post_body = {
