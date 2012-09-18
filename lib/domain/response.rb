@@ -36,7 +36,6 @@ module DTK
       def render_data
         if ok?()
 
-          puts "#{data.inspect}"
           # if response is empty, response status is ok but no data is passed back
           if data.empty?
             @render_view = RenderView::SIMPLE_LIST
