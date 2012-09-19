@@ -23,7 +23,7 @@ module DTK
           elsif ruby_obj.kind_of?(Hash)
             adapter.render(ruby_obj)
           elsif ruby_obj.kind_of?(Array)
-            ruby_obj.map{|el|render(command_class,el,type,adapter)}
+            ruby_obj.map{|el|render(command_class,el,type,nil,adapter)}
           else
             raise Error.new("ruby_obj has unexepected type")
           end
@@ -70,11 +70,11 @@ module DTK
         end
       end
 
-      def get_meta(type,command_class)
+      def get_meta(type,command_class,data_type_index=nil)
         ret = nil
-        command = snake_form(command_class)
+        view = data_type_index||snake_form(command_class)
         begin
-          dtk_require("../views/#{command}/#{type}")
+          dtk_require("../views/#{view}/#{type}")
           ret = DTK::Client::ViewMeta.const_get cap_form(type)
          rescue Exception => e
           ret = failback_meta(command_class.respond_to?(:pretty_print_cols) ? command_class.pretty_print_cols() : [])

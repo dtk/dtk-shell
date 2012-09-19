@@ -11,7 +11,7 @@ module DTK
       attr_reader :meta
       def initialize(type,command_class,data_type_index=nil)
         super
-        @meta = get_meta(type,command_class)
+        @meta = get_meta(type,command_class,data_type_index)
       end
 
       def failback_meta(ordered_cols)
