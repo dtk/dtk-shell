@@ -18,6 +18,14 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
+    desc "ASSEMBLY-NAME/ID task-status", "Task status of running or last assembly task"
+    def task_status(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      post rest_url("assembly/task_status"), post_body
+    end
+
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
     def run_smoketests(assembly_id)
       post_body = {
