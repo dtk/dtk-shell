@@ -31,18 +31,37 @@ module DTK
           file_name = task_name.gsub('-','_')
           require File.expand_path("../commands/thor/#{file_name}", File.dirname(__FILE__))
           
+          tier_1_tasks, tier_2_tasks = get_command_class(file_name).tiered_task_names
+
           # gets thor command class and then all the task names for that command
-          @cached_tasks.store(task_name, get_command_class(file_name).task_names.sort)
+          @cached_tasks.store("#{task_name}_1",tier_1_tasks)
+          @cached_tasks.store("#{task_name}_2",tier_2_tasks)
         end
       end
 
       # load context will load list of commands available for given command (passed)
       # to method. Context is list of command available at current tier.
       def load_context(command_name=nil)
+        # when switching to tier 2 we need to use command name from tier one
+        # e.g. cc library/public, we are caching context under library_1, library_2
+        # so getting context for 'public' will not work and we use than library
+        command_name = tier_1_command if tier_2?
+
         # if there is no new context (current) we use old one
         @current = sub_tasks_names(command_name) || @current
         Readline.completion_append_character = " "
-        comp = proc { |s| @current.concat(CLIENT_COMMANDS).sort.grep( /^#{Regexp.escape(s)}/ ) }
+
+        # we add client commands
+        @current.concat(CLIENT_COMMANDS).sort!
+
+        # holder for commands to be used since we do not want to remember all of them
+        context_commands = @current
+
+        # we load thor command class identifiers for autocomplete context list
+        context_commands.concat(get_command_identifiers(command_name)) if tier_1?
+        
+        comp = proc { |s| context_commands.grep( /^#{Regexp.escape(s)}/ ) }
+
         Readline.completion_proc = comp
       end
 
@@ -98,7 +117,9 @@ module DTK
 
       # returns list of tasks for given command name
       def sub_tasks_names(command_name=nil)
-        return @cached_tasks[command_name.to_s] unless command_name.nil?
+        # cache works in a way that there are tier 1 and tier 2 list of ta
+        sufix = root? ? "" : tier_1? ? "_1" : "_2"
+        return @cached_tasks[command_name.to_s+sufix] unless command_name.nil?
 
         # returns root tasks
         @cached_tasks['dtk']
@@ -129,6 +150,19 @@ module DTK
         # TODO: Removed this 'put' after this has been implemented where needed
         puts "[DEV] Implement 'valid_id?' method for thor command class: #{thor_command_name} "
         return false
+      end
+
+      # get class identifiers for given thor command, returns array of identifiers
+      def get_command_identifiers(thor_command_name)
+        command_clazz = get_command_class(thor_command_name)
+        if command_clazz.respond_to?(:get_identifiers)
+          return command_clazz.get_identifiers(@conn)
+        end
+
+        # if not implemented we are going to let it in the context
+        # TODO: Removed this 'put' after this has been implemented where needed
+        puts "[DEV] Implement 'get_identifiers' method for thor command class: #{thor_command_name} "
+        return []
       end
 
       # changes command and argument if argument is plural of one of 

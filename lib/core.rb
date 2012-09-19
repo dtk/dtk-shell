@@ -32,25 +32,30 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
 
     # check for errors in response
     unless response_ruby_obj["errors"].nil?
-      error_internal = false
-      error_msg      = response_ruby_obj['errors'].map{|e| e["message"].gsub(/\.$/,"") unless e["message"].nil?}.join(". ")
-      error_internal = response_ruby_obj['errors'].map{|e| e["internal"] unless e["internal"].nil?}
+      error_internal  = false
+      error_backtrace = nil
 
-      response_ruby_obj["errors"].each do |e|
-        error_internal ||= e["internal"]
+      puts response_ruby_obj["errors"].inspect
+
+      error_msg      = response_ruby_obj['errors'].map{|e| e["message"].gsub(/\.$/,"") unless e["message"].nil?}.join(". ")
+      
+      response_ruby_obj["errors"].each do |e| 
+        error_internal  ||= e["internal"]
+        error_backtrace ||= e["backtrace"]
       end
+
+      # normalize it for display
+      error_msg = error_msg.empty? ? '' : ": #{error_msg}"
       
       # if error_internal.first == true
       if error_internal
-        # if internal error occured, store details to log
-        DtkLogger.instance.error("Response Error Message: #{error_msg}.")
-        # and display message to console
-        #TODO not sure what message should be displayed, in jirra ticket it said that descriptive error should be printed out
-        raise DTK::Client::DtkError, "Server has encountered internal error, please contact DTK team. See error log for more details."
+        DtkLogger.instance.error("Internal error#{error_msg}, backtrace: #{error_backtrace}")
+        #TODO not sure what message should be displayed, in jira ticket it said that descriptive error should be printed out
+        raise DTK::Client::DtkError, "Server has encountered internal error#{error_msg}, please contact DTK team. See DTK log for more details."
       else
+        DtkLogger.instance.error("Usage error#{error_msg}, backtrace: #{error_backtrace}")
         # if usage error occured, display message to console and display that same message to log
-        DtkLogger.instance.error("Usage error occured. Error message: #{error_msg}")
-        raise DTK::Client::DtkError, "Usage error occured. Error message: #{error_msg}" 
+        raise DTK::Client::DtkError, "Server has encountered usage error#{error_msg}, see DTK log for details." 
       end
     end
 
@@ -58,6 +63,7 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
     if print = response_ruby_obj.render_data() 
       print = [print] unless print.kind_of?(Array)
       print.each do |el|
+
         if el.kind_of?(String)
           el.each_line{|l| STDOUT << l}
         else
@@ -194,7 +200,7 @@ module DTK
       end
       def get_credentials()
         cred_file = File.expand_path("~/.dtkclient")
-        raise DTK::Client::DtkError,"Credential file (#{cred_file}) does not exist" unless File.exists?(cred_file)
+        raise DTK::Client::DtkError,"Authorization configuration file (#{cred_file}) does not exist" unless File.exists?(cred_file)
         ret = parse_key_value_file(cred_file)
         [:username,:password].each{|k|raise DTK::Client::DtkError,"cannot find #{k}" unless ret[k]}
         ret

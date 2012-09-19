@@ -4,7 +4,7 @@ module DTK
   module Client
     class ViewProcAugmentedSimpleList < ViewProcSimpleList
      private
-      def initialize(type,command_class)
+      def initialize(type,command_class,data_type_index=nil)
         super
         @meta = get_meta(type,command_class)
       end

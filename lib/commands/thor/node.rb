@@ -1,5 +1,7 @@
 module DTK::Client
   class Node < CommandBaseThor
+    @@cached_response = nil
+
     def self.pretty_print_cols()
       PPColumns::NODE
     end
@@ -62,13 +64,31 @@ module DTK::Client
     no_tasks do
       def self.valid_id?(value, conn)
         @conn = conn if @conn.nil?
-        response = post rest_url("node/list")
-        unless response.nil?
-          response['data'].each do |element|
+        if @@cached_response.nil?
+          @@cached_response = post rest_url("node/list")
+        end
+        unless @@cached_response.nil?
+          @@cached_response['data'].each do |element|
             return true if (element['id'].to_s==value || element['display_name'].to_s==value)
           end
         end
         return false
+      end
+
+      def self.get_identifiers(conn)
+        @conn = conn if @conn.nil?
+        if @@cached_response.nil?
+          @@cached_response = post rest_url("node/list")
+        end
+        unless @@cached_response.nil?
+          identifiers = []
+          @@cached_response['data'].each do |element|
+            identifiers << element['id'].to_s
+            identifiers << element['display_name']
+          end
+          return identifiers
+        end
+        return []
       end
     end
 

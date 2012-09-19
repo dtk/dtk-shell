@@ -16,6 +16,7 @@ module DTK
         @command_class = command_class
         # default values
         @render_view = RenderView::AUG_SIMPLE_LIST 
+        @render_data_type = nil
       end
 
       def self.wrap_helper_actions(&block)
@@ -40,7 +41,7 @@ module DTK
           if data.empty?
             @render_view = RenderView::SIMPLE_LIST
             if data.kind_of?(Array)
-              set_data('Message' => "Empty list")
+              set_data('Message' => "List is empty.")
             else #data.kind_of?(Hash)
               set_data('Status' => 'OK')
             end
@@ -55,6 +56,11 @@ module DTK
 
       def render_arg_list!
         @render_view = RenderView::AUG_SIMPLE_LIST
+      end
+
+      def set_datatype(datatype)
+        @render_data_type = datatype
+        self
       end
 
       def render_table(data_type)

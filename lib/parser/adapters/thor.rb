@@ -1,6 +1,7 @@
 require 'thor'
 require 'thor/group'
 
+
 module DTK
   module Client
     class CommandBaseThor < Thor
@@ -47,8 +48,39 @@ module DTK
       end
 
       # returns all task names for given thor class with use friendly names (with '-' instead '_')
-      def self.task_names
+      def self.task_names     
         task_names = all_tasks().map(&:first).collect { |item| item.gsub('_','-')}
+      end
+
+      # returns 2 arrays, with tier 1 tasks and tier 2 tasks
+      def self.tiered_task_names
+        # containers for tier 1/2 command list of tasks (or contexts)
+        tier_1,tier_2 = [], []
+        # get command name from namespace (which is derived by thor from file name)
+        command = namespace.split(':').last.gsub('_','-').upcase
+
+        # we seperate tier 1 and tier 2 tasks
+        all_tasks().each do |task|
+          # noralize task name with '-' since it will be displayed to user that way
+          task_name = task[0].gsub('_','-')
+          # we will match those commands that require identifiers (NAME/ID)
+          # e.g. ASSEMBLY-NAME/ID list ...   => MATCH
+          # e.g. [ASSEMBLY-NAME/ID] list ... => MATCH
+          matched_data = task[1].usage.match(/\[?#{command}.?(NAME\/ID|ID\/NAME)\]?/)
+          if matched_data.nil?
+            # no match it means it is tier 1 task, tier 1 => dtk:\assembly>
+            tier_1 << task_name
+          else
+            # match means it is tier 2 taks, tier 2 => dtk:\assembly\231312345>
+            tier_2 << task_name
+            # if there are '[' it means it is optinal identifiers so it is tier 1 and tier 2 task
+            tier_1 << task_name if matched_data[0].include?('[')
+          end
+        end
+        # there is always help, and in all cases this is exception to the rule
+        tier_2 << 'help'
+
+        return tier_1.sort, tier_2.sort
       end
 
       no_tasks do 
