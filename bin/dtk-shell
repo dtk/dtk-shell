@@ -113,8 +113,8 @@ while line = Readline.readline(prompt, true)
         args.unshift(@context.tier_2_command()) if @context.tier_2?
       end
 
-      temp_dev_flag = false
-      puts "Command > #{cmd} #{args.join(' ')}" if temp_dev_flag
+      temp_dev_flag = true
+      puts "dtk-input > #{cmd} #{args.join(' ')}" if temp_dev_flag
 
       # special case when we are doing help for context we need to remove
       # context paramter

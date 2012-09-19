@@ -1,5 +1,6 @@
 module DTK::Client
   class Assembly < CommandBaseThor
+    @@cached_response = nil
 
     def self.pretty_print_cols()
       PPColumns::ASSEMBLY
@@ -128,7 +129,7 @@ module DTK::Client
       :desc => "Name for assembly instance"
     def stage(assembly_template_id)
       post_body = {
-        :assembly_template_id => assembly_template_id
+        :assembly_id => assembly_template_id
       }
       post rest_url("assembly/stage"), post_body
     end
@@ -189,11 +190,31 @@ module DTK::Client
     no_tasks do
       def self.valid_id?(value, conn)
         @conn = conn if @conn.nil?
-        response = post rest_url("assembly/list")
-        response['data'].each do |element|
-          return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+        if @@cached_response.nil?
+          @@cached_response = post rest_url("assembly/list")
+        end
+        unless @@cached_response.nil?
+          @@cached_response['data'].each do |element|
+            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+          end
         end
         return false
+      end
+
+      def self.get_identifiers(conn)
+        @conn = conn if @conn.nil?
+        if @@cached_response.nil?
+          @@cached_response = post rest_url("assembly/list")
+        end
+        unless @@cached_response.nil?
+          identifiers = []
+          @@cached_response['data'].each do |element|
+            identifiers << element['id'].to_s
+            identifiers << element['display_name']
+          end
+          return identifiers
+        end
+        return []
       end
     end
     
