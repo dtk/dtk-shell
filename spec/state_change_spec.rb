@@ -5,7 +5,7 @@ include SpecThor
 describe DTK::Client::StateChange do
 
   # generic test for all task of Thor class
-  test_task_interface(DTK::Client::StateChange)
+  #test_task_interface(DTK::Client::StateChange)
 
 end
 

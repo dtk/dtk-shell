@@ -7,6 +7,6 @@ include SpecThor
 describe DTK::Client::NodeGroup do
 
   # generic test for all task of Thor class
-  test_task_interface(DTK::Client::NodeGroup)
+  #test_task_interface(DTK::Client::NodeGroup)
 
 end

@@ -5,7 +5,7 @@ include SpecThor
 describe DTK::Client::Repo do
 
   # generic test for all task of Thor class
-  test_task_interface(DTK::Client::Repo)
+  #test_task_interface(DTK::Client::Repo)
 
 end
 

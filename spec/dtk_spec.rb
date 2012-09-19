@@ -5,7 +5,7 @@ include SpecThor
 describe DTK::Client::Dtk do
 
   # generic test for all task of Thor class
-  test_task_interface(DTK::Client::Dtk)
+  #test_task_interface(DTK::Client::Dtk)
 
   context "Dtk CLI command" do
 

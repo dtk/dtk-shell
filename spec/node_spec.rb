@@ -16,14 +16,15 @@ describe DTK::Client::Node do
   	end
   end
 
-  context "#list -t" do
-  	command = "dtk node list -t"
-  	output = `#{command}`
+  #TODO uncomment this when we have nodes in targets
+  # context "#list -t" do
+  # 	command = "dtk node list -t"
+  # 	output = `#{command}`
 
-  	it "should list nodes only in targets" do
-  		output.should include("node_id")
-  	end
-  end
+  # 	it "should list nodes only in targets" do
+  # 		output.should include("node_id")
+  # 	end
+  # end
 
   context "#list -l" do
   	command = "dtk node list -l"

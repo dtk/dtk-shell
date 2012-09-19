@@ -5,7 +5,7 @@ include SpecThor
 describe DTK::Client::Dependency do
 
   # generic test for all task of Thor class
-  test_task_interface(DTK::Client::Dependency)
+  #test_task_interface(DTK::Client::Dependency)
 
 end
 
