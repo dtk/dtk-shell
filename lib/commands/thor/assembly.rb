@@ -23,7 +23,8 @@ module DTK::Client
       post_body = {
         :assembly_id => assembly_id
       }
-      post rest_url("assembly/task_status"), post_body
+      response = post rest_url("assembly/task_status"), post_body
+      response.set_datatype(DataType::TASK)
     end
 
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"

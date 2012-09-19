@@ -11,8 +11,7 @@ module DTK
       class << self
         include Aux
         def render(command_class,ruby_obj,type,data_type,adapter=nil)
-          
-          adapter ||= get_adapter(type,command_class)
+          adapter ||= get_adapter(type,command_class,data_type)
 
           if type == RenderView::TABLE
             # for table there is only one rendering, we use command class to
@@ -30,19 +29,45 @@ module DTK
           end
         end
 
-        def get_adapter(type,command_class)
-          cached = (AdapterCache[type]||{})[command_class]
+        def get_adapter(type,command_class,data_type=nil)
+          data_type_index = use_data_type_index?(command_class,data_type)
+          cached = 
+            if data_type_index
+              ((AdapterCacheAug[type]||{})[command_class]||{})[data_type_index]
+            else
+              (AdapterCache[type]||{})[command_class]
+            end
+
           return cached if cached
           dtk_nested_require("view_processor",type)
           klass = DTK::Client.const_get "ViewProc#{cap_form(type)}" 
-          AdapterCache[type] ||= Hash.new
-          AdapterCache[type][command_class] = klass.new(type,command_class)
+
+          if data_type_index
+            AdapterCacheAug[type] ||= Hash.new
+            AdapterCacheAug[type][command_class] ||= Hash.new
+            AdapterCacheAug[type][command_class][data_type_index] = klass.new(type,command_class,data_type_index)
+          else
+            AdapterCache[type] ||= Hash.new
+            AdapterCache[type][command_class] = klass.new(type,command_class)
+          end
         end
         AdapterCache = Hash.new
+        AdapterCacheAug = Hash.new
       end
      private
-      def initialize(type,command_class)
+      def initialize(type,command_class,data_type_index=nil)
         @command_class = command_class
+        @data_type_index = data_type_index
+      end
+
+      #data_type_index is used if there is adata type passed and it is different than command_class defualt data type
+      def self.use_data_type_index?(command_class,data_type)
+        if data_type
+         data_type_index = data_type.downcase
+          if data_type_index != snake_form(command_class)
+            data_type_index
+          end
+        end
       end
 
       def get_meta(type,command_class)

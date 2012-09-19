@@ -16,6 +16,7 @@ module DTK
         @command_class = command_class
         # default values
         @render_view = RenderView::AUG_SIMPLE_LIST 
+        @render_data_type = nil
       end
 
       def self.wrap_helper_actions(&block)
@@ -55,6 +56,11 @@ module DTK
 
       def render_arg_list!
         @render_view = RenderView::AUG_SIMPLE_LIST
+      end
+
+      def set_datatype(datatype)
+        @render_data_type = datatype
+        self
       end
 
       def render_table(data_type)
