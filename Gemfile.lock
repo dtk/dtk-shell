@@ -49,13 +49,13 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activesupport
-  erubis
+  activesupport (= 3.2.7)
+  erubis (= 2.7.0)
   fakeweb
-  grit
-  hirb
-  jenkins-client
-  json
-  rest-client
+  grit (= 2.5.0)
+  hirb (= 0.7.0)
+  jenkins-client (= 0.0.1)
+  json (= 1.7.4)
+  rest-client (= 1.6.7)
   rspec
-  thor
+  thor (= 0.15.4)
