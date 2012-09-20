@@ -1,16 +1,16 @@
-require 'lib/spec_thor'
-include SpecThor
+# require 'lib/spec_thor'
+# include SpecThor
 
-describe "dtk-shell" do
+# describe "dtk-shell" do
 
-context '#1'do
-	system("echo 'assembly list' | dtk-shell")	
-	#system("echo 'cc assembly'")
-end
+# # context '#1'do
+# # 	system("echo 'assembly list' | dtk-shell")	
+# # 	#system("echo 'cc assembly'")
+# # end
 
-context '#2' do
-	exec('exit')
-	#system("exit")
-end
-end
+# # context '#2' do
+# # 	exec('exit')
+# # 	#system("exit")
+# # end
+# end
 
