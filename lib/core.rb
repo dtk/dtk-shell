@@ -35,8 +35,6 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
       error_internal  = false
       error_backtrace = nil
 
-      puts response_ruby_obj["errors"].inspect
-
       error_msg      = response_ruby_obj['errors'].map{|e| e["message"].gsub(/\.$/,"") unless e["message"].nil?}.join(". ")
       
       response_ruby_obj["errors"].each do |e| 
@@ -53,9 +51,9 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
         #TODO not sure what message should be displayed, in jira ticket it said that descriptive error should be printed out
         raise DTK::Client::DtkError, "Server has encountered internal error#{error_msg}, please contact DTK team. See DTK log for more details."
       else
-        DtkLogger.instance.error("Usage error#{error_msg}, backtrace: #{error_backtrace}")
+        DtkLogger.instance.error("Usage error#{error_msg}")
         # if usage error occured, display message to console and display that same message to log
-        raise DTK::Client::DtkError, "Server has encountered usage error#{error_msg}, see DTK log for details." 
+        raise DTK::Client::DtkError, "Usage error#{error_msg}." 
       end
     end
 
