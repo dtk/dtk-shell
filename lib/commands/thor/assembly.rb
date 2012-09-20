@@ -209,7 +209,6 @@ module DTK::Client
         unless @@cached_response.nil?
           identifiers = []
           @@cached_response['data'].each do |element|
-            identifiers << element['id'].to_s
             identifiers << element['display_name']
           end
           return identifiers
