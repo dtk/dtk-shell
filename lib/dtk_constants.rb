@@ -23,7 +23,7 @@ end
 
 class DataType
   ASSEMBLY          = "ASSEMBLY"
-  ASSEMBLY_TEMPLATE = "ASSEMBLY"
+  ASSEMBLY_TEMPLATE = "ASSEMBLY_TEMPLATE"
   LIBRARY           = "LIBRARY"
   NODE              = "NODE"
   NODE_TEMPLATE     = "NODE_TEMPLATE"
