@@ -122,6 +122,22 @@
     "order": [
       "assembly_id",
       "assembly_name",
+      "status",
+      "nodes",
+      "components"
+    ],
+    "mapping": {
+      "components": "nodes.first['components'].join(', ')",
+      "nodes": "nodes.size",
+      "status": "execution_status",
+      "assembly_name": "display_name",
+      "assembly_id": "dtk_id"
+    }
+  },
+  "assembly_template": {
+    "order": [
+      "assembly_id",
+      "assembly_name",
       "nodes",
       "components"
     ],

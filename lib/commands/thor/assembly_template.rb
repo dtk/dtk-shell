@@ -3,13 +3,13 @@ module DTK::Client
     @@cached_response = nil
 
     def self.pretty_print_cols()
-      PPColumns::ASSEMBLY
+      PPColumns::ASSEMBLY_TEMPLATE
     end
 
     desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."
     method_option :list, :type => :boolean, :default => false
     def info(assembly_id=nil)
-      data_type = DataType::ASSEMBLY
+      data_type = DataType::ASSEMBLY_TEMPLATE
 
       post_body = {
         :assembly_id => assembly_id,
@@ -36,7 +36,7 @@ module DTK::Client
       case about
       when 'none'
         response = post rest_url("assembly/list"), {:subtype => 'template'}
-        data_type = DataType::ASSEMBLY
+        data_type = DataType::ASSEMBLY_TEMPLATE
       when 'nodes'
         response = post rest_url("assembly/info_about"), post_body
         data_type = DataType::NODE_TEMPLATE
