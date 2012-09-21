@@ -56,7 +56,6 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-TEMPLATE-NAME/ID stage [INSTANCE-NAME]", "Stage assembly template in target."
-    method_option :list, :type => :boolean, :default => false
     method_option "in-target",:aliases => "-t" ,
       :type => :numeric, 
       :banner => "TARGET-ID",
@@ -69,9 +68,35 @@ module DTK::Client
       }
       post_body.merge!(:target_id => options["in-target"]) if options["in-target"]
       post_body.merge!(:name => name) if name
-      
       post rest_url("assembly/stage"), post_body
     end
+
+    desc "ASSEMBLY-TEMPLATE-NAME/ID deploy [INSTANCE-NAME]", "Stage and deploy assembly template in target."
+    method_option "in-target",:aliases => "-t" ,
+      :type => :numeric, 
+      :banner => "TARGET-ID",
+      :desc => "Target (id) to create assembly in" 
+    def deploy(arg1,arg2=nil)
+      assembly_template_id,name = (arg2.nil? ? [arg1] : [arg2,arg1])
+
+      response = stage(arg1,arg2)
+      return response unless response.ok?
+
+      # create task      
+      assembly_id = response.data(:assembly_id)
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      ret = response = post(rest_url("assembly/create_task"), post_body)
+      return response unless response.ok?
+
+      # execute task
+      task_id = response.data(:task_id)
+      response = post(rest_url("task/execute"), "task_id" => task_id)
+      return response unless response.ok?
+      ret.add_data_value(:task_id,task_id)
+    end
+
 
     desc "delete ASSEMBLY-ID", "Delete assembly template"
     def delete(assembly_id)

@@ -42,7 +42,7 @@ module DTK::Client
     def commit_changes_and_execute(scope=nil)
       response = commit_changes(scope)
       if response.ok?
-        execute(response.data["task_id"])
+        execute(response.data(:task_id))
       else
         response
       end
@@ -82,7 +82,7 @@ module DTK::Client
       return true unless response.ok?
       @@count += 1
       return true if (@@count * TASK_STATUS_POLLING_INTERVAL) > TASK_STATUS_MAX_TIME
-      %w{succeeded failed}.include?(response.data["status"])
+      %w{succeeded failed}.include?(response.data(:status))
     end
 
      # we make valid methods to make sure that when context changing
