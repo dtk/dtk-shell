@@ -94,7 +94,7 @@ module DTK::Client
       task_id = response.data(:task_id)
       response = post(rest_url("task/execute"), "task_id" => task_id)
       return response unless response.ok?
-      ret.add_data_value(:task_id,task_id)
+      ret.add_data_value!(:task_id,task_id)
     end
 
 
