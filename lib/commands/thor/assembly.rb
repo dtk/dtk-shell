@@ -28,15 +28,19 @@ module DTK::Client
     end
 
 
-    desc "ASSEMBLY-NAME/ID converge", "Converges assembly instance"
-    def converge(assembly_id)
+    desc "ASSEMBLY-NAME/ID converge [COMMIT-MSG]", "Converges assembly instance"
+    def converge(arg1,arg2=nil)
+      assembly_id,commit_msg = (arg2.nil? ? [arg1] : [arg2,arg1])
+
+      # create task
       post_body = {
         :assembly_id => assembly_id
       }
-      # create
+      post_body.merge!(:commit_msg => commit_msg) if commit_msg
       response = post rest_url("assembly/create_task"), post_body
       return response unless response.ok?
-      # execute
+
+      # execute task
       task_id = response.data(:task_id)
       post rest_url("task/execute"), "task_id" => task_id
     end

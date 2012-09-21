@@ -92,14 +92,16 @@
       "task_id",
       "status",
       "start",
-      "end"
+      "end",
+      "commit_msg"
     ],
     "mapping": {
       "task_id": "dtk_id",
       "end": "ended_at.get_date",
       "start": "started_at.get_date",
       "status": "status.upcase",
-      "created": "created_at.get_date"
+      "created": "created_at.get_date",
+      "commit_msg": "commit_msg"
     }
   },
   "target": {
