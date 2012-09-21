@@ -6,6 +6,15 @@ module DTK::Client
       PPColumns::ASSEMBLY
     end
 
+    desc "ASSEMBLY-NAME/ID promote-to-library", "Update or create library assembly using workspace assembly"
+    def promote_to_library(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id
+      }
+
+      post rest_url("assembly/promote_to_library"), post_body
+    end
+
     desc "ASSEMBLY-NAME/ID converge", "Converges assembly instance"
     def converge(assembly_id)
       post_body = {
