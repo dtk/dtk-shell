@@ -21,6 +21,12 @@ module DTK
         @cached_tasks, @active_commands = {}, []
         @conn = DTK::Client::Conn.new()
 
+        if @conn.connection_error?
+          @conn.print_warning
+          puts "\nDTK will now exit. Please set up your connection properly and try again."
+          exit
+        end
+
         @cached_tasks.store('dtk', ROOT_TASKS.sort)
 
         ROOT_TASKS.each do |task_name|
