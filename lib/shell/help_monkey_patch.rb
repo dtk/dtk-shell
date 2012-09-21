@@ -9,11 +9,12 @@ class Thor
 
     def help(shell, subcommand = false)
       list = printable_tasks(true, subcommand)
+
       Thor::Util.thor_classes_in(self).each do |klass|
         list += klass.printable_tasks(false)
       end
-      list.sort!{ |a,b| a[0] <=> b[0] }
 
+      list.sort!{ |a,b| a[0] <=> b[0] }
       # monkey patching here => START
       unless @@shell_context.root?
         command=@@shell_context.tier_1_command.upcase
@@ -28,7 +29,8 @@ class Thor
           else
             unless @@shell_context.tier_1?
               # found and tier 2 we add it to list and remove ID/NAME part of desc
-              filtered_list << help_item.first.gsub(matched_data[0],'')
+              help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
+              filtered_list << help_item
             else
                # if it contains [] it is optional and will be available on both tiers
               filtered_list << help_item  if matched_data[0].include?('[')
@@ -47,7 +49,6 @@ class Thor
       end
 
       # monkey patching here => END
-
       shell.print_table(list, :indent => 2, :truncate => true)
       shell.say
       class_options_help(shell)
