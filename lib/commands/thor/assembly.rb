@@ -15,6 +15,19 @@ module DTK::Client
       post rest_url("assembly/promote_to_library"), post_body
     end
 
+    desc "ASSEMBLY-NAME/ID create-new-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Create a new assembly template from workspace assembly" 
+    def create_new_template(arg1,arg2,arg3)
+      #assembly_id is in last position
+      assembly_id,service_module_name,assembly_template_name = [arg3,arg1,arg2]
+      post_body = {
+        :assembly_id => assembly_id,
+        :service_module_name => service_module_name,
+        :assembly_template_name => assembly_template_name
+      }
+      post rest_url("assembly/create_new_template"), post_body
+    end
+
+
     desc "ASSEMBLY-NAME/ID converge", "Converges assembly instance"
     def converge(assembly_id)
       post_body = {
