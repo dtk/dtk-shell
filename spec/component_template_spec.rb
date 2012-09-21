@@ -31,14 +31,14 @@ describe DTK::Client::ComponentTemplate do
 			    output = `#{command}`
 
 			    it "should list all component_templates" do
-			      output.should include("component")
+			      output.should match(/(component|empty)/)
 			    end
   	  		when 'nodes'
 			    command = "dtk component-template #{$component_template_id} list #{l}"
 			    output = `#{command}`
 
 			    it "should list all #{l} for component-template with id #{$component_template_id}" do
-			      output.should include("name")
+			      output.should match(/(name|empty)/)
 			    end
 			end
       	end

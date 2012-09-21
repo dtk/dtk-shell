@@ -12,7 +12,7 @@ describe DTK::Client::Node do
   	output = `#{command}`
 
   	it "should list all nodes" do
-  		output.should include("node_id")
+  		output.should match(/(node|error)/)
   	end
   end
 
@@ -31,7 +31,7 @@ describe DTK::Client::Node do
   	output = `#{command}`
 
   	it "should list nodes only in libraries" do
-  		output.should include("node_id")
+  		output.should match(/(node|error)/)
   	end
   end
 

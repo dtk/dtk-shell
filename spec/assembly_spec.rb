@@ -20,19 +20,19 @@ describe DTK::Client::Assembly do
     process_status = $?
 
     it "should have assembly converge listing" do
-      output.should include("converge")
+      output.should match(/(converge|empty)/)
     end
 
     it "should have assembly info listing" do
-      output.should include("info")
+      output.should match(/(info|empty)/)
     end
 
     it "should have assembly remove-component listing" do
-      output.should include("remove-component")
+      output.should match(/(remove-component|empty)/)
     end
 
     it "should have assembly list listing" do
-      output.should include("list")
+      output.should match(/(list|empty)/)
     end
 
   end

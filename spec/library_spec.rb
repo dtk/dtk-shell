@@ -22,21 +22,6 @@ describe DTK::Client::Library do
     end
   end
 
- #  context "Dtk CLI list specific library" do
- #  	unless $library_id.nil?
- #  	  	lists.each do |l|
-	# 	    command = "dtk library #{$library_id} list #{l}"
-	# 	    output = `#{command}`
-
-	# 	    it "should list all #{l} for library with id #{$library_id}" do
-	# 	      output.should include("#{l.singularize}")
-	# 	    end
- #      	end
-	# end
- #  end
-
- #TODO change this with code commented above
- #when make sure that all commands are implemented properly
   context "Dtk CLI list specific library" do
   	 unless $library_id.nil?
   	  	 lists.each do |l|
@@ -47,10 +32,22 @@ describe DTK::Client::Library do
 			     output = `#{command}`
 
 			     it "should list all #{l} for library with id #{$library_id}" do
-			       output.should include("#{l.singularize}")
+			       output.should match(/(node|error)/)
 			     end
 			     when 'components'
+            command = "dtk library #{$library_id} list #{l}"
+            output = `#{command}`
+
+            it "should list all #{l} for library with id #{$library_id}" do
+             output.should match(/(component|error)/)
+            end
 			     when 'assemblies'
+            command = "dtk library #{$library_id} list #{l}"
+            output = `#{command}`
+
+            it "should list all #{l} for library with id #{$library_id}" do
+             output.should match(/(assembly|error)/)
+            end
 			     end
       	 end
 	   end

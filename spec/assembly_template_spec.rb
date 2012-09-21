@@ -30,14 +30,14 @@ describe DTK::Client::AssemblyTemplate do
 			       output = `#{command}`
 
 			       it "should list all assembly_templates" do
-			         output.should include("assembly")
+			         output.should match(/(assembly|empty)/)
 			       end
   	  		when 'nodes'
 			       command = "dtk assembly-template #{$assembly_template_id} list #{l}"
 			       output = `#{command}`
 
 			       it "should list all #{l} for assembly-template with id #{$assembly_template_id}" do
-			         output.should include("name")
+			         output.should match(/(name|empty)/)
 			       end
 			    when 'components'
 				    #TODO when check why we don't have table definition for data type COMPONENT
