@@ -8,8 +8,11 @@ module DTK::Client
       post_body = {
        :component_module_id => component_module_id
       }
-      post rest_url("component_module/delete"), post_body
-      #TODO: delete .git dir in local dir if it exists
+      response = post(rest_url("component_module/delete"), post_body)
+      return response unless response.ok?
+      module_name = response.data(:module_name)
+      dtk_require_from_base('command_helpers/git_repo')
+      GitRepo.unlink_local_clone?(:component_module,module_name)
     end
 
     desc "create COMPONENT-MODULE-NAME [LIBRARY-NAME/ID]", "Create new module from local clone"
