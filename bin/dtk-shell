@@ -93,7 +93,7 @@ while line = Readline.readline(prompt, true)
 
     if ('cc' == cmd)
       # in case there is no params we just reload command
-      next if args.empty?
+      args << "/" if args.empty?
       # changes context based on passed args
       prompt = change_context(args)
     else
