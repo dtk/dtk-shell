@@ -2,8 +2,6 @@ module DTK::Client
 
   class Library < CommandBaseThor
 
-    @@cached_response = nil
-
     def self.pretty_print_cols()
       PPColumns::LIBRARY
     end
@@ -85,11 +83,12 @@ module DTK::Client
     no_tasks do
       def self.valid_id?(value, conn)
         @conn = conn if @conn.nil?
-        if @@cached_response.nil?
-          @@cached_response = post rest_url("library/list")
-        end
-        unless @@cached_response.nil?
-          @@cached_response['data'].each do |element|
+        response = nil
+        
+        response = post rest_url("library/list")
+        
+        unless response.nil?
+          response['data'].each do |element|
             return true if (element['id'].to_s==value || element['display_name'].to_s==value)
           end
         end
@@ -98,12 +97,13 @@ module DTK::Client
 
       def self.get_identifiers(conn)
         @conn = conn if @conn.nil?
-        if @@cached_response.nil?
-          @@cached_response = post rest_url("library/list")
-        end
-        unless @@cached_response.nil?
+        response = nil
+        
+        response = post rest_url("library/list")
+        
+        unless response.nil?
           identifiers = []
-          @@cached_response['data'].each do |element|
+          response['data'].each do |element|
             identifiers << element['display_name']
           end
           return identifiers
