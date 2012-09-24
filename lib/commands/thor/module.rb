@@ -47,9 +47,9 @@ module DTK::Client
       post rest_url("component_module/export"), post_body
     end
 
-    desc "push-changes", "Push changes from local copy of module to server"
-    def push_changes()
-      diffs = GitRepo.push_changes(:component_module)
+    desc "push-all-changes", "Push changes from local copy of module to server"
+    def push_all_changes()
+      diffs = GitRepo.push_all_changes(:component_module)
       #TODO: if any changes tell the server to synchronize the mode with that 
       #post to component_module/update_meta_info"
       diffs

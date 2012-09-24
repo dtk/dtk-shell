@@ -15,7 +15,7 @@ module DTK; module Client
       end
     end
 
-    def push_changes(type,opts={})
+    def push_all_changes(type,opts={})
       Response.wrap_helper_actions() do
         local_repo_dirs(type).map do |repo_dir|
           repo_name = repo_dir.split("/").last
@@ -23,6 +23,16 @@ module DTK; module Client
           diffs = push_repo_changes_aux(repo,opts)
           {repo_name => diffs.inspect}
         end
+      end
+    end
+
+    #TODO: not treating versions yet
+    def push_changes(type,module_name,opts={})
+      Response.wrap_helper_actions() do
+        repo_dir = local_repo_dir(type,module_name)
+        repo = create(repo_dir)
+        diffs = push_repo_changes_aux(repo,opts)
+        {:diffs => diffs}
       end
     end
 

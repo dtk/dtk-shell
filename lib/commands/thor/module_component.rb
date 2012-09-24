@@ -178,6 +178,7 @@ module DTK::Client
 
     #### end: commands to manage workspace and promote changes from workspace to library ###
 
+    #### end: commands related to cloning to and pushing from local clone
     desc "COMPONENT-MODULE-NAME/ID clone [VERSION]", "Clone into client the component module files"
     def clone(arg1,arg2=nil)
       component_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1]) 
@@ -194,6 +195,29 @@ module DTK::Client
       response = GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
       response
     end
+
+    desc "COMPONENT-MODULE-NAME/ID push-clone-changes [VERSION]", "Push changes from local copy of module to server"
+    def push_clone_changes(arg1,arg2=nil)
+      component_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1])
+      post_body = {
+        :component_module_id => component_module_id
+      }
+      post_body.merge!(:version => version) if version 
+
+      response =  post(rest_url("component_module/workspace_branch_info"),post_body) 
+      return response unless response.ok?
+
+      dtk_require_from_base('command_helpers/git_repo')
+      response = GitRepo.push_changes(:component_module,response.data(:module_name))
+      return response unless response.ok?
+      pp [:diffs,response]
+
+      post_body.merge!(:diffs => response.data(:diffs))
+
+      post rest_url("component_module/update_model_from_clone"), post_body
+    end
+
+    #### end: commands related to cloning to and pushing from local clone
 
     #TODO: add-direct-access and remove-direct-access should be removed as commands and instead add-direct-access 
     #Change from having module-command/add_direct_access to being a command to being done when client is installed if user wants this option
@@ -226,7 +250,6 @@ module DTK::Client
       }
       post rest_url("component_module/remove_user_direct_access"), post_body
     end
-
 
     # we make valid methods to make sure that when context changing
     # we allow change only for valid ID/NAME
