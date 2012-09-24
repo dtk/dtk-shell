@@ -6,15 +6,41 @@ module DTK::Client
       PPColumns::ASSEMBLY
     end
 
-    desc "ASSEMBLY-NAME/ID converge", "Converges assembly instance"
-    def converge(assembly_id)
+    desc "ASSEMBLY-NAME/ID promote-to-library", "Update or create library assembly using workspace assembly"
+    def promote_to_library(assembly_id)
       post_body = {
         :assembly_id => assembly_id
       }
-      # create
+
+      post rest_url("assembly/promote_to_library"), post_body
+    end
+
+    desc "ASSEMBLY-NAME/ID create-new-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Create a new assembly template from workspace assembly" 
+    def create_new_template(arg1,arg2,arg3)
+      #assembly_id is in last position
+      assembly_id,service_module_name,assembly_template_name = [arg3,arg1,arg2]
+      post_body = {
+        :assembly_id => assembly_id,
+        :service_module_name => service_module_name,
+        :assembly_template_name => assembly_template_name
+      }
+      post rest_url("assembly/create_new_template"), post_body
+    end
+
+
+    desc "ASSEMBLY-NAME/ID converge [COMMIT-MSG]", "Converges assembly instance"
+    def converge(arg1,arg2=nil)
+      assembly_id,commit_msg = (arg2.nil? ? [arg1] : [arg2,arg1])
+
+      # create task
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      post_body.merge!(:commit_msg => commit_msg) if commit_msg
       response = post rest_url("assembly/create_task"), post_body
       return response unless response.ok?
-      # execute
+
+      # execute task
       task_id = response.data(:task_id)
       post rest_url("task/execute"), "task_id" => task_id
     end

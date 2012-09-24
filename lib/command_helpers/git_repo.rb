@@ -1,6 +1,8 @@
 dtk_require_dtk_common('grit_adapter') #only one adapter now
 dtk_require_dtk_common('errors') 
 dtk_require_dtk_common('log') 
+require 'fileutils'
+
 module DTK; module Client
   class GitRepo; class << self
     def create_clone_with_branch(type,module_name,repo_url,branch,version=nil)
@@ -13,7 +15,7 @@ module DTK; module Client
       end
     end
 
-    def push_changes(type,opts={})
+    def push_all_changes(type,opts={})
       Response.wrap_helper_actions() do
         local_repo_dirs(type).map do |repo_dir|
           repo_name = repo_dir.split("/").last
@@ -21,6 +23,25 @@ module DTK; module Client
           diffs = push_repo_changes_aux(repo,opts)
           {repo_name => diffs.inspect}
         end
+      end
+    end
+
+    #TODO: not treating versions yet
+    def push_changes(type,module_name,opts={})
+      Response.wrap_helper_actions() do
+        repo_dir = local_repo_dir(type,module_name)
+        repo = create(repo_dir)
+        diffs = push_repo_changes_aux(repo,opts)
+        {:diffs => diffs}
+      end
+    end
+
+    #if local clone exists remove its .git directory
+    def unlink_local_clone?(type,module_name,version=nil)
+      local_repo_dir = local_repo_dir(type,module_name,version)
+      git_dir = "#{local_repo_dir}/.git"
+      if File.directory?(git_dir)
+        FileUtils.rm_rf(git_dir)
       end
     end
 
