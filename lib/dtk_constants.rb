@@ -1,25 +1,24 @@
 require 'singleton'
+dtk_require("config/disk_cacher")
 
 class PPColumns
 
   include Singleton
 
   def initialize
-    
+    content = DiskCacher.new.fetch("http://localhost/mockup/get_const_metadata", ::Config::Configuration.get(:caching_url,:meta_constants_ttl))
+    raise DTK::Client::DtkError, "Require constants metadata is empty, please contact DTK team." if content.empty?
+    @constants = JSON.parse(content)
+  end
 
-  ASSEMBLY          = [:display_name, :execution_status, :type, :id, :description, :external_ref]
-  ASSEMBLY_TEMPLATE = [:display_name, :type, :id, :description, :external_ref]
-  LIBRARY           = [:display_name, :id, :description]
-  NODE              = [:display_name, :os_type, :id, :description, :node_status, :external_ref]
-  NODE_TEMPLATE     = [:display_name, :os_type, :id, :description, :template_name, :template_type, :size]
-  NODE_GROUP        = [:display_name, :type,:id, :description]
-  MODULE            = [:display_name, :id, :version]
-  REMOTE_MODULE     = [:display_name, :version]
-  PROJECT           = [:display_name, :id, :description]
-  REPO              = [:display_name, :id]
-  SERVICE_MODULE    = [:display_name, :id, :version]
-  TARGET            = [:display_name, :id, :description, :type, :iaas_type]
-  COMPONENT         = [:display_name, :id, :type, :version, :library]
+  def self.get(symbol_identifier)
+    return PPColumns.instance.get(symbol_identifier)
+  end
+
+  def get(symbol_identifier)
+    return @constants[symbol_identifier.to_s]
+  end
+
 end
 
 #

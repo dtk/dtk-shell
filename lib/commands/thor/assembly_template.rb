@@ -2,7 +2,7 @@ module DTK::Client
   class AssemblyTemplate < CommandBaseThor
 
     def self.pretty_print_cols()
-      PPColumns::ASSEMBLY_TEMPLATE
+      PPColumns.get(:assembly_template)
     end
 
     desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."

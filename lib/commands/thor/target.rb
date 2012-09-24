@@ -2,7 +2,7 @@ module DTK::Client
   class Target < CommandBaseThor
 
     def self.pretty_print_cols()
-      PPColumns::TARGET
+      PPColumns.get(:target)
     end
 
     desc "[TARGET-NAME/ID] list [nodes|assemblies]","List targets or nodes in given targets."

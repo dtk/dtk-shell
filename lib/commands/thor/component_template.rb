@@ -2,7 +2,7 @@ module DTK::Client
   class ComponentTemplate < CommandBaseThor
 
     def self.pretty_print_cols()
-      PPColumns::COMPONENT
+      PPColumns.get(:component)
     end
 
     desc "COMPONENT-NAME/ID info", "Get information about given component template."

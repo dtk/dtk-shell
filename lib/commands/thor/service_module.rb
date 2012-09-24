@@ -5,7 +5,7 @@ module DTK::Client
   class ServiceModule < CommandBaseThor
 
     def self.pretty_print_cols()
-      PPColumns::SERVICE_MODULE
+      PPColumns.get(:service_module)
     end
 
 

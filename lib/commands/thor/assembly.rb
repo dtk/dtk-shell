@@ -2,7 +2,7 @@ module DTK::Client
   class Assembly < CommandBaseThor
 
     def self.pretty_print_cols()
-      PPColumns::ASSEMBLY
+      PPColumns.get(:assembly)
     end
 
     desc "ASSEMBLY-NAME/ID promote-to-library", "Update or create library assembly using workspace assembly"

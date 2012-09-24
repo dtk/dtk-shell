@@ -2,7 +2,7 @@ module DTK::Client
   class NodeTemplate < CommandBaseThor
 
     def self.pretty_print_cols()
-      PPColumns::NODE
+      PPColumns.get(:node)
     end
 
     desc "NODE-NAME/ID info", "Get information about given node template."

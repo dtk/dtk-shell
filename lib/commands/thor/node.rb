@@ -2,7 +2,7 @@ module DTK::Client
   class Node < CommandBaseThor
 
     def self.pretty_print_cols()
-      PPColumns::NODE
+      PPColumns.get(:node)
     end
     
     desc "list","List nodes"

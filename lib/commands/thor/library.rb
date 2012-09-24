@@ -3,7 +3,7 @@ module DTK::Client
   class Library < CommandBaseThor
 
     def self.pretty_print_cols()
-      PPColumns::LIBRARY
+      PPColumns.get(:library)
     end
 
     desc "[LIBRARY ID/NAME] info","Info for given library based on specified identifier."
@@ -29,14 +29,14 @@ module DTK::Client
 
         response = case selected_type.downcase
         when "nodes"
-          search_hash.cols,data_type = PPColumns::NODE, DataType::NODE
-          post rest_url("node/list"),search_hash.post_body_hash
+          search_hash.cols,data_type = PPColumns.get(:node), DataType::NODE
+          response = post rest_url("node/list"),search_hash.post_body_hash
         when "components"
-          search_hash.cols, data_type = PPColumns::COMPONENT, DataType::COMPONENT
+          search_hash.cols, data_type = PPColumns.get(:component), DataType::COMPONENT
           post rest_url("component/list"),search_hash.post_body_hash
         when "assemblies"
           # TODO: Filter libraries via assemblie is not working need to talk to Rich
-          search_hash.cols, data_type = PPColumns::ASSEMBLY, DataType::ASSEMBLY
+          search_hash.cols, data_type = PPColumns.get(:assembly), DataType::ASSEMBLY
           post rest_url("assembly/list_from_library"),search_hash.post_body_hash
         else
           raise DTK::Client::DtkError, "Not supported type '#{selected_type}' for given command."
