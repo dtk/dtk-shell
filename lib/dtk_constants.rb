@@ -1,7 +1,12 @@
-#
-# Pretty Print columns constants. 
-#
+require 'singleton'
+
 class PPColumns
+
+  include Singleton
+
+  def initialize
+    
+
   ASSEMBLY          = [:display_name, :execution_status, :type, :id, :description, :external_ref]
   ASSEMBLY_TEMPLATE = [:display_name, :type, :id, :description, :external_ref]
   LIBRARY           = [:display_name, :id, :description]
