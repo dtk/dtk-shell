@@ -23,7 +23,6 @@ module DTK
       # it will route it properly by placing ID as last param
       def self.arg_analyzer(argv)
         all_task_names = task_names()
-        
         # we are looking for case when task name is second options and ID/NAME is first
         unless argv.first == 'help'
           if (argv.size > 1 && all_task_names.include?(argv[1]))
