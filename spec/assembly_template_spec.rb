@@ -12,8 +12,8 @@ describe DTK::Client::AssemblyTemplate do
   context "#list" do
     output = `dtk assembly-template list`
 
-    it "should be string" do
-      output.should be_a_kind_of(String)
+    it "should contain assemblies" do
+      output.should match(/(assembly|empty|Missing)/)
     end
 
     unless output.nil?
@@ -40,7 +40,12 @@ describe DTK::Client::AssemblyTemplate do
 			         output.should match(/(name|empty)/)
 			       end
 			    when 'components'
-				    #TODO when check why we don't have table definition for data type COMPONENT
+				    command = "dtk assembly-template #{$assembly_template_id} list #{l}"
+            output = `#{command}`
+
+            it "should list all #{l} for assembly-template with id #{$assembly_template_id}" do
+              output.should match(/(name|empty)/)
+            end
 			    when 'targets'
 				    #TODO when check why we are getting internal error.
 			    end

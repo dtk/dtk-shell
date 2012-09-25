@@ -13,8 +13,8 @@ describe DTK::Client::Library do
   context "Dtk CLI list command" do
     output = `dtk library list`
 
-    it "should be string" do
-      output.should be_a_kind_of(String)
+    it "should list libraries" do
+      output.should match(/(library|empty)/)
     end
 
     unless output.nil?
@@ -32,21 +32,21 @@ describe DTK::Client::Library do
 			     output = `#{command}`
 
 			     it "should list all #{l} for library with id #{$library_id}" do
-			       output.should match(/(node|error)/)
+			       output.should match(/(node|empty|error)/)
 			     end
 			     when 'components'
             command = "dtk library #{$library_id} list #{l}"
             output = `#{command}`
 
             it "should list all #{l} for library with id #{$library_id}" do
-             output.should match(/(component|error)/)
+             output.should match(/(component|empty|error)/)
             end
 			     when 'assemblies'
             command = "dtk library #{$library_id} list #{l}"
             output = `#{command}`
 
             it "should list all #{l} for library with id #{$library_id}" do
-             output.should match(/(assembly|error)/)
+             output.should match(/(assembly|empty|error)/)
             end
 			     end
       	 end

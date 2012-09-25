@@ -13,7 +13,7 @@ describe DTK::Client::NodeTemplate do
 		output = `#{command}`
 
 		it "should list all nodes" do
-			output.should match(/(node|error)/)
+			output.should match(/(node|empty|error)/)
 		end
 
 		unless output.nil?
@@ -30,14 +30,14 @@ describe DTK::Client::NodeTemplate do
 					output = `#{command}`
 
 			     	it "should list all nodes" do
-			       		output.should match(/(node|error)/)
+			       		output.should match(/(node|empty|error)/)
 			     	end
 			    when 'targets'
 			    	command = "dtk node-template #{$node_id} list #{l}"
 					output = `#{command}`
 
 			     	it "should list all nodes" do
-			       		output.should match(/(node|error)/)
+			       		output.should match(/(node|empty|error)/)
 			     	end
 			    end
 			end

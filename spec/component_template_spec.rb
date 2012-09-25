@@ -11,8 +11,8 @@ describe DTK::Client::ComponentTemplate do
 	context "#list" do
     	output = `dtk component-template list`
 
-    	it "should be string" do
-      	output.should be_a_kind_of(String)
+    	it "should contain component" do
+      	output.should match(/(component|empty|Missing)/)
     	end
 
     	#TODO component-template list doesn't return values because
@@ -38,7 +38,7 @@ describe DTK::Client::ComponentTemplate do
 			    output = `#{command}`
 
 			    it "should list all #{l} for component-template with id #{$component_template_id}" do
-			      output.should match(/(name|empty)/)
+			      output.should match(/(component|empty)/)
 			    end
 			end
       	end
