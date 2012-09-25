@@ -5,6 +5,15 @@ module DTK::Client
       PPColumns.get(:target)
     end
 
+    desc "create TARGET-NAME [DESCRIPTION]","Create new target"
+    def create(target_id,description=nil)
+      post_body = {
+        :target_name => target_id,
+        :description => description
+      }
+       post rest_url("target/create"), post_body
+    end
+
     desc "[TARGET-NAME/ID] list [nodes|assemblies]","List targets or nodes in given targets."
     method_option :list, :type => :boolean, :default => false
     def list(about="none",target_id=nil)

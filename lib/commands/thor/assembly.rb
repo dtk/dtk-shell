@@ -166,10 +166,9 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID remove-component COMPONENT-ID","Removes component from targeted assembly."
     def remove_component(component_id,assembly_id)
       post_body = {
-        :assembly_id  => assembly_id,
-        :component_id => component_id
+        :id => component_id
       }
-      response = post(rest_url("assembly/info"),post_body)
+      response = post(rest_url("component/delete"),post_body)
     end
 
     # we make valid methods to make sure that when context changing
