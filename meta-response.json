@@ -100,7 +100,7 @@
       "start": "started_at.get_date",
       "status": "status.upcase",
       "created": "created_at.get_date",
-      "commit_msg": "commit_msg"
+      "commit_msg": "commit_message"
     }
   },
   "target": {

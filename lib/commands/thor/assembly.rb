@@ -26,16 +26,19 @@ module DTK::Client
       post rest_url("assembly/create_new_template"), post_body
     end
 
-
-    desc "ASSEMBLY-NAME/ID converge [COMMIT-MSG]", "Converges assembly instance"
-    def converge(arg1,arg2=nil)
-      assembly_id,commit_msg = (arg2.nil? ? [arg1] : [arg2,arg1])
+    desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
+    method_option "commit_msg",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    def converge(assembly_id)
 
       # create task
       post_body = {
         :assembly_id => assembly_id
       }
-      post_body.merge!(:commit_msg => commit_msg) if commit_msg
+      post_body.merge!(:commit_msg => options["commit_msg"]) if options["commit_msg"]
+
       response = post rest_url("assembly/create_task"), post_body
       return response unless response.ok?
 
@@ -112,7 +115,6 @@ module DTK::Client
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
-
       # set render view to be used
       unless options.list?
         response.render_table(data_type)
