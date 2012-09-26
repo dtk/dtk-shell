@@ -27,7 +27,6 @@
     "order": [
       "component_id",
       "name",
-      "component_type",
       "version"
     ],
     "mapping": {

@@ -17,14 +17,21 @@ module DTK::Client
       post rest_url("assembly/info"), post_body
     end
 
-    desc "[ASSEMBLY-TEMPLATE-NAME/ID] list [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
+    desc "list", "List all assembly templates."
     method_option :list, :type => :boolean, :default => false
-    def list(arg1=nil,arg2=nil)
-      about, assembly_id = 
-        if arg1.nil? then ['none']
-        elsif arg2.nil? then ['none',arg1]
-        else [arg1,arg2]
-      end
+    def list()
+      response = post rest_url("assembly/list"), {:subtype => 'template'}
+      data_type = DataType::ASSEMBLY_TEMPLATE
+      response.render_table(data_type) unless options.list?
+      response
+    end
+
+#    desc "[ASSEMBLY-TEMPLATE-NAME/ID] show [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
+    #TODO: temporaily taking out target option
+    desc "ASSEMBLY-TEMPLATE-NAME/ID show nodes|components", "List all nodes/components for given assembly template."
+    method_option :list, :type => :boolean, :default => false
+    def show(arg1,arg2)
+      assembly_id, about = [arg2,arg1] 
 
       post_body = {
         :assembly_id => assembly_id,
@@ -33,25 +40,24 @@ module DTK::Client
       }
 
       case about
-      when 'none'
-        response = post rest_url("assembly/list"), {:subtype => 'template'}
-        data_type = DataType::ASSEMBLY_TEMPLATE
       when 'nodes'
         response = post rest_url("assembly/info_about"), post_body
         data_type = DataType::NODE_TEMPLATE
       when 'components'
         response = post rest_url("assembly/info_about"), post_body
         data_type = DataType::COMPONENT
+=begin
       when 'targets'
         response = post rest_url("assembly/info_about"), post_body
         data_type = DataType::TARGET
+=end
       else
         raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
 
       response.render_table(data_type) unless options.list?
 
-      return response
+      response
     end
 
     desc "ASSEMBLY-TEMPLATE-NAME/ID stage [INSTANCE-NAME]", "Stage assembly template in target."
@@ -97,7 +103,7 @@ module DTK::Client
     end
 
 
-    desc "delete ASSEMBLY-ID", "Delete assembly template"
+    desc "delete ASSEMBLY-NAME/ID", "Delete assembly template"
     def delete(assembly_id)
       post_body = {
         :assembly_id => assembly_id,
