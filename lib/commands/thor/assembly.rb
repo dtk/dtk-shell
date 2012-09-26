@@ -66,10 +66,24 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
-    #TODO: put in flag to control detail level
-    desc "[ASSEMBLY-NAME/ID] list [nodes|components|tasks] [FILTER] [--list]","List asssemblies, or nodes, components, tasks from their assemblies."
+    desc "list","List asssembly instances"
     method_option :list, :type => :boolean, :default => false
-    def list(*rotated_args)
+    def list()
+      data_type = DataType::ASSEMBLY
+      response = post rest_url("assembly/list"), {:subtype  => 'instance'}
+
+      # set render view to be used
+      unless options.list?
+        response.render_table(data_type)
+      end
+     
+      response
+    end
+
+    #TODO: put in flag to control detail level
+    desc "ASSEMBLY-NAME/ID show nodes|components|tasks [FILTER] [--list]","List nodes, components, or tasks associated with assembly."
+    method_option :list, :type => :boolean, :default => false
+    def show(*rotated_args)
       #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
       assembly_id,about,filter = rotate_args(rotated_args)
       about ||= "none"
@@ -86,10 +100,6 @@ module DTK::Client
       }
 
       case about
-        when "none":
-          data_type = DataType::ASSEMBLY
-           #TODO: change to post rest_url("assembly/list when update on server side
-           response = post rest_url("assembly/list"), {:subtype  => 'instance'}
         when "nodes":
           data_type = DataType::NODE
           response = post rest_url("assembly/info_about"), post_body
