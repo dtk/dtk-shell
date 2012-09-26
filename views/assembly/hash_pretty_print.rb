@@ -1,4 +1,4 @@
-module DTK::Client::ViewMeta
+module DTK::Client::ViewMeta::Assembly
   HashPrettyPrint = {
     :top_type => :assembly,
     :defs => {

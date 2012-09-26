@@ -1,4 +1,4 @@
-module DTK::Client::ViewMeta
+module DTK::Client::ViewMeta::Task
   HashPrettyPrint = {
     :top_type => :task,
     :defs => {

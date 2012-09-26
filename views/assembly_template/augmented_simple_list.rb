@@ -1,4 +1,4 @@
-module DTK::Client::ViewMeta
+module DTK::Client::ViewMeta::AssemblyTemplate
   AugmentedSimpleList = {
     :attribute_def => {
       :keys => [:attribute_name,:value,:override],
