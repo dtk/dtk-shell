@@ -7,7 +7,14 @@ module DTK::Client
     def self.pretty_print_cols()
       PPColumns.get(:service_module)
     end
+    
+    ##TODO: templ debug
+    desc "debug-get-project-trees","debug-get-project-trees"
+    def debug_get_project_trees()
+      get rest_url('service_module/debug_get_project_trees')
+    end
 
+    ##TODO: end: temp debug
 
     desc "SERVICE-MODULE-NAME/ID info", "Provides information about specified service module"
     def info(service_module_id)
