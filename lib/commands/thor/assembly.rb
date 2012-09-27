@@ -26,16 +26,18 @@ module DTK::Client
       post rest_url("assembly/create_new_template"), post_body
     end
 
-
-    desc "ASSEMBLY-NAME/ID converge [COMMIT-MSG]", "Converges assembly instance"
-    def converge(arg1,arg2=nil)
-      assembly_id,commit_msg = (arg2.nil? ? [arg1] : [arg2,arg1])
-
+    desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
+    method_option "commit_msg",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    def converge(assembly_id)
       # create task
       post_body = {
         :assembly_id => assembly_id
       }
-      post_body.merge!(:commit_msg => commit_msg) if commit_msg
+      post_body.merge!(:commit_msg => options["commit_msg"]) if options["commit_msg"]
+
       response = post rest_url("assembly/create_task"), post_body
       return response unless response.ok?
 
@@ -66,10 +68,24 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
-    #TODO: put in flag to control detail level
-    desc "[ASSEMBLY-NAME/ID] list [nodes|components|tasks] [FILTER] [--list]","List asssemblies, or nodes, components, tasks from their assemblies."
+    desc "list","List asssembly instances"
     method_option :list, :type => :boolean, :default => false
-    def list(*rotated_args)
+    def list()
+      data_type = DataType::ASSEMBLY
+      response = post rest_url("assembly/list"), {:subtype  => 'instance'}
+
+      # set render view to be used
+      unless options.list?
+        response.render_table(data_type)
+      end
+     
+      response
+    end
+
+    #TODO: put in flag to control detail level
+    desc "ASSEMBLY-NAME/ID show nodes|components|tasks [FILTER] [--list]","List nodes, components, or tasks associated with assembly."
+    method_option :list, :type => :boolean, :default => false
+    def show(*rotated_args)
       #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
       assembly_id,about,filter = rotate_args(rotated_args)
       about ||= "none"
@@ -86,10 +102,6 @@ module DTK::Client
       }
 
       case about
-        when "none":
-          data_type = DataType::ASSEMBLY
-           #TODO: change to post rest_url("assembly/list when update on server side
-           response = post rest_url("assembly/list"), {:subtype  => 'instance'}
         when "nodes":
           data_type = DataType::NODE
           response = post rest_url("assembly/info_about"), post_body
@@ -102,7 +114,6 @@ module DTK::Client
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
-
       # set render view to be used
       unless options.list?
         response.render_table(data_type)
@@ -166,10 +177,9 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID remove-component COMPONENT-ID","Removes component from targeted assembly."
     def remove_component(component_id,assembly_id)
       post_body = {
-        :assembly_id  => assembly_id,
-        :component_id => component_id
+        :id => component_id
       }
-      response = post(rest_url("assembly/info"),post_body)
+      response = post(rest_url("component/delete"),post_body)
     end
 
     # we make valid methods to make sure that when context changing

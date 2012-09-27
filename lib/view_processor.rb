@@ -75,7 +75,8 @@ module DTK
         view = data_type_index||snake_form(command_class)
         begin
           dtk_require("../views/#{view}/#{type}")
-          ret = DTK::Client::ViewMeta.const_get cap_form(type)
+          view_const = DTK::Client::ViewMeta.const_get cap_form(view)
+          ret = view_const.const_get cap_form(type)
          rescue Exception => e
           ret = failback_meta(command_class.respond_to?(:pretty_print_cols) ? command_class.pretty_print_cols() : [])
         end

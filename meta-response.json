@@ -27,7 +27,6 @@
     "order": [
       "component_id",
       "name",
-      "component_type",
       "version"
     ],
     "mapping": {
@@ -101,7 +100,7 @@
       "start": "started_at.get_date",
       "status": "status.upcase",
       "created": "created_at.get_date",
-      "commit_msg": "commit_msg"
+      "commit_msg": "commit_message"
     }
   },
   "target": {
@@ -147,5 +146,18 @@
       "assembly_name": "display_name",
       "assembly_id": "dtk_id"
     }
+  },
+  "module_diff": {
+    "order": [
+      "module_name",
+      "module_id",
+      "has_diff"
+    ],
+    "mapping": {
+      "module_name": "name",
+      "module_id": "dtk_id",
+      "has_diff" : "has_diff ? 'TRUE' : ''"
+    } 
   }
 }
+

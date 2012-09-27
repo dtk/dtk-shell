@@ -66,6 +66,7 @@ module DTK
       def render_table(data_type)
         @render_data_type   = data_type
         @render_view = RenderView::TABLE
+        self
       end
 
       def hash_part()

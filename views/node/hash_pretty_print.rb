@@ -1,4 +1,4 @@
-module DTK::Client::ViewMeta
+module DTK::Client::ViewMeta::Node
   HashPrettyPrint = {
     :top_type => :node,
     :defs => {
