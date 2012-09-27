@@ -73,6 +73,12 @@ module DTK
       def get_meta(type,command_class,data_type_index=nil)
         ret = nil
         view = data_type_index||snake_form(command_class)
+
+        # TODO: Fix this logic, but we first need to see what to do with simple lists
+        if type.eql?('hash_pretty_print')
+          return pretty_print_meta(command_class, data_type_index)
+        end
+
         begin
           dtk_require("../views/#{view}/#{type}")
           view_const = DTK::Client::ViewMeta.const_get cap_form(view)
@@ -82,6 +88,14 @@ module DTK
         end
         ret
       end
+
+      def pretty_print_meta(command_class,data_type_index=nil)
+        view = data_type_index||snake_form(command_class)        
+        content = DiskCacher.new.fetch("http://localhost/mockup/get_pp_metadata", ::Config::Configuration.get(:caching_url,:meta_table_ttl))
+        raise DTK::Client::DtkError, "Pretty print metadata is empty, please contact DTK team." if content.empty?
+        return JSON.parse(content, {:symbolize_names => true})[view.to_sym]
+      end
+
     end
     module ViewMeta
     end

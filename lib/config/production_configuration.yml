@@ -1,7 +1,8 @@
 application:
-  development_mode: false
+  development_mode:       false
 caching_url:
-  meta_table_ttl:     7200000   # time to live (ms)
-  meta_constants_ttl: 7200000   # time to live (ms)
+  meta_table_ttl:         7200000   # time to live (ms)
+  meta_constants_ttl:     7200000   # time to live (ms)
+  meta_pretty_print_ttl:  7200000   # time to live (ms)
 task_monitor:
-  check_frequency:       60     # check frequency for task status threads (seconds)
+  check_frequency:        60     # check frequency for task status threads (seconds)
