@@ -5,6 +5,7 @@ require File.expand_path('../lib/commands/thor/dtk',       File.dirname(__FILE__
 require File.expand_path('../lib/error',                   File.dirname(__FILE__))
 require File.expand_path('../lib/shell/context',           File.dirname(__FILE__))
 require File.expand_path('../lib/shell/help_monkey_patch', File.dirname(__FILE__))
+require File.expand_path('../lib/shell/status_monitor',    File.dirname(__FILE__))
 
 require 'shellwords'
 require 'readline'
@@ -12,6 +13,9 @@ require 'thor'
 require 'rubygems'
 
 #ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
+
+# GLOBAL IDENTIFIER
+$shell_mode = true
 
 # METHODS
 
@@ -66,17 +70,18 @@ def change_context(args)
     return @context.shell_prompt
   end
 end
+# RUNTIME PART - STARTS HERE
 
 begin
-# RUNTIME PART - STARTS HERE
-@context    = DTK::Shell::Context.new
-# loads root context 
-@context.load_context()
-
+  @context    = DTK::Shell::Context.new
+  # loads root context 
+  @context.load_context()
 rescue DTK::Client::DtkError => e
   puts e.message
   exit
 end
+
+@t1 = nil
 
 prompt = DTK::Shell::Context::DTK_ROOT_PROMPT
 while line = Readline.readline(prompt, true)
@@ -131,6 +136,9 @@ while line = Readline.readline(prompt, true)
 
       # execute command via Thor
       top_level_execute(cmd,args,true)
+
+      # check execution status, prints status to sttout
+      DTK::Shell::StatusMonitor.check_status()
     end
 
   rescue DTK::Shell::Error => e

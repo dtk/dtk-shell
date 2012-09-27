@@ -1,3 +1,5 @@
+dtk_require("../../shell/status_monitor")
+
 module DTK::Client
   class AssemblyTemplate < CommandBaseThor
 
@@ -92,6 +94,12 @@ module DTK::Client
       # execute task
       task_id = response.data(:task_id)
       response = post(rest_url("task/execute"), "task_id" => task_id)
+
+      # start watching task ID
+      if $shell_mode
+        DTK::Shell::StatusMonitor.start_monitoring(task_id) if response.ok?
+      end
+
       return response unless response.ok?
       ret.add_data_value!(:task_id,task_id)
     end
