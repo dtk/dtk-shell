@@ -40,5 +40,5 @@ class DataType
   TARGET            = "TARGET"       
   COMPONENT         = "COMPONENT"
   TASK              = "TASK"
-  DIFF              = "DIFF"
+  MODULE_DIFF       = "MODULE_DIFF"
 end

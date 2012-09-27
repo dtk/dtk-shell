@@ -147,16 +147,17 @@
       "assembly_id": "dtk_id"
     }
   },
-  "component_diff": {
+  "module_diff": {
     "order": [
-      "name",
-      "id",
-      "diff"
+      "module_name",
+      "module_id",
+      "has_diff"
     ],
     "mapping": {
-      "name": "dtk_name"
-      "id": "dtk_id"
-      "diff" : "is_diff"
-    }
+      "module_name": "name",
+      "module_id": "dtk_id",
+      "has_diff" : "has_diff ? 'TRUE' : ''"
+    } 
   }
 }
+

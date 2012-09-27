@@ -79,9 +79,9 @@
       "id",
       "description"
    ],
-   "diff":[
+   "module_diff":[
       "name",
       "id",
-      "is_diff"
+      "has_diff"
    ]     
 }
