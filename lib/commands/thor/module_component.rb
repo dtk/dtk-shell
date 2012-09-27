@@ -90,6 +90,13 @@ module DTK::Client
       return response
     end
 
+    desc "list-diffs","List difference between workspace and library component modules"
+    def list_diffs()
+      response = get rest_url("component_module/get_all_workspace_library_diffs")
+pp response.data
+      response.render_table(DataType::DIFF)
+    end
+
     #### end: list and info commands ###
 
     #### commands to interact with remote repo ###

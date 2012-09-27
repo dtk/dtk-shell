@@ -146,5 +146,17 @@
       "assembly_name": "display_name",
       "assembly_id": "dtk_id"
     }
+  },
+  "component_diff": {
+    "order": [
+      "name",
+      "id",
+      "diff"
+    ],
+    "mapping": {
+      "name": "dtk_name"
+      "id": "dtk_id"
+      "diff" : "is_diff"
+    }
   }
 }

@@ -78,5 +78,10 @@
       "display_name",
       "id",
       "description"
-   ]
+   ],
+   "diff":[
+      "name",
+      "id",
+      "is_diff"
+   ]     
 }
