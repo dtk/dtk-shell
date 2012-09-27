@@ -32,7 +32,6 @@ module DTK::Client
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def converge(assembly_id)
-
       # create task
       post_body = {
         :assembly_id => assembly_id

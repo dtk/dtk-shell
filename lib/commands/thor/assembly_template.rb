@@ -76,11 +76,15 @@ module DTK::Client
       post rest_url("assembly/stage"), post_body
     end
 
-    desc "ASSEMBLY-TEMPLATE-NAME/ID deploy [INSTANCE-NAME]", "Stage and deploy assembly template in target."
+    desc "ASSEMBLY-TEMPLATE-NAME/ID deploy [INSTANCE-NAME] [-m COMMIT-MSG]", "Stage and deploy assembly template in target."
     method_option "in-target",:aliases => "-t" ,
       :type => :numeric, 
       :banner => "TARGET-ID",
       :desc => "Target (id) to create assembly in" 
+    method_option "commit_msg",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
     def deploy(arg1,arg2=nil)
       assembly_template_id,name = (arg2.nil? ? [arg1] : [arg2,arg1])
 
@@ -92,6 +96,8 @@ module DTK::Client
       post_body = {
         :assembly_id => assembly_id
       }
+      post_body.merge!(:commit_msg => options["commit_msg"]) if options["commit_msg"]
+
       ret = response = post(rest_url("assembly/create_task"), post_body)
       return response unless response.ok?
 
