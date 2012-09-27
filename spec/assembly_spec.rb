@@ -14,7 +14,7 @@ describe DTK::Client::Assembly do
     output = `dtk assembly list`
 
     it "should have assembly listing" do
-      output.should match(/(assembly|empty)/)
+      output.should match(/(assembly|id|empty)/)
     end
 
     unless output.nil?
@@ -31,28 +31,28 @@ describe DTK::Client::Assembly do
              output = `#{command}`
 
              it "should list all assemblies" do
-               output.should match(/(assembly|empty)/)
+               output.should match(/(assembly|id|empty)/)
              end
           when 'nodes'
              command = "dtk assembly #{$assembly_id} list #{l}"
              output = `#{command}`
 
              it "should list all #{l} for assembly with id #{$assembly_id}" do
-               output.should match(/(node|empty)/)
+               output.should match(/(node|id|empty)/)
              end
           when 'components'
             command = "dtk assembly #{$assembly_id} list #{l}"
              output = `#{command}`
 
              it "should list all #{l} for assembly with id #{$assembly_id}" do
-               output.should match(/(component|empty)/)
+               output.should match(/(component|id|empty)/)
              end
           when 'tasks'
             command = "dtk assembly #{$assembly_id} list #{l}"
              output = `#{command}`
 
              it "should list all #{l} for assembly with id #{$assembly_id}" do
-               output.should match(/(task|empty)/)
+               output.should match(/(task|id|empty)/)
              end
           end
       end

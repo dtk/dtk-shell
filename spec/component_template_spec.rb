@@ -12,7 +12,7 @@ describe DTK::Client::ComponentTemplate do
     	output = `dtk component-template list`
 
     	it "should contain component" do
-      	output.should match(/(component|empty|Missing)/)
+      	output.should match(/(component|id|empty|Missing)/)
     	end
 
     	#TODO component-template list doesn't return values because
@@ -31,14 +31,14 @@ describe DTK::Client::ComponentTemplate do
 			    output = `#{command}`
 
 			    it "should list all component_templates" do
-			      output.should match(/(component|empty)/)
+			      output.should match(/(component|id|empty)/)
 			    end
   	  		when 'nodes'
 			    command = "dtk component-template #{$component_template_id} list #{l}"
 			    output = `#{command}`
 
 			    it "should list all #{l} for component-template with id #{$component_template_id}" do
-			      output.should match(/(component|empty)/)
+			      output.should match(/(component|id|empty)/)
 			    end
 			end
       	end

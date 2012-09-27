@@ -13,7 +13,7 @@ describe DTK::Client::AssemblyTemplate do
     output = `dtk assembly-template list`
 
     it "should contain assemblies" do
-      output.should match(/(assembly|empty|Missing)/)
+      output.should match(/(assembly|id|empty|Missing)/)
     end
 
     unless output.nil?
@@ -30,14 +30,14 @@ describe DTK::Client::AssemblyTemplate do
 			       output = `#{command}`
 
 			       it "should list all #{l} for assembly-template with id #{$assembly_template_id}" do
-			         output.should match(/(name|empty)/)
+			         output.should match(/(name|id|empty)/)
 			       end
 			    when 'components'
 				    command = "dtk assembly-template #{$assembly_template_id} show #{l}"
             output = `#{command}`
 
             it "should list all #{l} for assembly-template with id #{$assembly_template_id}" do
-              output.should match(/(name|empty)/)
+              output.should match(/(name|id|empty)/)
             end
 			    when 'targets'
 				    #TODO when check why we are getting internal error.
