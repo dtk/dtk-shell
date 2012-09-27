@@ -14,7 +14,7 @@ describe DTK::Client::ServiceModule do
   	output = `#{command}`
 
   	it "should list all modules" do
-  		output.should match(/(module|empty|error)/)
+  		output.should match(/(id|empty|error)/)
   	end
 
   	unless output.nil?
@@ -31,14 +31,14 @@ describe DTK::Client::ServiceModule do
   				output  = `#{command}`
 
   				it "should list all modules" do
-  					output.should match(/(module|empty|error)/)
+  					output.should match(/(id|empty|error)/)
   				end
   			when 'assemblies'
   				command = "dtk service-module #{$module_id} list #{l}"
   				output  = `#{command}`
 
   				it "should list all assemblies for module with id #{$module_id}" do
-  					output.should match(/(assembly|empty|error)/)
+  					output.should match(/(id|empty|error)/)
   				end
   			end
   		end
