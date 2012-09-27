@@ -10,6 +10,11 @@ class String
   end
 end
 
+# override OpenStruct to remove defintion for id
+class DtkOpenStruct < OpenStruct
+  undef id
+end
+
 module DTK
   module Client
     class ViewProcTablePrint < ViewProcessor
@@ -45,7 +50,7 @@ module DTK
           raise DTK::Client::DtkError,"Missing table definition(s) for data type #{data_type}."
         end
 
-        # transforms data to OpenStruct
+        # transforms data to DtkOpenStruct
         structured_data = []
         data.each do |data_element|
           structured_data << to_ostruct(data_element)
@@ -54,7 +59,7 @@ module DTK
         # we use array of OpenStruct to hold our evaluated values
         @evaluated_data = []
         structured_data.each do |structured_element|
-          evaluated_element = OpenStruct.new
+          evaluated_element = DtkOpenStruct.new
           # based on mappign we set key = eval(value)
           table_defintion.each do |k,v|
             begin
@@ -95,7 +100,7 @@ module DTK
             [k,v]
           end
         end
-        OpenStruct.new(arr)
+        DtkOpenStruct.new(arr)
       end
 
       def safe_name(identifier)

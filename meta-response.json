@@ -1,7 +1,7 @@
 {
   "node": {
     "order": [
-      "node_id",
+      "id",
       "name",
       "node_type",
       "region",
@@ -20,12 +20,12 @@
       "node_type": "node_type",
       "zone": "external_ref.availability_zone",
       "os": "os_type",
-      "node_id": "dtk_id"
+      "id": "dtk_id"
     }
   },
   "component": {
     "order": [
-      "component_id",
+      "id",
       "name",
       "version"
     ],
@@ -33,20 +33,20 @@
       "name": "display_name",
       "version": "version",
       "library": "library.display_name",
-      "component_id": "dtk_id",
+      "id": "dtk_id",
       "library_id": "library_library_id",
       "component_type": "dtk_type"
     }
   },
   "module": {
     "order": [
-      "module_id",
+      "id",
       "name",
       "version"
     ],
     "mapping": {
       "name": "display_name",
-      "module_id": "dtk_id",
+      "id": "dtk_id",
       "version": "version"
     }
   },
@@ -68,12 +68,12 @@
   },
   "library": {
     "order": [
-      "library_id",
+      "id",
       "library_name"
     ],
     "mapping": {
       "library_name": "display_name",
-      "library_id": "dtk_id"
+      "id": "dtk_id"
     }
   },
   "remote_module": {
@@ -88,14 +88,14 @@
   },
   "task": {
     "order": [
-      "task_id",
+      "id",
       "status",
       "start",
       "end",
       "commit_msg"
     ],
     "mapping": {
-      "task_id": "dtk_id",
+      "id": "dtk_id",
       "end": "ended_at.get_date",
       "start": "started_at.get_date",
       "status": "status.upcase",
@@ -105,21 +105,21 @@
   },
   "target": {
     "order": [
-      "target_id",
+      "id",
       "target_type",
       "iaas",
       "description"
     ],
     "mapping": {
       "iaas": "iaas_type",
-      "target_id": "dtk_id",
+      "id": "dtk_id",
       "description": "description",
       "target_type": "dtk_type"
     }
   },
   "assembly": {
     "order": [
-      "assembly_id",
+      "id",
       "assembly_name",
       "status",
       "nodes",
@@ -130,12 +130,12 @@
       "nodes": "nodes.size",
       "status": "execution_status",
       "assembly_name": "display_name",
-      "assembly_id": "dtk_id"
+      "id": "dtk_id"
     }
   },
   "assembly_template": {
     "order": [
-      "assembly_id",
+      "id",
       "assembly_name",
       "nodes",
       "components"
@@ -144,7 +144,7 @@
       "components": "nodes.first['components'].join(', ')",
       "nodes": "nodes.size",
       "assembly_name": "display_name",
-      "assembly_id": "dtk_id"
+      "id": "dtk_id"
     }
   },
   "module_diff": {
