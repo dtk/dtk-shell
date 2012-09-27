@@ -6,7 +6,7 @@ include SpecThor
 describe DTK::Client::AssemblyTemplate do
   #test_task_interface(DTK::Client::AssemblyTemplate)
   
-  lists = ['none', 'nodes', 'components', 'targets']
+  lists = ['nodes', 'components', 'targets']
   $assembly_template_id = ''
 
   context "#list" do
@@ -25,22 +25,15 @@ describe DTK::Client::AssemblyTemplate do
   	unless $assembly_template_id.nil?
   	  lists.each do |l|
   	  		case l
-  	  		when 'none'
-			       command = "dtk assembly-template #{$assembly_template_id} list none"
-			       output = `#{command}`
-
-			       it "should list all assembly_templates" do
-			         output.should match(/(assembly|empty)/)
-			       end
   	  		when 'nodes'
-			       command = "dtk assembly-template #{$assembly_template_id} list #{l}"
+			       command = "dtk assembly-template #{$assembly_template_id} show #{l}"
 			       output = `#{command}`
 
 			       it "should list all #{l} for assembly-template with id #{$assembly_template_id}" do
 			         output.should match(/(name|empty)/)
 			       end
 			    when 'components'
-				    command = "dtk assembly-template #{$assembly_template_id} list #{l}"
+				    command = "dtk assembly-template #{$assembly_template_id} show #{l}"
             output = `#{command}`
 
             it "should list all #{l} for assembly-template with id #{$assembly_template_id}" do

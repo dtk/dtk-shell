@@ -5,6 +5,7 @@ GEM
       i18n (~> 0.6)
       multi_json (~> 1.0)
     addressable (2.3.2)
+    colorize (0.5.8)
     diff-lcs (1.1.3)
     erubis (2.7.0)
     fakeweb (1.3.0)
@@ -50,6 +51,7 @@ PLATFORMS
 
 DEPENDENCIES
   activesupport (= 3.2.7)
+  colorize (= 0.5.8)
   erubis (= 2.7.0)
   fakeweb
   grit (= 2.5.0)
