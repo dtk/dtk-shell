@@ -36,8 +36,7 @@ module DTK
         # use this to see data structure
         # puts data.first.inspect
 
-        @table_defintions = get_metadata()     
-
+        @table_defintions = get_metadata()
         # e.g. data type ASSEMBLY
         @command_name     = data_type
         # e.g. ASSEMBLY => TableDefintions::ASSEMBLY
