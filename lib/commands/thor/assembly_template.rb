@@ -94,9 +94,9 @@ module DTK::Client
       # create task      
       assembly_id = response.data(:assembly_id)
       post_body = {
-        :assembly_id => assembly_id
+        :assembly_id => assembly_id,
+        :commit_msg => options["commit_msg"]||"Initial deploy"
       }
-      post_body.merge!(:commit_msg => options["commit_msg"]) if options["commit_msg"]
 
       ret = response = post(rest_url("assembly/create_task"), post_body)
       return response unless response.ok?
