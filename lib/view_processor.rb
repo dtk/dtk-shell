@@ -97,7 +97,7 @@ module DTK
       end
 
       def empty_pretty_print_meta()
-        {:top=>[]}
+        {:top_type=>:top, :defs=>{:top_def=>[]}}
       end
     end
     module ViewMeta
