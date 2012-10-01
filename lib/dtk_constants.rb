@@ -20,7 +20,3 @@ class PPColumns
   end
 
 end
-
-#
-# ID for data types
-#
