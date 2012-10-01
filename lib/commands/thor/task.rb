@@ -11,7 +11,7 @@ module DTK::Client
       search_hash.set_order_by!(:created_at,"DESC")
       response = post rest_url("task/list"), search_hash.post_body_hash()
       
-      response.render_table(DataType::TASK) unless options.list?
+      response.render_table(:task) unless options.list?
       return response
     end
 

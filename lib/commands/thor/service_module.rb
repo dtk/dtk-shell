@@ -36,14 +36,14 @@ module DTK::Client
        when "none":
          action = (options.remote? ? "list_remote" : "list")
          response = post rest_url("service_module/#{action}")
-         data_type = DataType::MODULE
+         data_type = :module
        when "assemblies":
          if options.remote?
            #TODO: this is temp; will shortly support this
            raise DTK::Client::DtkError, "Not supported '--remote' option when listing service module assemblies"
          end
          response = post rest_url("service_module/list_assemblies"),post_body
-         data_type = DataType::ASSEMBLY
+         data_type = :assembly
        else 
          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end

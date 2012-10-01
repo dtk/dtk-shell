@@ -73,14 +73,14 @@ module DTK::Client
       when 'none'
         action = (options.remote? ? "list_remote" : "list")
         response = post rest_url("component_module/#{action}")
-        data_type = DataType::COMPONENT
+        data_type = :component
       when 'components'
         if options.remote?
           #TODO: this is temp; will shortly support this
           raise DTK::Client::DtkError, "Not supported '--remote' option when listing components in component modules"
         end
         response = post rest_url("component_module/list"), post_body
-        data_type = DataType::COMPONENT
+        data_type = :component
       else
         raise DTK::Client::DtkError, "Not supported type '#{targets}' for given command."
       end
@@ -93,7 +93,7 @@ module DTK::Client
     desc "list-diffs","List difference between workspace and library component modules"
     def list_diffs()
       response = get rest_url("component_module/get_all_workspace_library_diffs")
-      response.render_table(DataType::MODULE_DIFF)
+      response.render_table(:module_diff)
     end
 
     #### end: list and info commands ###

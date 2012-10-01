@@ -12,10 +12,10 @@ module DTK::Client
     method_option :remote, :type => :boolean, :default => false
     def list()
       if options.remote?
-        data_type = DataType::REMOTE_MODULE
+        data_type = :remote_module
         response = post rest_url("component_module/list_remote")
       else
-        data_type = DataType::MODULE
+        data_type = :module
         response = post rest_url("component_module/list_from_library")
       end
 

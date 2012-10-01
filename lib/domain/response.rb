@@ -59,12 +59,12 @@ module DTK
       end
 
       def set_datatype(datatype)
-        @render_data_type = datatype
+        @render_data_type = symbol_to_data_type_upcase(data_type)
         self
       end
 
       def render_table(data_type)
-        @render_data_type   = data_type
+        @render_data_type = symbol_to_data_type_upcase(data_type)
         @render_view = RenderView::TABLE
         self
       end
@@ -72,6 +72,13 @@ module DTK
       def hash_part()
         keys.inject(Hash.new){|h,k|h.merge(k => self[k])}
       end
+
+      def symbol_to_data_type_upcase(data_type)
+        unless data_type.nil?
+          return data_type.to_s.upcase
+        end
+      end
+
       private :hash_part
 
       class Ok < self

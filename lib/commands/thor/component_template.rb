@@ -8,7 +8,7 @@ module DTK::Client
     desc "COMPONENT-NAME/ID info", "Get information about given component template."
     method_option :list, :type => :boolean, :default => false
     def info(component_id=nil)
-      data_type = DataType::COMPONENT
+      data_type = :component
 
       post_body = {
         :component_id => component_id,
@@ -24,7 +24,7 @@ module DTK::Client
     desc "COMPONENT-NAME/ID list nodes", "List all nodes for given component template."
     method_option :list, :type => :boolean, :default => false
     def list(nodes='none', component_id=nil)
-      data_type = DataType::COMPONENT
+      data_type = :component
 
       post_body = {
         :component_id => component_id,
@@ -49,7 +49,7 @@ module DTK::Client
     desc "COMPONENT-NAME/ID stage NODE-NAME/ID", "Stage indentified node for given component template."
     method_option :list, :type => :boolean, :default => false
     def stage(node_id, component_id=nil)
-      data_type = DataType::COMPONENT
+      data_type = :component
 
       post_body = {
         :component_id => component_id

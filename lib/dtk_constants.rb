@@ -24,21 +24,3 @@ end
 #
 # ID for data types
 #
-
-class DataType
-  ASSEMBLY          = "ASSEMBLY"
-  ASSEMBLY_TEMPLATE = "ASSEMBLY_TEMPLATE"
-  LIBRARY           = "LIBRARY"
-  NODE              = "NODE"
-  NODE_TEMPLATE     = "NODE_TEMPLATE"
-  NODE_GROUP        = "NODE_GROUP"
-  MODULE            = "MODULE"
-  REMOTE_MODULE     = "REMOTE_MODULE"
-  PROJECT           = "PROJECT"
-  REPO              = "REPO"  
-  SERVICE_MODULE    = "SERVICE_MODULE"
-  TARGET            = "TARGET"       
-  COMPONENT         = "COMPONENT"
-  TASK              = "TASK"
-  MODULE_DIFF       = "MODULE_DIFF"
-end

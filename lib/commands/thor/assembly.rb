@@ -52,7 +52,7 @@ module DTK::Client
         :assembly_id => assembly_id
       }
       response = post rest_url("assembly/task_status"), post_body
-      response.set_datatype(DataType::TASK)
+      response.set_datatype(:task)
     end
 
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
@@ -71,7 +71,7 @@ module DTK::Client
     desc "list","List asssembly instances"
     method_option :list, :type => :boolean, :default => false
     def list()
-      data_type = DataType::ASSEMBLY
+      data_type = :assembly
       response = post rest_url("assembly/list"), {:subtype  => 'instance'}
 
       # set render view to be used
@@ -103,13 +103,13 @@ module DTK::Client
 
       case about
         when "nodes":
-          data_type = DataType::NODE
+          data_type = :node
           response = post rest_url("assembly/info_about"), post_body
         when "components":
-          data_type = DataType::COMPONENT
+          data_type = :component
           response = post rest_url("assembly/info_about"), post_body
         when "tasks":
-          data_type = DataType::TASK
+          data_type = :task
           response = post rest_url("assembly/info_about"), post_body
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."

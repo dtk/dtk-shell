@@ -8,7 +8,7 @@ module DTK::Client
     desc "NODE-NAME/ID info", "Get information about given node template."
     method_option :list, :type => :boolean, :default => false
     def info(node_id=nil)
-      data_type = DataType::NODE
+      data_type = :node
 
       post_body = {
         :node_id => node_id,
@@ -24,7 +24,7 @@ module DTK::Client
     desc "NODE-NAME/ID list targets", "List all components for given node template."
     method_option :list, :type => :boolean, :default => false
     def list(targets='none', node_id=nil)
-      data_type = DataType::NODE
+      data_type = :node
 
       post_body = {
         :node_id => node_id,
@@ -49,7 +49,7 @@ module DTK::Client
     desc "NODE-NAME/ID stage TARGET-NAME/ID", "Stage indentified target for given node template."
     method_option :list, :type => :boolean, :default => false
     def stage(target_id, node_id=nil)
-      data_type = DataType::NODE
+      data_type = :node
 
       post_body = {
         :node_id => node_id

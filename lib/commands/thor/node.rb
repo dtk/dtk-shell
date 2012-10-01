@@ -35,7 +35,7 @@ module DTK::Client
         end
       response = post rest_url("node/list"), search_hash.post_body_hash()
       
-      response.render_table(DataType::NODE) unless options.list?
+      response.render_table(:node) unless options.list?
       return response
     end
 

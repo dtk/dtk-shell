@@ -10,7 +10,7 @@ module DTK::Client
     desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."
     method_option :list, :type => :boolean, :default => false
     def info(assembly_id=nil)
-      data_type = DataType::ASSEMBLY_TEMPLATE
+      data_type = :assembly_template
 
       post_body = {
         :assembly_id => assembly_id,
@@ -23,7 +23,7 @@ module DTK::Client
     method_option :list, :type => :boolean, :default => false
     def list()
       response = post rest_url("assembly/list"), {:subtype => 'template'}
-      data_type = DataType::ASSEMBLY_TEMPLATE
+      data_type = :assembly_template
       response.render_table(data_type) unless options.list?
       response
     end
@@ -44,14 +44,14 @@ module DTK::Client
       case about
       when 'nodes'
         response = post rest_url("assembly/info_about"), post_body
-        data_type = DataType::NODE_TEMPLATE
+        data_type = :node_template
       when 'components'
         response = post rest_url("assembly/info_about"), post_body
-        data_type = DataType::COMPONENT
+        data_type = :component
 =begin
       when 'targets'
         response = post rest_url("assembly/info_about"), post_body
-        data_type = DataType::TARGET
+        data_type = :target
 =end
       else
         raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."

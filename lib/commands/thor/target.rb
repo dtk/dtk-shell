@@ -26,13 +26,13 @@ module DTK::Client
       case about
       when "none"
         response  = post rest_url("target/list")
-        data_type =  DataType::TARGET
+        data_type =  :target
       when "nodes"
         response  = post rest_url("target/list"), post_body
-        data_type =  DataType::NODE
+        data_type =  :node
       when "assemblies"
         response  = post rest_url("target/list"), post_body
-        data_type =  DataType::ASSEMBLY
+        data_type =  :assembly
       else
         raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end

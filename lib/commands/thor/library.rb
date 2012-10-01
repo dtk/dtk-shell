@@ -15,7 +15,7 @@ module DTK::Client
     method_option :list, :type => :boolean, :default => false
     def list(selected_type='none', library_id=nil)
       # sets data type to be used when printing table
-      data_type = DataType::LIBRARY
+      data_type = :library
 
       search_hash = SearchHash.new()
       search_hash.cols = pretty_print_cols()
@@ -29,14 +29,14 @@ module DTK::Client
 
         response = case selected_type.downcase
         when "nodes"
-          search_hash.cols,data_type = PPColumns.get(:node), DataType::NODE
+          search_hash.cols,data_type = PPColumns.get(:node), :node
           response = post rest_url("node/list"),search_hash.post_body_hash
         when "components"
-          search_hash.cols, data_type = PPColumns.get(:component), DataType::COMPONENT
+          search_hash.cols, data_type = PPColumns.get(:component), :component
           post rest_url("component/list"),search_hash.post_body_hash
         when "assemblies"
           # TODO: Filter libraries via assemblie is not working need to talk to Rich
-          search_hash.cols, data_type = PPColumns.get(:assembly), DataType::ASSEMBLY
+          search_hash.cols, data_type = PPColumns.get(:assembly), :assembly
           post rest_url("assembly/list_from_library"),search_hash.post_body_hash
         else
           raise DTK::Client::DtkError, "Not supported type '#{selected_type}' for given command."
