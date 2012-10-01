@@ -15,6 +15,7 @@ class DiskCacher
       if use_mock_up
         FakeWeb.register_uri(:get, "http://localhost/mockup/get_table_metadata", :body => File.open(File.expand_path('../../meta-response.json',File.dirname(__FILE__)),'rb').read)
         FakeWeb.register_uri(:get, "http://localhost/mockup/get_const_metadata", :body => File.open(File.expand_path('../../meta-constants-response.json',File.dirname(__FILE__)),'rb').read)
+        FakeWeb.register_uri(:get, "http://localhost/mockup/get_pp_metadata",    :body => File.open(File.expand_path('../../meta-pretty-print-response.json',File.dirname(__FILE__)),'rb').read)
       end
 
       # we check if the file -- a MD5 hexdigest of the URL -- exists
