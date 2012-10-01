@@ -74,9 +74,7 @@ module DTK
       end
 
       def symbol_to_data_type_upcase(data_type)
-        unless data_type.nil?
-          return data_type.to_s.upcase
-        end
+        return data_type.nil? ? nil : data_type.to_s.upcase
       end
 
       private :hash_part
