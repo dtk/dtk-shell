@@ -93,7 +93,8 @@ module DTK
         view = data_type_index||snake_form(command_class)        
         content = DiskCacher.new.fetch("http://localhost/mockup/get_pp_metadata", ::Config::Configuration.get(:caching_url,:meta_table_ttl))
         raise DTK::Client::DtkError, "Pretty print metadata is empty, please contact DTK team." if content.empty?
-        JSON.parse(content, {:symbolize_names => true})[view.to_sym]||empty_pretty_print_meta()
+        hash_content = JSON.parse(content, {:symbolize_names => true})
+        (view && (not view.empty?) && hash_content[view.to_sym])||empty_pretty_print_meta()
       end
 
       def empty_pretty_print_meta()
