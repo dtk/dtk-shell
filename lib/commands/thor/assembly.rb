@@ -182,6 +182,15 @@ module DTK::Client
       response = post(rest_url("component/delete"),post_body)
     end
 
+
+    desc "ASSEMBLY-NAME/ID get-netstats", "Get netstats"
+    def get_netstats(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      post(rest_url("assembly/get_netstats"),post_body)
+    end
+
     # we make valid methods to make sure that when context changing
     # we allow change only for valid ID/NAME
 
