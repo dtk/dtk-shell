@@ -261,11 +261,9 @@ module DTK::Client
 
     no_tasks do
       def self.valid_id?(value, conn)
-        @conn = conn if @conn.nil?
-        response = nil
-        
-        response = post rest_url("component_module/list")
-        
+        @conn    = conn if @conn.nil?
+        response = get_cached_response(:module_component, "component_module/list")
+
         unless response.nil?
           response['data'].each do |element|
             return true if (element['id'].to_s==value || element['display_name'].to_s==value)
@@ -275,15 +273,13 @@ module DTK::Client
       end
 
       def self.get_identifiers(conn)
-        @conn = conn if @conn.nil?
-        response = nil
-        
-        response = post rest_url("component_module/list")
-        
+        @conn    = conn if @conn.nil?
+        response = get_cached_response(:module_component, "component_module/list")
+
         unless response.nil?
           identifiers = []
           response['data'].each do |element|
-            identifiers << element['display_name']
+             identifiers << element['display_name']
           end
           return identifiers
         end

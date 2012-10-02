@@ -7,6 +7,8 @@ module DTK
     class CommandBaseThor < Thor
       include CommandBase
       extend  CommandBase
+      @@cached_response = {}
+      TIME_DIFF         = 3  #second(s)
       
       def initialize(args, opts, config)
         @conn = config[:conn]
@@ -44,6 +46,23 @@ module DTK
         end
 
         argv
+      end
+
+      # we take current timestamp and compare it to timestamp stored in @@cached_response
+      # if difference is greater than TIME_DIFF we send request again, if not we use
+      # response from cache
+      def self.get_cached_response(clazz, url, subtype=nil)
+        current_ts = Time.now.to_i
+        # if @@cache_response is empty return true if not than return time difference between
+        # current_ts and ts stored in cache
+        time_difference = @@cached_response[clazz].nil? ? true : ((current_ts - @@cached_response[clazz][:ts]) > TIME_DIFF)
+
+        if time_difference
+          response = post rest_url(url), subtype
+          @@cached_response.store(clazz, {:response => response, :ts => current_ts})
+        end
+
+        return @@cached_response[clazz][:response]
       end
 
       # returns all task names for given thor class with use friendly names (with '-' instead '_')

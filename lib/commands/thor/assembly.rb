@@ -187,10 +187,8 @@ module DTK::Client
 
     no_tasks do
       def self.valid_id?(value, conn)
-        @conn = conn if @conn.nil?
-        response = nil
-        
-        response = post rest_url("assembly/list")
+        @conn    = conn if @conn.nil?
+        response = get_cached_response(:assembly, "assembly/list")
         
         unless response.nil?
           response['data'].each do |element|
@@ -201,15 +199,13 @@ module DTK::Client
       end
 
       def self.get_identifiers(conn)
-        @conn = conn if @conn.nil?
-        response = nil
-        
-        response = post rest_url("assembly/list")
-        
+        @conn    = conn if @conn.nil?
+        response = get_cached_response(:assembly, "assembly/list")
+
         unless response.nil?
           identifiers = []
           response['data'].each do |element|
-            identifiers << element['display_name']
+             identifiers << element['display_name']
           end
           return identifiers
         end
