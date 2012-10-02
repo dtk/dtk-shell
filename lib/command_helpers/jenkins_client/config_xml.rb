@@ -175,7 +175,7 @@ pp &quot;Script has been started!&quot;
 puts &quot;Using template ID: #{ASSEMBLY_ID}&quot; 
 
 # Stage the assembly
-stageAssembly = RestClient.post(ENDPOINT + &apos;/rest/assembly/stage&apos;, &apos;assembly_template_id&apos; =&gt; ASSEMBLY_ID) 
+stageAssembly = RestClient.post(ENDPOINT + &apos;/rest/assembly/stage&apos;, &apos;assembly_id&apos; =&gt; ASSEMBLY_ID) 
 assemblyId = JSON.parse(stageAssembly)[&quot;data&quot;][&quot;assembly_id&quot;]
 
 puts &quot;Using stage assembly ID: #{assemblyId}&quot; 
