@@ -108,6 +108,9 @@ module DTK::Client
         when "components":
           data_type = :component
           response = post rest_url("assembly/info_about"), post_body
+        when "attributes":
+          data_type = :attribute
+          response = post rest_url("assembly/info_about"), post_body
         when "tasks":
           data_type = :task
           response = post rest_url("assembly/info_about"), post_body

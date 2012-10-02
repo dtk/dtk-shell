@@ -38,6 +38,18 @@
       "component_type": "dtk_type"
     }
   },
+  "attribute": {
+    "order": [
+      "id",
+      "path",
+      "value"
+    ],
+    "mapping": {
+      "path": "display_name",
+      "id": "dtk_id",
+      "value": "value"
+    }
+  },
   "module": {
     "order": [
       "id",

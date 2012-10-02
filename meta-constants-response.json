@@ -38,6 +38,11 @@
       "version",
       "library"
    ],
+   "attribute":[
+      "display_name",
+      "id",
+      "value"
+   ],
    "library":[
       "display_name",
       "id",
