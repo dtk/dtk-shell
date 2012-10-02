@@ -58,7 +58,7 @@ module DTK
         @render_view = RenderView::AUG_SIMPLE_LIST
       end
 
-      def set_datatype(datatype)
+      def set_datatype(data_type)
         @render_data_type = symbol_to_data_type_upcase(data_type)
         self
       end
