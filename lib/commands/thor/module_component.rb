@@ -60,34 +60,25 @@ module DTK::Client
       post rest_url("component_module/info"), post_body
     end
 
-    desc "[COMPONENT-MODULE-NAME/ID] list [component] [--remote]", "List all components for given component module."
-    method_option :list, :type => :boolean, :default => false
+    desc "list [--remote]", "List library or component remote component modules."
     method_option :remote, :type => :boolean, :default => false
-    def list(targets='none', component_module_id=nil)
+    def list()
+      action = (options.remote? ? "list_remote" : "list")
+      response = post rest_url("component_module/#{action}")
+      data_type = :component
+      response.render_table(:component)
+    end
+
+    desc "[COMPONENT-MODULE-NAME/ID] show-components", "List all components for given component module."
+    #TODO: support info on remote
+    def show_components(component_module_id)
       post_body = {
         :component_module_id => component_module_id,
-        :about => targets
+        :about => 'components'
       }
-
-      case targets
-      when 'none'
-        action = (options.remote? ? "list_remote" : "list")
-        response = post rest_url("component_module/#{action}")
-        data_type = :component
-      when 'components'
-        if options.remote?
-          #TODO: this is temp; will shortly support this
-          raise DTK::Client::DtkError, "Not supported '--remote' option when listing components in component modules"
-        end
-        response = post rest_url("component_module/list"), post_body
-        data_type = :component
-      else
-        raise DTK::Client::DtkError, "Not supported type '#{targets}' for given command."
-      end
-
+      response = post rest_url("component_module/info_about"), post_body
+      data_type = :component
       response.render_table(data_type) unless options.list?
-
-      return response
     end
 
     desc "list-diffs","List difference between workspace and library component modules"
