@@ -108,6 +108,9 @@ module DTK::Client
         when "components":
           data_type = :component
           response = post rest_url("assembly/info_about"), post_body
+        when "attributes":
+          data_type = :attribute
+          response = post rest_url("assembly/info_about"), post_body
         when "tasks":
           data_type = :task
           response = post rest_url("assembly/info_about"), post_body
@@ -155,6 +158,7 @@ module DTK::Client
         :pattern => pattern,
         :value => value
       }
+      #TODO: have this return format like assembly show attributes with subset of rows that gt changed
       post rest_url("assembly/set_attributes"), post_body
     end
 
@@ -180,6 +184,15 @@ module DTK::Client
         :id => component_id
       }
       response = post(rest_url("component/delete"),post_body)
+    end
+
+
+    desc "ASSEMBLY-NAME/ID get-netstats", "Get netstats"
+    def get_netstats(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      post(rest_url("assembly/get_netstats"),post_body)
     end
 
     # we make valid methods to make sure that when context changing
