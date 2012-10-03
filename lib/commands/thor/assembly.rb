@@ -172,7 +172,7 @@ module DTK::Client
       }
       response = post(rest_url("assembly/info"),post_body)
       return response unless response.ok?
-      assembly_id,assembly_name = response.data_ret!(:id,:display_name)
+      assembly_id,assembly_name = response.data(:id,:display_name)
       #TODO: modify JenkinsClient to use response wrapper
       JenkinsClient.create_assembly_project?(assembly_name,assembly_id)
       nil
@@ -192,8 +192,34 @@ module DTK::Client
       post_body = {
         :assembly_id => assembly_id
       }
-      post(rest_url("assembly/get_netstats"),post_body)
+      response = post(rest_url("assembly/initiate_get_netstats"),post_body)
+      return response unless response.ok?
+      action_results_id = response.data(:action_results_id)
+      end_loop = false
+      response = nil
+      count = 0
+      ret_only_if_complete = true
+      until end_loop do
+        post_body = {
+          :action_results_id => action_results_id,
+          :return_only_if_complete => ret_only_if_complete
+        }
+        response = post(rest_url("assembly/get_action_results"),post_body)
+        count += 1
+        if count > GetNetStatsTries or response.data(:is_complete)
+          end_loop = true
+        else
+          #last time in loop return whetever is teher
+          if count == GetNetStatsTries
+            ret_only_if_complete = false
+          end
+          sleep GetNetStatsSleep
+        end
+      end
+      response
     end
+    GetNetStatsTries = 6
+    GetNetStatsSleep = 0.5
 
     # we make valid methods to make sure that when context changing
     # we allow change only for valid ID/NAME
