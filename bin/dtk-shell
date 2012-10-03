@@ -137,6 +137,9 @@ while line = Readline.readline(prompt, true)
       # execute command via Thor
       top_level_execute(cmd,args,true)
 
+      # when command is executed reload cached tasks with latest commands
+      @context.reload_cached_tasks(cmd)
+
       # check execution status, prints status to sttout
       DTK::Shell::StatusMonitor.check_status()
     end
