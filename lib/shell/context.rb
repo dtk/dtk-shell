@@ -36,12 +36,8 @@ module DTK
           # normalize to file_names
           file_name = task_name.gsub('-','_')
           require File.expand_path("../commands/thor/#{file_name}", File.dirname(__FILE__))
-          
-          tier_1_tasks, tier_2_tasks = get_command_class(file_name).tiered_task_names
 
-          # gets thor command class and then all the task names for that command
-          @cached_tasks.store("#{task_name}_1",tier_1_tasks)
-          @cached_tasks.store("#{task_name}_2",tier_2_tasks)
+          get_latest_tasks(task_name)
         end
       end
 
@@ -75,6 +71,18 @@ module DTK
       def reset
         active_commands.clear
         load_context()
+      end
+
+      # when e.g assembly is deleted we want it to be removed from list without
+      # exiting dtk-shell
+      def reload_cached_tasks(command_name)
+        @cached_tasks["#{command_name}_1"].clear
+        @cached_tasks["#{command_name}_2"].clear
+       
+        get_latest_tasks(command_name)
+
+        file_name = command_name.gsub('-','_')
+        load_context(file_name)
       end
 
       # gets current path for shell
@@ -191,6 +199,15 @@ module DTK
 
       def get_command_class(command_name)
         Object.const_get('DTK').const_get('Client').const_get(cap_form(command_name))
+      end
+
+      def get_latest_tasks(command_name)
+        file_name = command_name.gsub('-','_')
+        tier_1_tasks, tier_2_tasks = get_command_class(file_name).tiered_task_names
+
+        # gets thor command class and then all the task names for that command
+        @cached_tasks.store("#{command_name}_1",tier_1_tasks)
+        @cached_tasks.store("#{command_name}_2",tier_2_tasks)
       end
 
     end
