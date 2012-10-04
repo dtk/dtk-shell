@@ -3,7 +3,7 @@ DTK Client user install
 
 This is guide only for user installation, development setup is bellow.
 
-- Get the install script under <tt>https://github.com/rich-reactor8/dtk-client/blob/dtk_prefix/bundle/install_client.sh</tt>
+- Get the install script under <tt>https://github.com/rich-reactor8/dtk-client/blob/master/bundle/install_client.sh</tt>
 
 - Run script with <tt>sudo bash install_client.sh</tt>
 - When prompted use following values in wizard:
