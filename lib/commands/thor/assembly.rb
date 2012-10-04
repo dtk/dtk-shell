@@ -188,8 +188,8 @@ module DTK::Client
         :pattern => pattern,
         :value => value
       }
-      #TODO: have this return format like assembly show attributes with subset of rows that gt changed
-      post rest_url("assembly/set_attributes"), post_body
+      response = post(rest_url("assembly/set_attributes"),post_body)
+      response.render_table(:attribute)
     end
 
     desc "create-jenkins-project ASSEMBLY-TEMPLATE-NAME/ID", "Create Jenkins project for assembly template"
