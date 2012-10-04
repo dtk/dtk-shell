@@ -46,14 +46,14 @@ module DTK
           @order_definition = get_table_defintion(@command_name, true)
         else
           # if there is custom metadata, check if it is in valid format
-          validated = validate_forced_metadata(forced_metadata)
+          validate_forced_metadata(forced_metadata)
 
-          if validated
+          # if validated
             table_defintion   = forced_metadata['mapping']
             @order_definition = forced_metadata['order']
-          else
-            raise DTK::Client::DtkError,"Provided table definition is not valid. Please review your order and mapping for provided definition: \n #{forced_metadata.inspect}"
-          end
+          # else
+          #   raise DTK::Client::DtkError,"Provided table definition is not valid. Please review your order and mapping for provided definition: \n #{forced_metadata.inspect}"
+          # end
         end
 
         # if one defintion is missing we stop the execution
@@ -129,12 +129,11 @@ module DTK
       # Check if custom metadata is sent in valid format
       def validate_forced_metadata(forced_metadata)
         # if custom metadata does not contain order(Array) or mapping(Hash),then it's not valid metadata
-        if(forced_metadata['order'].nil? || forced_metadata['mapping'].nil?)
-          return false
-        else
-          # valid metadata needs to contain order(Array) and mapping(Hash)
-          return (forced_metadata['order'].class.eql?(Array) && forced_metadata['mapping'].class.eql?(Hash))
+        unless (forced_metadata['order'].nil? || forced_metadata['mapping'].nil?)
+          return if (forced_metadata['order'].class.eql?(Array) && forced_metadata['mapping'].class.eql?(Hash))
         end
+        
+        raise DTK::Client::DtkError,"Provided table definition is not valid. Please review your order and mapping for provided definition: \n #{forced_metadata.inspect}"
       end
 
       def print
