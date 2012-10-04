@@ -12,4 +12,4 @@ gem 'hirb','0.7.0'
 gem 'colorize','0.5.8'
 # used to mock up metadata response for table_print
 # TODO: Remove this when implemntation is set on server side
-gem 'fakeweb'
+gem 'fakeweb','1.3.0'

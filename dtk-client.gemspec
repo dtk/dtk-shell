@@ -25,5 +25,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'dtk-common','~> 0.1.0'
   gem.add_dependency 'jenkins-client','~> 0.0.1'
   gem.add_dependency 'colorize','~> 0.5.8'
-  
+  gem.add_dependency 'fakeweb','~> 1.3.0'
 end
