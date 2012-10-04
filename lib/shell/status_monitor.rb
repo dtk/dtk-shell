@@ -60,8 +60,7 @@ module DTK
         puts "Client has started monitoring task [ID:#{task_id}]. You will be notified when task has been completed."
         @threads << DTK::Shell::TaskStatusThread.new do
           begin
-            response = nil
-            post_hash_body = Hash.new
+            response, post_hash_body = nil, {}
             post_hash_body[:task_id] = task_id
             DTK::Shell::TaskStatusThread.current.task_id = task_id
 
