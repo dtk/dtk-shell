@@ -47,7 +47,7 @@ module DTK
         else
           # if there is custom metadata, check if it is in valid format
           validated = validate_forced_metadata(forced_metadata)
-          
+
           if validated
             table_defintion   = forced_metadata['mapping']
             @order_definition = forced_metadata['order']
@@ -129,7 +129,7 @@ module DTK
       # Check if custom metadata is sent in valid format
       def validate_forced_metadata(forced_metadata)
         # if custom metadata does not contain order(Array) or mapping(Hash),then it's not valid metadata
-        if(forced_metadata['order'].nil? && forced_metadata['mapping'].nil?)
+        if(forced_metadata['order'].nil? || forced_metadata['mapping'].nil?)
           return false
         else
           # valid metadata needs to contain order(Array) and mapping(Hash)
