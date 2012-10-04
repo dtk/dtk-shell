@@ -18,8 +18,8 @@ end
 module DTK
   module Client
     class ViewProcTablePrint < ViewProcessor
-      def render(data, command_clazz, data_type_clazz)
-        DtkResponse.new(data, data_type_clazz).print
+      def render(data, command_clazz, data_type_clazz, forced_metadata=nil)
+        DtkResponse.new(data, data_type_clazz, forced_metadata).print
       end
     end
 
@@ -32,17 +32,29 @@ module DTK
       # when adding class to table view you need to define mapping and order to be displayed in table
       # this can be fixed with facets, but that is todo for now TODO: use facets with ordered hashes
 
-      def initialize(data, data_type)
-        # use this to see data structure
-        # puts data.first.inspect
+      def initialize(data, data_type, forced_metadata=nil)
+        
+        # if there is no custom metadata, then we use metadata predefined in meta-response.json file
+        if forced_metadata.nil?
+          # get all table definitions from json file
+          @table_defintions = get_metadata()
+          # e.g. data type ASSEMBLY
+          @command_name     = data_type
+          # e.g. ASSEMBLY => TableDefintions::ASSEMBLY
+          table_defintion   = get_table_defintion(@command_name)
+          # e.g. ASSEMBLY => TableDefintions::ASSEMBLY_ORDER
+          @order_definition = get_table_defintion(@command_name, true)
+        else
+          # if there is custom metadata, check if it is in valid format
+          validated = validate_forced_metadata(forced_metadata)
 
-        @table_defintions = get_metadata()
-        # e.g. data type ASSEMBLY
-        @command_name     = data_type
-        # e.g. ASSEMBLY => TableDefintions::ASSEMBLY
-        table_defintion   = get_table_defintion(@command_name)
-        # e.g. ASSEMBLY => TableDefintions::ASSEMBLY_ORDER
-        @order_definition = get_table_defintion(@command_name, true)
+          if validated
+            table_defintion   = forced_metadata['mapping']
+            @order_definition = forced_metadata['order']
+          else
+            raise DTK::Client::DtkError,"Provided table definition is not valid. Please review your order and mapping for provided definition: \n #{forced_metadata.inspect}"
+          end
+        end
 
         # if one defintion is missing we stop the execution
         if table_defintion.nil? || @order_definition.nil?
@@ -111,6 +123,17 @@ module DTK
           @table_defintions[name.downcase][(is_order ? 'order' : 'mapping')]
         rescue NameError => e
           return nil
+        end
+      end
+
+      # Check if custom metadata is sent in valid format
+      def validate_forced_metadata(forced_metadata)
+        # if custom metadata does not contain order(Array) or mapping(Hash),then it's not valid metadata
+        if(forced_metadata['order'].nil? || forced_metadata['mapping'].nil?)
+          return false
+        else
+          # valid metadata needs to contain order(Array) and mapping(Hash)
+          return (forced_metadata['order'].class.eql?(Array) && forced_metadata['mapping'].class.eql?(Hash))
         end
       end
 
