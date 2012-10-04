@@ -125,6 +125,16 @@ module DTK::Client
       return response
     end
 
+
+    desc "ASSEMBLY-NAME/ID debug-get-missing-parameters", "debug-get-missing-parameters"
+    def debug_get_missing_parameters(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id,
+        :subtype     => 'instance'
+      }
+       post rest_url("assembly/get_missing_parameters"), post_body
+    end
+
     desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
     def list_smoketests(assembly_id)
       post_body = {
