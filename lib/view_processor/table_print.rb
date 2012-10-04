@@ -48,12 +48,8 @@ module DTK
           # if there is custom metadata, check if it is in valid format
           validate_forced_metadata(forced_metadata)
 
-          # if validated
-            table_defintion   = forced_metadata['mapping']
-            @order_definition = forced_metadata['order']
-          # else
-          #   raise DTK::Client::DtkError,"Provided table definition is not valid. Please review your order and mapping for provided definition: \n #{forced_metadata.inspect}"
-          # end
+          table_defintion   = forced_metadata['mapping']
+          @order_definition = forced_metadata['order']
         end
 
         # if one defintion is missing we stop the execution
