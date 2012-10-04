@@ -1,6 +1,8 @@
 require 'thor'
 require 'thor/group'
 
+dtk_require("../../shell/interactive_wizard")
+
 
 module DTK
   module Client
