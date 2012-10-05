@@ -93,9 +93,14 @@ module DTK::Client
         response = get_cached_response(:task, "task/list")
 
         unless response.nil?
-          response['data'].each do |element|
-            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+          unless response['data'].nil?
+            response['data'].each do |element|
+              return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+            end
           end
+          
+          # if response is ok but response['data'] is nil, display warning message
+          DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
         end
         return false
       end
@@ -105,11 +110,16 @@ module DTK::Client
         response = get_cached_response(:task, "task/list")
 
         unless response.nil?
-          identifiers = []
-          response['data'].each do |element|
-             identifiers << element['display_name']
+          unless response['data'].nil?
+            identifiers = []
+            response['data'].each do |element|
+               identifiers << element['display_name']
+            end
+            return identifiers
           end
-          return identifiers
+
+          # if response is ok but response['data'] is nil, display warning message
+          DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
         end
         return []
       end
