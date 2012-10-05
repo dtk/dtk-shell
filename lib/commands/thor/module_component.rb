@@ -1,3 +1,5 @@
+dtk_require_from_base('command_helpers/ssh_processing')
+
 module DTK::Client
   class ModuleComponent < CommandBaseThor
 
