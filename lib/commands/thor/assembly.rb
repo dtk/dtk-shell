@@ -46,6 +46,37 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
+    desc "ASSEMBLY-NAME/ID debug-converge [-m COMMIT-MSG]", "Converges assembly instance with paramter checking"
+    method_option "commit_msg",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    def debug_converge(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id,
+        :subtype     => 'instance'
+      }
+      response = post rest_url("assembly/get_missing_parameters"), post_body
+      return response unless response.ok?
+      missing_params = response.data
+      DTK::Shell::InteractiveWizard.new.resolve_missing_params(missing_params)
+
+      # create task
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      post_body.merge!(:commit_msg => options["commit_msg"]) if options["commit_msg"]
+
+      response = post rest_url("assembly/create_task"), post_body
+      return response unless response.ok?
+
+      # execute task
+      task_id = response.data(:task_id)
+      post rest_url("task/execute"), "task_id" => task_id
+    end
+
+
+
     desc "ASSEMBLY-NAME/ID task-status", "Task status of running or last assembly task"
     def task_status(assembly_id)
       post_body = {
@@ -71,7 +102,6 @@ module DTK::Client
     desc "list","List asssembly instances"
     method_option :list, :type => :boolean, :default => false
     def list()
-      DTK::Shell::InteractiveWizard.new.resolve_missing_params(nil)
       data_type = :assembly
       response = post rest_url("assembly/list"), {:subtype  => 'instance'}
 
@@ -84,8 +114,7 @@ module DTK::Client
     end
 
     #TODO: put in flag to control detail level
-    desc "ASSEMBLY-NAME/ID show nodes|components|tasks [FILTER] [--list]","List nodes, components, or tasks associated with assembly."
-    method_option :list, :type => :boolean, :default => false
+    desc "ASSEMBLY-NAME/ID show nodes|components|attributes|tasks [FILTER]","List nodes, components, attributes, or tasks associated with assembly."
     def show(*rotated_args)
       #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
       assembly_id,about,filter = rotate_args(rotated_args)
@@ -126,16 +155,6 @@ module DTK::Client
       return response
     end
 
-
-    desc "ASSEMBLY-NAME/ID debug-get-missing-parameters", "debug-get-missing-parameters"
-    def debug_get_missing_parameters(assembly_id)
-      post_body = {
-        :assembly_id => assembly_id,
-        :subtype     => 'instance'
-      }
-       post rest_url("assembly/get_missing_parameters"), post_body
-    end
-
     desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
     def list_smoketests(assembly_id)
       post_body = {
@@ -169,8 +188,8 @@ module DTK::Client
         :pattern => pattern,
         :value => value
       }
-      #TODO: have this return format like assembly show attributes with subset of rows that gt changed
-      post rest_url("assembly/set_attributes"), post_body
+      response = post(rest_url("assembly/set_attributes"),post_body)
+      response.render_table(:attribute)
     end
 
     desc "create-jenkins-project ASSEMBLY-TEMPLATE-NAME/ID", "Create Jenkins project for assembly template"
