@@ -2,7 +2,7 @@ module DTK::Client
   class ModuleComponent < CommandBaseThor
 
     #### create and delete commands ###
-    desc "delete COMPONENT-MODULE-NAME/ID", "Delete component module and all items contained in it"
+    desc "delete MODULE-COMPONENT-ID/NAME", "Delete component module and all items contained in it"
     def delete(component_module_id)
       post_body = {
        :component_module_id => component_module_id
@@ -14,7 +14,7 @@ module DTK::Client
       GitRepo.unlink_local_clone?(:component_module,module_name)
     end
 
-    desc "create COMPONENT-MODULE-NAME [LIBRARY-NAME/ID]", "Create new module from local clone"
+    desc "MODULE-COMPONENT-ID/NAME create [LIBRARY-NAME/ID]", "Create new module from local clone"
     def create(arg1,arg2=nil)
       module_name, library_id = (arg2.nil? ? [arg1] : [arg2,arg1])
 
@@ -51,7 +51,7 @@ module DTK::Client
     #### end: create and delete commands ###
 
     #### list and info commands ###
-    desc "COMPONENT-MODULE-NAME/ID info", "Get information about given component module."
+    desc "MODULE-COMPONENT-ID/NAME info", "Get information about given component module."
     def info(component_module_id)
       post_body = {
         :component_module_id => component_module_id
@@ -69,7 +69,7 @@ module DTK::Client
       response.render_table(:component)
     end
 
-    desc "[COMPONENT-MODULE-NAME/ID] show-components", "List all components for given component module."
+    desc "[MODULE-COMPONENT-ID/NAME] show-components", "List all components for given component module."
     #TODO: support info on remote
     def show_components(component_module_id)
       post_body = {
@@ -111,7 +111,7 @@ module DTK::Client
     end
 
 
-    desc "COMPONENT-MODULE-NAME/ID export", "Export component module remote repository."
+    desc "MODULE-COMPONENT-ID/NAME export", "Export component module remote repository."
     def export(component_module_id)
       post_body = {
         :component_module_id => component_module_id
@@ -120,7 +120,7 @@ module DTK::Client
       post rest_url("component_module/export"), post_body
     end
 
-    desc "COMPONENT-MODULE-NAME/ID push-to-remote", "Push local copy of component module to remote repository."
+    desc "MODULE-COMPONENT-ID/NAME push-to-remote", "Push local copy of component module to remote repository."
     def push_to_remote(component_module_id)
       post_body = {
         :component_module_id => component_module_id
@@ -129,7 +129,7 @@ module DTK::Client
       post rest_url("component_module/push_to_remote"), post_body
     end
 
-    desc "COMPONENT-MODULE-NAME/ID pull-from-remote", "Update local component module from remote repository."
+    desc "MODULE-COMPONENT-ID/NAME pull-from-remote", "Update local component module from remote repository."
     def pull_from_remote(component_module_id)
       post_body = {
         :component_module_id => component_module_id
@@ -141,7 +141,7 @@ module DTK::Client
     #### end: commands to interact with remote repo ###
 
     #### commands to manage workspace and promote changes from workspace to library ###
-    desc "COMPONENT-MODULE-NAME/ID promote-to-library [VERSION]", "Update library module with changes from workspace"
+    desc "MODULE-COMPONENT-ID/NAME promote-to-library [VERSION]", "Update library module with changes from workspace"
     def promote_to_library(arg1,arg2=nil)
       #component_module_id is in last position, which coudl be arg1 or arg2
       component_module_id,version = (arg2 ? [arg2,arg1] : [arg1])
@@ -155,7 +155,7 @@ module DTK::Client
     end
 
     #TODO: may also provide an optional library argument to create in new library
-    desc "COMPONENT-MODULE-NAME/ID promote-new-version [EXISTING-VERSION] NEW-VERSION", "Promote workspace module as new version of module in library from workspace"
+    desc "MODULE-COMPONENT-ID/NAME promote-new-version [EXISTING-VERSION] NEW-VERSION", "Promote workspace module as new version of module in library from workspace"
     def promote_new_version(arg1,arg2,arg3=nil)
       #component_module_id is in last position
       component_module_id,new_version,existing_version = 
@@ -175,7 +175,7 @@ module DTK::Client
     #### end: commands to manage workspace and promote changes from workspace to library ###
 
     #### end: commands related to cloning to and pushing from local clone
-    desc "COMPONENT-MODULE-NAME/ID clone [VERSION]", "Clone into client the component module files"
+    desc "MODULE-COMPONENT-ID/NAME clone [VERSION]", "Clone into client the component module files"
     def clone(arg1,arg2=nil)
       component_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1]) 
       post_body = {
@@ -192,7 +192,7 @@ module DTK::Client
       response
     end
 
-    desc "COMPONENT-MODULE-NAME/ID push-clone-changes [VERSION]", "Push changes from local copy of module to server"
+    desc "MODULE-COMPONENT-ID/NAME push-clone-changes [VERSION]", "Push changes from local copy of module to server"
     def push_clone_changes(arg1,arg2=nil)
       component_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1])
       post_body = {
