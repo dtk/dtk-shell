@@ -48,7 +48,7 @@ module DTK
       def resolve_missing_params(error_response)
         begin
           error_response ||= @mock_up_response
-          user_provided_params = {}
+          user_provided_params, checkup_hash = {}, {}
 
           puts "\nResponse returned errors, please fill in missing data.\n"
           error_response.each do |error|
@@ -57,14 +57,15 @@ module DTK
 
             puts "Please enter #{string_identifier}:"
             while line = Readline.readline(": ", true)
-              user_provided_params[error['description'].to_sym] = line
+              user_provided_params[error['id']] = line
+              checkup_hash[error['description'].to_sym] = line
               break
             end
             
           end
 
           # pp print for provided parameters
-          pretty_print_provided_user_info(user_provided_params)
+          pretty_print_provided_user_info(checkup_hash)
 
           # make sure this is satisfactory
           while line = Readline.readline("Is provided information ok? (yes|no) ", true)
