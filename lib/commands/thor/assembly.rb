@@ -73,7 +73,6 @@ module DTK::Client
     desc "list","List asssembly instances"
     method_option :list, :type => :boolean, :default => false
     def list()
-      DTK::Shell::InteractiveWizard.new.resolve_missing_params(nil)
       data_type = :assembly
       response = post rest_url("assembly/list"), {:subtype  => 'instance'}
 
