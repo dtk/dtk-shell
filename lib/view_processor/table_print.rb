@@ -13,6 +13,7 @@ end
 # override OpenStruct to remove defintion for id
 class DtkOpenStruct < OpenStruct
   undef id
+  undef type
 end
 
 module DTK

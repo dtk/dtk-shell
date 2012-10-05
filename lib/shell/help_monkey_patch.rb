@@ -22,7 +22,7 @@ class Thor
 
         list.each do |help_item|
           # matches identifiers for ID/NAME
-          matched_data          = help_item.first.match(/\s\[?#{command}.?(NAME\/ID|ID\/NAME)\]?\s/)
+          matched_data          = help_item.first.match(/^\s\[?#{command}.?(NAME\/ID|ID\/NAME)\]?\s/)
           # if list command matches all bracketed options
           matched_list_options = help_item.first.match(/list (\[.+\])/)
           list_optional_data = matched_list_options.nil? ? nil : matched_list_options[1].split(' ')
