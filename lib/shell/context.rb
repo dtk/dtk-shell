@@ -61,7 +61,7 @@ module DTK
 
         # we load thor command class identifiers for autocomplete context list
         context_commands.concat(get_command_identifiers(command_name)) if tier_1?
-        
+
         comp = proc { |s| context_commands.grep( /^#{Regexp.escape(s)}/ ) }
 
         Readline.completion_proc = comp
@@ -81,8 +81,7 @@ module DTK
        
         get_latest_tasks(command_name)
 
-        file_name = command_name.gsub('-','_')
-        load_context(file_name)
+        load_context(command_name)
       end
 
       # gets current path for shell
