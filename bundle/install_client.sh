@@ -3,7 +3,7 @@
 
 # GLOBAL VAR
 
-abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
+abh_gem_repository="http://abh:haris@ec2-176-34-95-163.eu-west-1.compute.amazonaws.com:3000/"
 log_file="/var/log/dtk-client.log"
 
 
@@ -44,16 +44,14 @@ function install_gem {
   if $found_gem ; then
     echo "Gem $1 already installed."
   else
-    echo "Installing gem $1 (please wait) ..."
-   
+    # special case for geminabox
     if [[ $1 = "geminabox" ]]; then
-       # special case for geminabox (no rdoc or ri)
-      gem install $1 --no-ri --no-rdoc
-    else
-      # install gem
-      gem install $1 
+      echo "[NOTE] Please ignore error output (if it happens) when installing geminabox since that is known issue, this will not affect installation process."
     fi
 
+    echo "Installing gem $1 (please wait) ..."
+    # install gem
+    gem install $1
     # check installation
     gem_exists $1
 
@@ -92,7 +90,7 @@ check_for_ruby_gems
 echo "Wizard is installing necessery gems ..."
 
 # install geminabox
-# install_gem "geminabox"
+install_gem "geminabox"
 
 # add ABH gem repository for dtk gems
 add_abh_gem_repository

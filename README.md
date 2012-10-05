@@ -11,7 +11,7 @@ This is guide only for user installation, development setup is bellow.
 ```
 username=abh
 password=r8server
-server_host=ec2-54-247-191-95.eu-west-1.compute.amazonaws.com
+server_host=ec2-176-34-95-163.eu-west-1.compute.amazonaws.com
 server_port=7000
 ```
 
