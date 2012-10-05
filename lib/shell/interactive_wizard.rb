@@ -12,6 +12,7 @@ module DTK
       
 
       def initialize
+        # TODO Remove this after we get response from server
         @mock_up_response =   [
           {
             "id"=>2147515644,
@@ -43,12 +44,12 @@ module DTK
       end
 
       # takes hash maps with description of missing params and
-      # returns hash map with key, values for each missed param
+      # returns array of hash map with key, value for each missed param
 
       def resolve_missing_params(error_response)
         begin
           error_response ||= @mock_up_response
-          user_provided_params, checkup_hash = {}, {}
+          user_provided_params, checkup_hash = [], {}
 
           puts "\nResponse returned errors, please fill in missing data.\n"
           error_response.each do |error|
@@ -57,7 +58,7 @@ module DTK
 
             puts "Please enter #{string_identifier}:"
             while line = Readline.readline(": ", true)
-              user_provided_params[error['id']] = line
+              user_provided_params << {:id => error['id'], :value => line}
               checkup_hash[error['description'].to_sym] = line
               break
             end
