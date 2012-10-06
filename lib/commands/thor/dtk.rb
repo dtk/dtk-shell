@@ -30,14 +30,8 @@ module DTK::Client
       # API descriptor
     end
 
-    #TODO: remove
-    desc "module", "Legacy command for testing."
+    desc "module", "Commands to create, query, import and export component modules."
     def module
-      # API descriptor
-    end
-
-    desc "module-component", "Commands to create, query, import and export component modules."
-    def module_component
       # API descriptor
     end
 

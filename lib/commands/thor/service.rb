@@ -175,7 +175,7 @@ module DTK::Client
 
       def self.get_identifiers(conn)
         @conn    = conn if @conn.nil?
-        response = get_cached_response(:service_module, "service_module/list")
+        response = get_cached_response(:service, "service_module/list")
 
         unless response.nil?
           unless response['data'].nil?
