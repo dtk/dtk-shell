@@ -113,7 +113,7 @@ module DTK::Client
     end
 
 
-    desc "MODULE-ID/NAME export", "Export component module remote repository."
+    desc "MODULE-ID/NAME export", "Export component module to remote repository."
     def export(component_module_id)
       post_body = {
         :component_module_id => component_module_id

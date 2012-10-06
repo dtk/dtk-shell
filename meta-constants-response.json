@@ -88,5 +88,14 @@
       "name",
       "id",
       "has_diff"
-   ]     
+   ],
+   "task_status":[
+      "type",
+      "status",
+      "node",
+      "components",
+      "started_at",
+      "ended_at",
+      "errors"
+   ]       
 }

@@ -170,6 +170,27 @@
       "module_id": "dtk_id",
       "has_diff" : "has_diff ? 'TRUE' : ''"
     } 
+  },
+  "task_status": {
+    "order": [	 
+       "status",
+       "task_type",
+       "node",
+       "components",
+       "started_at",
+       "ended_at",
+       "errors"
+    ],
+    "mapping": {
+      "task_type": "dtk_type",
+       "status": "status",
+       "node": "node.name",
+       "components": "components.join(',')",
+       "started_at": "started_at",
+       "ended_at": "ended_at",
+       "errors": "errors"
+   }
   }
 }
+
 
