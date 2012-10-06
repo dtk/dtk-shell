@@ -74,8 +74,8 @@ module DTK::Client
     #  # API descriptor
     #end
 
-    desc "service-module", "Commands to create, query, import and export component modules."
-    def service_module
+    desc "service", "Commands to create, query, import and export service modules."
+    def service
       # API descriptor
     end
 
