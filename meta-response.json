@@ -188,7 +188,7 @@
        "components": "components.join(',')",
        "started_at": "started_at",
        "ended_at": "ended_at",
-       "errors": "errors"
+       "errors": "errors.message"
    }
   }
 }
