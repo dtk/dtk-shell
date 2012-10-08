@@ -73,7 +73,9 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
         end
       end
     end
-
+  rescue ArgumentError => e
+    # thor throws this error, this should be resuced as it is now
+    puts e.message
   rescue DTK::Client::DtkError => e
     # this are expected application errors
     puts e.message

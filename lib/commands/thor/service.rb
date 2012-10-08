@@ -2,7 +2,7 @@
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_from_base('command_helpers/git_repo')
 module DTK::Client
-  class ServiceModule < CommandBaseThor
+  class Service < CommandBaseThor
 
     def self.pretty_print_cols()
       PPColumns.get(:service_module)
@@ -16,7 +16,7 @@ module DTK::Client
 
     ##TODO: end: temp debug
 
-    desc "SERVICE-MODULE-NAME/ID info", "Provides information about specified service module"
+    desc "SERVICE-NAME/ID info", "Provides information about specified service module"
     def info(service_module_id)
       post_body = {
        :service_module_id => service_module_id
@@ -24,7 +24,7 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-    desc "[SERVICE-MODULE-NAME/ID] list [assemblies] [--remote]","List local or remote service modules or assemblies associated to it."
+    desc "[SERVICE-NAME/ID] list [assemblies] [--remote]","List local or remote service modules or assemblies associated to it."
     method_option :list, :type => :boolean, :default => false
     method_option :remote, :type => :boolean, :default => false
     def list(about="none",service_module_id=nil)
@@ -54,7 +54,7 @@ module DTK::Client
     end
 
     # TODO: Duplicate of library import ... should we delete this one?
-    desc "import REMOTE-SERVICE-MODULE-NAME [library_id]", "Import remote service module into library"
+    desc "import REMOTE-SERVICE-NAME [library_id]", "Import remote service module into library"
     def import(service_module_name,library_id=nil)
       post_body = {
        :remote_module_name => service_module_name
@@ -63,7 +63,7 @@ module DTK::Client
       post rest_url("service_module/import"), post_body
     end
 
-    desc "SERVICE-MODULE-NAME/ID  export", "Export service module to remote repo"
+    desc "SERVICE-NAME/ID export", "Export service module to remote repo"
     def export(service_module_id)
       post_body = {
        :service_module_id => service_module_id
@@ -71,7 +71,7 @@ module DTK::Client
       post rest_url("service_module/export"), post_body
     end
 
-    desc "SERVICE-MODULE-NAME/ID push-to-remote", "DESCRIPTION NEEDED!"
+    desc "SERVICE-NAME/ID push-to-remote", "DESCRIPTION NEEDED!"
     def push_to_remote(service_module_id)
       post_body = {
        :service_module_id => service_module_id
@@ -79,7 +79,7 @@ module DTK::Client
       post rest_url("service_module/push_to_remote"), post_body
     end
 
-    desc "SERVICE-MODULE-NAME/ID pull-from-remote", "DESCRIPTION NEEDED!"
+    desc "SERVICE-NAME/ID pull-from-remote", "DESCRIPTION NEEDED!"
     def push_to_remote(service_module_id)
       post_body = {
        :service_module_id => service_module_id
@@ -88,7 +88,7 @@ module DTK::Client
     end
 
     # TODO: Check to see if we are deleting this
-    desc "create MODULE-NAME [library_id]", "Create an empty service module in library"
+    desc "create SERVICE-NAME [library_id]", "Create an empty service module in library"
     def create(module_name,library_id=nil)
       post_body = {
        :module_name => module_name
@@ -97,7 +97,7 @@ module DTK::Client
       post rest_url("service_module/create"), post_body
     end
 
-    desc "delete SERVICE-MODULE-ID", "Delete service module and all items contained in it"
+    desc "delete SERVICE-NAME/ID", "Delete service module and all items contained in it"
     def delete(service_module_id)
       post_body = {
        :service_module_id => service_module_id
@@ -135,7 +135,7 @@ module DTK::Client
       post rest_url("service_module/remove_user_direct_access"), post_body
     end
 
-    desc "create-jenkins-project SERVICE-MODULE-ID", "Create Jenkins project for service module"
+    desc "create-jenkins-project SERVICE-NAME/ID", "Create Jenkins project for service module"
     def create_jenkins_project(service_module_id)
       #require put here so dont necessarily have to install jenkins client gems
 
@@ -175,7 +175,7 @@ module DTK::Client
 
       def self.get_identifiers(conn)
         @conn    = conn if @conn.nil?
-        response = get_cached_response(:service_module, "service_module/list")
+        response = get_cached_response(:service, "service_module/list")
 
         unless response.nil?
           unless response['data'].nil?

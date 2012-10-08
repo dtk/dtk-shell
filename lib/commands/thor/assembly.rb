@@ -51,11 +51,13 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID task-status", "Task status of running or last assembly task"
     def task_status(assembly_id)
       post_body = {
-        :assembly_id => assembly_id
+        :assembly_id => assembly_id,
+        :format => :table
       }
       response = post rest_url("assembly/task_status"), post_body
-      response.set_datatype(:task)
+      response.render_table(:task_status)
     end
+
 
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
     def run_smoketests(assembly_id)
@@ -73,7 +75,6 @@ module DTK::Client
     desc "list","List asssembly instances"
     method_option :list, :type => :boolean, :default => false
     def list()
-      DTK::Shell::InteractiveWizard.new.resolve_missing_params(nil)
       data_type = :assembly
       response = post rest_url("assembly/list"), {:subtype  => 'instance'}
 
@@ -126,16 +127,6 @@ module DTK::Client
       end
      
       return response
-    end
-
-
-    desc "ASSEMBLY-NAME/ID debug-get-missing-parameters", "debug-get-missing-parameters"
-    def debug_get_missing_parameters(assembly_id)
-      post_body = {
-        :assembly_id => assembly_id,
-        :subtype     => 'instance'
-      }
-       post rest_url("assembly/get_missing_parameters"), post_body
     end
 
     desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
@@ -233,6 +224,46 @@ module DTK::Client
     end
     GetNetStatsTries = 6
     GetNetStatsSleep = 0.5
+
+   #####TODO: templ for debugging
+    desc "ASSEMBLY-NAME/ID debug-converge [-m COMMIT-MSG]", "Converges assembly instance with paramter checking"
+    method_option "commit_msg",:aliases => "-m" ,
+      :type => :string,
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    def debug_converge(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id,
+        :subtype     => 'instance'
+      }
+      response = post rest_url("assembly/get_missing_parameters"), post_body
+      return response unless response.ok?
+      missing_params = response.data
+      unless missing_params.empty?
+        param_bindings = DTK::Shell::InteractiveWizard.new.resolve_missing_params(missing_params)
+        post_body = {
+          :assembly_id => assembly_id,
+          :av_pairs_hash => param_bindings.inject(Hash.new){|h,r|h.merge(r[:id] => r[:value])}
+        }
+     response = post rest_url("assembly/set_attributes"), post_body
+        return response unless response.ok?
+        return response.data
+      end
+      # create task
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      post_body.merge!(:commit_msg => options["commit_msg"]) if options["commit_msg"]
+
+      response = post rest_url("assembly/create_task"), post_body
+      return response unless response.ok?
+
+      # execute task
+      task_id = response.data(:task_id)
+      post rest_url("task/execute"), "task_id" => task_id
+    end
+
+   #######
 
     # we make valid methods to make sure that when context changing
     # we allow change only for valid ID/NAME

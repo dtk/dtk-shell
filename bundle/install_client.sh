@@ -44,16 +44,14 @@ function install_gem {
   if $found_gem ; then
     echo "Gem $1 already installed."
   else
-    echo "Installing gem $1 (please wait) ..."
-   
+    # special case for geminabox
     if [[ $1 = "geminabox" ]]; then
-       # special case for geminabox (no rdoc or ri)
-      gem install $1 --no-ri --no-rdoc
-    else
-      # install gem
-      gem install $1 
+      echo "[NOTE] Please ignore error output (if it happens) when installing geminabox since that is known issue, this will not affect installation process."
     fi
 
+    echo "Installing gem $1 (please wait) ..."
+    # install gem
+    gem install $1
     # check installation
     gem_exists $1
 
