@@ -55,7 +55,7 @@ module DTK::Client
         :format => :table
       }
       response = post rest_url("assembly/task_status"), post_body
-      response.render_table(:task_status)
+      response.render_table(:assembly_task_status)
     end
 
 

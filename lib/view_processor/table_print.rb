@@ -34,7 +34,6 @@ module DTK
       # this can be fixed with facets, but that is todo for now TODO: use facets with ordered hashes
 
       def initialize(data, data_type, forced_metadata=nil)
-        
         # if there is no custom metadata, then we use metadata predefined in meta-response.json file
         if forced_metadata.nil?
           # get all table definitions from json file
@@ -60,6 +59,10 @@ module DTK
 
         # transforms data to DtkOpenStruct
         structured_data = []
+
+        # very important since rest of the code expect array to be used
+        data = [data] unless data.kind_of?(Array)
+
         data.each do |data_element|
           structured_data << to_ostruct(data_element)
         end
@@ -108,6 +111,7 @@ module DTK
             [k,v]
           end
         end
+
         DtkOpenStruct.new(arr)
       end
 

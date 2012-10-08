@@ -3,9 +3,9 @@ require File.expand_path('../lib/client',                  File.dirname(__FILE__
 require File.expand_path('../lib/parser/adapters/thor',    File.dirname(__FILE__))
 require File.expand_path('../lib/commands/thor/dtk',       File.dirname(__FILE__))
 require File.expand_path('../lib/error',                   File.dirname(__FILE__))
-require File.expand_path('../lib/shell/context',           File.dirname(__FILE__))
-require File.expand_path('../lib/shell/help_monkey_patch', File.dirname(__FILE__))
-require File.expand_path('../lib/shell/status_monitor',    File.dirname(__FILE__))
+
+# load all from shell directory since those are required
+Dir[File.expand_path('../lib/shell/*.rb', File.dirname(__FILE__))].each {|file| require file }
 
 require 'shellwords'
 require 'readline'
@@ -73,7 +73,8 @@ end
 # RUNTIME PART - STARTS HERE
 
 begin
-  @context    = DTK::Shell::Context.new
+  @context      = DTK::Shell::Context.new
+  @shell_header = DTK::Shell::HeaderShell.new
   # loads root context 
   @context.load_context()
 rescue DTK::Client::DtkError => e
