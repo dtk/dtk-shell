@@ -3,7 +3,7 @@
 
 # GLOBAL VAR
 
-abh_gem_repository="http://abh:haris@ec2-176-34-95-163.eu-west-1.compute.amazonaws.com:3000/"
+abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
 log_file="/var/log/dtk-client.log"
 
 
