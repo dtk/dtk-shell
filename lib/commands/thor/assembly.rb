@@ -48,7 +48,11 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
-    desc "ASSEMBLY-NAME/ID add ADD-ON-TYPE", "Adds a sub assembly template to the assembly instance"
+    desc "ASSEMBLY-NAME/ID add ADD-ON-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly instance"
+    method_option "count",:aliases => "-n" ,
+      :type => :string, #integer 
+      :banner => "COUNT",
+      :desc => "Number of sub-assemblies to add"
     def add(arg1,arg2)
       assembly_id, add_on_type = [arg2,arg1]
       # create task
@@ -56,6 +60,7 @@ module DTK::Client
         :assembly_id => assembly_id,
         :add_on_type => add_on_type
       }
+      post_body.merge!(:count => options["count"]) if options["count"]
       post rest_url("assembly/add_sub_assembly"), post_body
     end
 
