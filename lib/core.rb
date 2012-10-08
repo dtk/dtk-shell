@@ -26,6 +26,9 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
 
     conn = DTK::Client::Conn.new()
 
+    # if connection parameters are not set up properly then don't execute any command
+    return if validate_connection(conn)
+
     # call proper thor class and task
     command_class = DTK::Client.const_get "#{cap_form(command)}"
     response_ruby_obj = command_class.execute_from_cli(conn,argv,shell_execute)
@@ -89,6 +92,15 @@ def load_command(command_name)
 
   dtk_nested_require("parser/adapters",parser_adapter)
   dtk_nested_require("commands/#{parser_adapter}",command_name)
+end
+
+# check if connection is set up properly
+def validate_connection(connection)
+  if connection.connection_error?
+    connection.print_warning
+    puts "\nDTK will now exit. Please set up your connection properly and try again."
+    return true
+  end
 end
 
 module DTK
