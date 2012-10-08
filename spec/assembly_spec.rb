@@ -4,7 +4,7 @@ include SpecThor
 
 
 describe DTK::Client::Assembly do
-  lists = ['none', 'nodes', 'components', 'tasks']
+  lists = ['nodes', 'components', 'tasks']
   $assembly_id = ''
   
   # generic test for all task of Thor class
@@ -26,29 +26,22 @@ describe DTK::Client::Assembly do
     unless $assembly_id.nil?
       lists.each do |l|
           case l
-          when 'none'
-             command = "dtk assembly #{$assembly_id} list none"
-             output = `#{command}`
-
-             it "should list all assemblies" do
-               output.should match(/(assembly|id|empty)/)
-             end
           when 'nodes'
-             command = "dtk assembly #{$assembly_id} list #{l}"
+             command = "dtk assembly #{$assembly_id} show #{l}"
              output = `#{command}`
 
              it "should list all #{l} for assembly with id #{$assembly_id}" do
                output.should match(/(node|id|empty)/)
              end
           when 'components'
-            command = "dtk assembly #{$assembly_id} list #{l}"
+            command = "dtk assembly #{$assembly_id} show #{l}"
              output = `#{command}`
 
              it "should list all #{l} for assembly with id #{$assembly_id}" do
                output.should match(/(component|id|empty)/)
              end
           when 'tasks'
-            command = "dtk assembly #{$assembly_id} list #{l}"
+            command = "dtk assembly #{$assembly_id} show #{l}"
              output = `#{command}`
 
              it "should list all #{l} for assembly with id #{$assembly_id}" do

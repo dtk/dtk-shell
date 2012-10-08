@@ -5,12 +5,30 @@ dtk_nested_require("../lib/commands/thor","module")
 include SpecThor
 
 describe DTK::Client::Module do
+  $module_id = ''
 
-  # generic test for all task of Thor class
-  #test_task_interface(DTK::Client::Module)
-
-  #TODO when dtk module list is implemented to work properly 
   context "#list" do
+    output = `dtk module list`
+
+    it "should have module listing" do
+      output.should match(/(error|id|empty)/)
+    end
+
+    unless output.nil?
+      $module_id = output.match(/\D([0-9]+)\D/)
+    end
+  end
+
+
+  context "#list/command" do
+    unless $module_id.nil?
+        command = "dtk module #{$module_id} show-components"
+        output  = `#{command}`
+
+        it "should list all components for module with id #{$module_id}" do
+            output.should match(/(error|id|empty)/)
+        end
+    end
   end
 
 end
