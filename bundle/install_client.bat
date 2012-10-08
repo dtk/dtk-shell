@@ -3,7 +3,7 @@
 
 :: GLOBAL VAR
 
-set abh_gem_repository="http://abh:haris@ec2-176-34-95-163.eu-west-1.compute.amazonaws.com:3000/"
+set abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
 set log_file="%TMP%\dtk-client.log"
 
 echo "Welcome to DTK CLI Client installation!"
