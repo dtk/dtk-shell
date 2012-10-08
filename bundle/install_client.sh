@@ -90,7 +90,7 @@ check_for_ruby_gems
 echo "Wizard is installing necessery gems ..."
 
 # install geminabox
-install_gem "geminabox"
+# install_gem "geminabox"
 
 # add ABH gem repository for dtk gems
 add_abh_gem_repository
