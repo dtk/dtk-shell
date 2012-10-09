@@ -134,7 +134,7 @@ module DTK::Client
         @conn    = conn if @conn.nil?
         response = get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template'})
 
-        unless response.nil?
+        unless (response.nil? || response.empty?)
           unless response['data'].nil?
             response['data'].each do |element|
               return true if (element['id'].to_s==value || element['display_name'].to_s==value)
@@ -151,7 +151,7 @@ module DTK::Client
         @conn    = conn if @conn.nil?
         response = get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template'})
 
-        unless response.nil?
+        unless (response.nil? || response.empty?)
           unless response['data'].nil?
             identifiers = []
             response['data'].each do |element|

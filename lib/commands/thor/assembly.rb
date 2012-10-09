@@ -55,7 +55,7 @@ module DTK::Client
         :format => :table
       }
       response = post rest_url("assembly/task_status"), post_body
-      response.render_table(:assembly_task_status)
+      response.render_table(:task_status)
     end
 
 
@@ -273,7 +273,7 @@ module DTK::Client
         @conn    = conn if @conn.nil?
         response = get_cached_response(:assembly, "assembly/list")
         
-        unless response.nil?
+        unless (response.nil? || response.empty?)
           unless response['data'].nil?
             response['data'].each do |element|
               return true if (element['id'].to_s==value || element['display_name'].to_s==value)
@@ -290,7 +290,7 @@ module DTK::Client
         @conn    = conn if @conn.nil?
         response = get_cached_response(:assembly, "assembly/list")
 
-        unless response.nil?
+        unless (response.nil? || response.empty?)
           unless response['data'].nil?
             identifiers = []
             response['data'].each do |element|
