@@ -208,6 +208,16 @@
        "started_at": "started_at.get_date",
        "ended_at": "ended_at.get_date"
    }
+  },
+  "service_add_on": {
+    "order": [
+       "type",
+       "description"
+    ],
+    "mapping": {
+       "type": "dtk_type",
+       "description": "description"
+   }
   }
 }
 

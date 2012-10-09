@@ -71,7 +71,7 @@ module DTK::Client
       post rest_url("service_module/export"), post_body
     end
 
-    desc "SERVICE-NAME/ID push-to-remote", "DESCRIPTION NEEDED!"
+    desc "SERVICE-NAME/ID push-to-remote", "Push local copy of service module to remote repository."
     def push_to_remote(service_module_id)
       post_body = {
        :service_module_id => service_module_id
@@ -79,8 +79,8 @@ module DTK::Client
       post rest_url("service_module/push_to_remote"), post_body
     end
 
-    desc "SERVICE-NAME/ID pull-from-remote", "DESCRIPTION NEEDED!"
-    def push_to_remote(service_module_id)
+    desc "SERVICE-NAME/ID pull-from-remote", "Update local service module from remote repository."
+    def pull_from_remote(service_module_id)
       post_body = {
        :service_module_id => service_module_id
       }

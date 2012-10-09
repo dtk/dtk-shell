@@ -48,8 +48,34 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
+    desc "ASSEMBLY-NAME/ID add ADD-ON-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly instance"
+    method_option "count",:aliases => "-n" ,
+      :type => :string, #integer 
+      :banner => "COUNT",
+      :desc => "Number of sub-assemblies to add"
+    def add(arg1,arg2)
+      assembly_id, add_on_type = [arg2,arg1]
+      # create task
+      post_body = {
+        :assembly_id => assembly_id,
+        :add_on_type => add_on_type
+      }
+      post_body.merge!(:count => options["count"]) if options["count"]
+      post rest_url("assembly/add_sub_assembly"), post_body
+    end
+
     desc "ASSEMBLY-NAME/ID task-status", "Task status of running or last assembly task"
     def task_status(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id,
+        :format => :table
+      }
+      response = post rest_url("assembly/task_status"), post_body
+      response.render_table(:task_status)
+    end
+
+    desc "ASSEMBLY-NAME/ID debug-task-status", "Task status of running or last assembly task"
+    def debug_task_status(assembly_id)
       post_body = {
         :assembly_id => assembly_id,
         :format => :table
@@ -87,7 +113,7 @@ module DTK::Client
     end
 
     #TODO: put in flag to control detail level
-    desc "ASSEMBLY-NAME/ID show nodes|components|tasks [FILTER] [--list]","List nodes, components, or tasks associated with assembly."
+    desc "ASSEMBLY-NAME/ID show nodes|components|tasks|add-on [FILTER] [--list]","List nodes, components, add-ons, or tasks associated with assembly."
     method_option :list, :type => :boolean, :default => false
     def show(*rotated_args)
       #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
@@ -117,6 +143,9 @@ module DTK::Client
           response = post rest_url("assembly/info_about"), post_body
         when "tasks":
           data_type = :task
+          response = post rest_url("assembly/info_about"), post_body
+        when "add-on":
+          data_type = :service_add_on
           response = post rest_url("assembly/info_about"), post_body
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
