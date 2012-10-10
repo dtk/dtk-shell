@@ -21,13 +21,13 @@ module DTK::Client
       return response
     end
 
-    desc "NODE-TEMPLATE-NAME/ID list", "List all node templates."
+    desc "list", "List all node templates."
     def list()
       post_body = {
         :subtype => 'template'
       }
-      response = post rest_url("node/list")
-      response.render_table(:node)
+      response = post rest_url("node/list"), post_body
+      response.render_table(:node_template)
     end
 
 

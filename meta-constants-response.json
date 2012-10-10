@@ -16,9 +16,10 @@
       "os_type",
       "id",
       "description",
-      "template_name",
-      "template_type",
-      "size"
+      type",
+      "size",
+      "region",
+      "image_id"
    ],
    "service_module":[
       "display_name",

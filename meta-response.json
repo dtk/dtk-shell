@@ -23,6 +23,24 @@
       "id": "dtk_id"
     }
   },
+  "node_template": {
+    "order": [
+      "name",
+      "os",
+      "template_type",
+      "image_id",
+      "size",
+      "region"
+    ],
+    "mapping": {
+      "name": "display_name",
+      "os": "os_type",
+      "template_type": "dtk_type",
+      "image_id": "image_id",
+      "size": "size",
+      "region" : "region"
+    }
+  },
   "component": {
     "order": [
       "id",
@@ -60,22 +78,6 @@
       "name": "display_name",
       "id": "dtk_id",
       "version": "version"
-    }
-  },
-  "node_template": {
-    "order": [
-      "name",
-      "template_name",
-      "os",
-      "template_type",
-      "size"
-    ],
-    "mapping": {
-      "name": "display_name",
-      "template_type": "template_type",
-      "size": "size.split('.').last",
-      "os": "os_type",
-      "template_name": "template_name"
     }
   },
   "library": {
