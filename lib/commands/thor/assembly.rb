@@ -1,8 +1,12 @@
+require 'rest_client'
+require 'json'
 dtk_require("../../dtk_logger")
+
+LOG_SLEEP_TIME = Config::Configuration.get(:tail_log,:request_sleep_time)
 
 module DTK::Client
   class Assembly < CommandBaseThor
-
+    
     def self.pretty_print_cols()
       PPColumns.get(:assembly)
     end
@@ -291,6 +295,27 @@ module DTK::Client
       task_id = response.data(:task_id)
       post rest_url("task/execute"), "task_id" => task_id
     end
+
+    desc "tail [POSITION_TO_START] [BUFFER_SIZE]","Tail specified number of lines from log"
+    def tail(start_line=nil, buffer_size=0)
+      puts "========================================================================================================================"
+      while true
+        begin
+          raise DTK::Client::DtkError, "Rich,you need to setup endpoint here."
+          # url goes here this is which I used for local testing
+          response = get "http://172.20.12.58:3000/generate_log/generate?start=#{start_line}&num=#{buffer_size}&format=json"
+          puts response["data"]
+          
+          start_line = response["last_position"].to_i
+          sleep(LOG_SLEEP_TIME)
+        rescue Interrupt => e
+          return
+        end
+     end
+     puts "========================================================================================================================"
+    end
+
+  
 
    #######
 

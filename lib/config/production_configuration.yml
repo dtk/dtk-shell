@@ -6,3 +6,5 @@ caching_url:
   meta_pretty_print_ttl:  7200000   # time to live (ms)
 task_monitor:
   check_frequency:        60     # check frequency for task status threads (seconds)
+tail_log:
+  request_sleep_time:       10     # sleep time between requests (seconds)
