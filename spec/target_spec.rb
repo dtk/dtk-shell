@@ -7,9 +7,10 @@ describe DTK::Client::Target do
   # generic test for all task of Thor class
   #test_task_interface(DTK::Client::Target)
 
-  lists = ['none', 'nodes', 'assemblies']
+  list       = ['none', 'nodes', 'assemblies']
   $target_id = ''
 
+  # list all targets and take one target_id
   context "#list" do
     output = `dtk target list`
 
@@ -22,32 +23,16 @@ describe DTK::Client::Target do
     end
   end
 
+  # for previously taken target_id, do list none|nodes|assemblies
   context "#list command" do
   	unless $target_id.nil?
-  		lists.each do |l|
-  			case l
-  			when 'none'
-  				command = "dtk target #{$target_id} list #{l}"
-			    output = `#{command}`
+  		list.each do |list_element|
+        command = "dtk target #{$target_id} list #{list_element}"
+        output  = `#{command}`
 
-			    it "should list all targets" do
-			       output.should match(/(target|id|empty|error)/)
-			    end
-			when 'nodes'
-				command = "dtk target #{$target_id} list #{l}"
-			    output = `#{command}`
-
-			    it "should list all #{l} for target with id #{$target_id}" do
-			       output.should match(/(node|id|empty|error)/)
-			    end
-			when 'assemblies'
-				command = "dtk target #{$target_id} list #{l}"
-			    output = `#{command}`
-
-			    it "should list all #{l} for target with id #{$target_id}" do
-			       output.should match(/(assembly|id|empty|error)/)
-			    end
-			end
+        it "should list all targets | nodes | assemblies" do
+          output.should match(/(name|id|empty|error)/)
+        end
   		end
   	end
   end

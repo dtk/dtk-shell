@@ -6,41 +6,34 @@ describe DTK::Client::Service do
 
   # generic test for all task of Thor class
   #test_task_interface(DTK::Client::ServiceModule)
-  lists = ['none', 'assemblies']
-  $module_id = ''
+  list        = ['none', 'assemblies']
+  $service_id = ''
 
+  # list all services and take one service_id
   context "#list" do
   	command = "dtk service list"
-  	output = `#{command}`
+  	output  = `#{command}`
 
   	it "should list all modules" do
   		output.should match(/(id|empty|error)/)
   	end
 
   	unless output.nil?
-  		$module_id = output.match(/\D([0-9]+)\D/)
+  		$service_id = output.match(/\D([0-9]+)\D/)
   	end
   end
 
+  # for previously taken service_id, do list none|assemblies
   context "#list command" do
-  	unless $module_id.nil?
-  		lists.each do |l|
-  			case l
-  			when 'none'
-  				command = "dtk service #{$module_id} list #{l}"
-  				output  = `#{command}`
+  	unless $service_id.nil?
+  		list.each do |list_element|
 
-  				it "should list all modules" do
-  					output.should match(/(id|empty|error)/)
-  				end
-  			when 'assemblies'
-  				command = "dtk service #{$module_id} list #{l}"
-  				output  = `#{command}`
+        command = "dtk service #{$service_id} list #{list_element}"
+        output  = `#{command}`
 
-  				it "should list all assemblies for module with id #{$module_id}" do
-  					output.should match(/(id|empty|error)/)
-  				end
-  			end
+        it "should list all modules or assemblies for service with id #{$service_id}" do
+          output.should match(/(id|name|empty|error)/)
+        end
   		end
   	end
   end
