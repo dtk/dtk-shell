@@ -8,4 +8,4 @@ task_monitor:
   check_frequency:        60     # check frequency for task status threads (seconds)
 assembly:
   tail_log_frequency:     10     # frequency between requests (seconds)
-  debug_task_frequency:   10     # frequency between requests (seconds)
+  debug_task_frequency:    5     # frequency between requests (seconds)

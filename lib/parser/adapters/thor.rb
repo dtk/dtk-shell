@@ -110,7 +110,9 @@ module DTK
         end
         # Loading output used to display waiting status
         def wait_animation(message, time_seconds)
-          # in second we will have 4 characters
+          # horizontal dash charcter
+          h_dash = ["2014".hex].pack("U")
+
           print message
           print " [   ]"
           STDOUT.flush
@@ -119,7 +121,7 @@ module DTK
               next_output = "\b\b\b\b\b"
               case
                when i % 4 == 0
-                 next_output += "[ ―  ]"
+                 next_output += "[ #{h_dash} ]"
                when i % 3 == 0
                 next_output += "[ / ]"
                when i % 2 == 0

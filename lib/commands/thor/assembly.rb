@@ -92,7 +92,7 @@ module DTK::Client
           response.render_table(:task_status)
           system('clear')
           response.render_data
-          wait_animation("Watching status task refreshing interval is #{DEBUG_SLEEP_TIME} seconds.",DEBUG_SLEEP_TIME)
+          wait_animation("Watching assembly task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
         end
       rescue Interrupt => e
         # this tells rest of the flow to skip rendering of this response
