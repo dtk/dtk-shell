@@ -51,11 +51,11 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
       # if error_internal.first == true
       if error_internal
         # print error message and backtrace
-        DtkLogger.instance.error("[INTERNAL ERROR] DTK has encountered an error: #{error_msg}, backtrace: #{error_backtrace}")
-        #TODO not sure what message should be displayed, in jira ticket it said that descriptive error should be printed out
+        #DtkLogger.instance.error("[INTERNAL ERROR] DTK has encountered an error: #{error_msg}, backtrace: #{error_backtrace}")
+
         raise DTK::Client::DtkError, "[INTERNAL ERROR] DTK has encountered an error: #{error_msg}. See DTK log for more details."
       else
-        DtkLogger.instance.error("Following error occured: #{error_msg}.")
+        # DtkLogger.instance.error("Following error occured: #{error_msg}.")
         # if usage error occured, display message to console and display that same message to log
         raise DTK::Client::DtkError, "Following error occured: #{error_msg}." 
       end
@@ -78,7 +78,8 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
     puts e.message
   rescue DTK::Client::DtkError => e
     # this are expected application errors
-    puts e.message
+    #puts e.message
+    DtkLogger.instance.error(e.message)
   rescue Exception => e
     # All errors for task will be handled here
     DtkLogger.instance.fatal("[INTERNAL ERROR] DTK has encountered an error #{e.class}: #{e.message}",true)
