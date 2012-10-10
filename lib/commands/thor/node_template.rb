@@ -30,6 +30,15 @@ module DTK::Client
       response.render_table(:node_template)
     end
 
+    #TODO: this may be moved to just be a utility fn
+    desc "image-upgrade OLD-IMAGE-ID NEW-IMAGE-ID", "Upgrade use of OLD-IMAGE-ID to NEW-IMAGE-ID"
+    def image_upgrade(old_image_id,new_image_id)
+      post_body = {
+        old_image_id => old_image_id,
+        new_image_id => new_image_id
+      }
+      post rest_url("node/image_upgrade"), post_body
+    end
 
     desc "NODE-NAME/ID stage TARGET-NAME/ID", "Stage indentified target for given node template."
     method_option :list, :type => :boolean, :default => false
