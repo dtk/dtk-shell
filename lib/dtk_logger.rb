@@ -59,7 +59,7 @@ class DtkLogger
   end
 
   def no_log_found
-    puts "[WARNING] Log file cannot be found please created it yourself or re-install DTK client. Use: 'sudo touch /var/log/#{LOG_FILE_NAME}; sudo chmod 666 /var/log/#{LOG_FILE_NAME}' "
+    puts "[WARNING] Log file cannot be found please create it yourself or re-install DTK client. Use: 'sudo touch /var/log/#{LOG_FILE_NAME}; sudo chmod 666 /var/log/#{LOG_FILE_NAME}' "
   end
 
 end
