@@ -81,8 +81,8 @@ module DTK
               # in such a way that those error will be specially printed later on
               if k.include? 'error'
                 
-                eval "error_message=structured_element.#{v}"
-                        
+                error_message = eval "structured_element.#{v}"
+
                 # here we see if there was an error if not we will skip this
                 # if so we add it to @error_data
                 if error_message.empty?
