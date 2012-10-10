@@ -9,11 +9,14 @@ module DTK
     #TODO: should make higher level class be above whether it is 'rest'
     class Response < Common::Response
 
-      attr_accessor :render_view
+      # :render_view => symbol specifing type of data to be rendered e.g. :assembly
+      # :skip_render => flag that specifies that render is not needed
+      attr_accessor :render_view, :skip_render
 
       def initialize(command_class=nil,hash={})
         super(hash)
         @command_class = command_class
+        @skip_render   = false
         # default values
         @render_view = RenderView::AUG_SIMPLE_LIST 
         @render_data_type = nil
@@ -35,22 +38,24 @@ module DTK
       end
 
       def render_data
-        if ok?()
+        unless @skip_render
+          if ok?()
 
-          # if response is empty, response status is ok but no data is passed back
-          if data.empty?
-            @render_view = RenderView::SIMPLE_LIST
-            if data.kind_of?(Array)
-              set_data('Message' => "List is empty.")
-            else #data.kind_of?(Hash)
-              set_data('Status' => 'OK')
+            # if response is empty, response status is ok but no data is passed back
+            if data.empty?
+              @render_view = RenderView::SIMPLE_LIST
+              if data.kind_of?(Array)
+                set_data('Message' => "List is empty.")
+              else #data.kind_of?(Hash)
+                set_data('Status' => 'OK')
+              end
             end
-          end
 
-          # sending raw data from response
-          ViewProcessor.render(@command_class, data, @render_view, @render_data_type)
-        else
-          hash_part()
+            # sending raw data from response
+            ViewProcessor.render(@command_class, data, @render_view, @render_data_type)
+          else
+            hash_part()
+          end
         end
       end
 

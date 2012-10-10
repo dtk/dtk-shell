@@ -108,6 +108,36 @@ module DTK
         def not_implemented
           raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
         end
+        # Loading output used to display waiting status
+        def wait_animation(message, time_seconds)
+          # in second we will have 4 characters
+          print message
+          print " [   ]"
+          STDOUT.flush
+          time_seconds.downto(1) do
+            1.upto(4) do |i|
+              next_output = "\b\b\b\b\b"
+              case
+               when i % 4 == 0
+                 next_output += "[ — ]"
+               when i % 3 == 0
+                next_output += "[ / ]"
+               when i % 2 == 0
+                next_output += "[ | ]"
+               else
+                next_output += "[ \\ ]"
+              end
+
+              print next_output
+              STDOUT.flush
+              sleep(0.25)
+            end
+          end
+          # remove loading animation
+          print "\b\b\b\b\b Refreshing..."
+          STDOUT.flush
+          puts 
+        end
       end
 
       ##

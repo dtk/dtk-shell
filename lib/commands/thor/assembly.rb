@@ -2,7 +2,8 @@ require 'rest_client'
 require 'json'
 dtk_require("../../dtk_logger")
 
-LOG_SLEEP_TIME = Config::Configuration.get(:tail_log,:request_sleep_time)
+LOG_SLEEP_TIME   = Config::Configuration.get(:assembly,:tail_log_frequency)
+DEBUG_SLEEP_TIME = Config::Configuration.get(:assembly,:debug_task_frequency)
 
 module DTK::Client
   class Assembly < CommandBaseThor
@@ -80,12 +81,23 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID debug-task-status", "Task status of running or last assembly task"
     def debug_task_status(assembly_id)
-      post_body = {
-        :assembly_id => assembly_id,
-        :format => :table
-      }
-      response = post rest_url("assembly/task_status"), post_body
-      response.render_table(:task_status)
+      # there will be infinite loop until intereputed with CTRL+C
+      begin
+        loop do 
+          post_body = {
+            :assembly_id => assembly_id,
+            :format => :table
+          }
+          response = post rest_url("assembly/task_status"), post_body
+          response.render_table(:task_status)
+          system('clear')
+          response.render_data
+          wait_animation("Watching status task refreshing interval is #{DEBUG_SLEEP_TIME} seconds.",DEBUG_SLEEP_TIME)
+        end
+      rescue Interrupt => e
+        # this tells rest of the flow to skip rendering of this response
+        response.skip_render = true
+      end
     end
 
 
