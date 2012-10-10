@@ -85,74 +85,78 @@ end
 @t1 = nil
 
 prompt = DTK::Shell::Context::DTK_ROOT_PROMPT
-while line = Readline.readline(prompt, true)
-  begin
-    # some special cases
-    exit if line == 'exit'
-    next if line.empty?
-    system('clear') and next if line == 'clear'
-    # when using help on root this is needed
-    line = 'dtk' if (line == 'help' && @context.root?)
 
-    args = Shellwords.split(line)
-    cmd = args.shift
+begin
+  while line = Readline.readline(prompt, true)
+    begin
+      # some special cases
+      exit if line == 'exit'
+      next if line.empty?
+      system('clear') and next if line == 'clear'
+      # when using help on root this is needed
+      line = 'dtk' if (line == 'help' && @context.root?)
 
-    if ('cc' == cmd)
-      # in case there is no params we just reload command
-      args << "/" if args.empty?
-      # changes context based on passed args
-      prompt = change_context(args)
-    else
-      # if e.g "list libraries" is sent instead of "library list" we reverse commands
-      # and still search for 'library list', this happens only on root
-      if !args.empty? && @context.active_commands.empty?
-        cmd, args = @context.reverse_commands(cmd, args)
-      end
+      args = Shellwords.split(line)
+      cmd = args.shift
 
-      # we only pre-process commands on Tier 1, Tier 2 on root there is no need
-      unless @context.root?
-        # command goes as first argument
-        args.unshift(cmd)
-        # main command is first one from 
-        cmd  = @context.tier_1_command()
-        # in case there is second cc it means it is ID and goes as first arg
-        args.unshift(@context.tier_2_command()) if @context.tier_2?
-      end
-
-      temp_dev_flag = true
-      puts "dtk-input > #{cmd} #{args.join(' ')}" if temp_dev_flag
-
-      # special case when we are doing help for context we need to remove
-      # context paramter
-      if @context.tier_2?
-        if args.last == 'help'
-          # we remove ID/NAME in order for help command to work
-          # e.g. library public help => library help
-          args.shift
+      if ('cc' == cmd)
+        # in case there is no params we just reload command
+        args << "/" if args.empty?
+        # changes context based on passed args
+        prompt = change_context(args)
+      else
+        # if e.g "list libraries" is sent instead of "library list" we reverse commands
+        # and still search for 'library list', this happens only on root
+        if !args.empty? && @context.active_commands.empty?
+          cmd, args = @context.reverse_commands(cmd, args)
         end
+
+        # we only pre-process commands on Tier 1, Tier 2 on root there is no need
+        unless @context.root?
+          # command goes as first argument
+          args.unshift(cmd)
+          # main command is first one from 
+          cmd  = @context.tier_1_command()
+          # in case there is second cc it means it is ID and goes as first arg
+          args.unshift(@context.tier_2_command()) if @context.tier_2?
+        end
+
+        temp_dev_flag = true
+        puts "dtk-input > #{cmd} #{args.join(' ')}" if temp_dev_flag
+
+        # special case when we are doing help for context we need to remove
+        # context paramter
+        if @context.tier_2?
+          if args.last == 'help'
+            # we remove ID/NAME in order for help command to work
+            # e.g. library public help => library help
+            args.shift
+          end
+        end
+
+        # send monkey patch class information about context
+        Thor.set_context(@context)
+
+        # execute command via Thor
+        top_level_execute(cmd,args,true)
+
+        # when 'delete' or 'delete-and-destroy' command is executed reload cached tasks with latest commands
+        unless (args.nil? || args.empty?)
+          @context.reload_cached_tasks(cmd) if args.first.include?('delete')
+        end
+
+        # check execution status, prints status to sttout
+        DTK::Shell::StatusMonitor.check_status()
       end
 
-      # send monkey patch class information about context
-      Thor.set_context(@context)
-
-      # execute command via Thor
-      top_level_execute(cmd,args,true)
-
-      # when 'delete' or 'delete-and-destroy' command is executed reload cached tasks with latest commands
-      unless (args.nil? || args.empty?)
-        @context.reload_cached_tasks(cmd) if args.first.include?('delete')
-      end
-
-      # check execution status, prints status to sttout
-      DTK::Shell::StatusMonitor.check_status()
+    rescue DTK::Shell::Error => e
+      puts e.message
     end
-
-  rescue DTK::Shell::Error => e
-    puts e.message
-  rescue Interrupt => e
-    system('stty', stty_save) # Restore
-    exit
   end
+rescue Interrupt => e
+  #system('stty', stty_save) # Restore
+  puts
+  exit
 end
 
 
