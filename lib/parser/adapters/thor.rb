@@ -119,7 +119,7 @@ module DTK
               next_output = "\b\b\b\b\b"
               case
                when i % 4 == 0
-                 next_output += "[ — ]"
+                 next_output += "[ ―  ]"
                when i % 3 == 0
                 next_output += "[ / ]"
                when i % 2 == 0
