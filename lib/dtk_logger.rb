@@ -3,6 +3,7 @@
 #
 require 'singleton'
 require 'logger'
+require File.expand_path('./util/os_util', File.dirname(__FILE__))
 
 class DtkLogger
 
@@ -13,12 +14,12 @@ class DtkLogger
   DEVELOPMENT_MODE        = Config::Configuration.get(:application,:development_mode)
 
   include Singleton
+  include DTK::Client::OsUtil
 
   def initialize
     begin
-            
       home_dir = `cd ~;pwd`.chomp
-      file = File.open("/var/log/#{LOG_FILE_NAME}", "a")
+      file = File.open("#{get_log_location()}/#{LOG_FILE_NAME}", "a")
       @logger = Logger.new(file, LOG_NUMBER_OF_OLD_FILES, LOG_MB_SIZE * 1024000)
 
     rescue SystemCallError => e
@@ -59,7 +60,7 @@ class DtkLogger
   end
 
   def no_log_found
-    puts "[WARNING] Log file cannot be found please create it yourself or re-install DTK client. Use: 'sudo touch /var/log/#{LOG_FILE_NAME}; sudo chmod 666 /var/log/#{LOG_FILE_NAME}' "
+    puts "[WARNING] Log file cannot be found please add it manually or re-install DTK client. Missing log #{get_log_location()}/#{LOG_FILE_NAME}"
   end
 
 end
