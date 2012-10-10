@@ -4,7 +4,7 @@
 :: GLOBAL VAR
 
 set abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
-set log_file="%TMP%\dtk-client.log"
+set log_file="%APPDATA%\DTK\dtk-client.log"
 
 echo "Welcome to DTK CLI Client installation!"
 
@@ -12,8 +12,10 @@ call :check_for_ruby
 call :check_for_ruby_gems 
 call :add_abh_gem_repository
 
-gem install dtk-common
-gem install dtk-client
+call gem install dtk-common --no-ri
+call gem install dtk-client
+
+call :create_config_log
 
 goto :EOF
 
@@ -56,6 +58,26 @@ IF "%gemsources%" == "" (
 )
 goto :EOF
 
+:: Create the configuration file in the home directory
+:create_config_log
+echo Please enter DTK server information.
+set /P username=Enter your username: 
+set /P password=Enter your password: 
+set /P server=Enter server name: 
+set /P port=Enter port number (default: 7000): 
+IF "%port%" == "" (
+  set port=7000
+)
+::set filepath='%HOMEDRIVE%%HOMEPATH%\.dtkclient'
+
+echo username=%username%  > %HOMEDRIVE%%HOMEPATH%\.dtkclient
+echo password=%password%  >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
+echo server_host=%server% >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
+echo server_port=%port%   >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
+
+touch %log_file%
+goto :EOF
+
 :ProgInPath
 set PROG=%~$PATH:1
 goto :EOF
@@ -64,4 +86,4 @@ goto :EOF
 :halt
 call :__SetErrorLevel %1
 call :__ErrorExit 2> nul
-goto :eof
+goto :EOF
