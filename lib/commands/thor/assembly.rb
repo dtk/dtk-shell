@@ -150,22 +150,19 @@ module DTK::Client
       case about
         when "nodes":
           data_type = :node
-          response = post rest_url("assembly/info_about"), post_body
         when "components":
           data_type = :component
-          response = post rest_url("assembly/info_about"), post_body
         when "attributes":
           data_type = :attribute
-          response = post rest_url("assembly/info_about"), post_body
         when "tasks":
           data_type = :task
-          response = post rest_url("assembly/info_about"), post_body
         when "add-on":
           data_type = :service_add_on
-          response = post rest_url("assembly/info_about"), post_body
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
+
+      response = post rest_url("assembly/info_about"), post_body
       # set render view to be used
       unless options.list?
         response.render_table(data_type)
