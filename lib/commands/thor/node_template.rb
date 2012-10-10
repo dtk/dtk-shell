@@ -21,30 +21,15 @@ module DTK::Client
       return response
     end
 
-    desc "NODE-NAME/ID list targets", "List all components for given node template."
-    method_option :list, :type => :boolean, :default => false
-    def list(targets='none', node_id=nil)
-      data_type = :node
-
+    desc "NODE-TEMPLATE-NAME/ID list", "List all node templates."
+    def list()
       post_body = {
-        :node_id => node_id,
-        :subtype => 'template',
-        :about   => targets
+        :subtype => 'template'
       }
-
-      case targets
-      when 'none'
-        response = post rest_url("node/list")
-      when 'targets'
-        response = post rest_url("node/list"), post_body
-      else
-        raise DTK::Client::DtkError, "Not supported type '#{targets}' for given command."
-      end
-
-      response.render_table(data_type) unless options.list?
-
-      return response
+      response = post rest_url("node/list")
+      response.render_table(:node)
     end
+
 
     desc "NODE-NAME/ID stage TARGET-NAME/ID", "Stage indentified target for given node template."
     method_option :list, :type => :boolean, :default => false
