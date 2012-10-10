@@ -26,7 +26,7 @@ module DTK
 				if is_windows?
 					return "#{ENV['APPDATA']}\\DTK"
 				else
-					return '/var/log/'
+					return '/var/log'
 				end
 			end
 
