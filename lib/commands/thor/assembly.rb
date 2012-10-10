@@ -83,6 +83,7 @@ module DTK::Client
     def debug_task_status(assembly_id)
       # there will be infinite loop until intereputed with CTRL+C
       begin
+        response = nil
         loop do 
           post_body = {
             :assembly_id => assembly_id,
@@ -95,8 +96,9 @@ module DTK::Client
           wait_animation("Watching assembly task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
         end
       rescue Interrupt => e
+        puts ""
         # this tells rest of the flow to skip rendering of this response
-        response.skip_render = true
+        response.skip_render = true unless response.nil?
       end
     end
 
