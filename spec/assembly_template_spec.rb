@@ -6,9 +6,11 @@ include SpecThor
 describe DTK::Client::AssemblyTemplate do
   #test_task_interface(DTK::Client::AssemblyTemplate)
   
-  lists = ['nodes', 'components', 'targets']
+  # add 'targets' when we implement them in AssemblyTemplate
+  list                  = ['nodes', 'components']
   $assembly_template_id = ''
 
+  # list all assembly-templates and take one assembly_template_id
   context "#list" do
     output = `dtk assembly-template list`
 
@@ -21,27 +23,16 @@ describe DTK::Client::AssemblyTemplate do
     end
   end
 
+  # for previously taken assembly_template_id, do show nodes|components|targets
   context "#list command" do
   	unless $assembly_template_id.nil?
-  	  lists.each do |l|
-  	  		case l
-  	  		when 'nodes'
-			       command = "dtk assembly-template #{$assembly_template_id} show #{l}"
-			       output = `#{command}`
+      list.each do |list_element|
+        command = "dtk assembly-template #{$assembly_template_id} show #{list_element}"
+        output  = `#{command}`
 
-			       it "should list all #{l} for assembly-template with id #{$assembly_template_id}" do
-			         output.should match(/(name|id|empty)/)
-			       end
-			    when 'components'
-				    command = "dtk assembly-template #{$assembly_template_id} show #{l}"
-            output = `#{command}`
-
-            it "should list all #{l} for assembly-template with id #{$assembly_template_id}" do
-              output.should match(/(name|id|empty)/)
-            end
-			    when 'targets'
-				    #TODO when check why we are getting internal error.
-			    end
+        it "should list all #{list_element} for assembly-template with id #{$assembly_template_id}" do
+          output.should match(/(name|id|empty)/)
+        end
       end
 	  end
   end

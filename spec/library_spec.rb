@@ -7,9 +7,10 @@ describe DTK::Client::Library do
   # generic test for all task of Thor class
   #test_task_interface(DTK::Client::Library)
 
-  lists = ['nodes', 'components', 'assemblies']
+  list        = ['nodes', 'components', 'assemblies']
   $library_id = ''
 
+  # list all libraries and take one library_id
   context "Dtk CLI list command" do
     output = `dtk library list`
 
@@ -22,35 +23,18 @@ describe DTK::Client::Library do
     end
   end
 
+  # for previously taken library_id, do list nodes|compoenents|assemblies
   context "Dtk CLI list specific library" do
-  	 unless $library_id.nil?
-  	  	 lists.each do |l|
+  	unless $library_id.nil?
+  	  list.each do |list_element|
+        command = "dtk library #{$library_id} list #{list_element}"
+        output = `#{command}`
 
-  	  		 case l
-  	  		 when 'nodes'
-			     command = "dtk library #{$library_id} list #{l}"
-			     output = `#{command}`
-
-			     it "should list all #{l} for library with id #{$library_id}" do
-			       output.should match(/(node|id|empty|error)/)
-			     end
-			     when 'components'
-            command = "dtk library #{$library_id} list #{l}"
-            output = `#{command}`
-
-            it "should list all #{l} for library with id #{$library_id}" do
-             output.should match(/(component|id|empty|error)/)
-            end
-			     when 'assemblies'
-            command = "dtk library #{$library_id} list #{l}"
-            output = `#{command}`
-
-            it "should list all #{l} for library with id #{$library_id}" do
-             output.should match(/(assembly|id|empty|error)/)
-            end
-			     end
-      	 end
-	   end
+        it "should list all #{list_element} for library with id #{$library_id}" do
+          output.should match(/(name|id|empty|error)/)
+        end
+      end
+	  end
   end
 
 end

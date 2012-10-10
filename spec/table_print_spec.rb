@@ -23,17 +23,17 @@ describe DTK::Client::DtkResponse do
 		@id               = "id"
 		@components       = "components"
 		@sample           = custom_assembly_template_metadata = {
-            "order" => [
+            "order"           => [
               @assembly_name,
               @nodes,
               @id,
               @components
             ],
-            "mapping" => {
-              "components" => "nodes.first['components'].join(', ')",
-              "nodes" => "nodes.size",
+            "mapping"         => {
+              "components"    => "nodes.first['components'].join(', ')",
+              "nodes"         => "nodes.size",
               "assembly_name" => "display_name",
-              "id" => "dtk_id"
+              "id"            => "dtk_id"
             }
  		}
 		response = DTK::Client::DtkResponse.new(data, @render_data_type, @sample)

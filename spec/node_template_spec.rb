@@ -5,12 +5,13 @@ include SpecThor
 describe DTK::Client::NodeTemplate do
 	#test_task_interface(DTK::Client::NodeTemplate)
 
-	lists = ['none', 'targets']
+	list     = ['none', 'targets']
   	$node_id = ''
 
+    # list all node-templates and take one node_id
 	context "#list" do
 		command = "dtk node-template list"
-		output = `#{command}`
+		output  = `#{command}`
 
 		it "should list all nodes" do
 			output.should match(/(node|id|empty|error)/)
@@ -21,26 +22,18 @@ describe DTK::Client::NodeTemplate do
 		end
 	end
 
+  	# for previously taken node id, do list none|tagets
 	context "#list command" do
-		unless $node_id.nil?
-			lists.each do |l|
-				case l
-  	  		 	when 'none'
-			     	command = "dtk node-template #{$node_id} list #{l}"
-					output = `#{command}`
-
-			     	it "should list all nodes" do
-			       		output.should match(/(node|id|empty|error)/)
-			     	end
-			    when 'targets'
-			    	command = "dtk node-template #{$node_id} list #{l}"
-					output = `#{command}`
-
-			     	it "should list all nodes" do
-			       		output.should match(/(node|id|empty|error)/)
-			     	end
-			    end
-			end
+	  unless $node_id.nil?
+		list.each do |list_element|
+		  command = "dtk node-template #{$node_id} list #{list_element}"
+		  output  = `#{command}`
+          
+		  it "should list all nodes" do
+		   	output.should match(/(name|id|empty|error)/)
+		  end
 		end
+	  end
 	end
+
 end
