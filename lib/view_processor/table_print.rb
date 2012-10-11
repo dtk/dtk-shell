@@ -82,13 +82,13 @@ module DTK
 
               if print_error_table && k.include?('error')
                 
-                error_message = command_executer(structured_element, v)
+                error_message = value_of(structured_element, v)
 
                 # here we see if there was an error if not we will skip this
                 # if so we add it to @error_data
                 if error_message.empty?
                   # no error message just add it as regular element
-                  evaluated_element.send("#{k}=",command_executer(structured_element, v))
+                  evaluated_element.send("#{k}=",value_of(structured_element, v))
                 else
                   # we set index for each message first => [ 1 ], second => [ 2 ], etc.
                   error_index = "[ #{@error_data.size + 1} ]"
@@ -105,7 +105,7 @@ module DTK
                 end
 
               else
-                evaluated_element.send("#{k}=", command_executer(structured_element, v))
+                evaluated_element.send("#{k}=", value_of(structured_element, v))
                 #eval "evaluated_element.#{k}=structured_element.#{v}"
               end
             rescue NoMethodError => e
@@ -186,7 +186,7 @@ module DTK
       # based on string sequence in mapped_command we are executing list of commands to follow
       # so for value of "foo.bar.split('.').last" we will get 4 commands that will
       # sequentaly be executed using values from previus results
-      def command_executer(open_struct_object, mapped_command)
+      def value_of(open_struct_object, mapped_command)
         # split string by '.' delimiter keeping in mind to split when words only
         commands = mapped_command.split(/\.(?=\w)/)
 
