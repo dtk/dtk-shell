@@ -10,13 +10,13 @@ module DTK
     class ViewProcessor
       class << self
         include Aux
-        def render(command_class,ruby_obj,type,data_type,adapter=nil)
+        def render(command_class, ruby_obj, type, data_type, adapter=nil, print_error_table=false)
           adapter ||= get_adapter(type,command_class,data_type)
 
           if type == RenderView::TABLE
             # for table there is only one rendering, we use command class to
             # determine output of the table
-            adapter.render(ruby_obj, command_class, data_type)
+            adapter.render(ruby_obj, command_class, data_type, nil, print_error_table)
 
             # saying no additional print needed (see core class)
             return false

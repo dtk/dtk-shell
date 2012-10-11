@@ -20,8 +20,8 @@ end
 module DTK
   module Client
     class ViewProcTablePrint < ViewProcessor
-      def render(data, command_clazz, data_type_clazz, forced_metadata=nil)
-        DtkResponse.new(data, data_type_clazz, forced_metadata).print
+      def render(data, command_clazz, data_type_clazz, forced_metadata=nil, print_error_table=false)
+        DtkResponse.new(data, data_type_clazz, forced_metadata, print_error_table).print
       end
     end
 
@@ -34,7 +34,7 @@ module DTK
       # when adding class to table view you need to define mapping and order to be displayed in table
       # this can be fixed with facets, but that is todo for now TODO: use facets with ordered hashes
 
-      def initialize(data, data_type, forced_metadata=nil)
+      def initialize(data, data_type, forced_metadata, print_error_table)
         # if there is no custom metadata, then we use metadata predefined in meta-response.json file
         if forced_metadata.nil?
           # get all table definitions from json file
@@ -79,21 +79,22 @@ module DTK
             begin
               # due to problems with space we have special way of handling error columns
               # in such a way that those error will be specially printed later on
-              if k.include? 'error'
+
+              if print_error_table && k.include?('error')
                 
-                error_message = eval "structured_element.#{v}"
+                error_message = command_executer(structured_element, v)
 
                 # here we see if there was an error if not we will skip this
                 # if so we add it to @error_data
                 if error_message.empty?
                   # no error message just add it as regular element
-                  eval "evaluated_element.#{k}=structured_element.#{v}"
+                  evaluated_element.send("#{k}=",command_executer(structured_element, v))
                 else
                   # we set index for each message first => [ 1 ], second => [ 2 ], etc.
                   error_index = "[ #{@error_data.size + 1} ]"
 
                   # original table takes that index
-                  eval "evaluated_element.#{k}=error_index"
+                  evaluated_element.send("#{k}=", error_index)
 
                   # we set new error element
                   error_element.id       = error_index
@@ -104,7 +105,8 @@ module DTK
                 end
 
               else
-                eval "evaluated_element.#{k}=structured_element.#{v}"
+                evaluated_element.send("#{k}=", command_executer(structured_element, v))
+                #eval "evaluated_element.#{k}=structured_element.#{v}"
               end
             rescue NoMethodError => e
               unless e.message.include? "nil:NilClass"
@@ -177,8 +179,45 @@ module DTK
           puts "\nERROR LIST".colorize(:red)
           table @error_data, :fields => [ :id, :message ]
         end
-
       end
+
+      private
+
+      # based on string sequence in mapped_command we are executing list of commands to follow
+      # so for value of "foo.bar.split('.').last" we will get 4 commands that will
+      # sequentaly be executed using values from previus results
+      def command_executer(open_struct_object, mapped_command)
+        # split string by '.' delimiter keeping in mind to split when words only
+        commands = mapped_command.split(/\.(?=\w)/)
+
+        value = open_struct_object
+        commands.each do |command|
+          value = evaluate_command(value, command)
+        end
+        return value
+      end
+
+
+      def evaluate_command(value, command)
+        case 
+          when command.include?('(')
+            # matches command and params e.g. split('.') => [1] split, [2] '.'
+            matched_data = command.match(/(.+)\((.+)\)/)
+            command, params = matched_data[1], matched_data[2]
+            value = value.send(command,params)
+          when command.include?('[')
+            # matches command such as first['foo']
+            matched_data    = command.match(/(.+)\[(.+)\]/)
+            command, params =  matched_data[1],matched_data[2]
+            value = evaluate_command(value,command)
+            value = value.send('[]',params)
+          else 
+            value = value.send(command)
+        end
+        
+        return value
+      end
+
 
     end
 
