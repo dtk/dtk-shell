@@ -1,3 +1,5 @@
+require 'etc'
+
 module DTK
 	module Client
 		module OsUtil
@@ -26,7 +28,8 @@ module DTK
 				if is_windows?
 					return "#{ENV['APPDATA']}\\DTK"
 				else
-					return '/var/log'
+					# returns log_path for current user e.g /var/log/user1
+					return "/var/log/#{Etc.getlogin}"
 				end
 			end
 

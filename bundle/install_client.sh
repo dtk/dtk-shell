@@ -4,10 +4,17 @@
 # GLOBAL VAR
 
 abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
-log_file="/var/log/dtk-client.log"
+log_location="/var/log/${SUDO_USER}"
 
 
 # FUNCTIONS BEGIN
+
+# print usage instructions
+function usage {
+  echo "usage: install_client.sh [username password dtk_server port]"
+  echo -e "\nIf all of the parameters are provided, installation is performed automatically without additional user input. "
+  echo -e "\nSee https://github.com/rich-reactor8/dtk-client/blob/master/README.md for additional information."
+}
 
 # check if gem exists sets global var $found_gem to true or false
 function gem_exists {
@@ -78,6 +85,18 @@ function add_abh_gem_repository {
 # FUNCTIONS END
 
 # BEGIN SCRIPT
+
+# check number of arguments
+if [[ $# -ne 0 ]] && [[ $# -ne 4 ]]; then
+        err_msg="ERROR: Invalid number of arguments \n";
+        usage
+        exit -1;
+elif [[ $# == 4 ]]; then
+  autoinstall=true
+elif [[ $# == 0 ]]; then
+  autoinstall=false
+fi;
+
 clear
 
 # install gems
@@ -99,11 +118,15 @@ add_abh_gem_repository
 install_gem "dtk-common"                            
 install_gem "dtk-client"
 
-
+log_file=${log_location}/dtk-client.log
 # check if there is log file if not create it
-if [ -f $log_file ]; then
+if [ -f ${log_file} ]; then
   echo "DTK client log file already exists $log_file. Continuing installation ..."
 else
+# check if the log location directory exists; if not then create it
+if [[ ! -d ${log_location} ]]; then
+  mkdir -p ${log_location}
+fi;
   `touch $log_file`
   `chmod 666 $log_file`
   if [ -f $log_file ]; then
@@ -135,23 +158,30 @@ if [ -f $file_path ]; then
 fi
 
 #: << 'END'
-# enter values
-echo "Please enter DTK server information."
-echo
-printf "Enter your username: "
-read username
-printf "Enter your password: "
-stty -echo                                      
-read password                                  
-stty echo               
-echo                                      
-printf "Enter server name: "
-read server
-printf "Enter port number (default: 7000): "
-read port
+if [[ ${autoinstall} == "false" ]]; then
+  # enter values
+  echo "Please enter DTK server information."
+  echo
+  printf "Enter your username: "
+  read username
+  printf "Enter your password: "
+  stty -echo                                      
+  read password                                  
+  stty echo               
+  echo                                      
+  printf "Enter server name: "
+  read server
+  printf "Enter port number (default: 7000): "
+  read port
+elif [[ ${autoinstall} == "true" ]]; then
+  username=$1
+  password=$2
+  server=$3
+  port=$4
+fi;
 
 # set default values
-if [ $port="" ]; then
+if [ $port == "" ]; then
   port="7000"
 fi
 
