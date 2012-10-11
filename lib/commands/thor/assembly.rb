@@ -69,37 +69,38 @@ module DTK::Client
       post rest_url("assembly/add_sub_assembly"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID task-status", "Task status of running or last assembly task"
+    desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
+    method_option :wait, :type => :boolean, :default => false
     def task_status(assembly_id)
-      post_body = {
-        :assembly_id => assembly_id,
-        :format => :table
-      }
-      response = post rest_url("assembly/task_status"), post_body
-      response.render_table(:task_status)
-    end
-
-    desc "ASSEMBLY-NAME/ID debug-task-status", "Task status of running or last assembly task"
-    def debug_task_status(assembly_id)
+      if options.wait?
       # there will be infinite loop until intereputed with CTRL+C
-      begin
-        loop do 
-          post_body = {
-            :assembly_id => assembly_id,
-            :format => :table
-          }
-          response = post rest_url("assembly/task_status"), post_body
-          response.render_table(:task_status)
-          system('clear')
-          response.render_data
-          wait_animation("Watching assembly task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
+        begin
+          response = nil
+          loop do 
+            post_body = {
+              :assembly_id => assembly_id,
+              :format => :table
+            }
+            response = post rest_url("assembly/task_status"), post_body
+            response.render_table(:task_status)
+            system('clear')
+            response.render_data
+            wait_animation("Watching assembly task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
+          end
+         rescue Interrupt => e
+          puts ""
+          # this tells rest of the flow to skip rendering of this response
+          response.skip_render = true unless response.nil?
         end
-      rescue Interrupt => e
-        # this tells rest of the flow to skip rendering of this response
-        response.skip_render = true
+      else
+        post_body = {
+          :assembly_id => assembly_id,
+          :format => :table
+        }
+        response = post rest_url("assembly/task_status"), post_body
+        response.render_table(:task_status)
       end
     end
-
 
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
     def run_smoketests(assembly_id)

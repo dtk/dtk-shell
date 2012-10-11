@@ -1,5 +1,6 @@
 require 'hirb'
 require 'ostruct'
+require 'colorize'
 
 dtk_require("../config/disk_cacher")
 
@@ -69,12 +70,42 @@ module DTK
 
         # we use array of OpenStruct to hold our evaluated values
         @evaluated_data = []
+        @error_data     = []
         structured_data.each do |structured_element|
           evaluated_element = DtkOpenStruct.new
+          error_element     = DtkOpenStruct.new
           # based on mappign we set key = eval(value)
           table_defintion.each do |k,v|
             begin
-              eval "evaluated_element.#{k}=structured_element.#{v}"
+              # due to problems with space we have special way of handling error columns
+              # in such a way that those error will be specially printed later on
+              if k.include? 'error'
+                
+                error_message = eval "structured_element.#{v}"
+
+                # here we see if there was an error if not we will skip this
+                # if so we add it to @error_data
+                if error_message.empty?
+                  # no error message just add it as regular element
+                  eval "evaluated_element.#{k}=structured_element.#{v}"
+                else
+                  # we set index for each message first => [ 1 ], second => [ 2 ], etc.
+                  error_index = "[ #{@error_data.size + 1} ]"
+
+                  # original table takes that index
+                  eval "evaluated_element.#{k}=error_index"
+
+                  # we set new error element
+                  error_element.id       = error_index
+                  error_element.message  = error_message
+
+                  # add it with other
+                  @error_data << error_element
+                end
+
+              else
+                eval "evaluated_element.#{k}=structured_element.#{v}"
+              end
             rescue NoMethodError => e
               unless e.message.include? "nil:NilClass"
                 # when chaining comands there are situations where more complex strcture
@@ -140,6 +171,13 @@ module DTK
       def print
         # hirb print out of our evaluated data in order defined
         table @evaluated_data,:fields => @order_definition
+
+        # in case there were error we print those errors
+        unless @error_data.empty?
+          puts "\nERROR LIST".colorize(:red)
+          table @error_data, :fields => [ :id, :message ]
+        end
+
       end
 
     end
