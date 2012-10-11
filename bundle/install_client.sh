@@ -4,7 +4,7 @@
 # GLOBAL VAR
 
 abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
-log_file="/var/log/dtk-client.log"
+log_location="/var/log/`whoami`"
 
 
 # FUNCTIONS BEGIN
@@ -99,11 +99,15 @@ add_abh_gem_repository
 install_gem "dtk-common"                            
 install_gem "dtk-client"
 
-
+log_file=${log_location}/dtk-client.log
 # check if there is log file if not create it
-if [ -f $log_file ]; then
+if [ -f ${log_file} ]; then
   echo "DTK client log file already exists $log_file. Continuing installation ..."
 else
+# check if the log location directory exists; if not then create it
+if [[ ! -d ${log_location} ]]; then
+  mkdir -p ${log_location}
+fi;
   `touch $log_file`
   `chmod 666 $log_file`
   if [ -f $log_file ]; then
