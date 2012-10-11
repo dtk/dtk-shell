@@ -34,8 +34,8 @@ module DTK::Client
     desc "image-upgrade OLD-IMAGE-ID NEW-IMAGE-ID", "Upgrade use of OLD-IMAGE-ID to NEW-IMAGE-ID"
     def image_upgrade(old_image_id,new_image_id)
       post_body = {
-        old_image_id => old_image_id,
-        new_image_id => new_image_id
+        :old_image_id => old_image_id,
+        :new_image_id => new_image_id
       }
       post rest_url("node/image_upgrade"), post_body
     end
