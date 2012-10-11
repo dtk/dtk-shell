@@ -33,16 +33,6 @@ module DTK
 				end
 			end
 
-			private
-
-			def create_user_log_folder(current_user)
-
-			end
-
-			def user_log_folder_exist?(current_user)
-				return File.directory?("/var/log/#{current_user}")
-			end
-
 		end
 	end
 end
