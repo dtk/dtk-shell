@@ -82,9 +82,24 @@ function add_abh_gem_repository {
 
 }
 
+function perform_uninstall {
+  echo "Uninstalling DTK Client..."
+  gem  uninstall -aIx dtk-client
+  gem  uninstall -aIx dtk-common
+  rm -rfv ${log_location}
+  rm -fv ~/.dtkclient
+}
+
 # FUNCTIONS END
 
 # BEGIN SCRIPT
+
+# check for uninstall
+if [[ $# == 1 ]] && [[ $1 == "uninstall" ]]; then
+  uninstall="true"
+  perform_uninstall
+  exit 0
+fi;
 
 # check number of arguments
 if [[ $# -ne 0 ]] && [[ $# -ne 4 ]]; then
@@ -92,9 +107,9 @@ if [[ $# -ne 0 ]] && [[ $# -ne 4 ]]; then
         usage
         exit -1;
 elif [[ $# == 4 ]]; then
-  autoinstall=true
+  autoinstall="true"
 elif [[ $# == 0 ]]; then
-  autoinstall=false
+  autoinstall="false"
 fi;
 
 clear
