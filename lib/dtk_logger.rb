@@ -22,6 +22,9 @@ class DtkLogger
       file = File.open("#{get_log_location()}/#{LOG_FILE_NAME}", "a")
       @logger = Logger.new(file, LOG_NUMBER_OF_OLD_FILES, LOG_MB_SIZE * 1024000)
 
+      @logger.formatter = proc do |severity, datetime, progname, msg|
+        "[#{datetime}] #{severity} -- : #{msg}\n"
+      end
     rescue SystemCallError => e
       no_log_found
     end
