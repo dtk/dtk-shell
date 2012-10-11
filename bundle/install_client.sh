@@ -12,7 +12,7 @@ log_location="/var/log/${SUDO_USER}"
 # print usage instructions
 function usage {
   echo "usage: install_client.sh [username password dtk_server port]"
-  echo -e "\nIf all of the parameters are provided, installation is performed automatically without additional user input."
+  echo -e "\nIf all of the parameters are provided, installation is performed automatically without additional user input. "
   echo -e "\nSee https://github.com/rich-reactor8/dtk-client/blob/master/README.md for additional information."
 }
 
