@@ -9,6 +9,13 @@ log_location="/var/log/${SUDO_USER}"
 
 # FUNCTIONS BEGIN
 
+# print usage instructions
+function usage {
+  echo "usage: install_client.sh [username password dtk_server port]"
+  echo -e "\nIf all of the parameters are provided, installation is performed automatically without additional user input. "
+  echo -e "\nSee https://github.com/rich-reactor8/dtk-client/blob/master/README.md for additional information."
+}
+
 # check if gem exists sets global var $found_gem to true or false
 function gem_exists {
   output=`gem list $1 | grep -i $1`
@@ -75,9 +82,36 @@ function add_abh_gem_repository {
 
 }
 
+function perform_uninstall {
+  echo "Uninstalling DTK Client..."
+  gem  uninstall -aIx dtk-client
+  gem  uninstall -aIx dtk-common
+  rm -rfv ${log_location}
+  rm -fv ~/.dtkclient
+}
+
 # FUNCTIONS END
 
 # BEGIN SCRIPT
+
+# check for uninstall
+if [[ $# == 1 ]] && [[ $1 == "uninstall" ]]; then
+  uninstall="true"
+  perform_uninstall
+  exit 0
+fi;
+
+# check number of arguments
+if [[ $# -ne 0 ]] && [[ $# -ne 4 ]]; then
+        err_msg="ERROR: Invalid number of arguments \n";
+        usage
+        exit -1;
+elif [[ $# == 4 ]]; then
+  autoinstall="true"
+elif [[ $# == 0 ]]; then
+  autoinstall="false"
+fi;
+
 clear
 
 # install gems
@@ -139,23 +173,30 @@ if [ -f $file_path ]; then
 fi
 
 #: << 'END'
-# enter values
-echo "Please enter DTK server information."
-echo
-printf "Enter your username: "
-read username
-printf "Enter your password: "
-stty -echo                                      
-read password                                  
-stty echo               
-echo                                      
-printf "Enter server name: "
-read server
-printf "Enter port number (default: 7000): "
-read port
+if [[ ${autoinstall} == "false" ]]; then
+  # enter values
+  echo "Please enter DTK server information."
+  echo
+  printf "Enter your username: "
+  read username
+  printf "Enter your password: "
+  stty -echo                                      
+  read password                                  
+  stty echo               
+  echo                                      
+  printf "Enter server name: "
+  read server
+  printf "Enter port number (default: 7000): "
+  read port
+elif [[ ${autoinstall} == "true" ]]; then
+  username=$1
+  password=$2
+  server=$3
+  port=$4
+fi;
 
 # set default values
-if [ $port="" ]; then
+if [ $port == "" ]; then
   port="7000"
 fi
 

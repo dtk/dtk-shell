@@ -84,7 +84,7 @@ module DTK::Client
             response = post rest_url("assembly/task_status"), post_body
             response.render_table(:task_status)
             system('clear')
-            response.render_data
+            response.render_data(true)
             wait_animation("Watching assembly task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
           end
          rescue Interrupt => e
@@ -98,6 +98,7 @@ module DTK::Client
           :format => :table
         }
         response = post rest_url("assembly/task_status"), post_body
+        response.print_error_table = true
         response.render_table(:task_status)
       end
     end
