@@ -36,7 +36,8 @@ describe DTK::Client::DtkResponse do
               "id"            => "dtk_id"
             }
  		}
-		response = DTK::Client::DtkResponse.new(data, @render_data_type, @sample)
+
+		response = DTK::Client::DtkResponse.new(@sample, @render_data_type, nil, true)
 	
 		it "should contain columns #{@assembly_name}, #{@nodes}, #{@id}, #{@components} " do
       		response.inspect.should include("assembly_name")
