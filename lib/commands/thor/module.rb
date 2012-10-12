@@ -16,10 +16,8 @@ module DTK::Client
       GitRepo.unlink_local_clone?(:component_module,module_name)
     end
 
-    desc "MODULE-ID/NAME create [LIBRARY-NAME/ID]", "Create new module from local clone"
-    def create(arg1,arg2=nil)
-      module_name, library_id = (arg2.nil? ? [arg1] : [arg2,arg1])
-
+    desc "create MODULE-NAME [LIBRARY-NAME/ID]", "Create new module from local clone"
+    def create(module_name,library_id=nil)
       dtk_require_from_base('command_helpers/git_repo')
 
       #first check that there is a directory there and it is not already a git repo
@@ -45,7 +43,8 @@ module DTK::Client
       post_body = {
         :repo_id => repo_id,
         :library_id => library_id,
-        :module_name => module_name
+        :module_name => module_name,
+        :scaffold_if_no_meta => true
       }
       post rest_url("component_module/update_repo_and_add_meta_data"), post_body
     end
@@ -208,14 +207,13 @@ module DTK::Client
       dtk_require_from_base('command_helpers/git_repo')
       response = GitRepo.push_changes(:component_module,response.data(:module_name))
       return response unless response.ok?
-      pp [:diffs,response]
-
       post_body.merge!(:diffs => response.data(:diffs))
 
       post rest_url("component_module/update_model_from_clone"), post_body
     end
 
     #### end: commands related to cloning to and pushing from local clone
+
 
     #TODO: add-direct-access and remove-direct-access should be removed as commands and instead add-direct-access 
     #Change from having module-command/add_direct_access to being a command to being done when client is installed if user wants this option
