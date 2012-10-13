@@ -119,7 +119,6 @@ module DTK; module Client
 
       #check if merge needed
       merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch)
-      pp [:debug,pp_module(repo),:merge_rel,merge_rel]
       if merge_rel == :equal
         diffs
       elsif [:branchpoint,:local_behind].include?(merge_rel)

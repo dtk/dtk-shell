@@ -78,7 +78,7 @@ module DTK::Client
       response.render_table(:component)
     end
 
-    desc "[MODULE-ID/NAME] show-components", "List all components for given component module."
+    desc "MODULE-ID/NAME show-components", "List all components for given component module."
     #TODO: support info on remote
     def show_components(component_module_id)
       post_body = {
