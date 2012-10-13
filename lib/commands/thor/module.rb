@@ -39,6 +39,7 @@ module DTK::Client
       }
       response = GitRepo.initialize_repo_and_push(:component_module,module_name,branch_info,repo_url)
       return response unless response.ok?
+      repo_branch =  response.data(:repo_branch)
 
       post_body = {
         :repo_id => repo_id,
@@ -46,7 +47,14 @@ module DTK::Client
         :module_name => module_name,
         :scaffold_if_no_meta => true
       }
-      post rest_url("component_module/update_repo_and_add_meta_data"), post_body
+      response = post(rest_url("component_module/update_repo_and_add_meta_data"),post_body)
+      return response unless response.ok?
+
+      if meta_created = response.data(:meta_created)
+        msg = "First cut of meta file #{meta_created[:path]} has been created in module dirctory; edit and then invoke push-clone-changes"
+        response = GitRepo.add_file(repo_branch,meta_created[:path],meta_created[:content],msg)
+      end
+      response
     end
 
     #### end: create and delete commands ###

@@ -1,4 +1,5 @@
 require 'hirb'
+=begin
 module Hirb
 	class Helpers::ObjectTable
 	  def format_cell(value, cell_width)
@@ -11,3 +12,4 @@ module Hirb
 	  end
 	end
 end
+=end
