@@ -51,8 +51,8 @@ module DTK::Client
       return response unless response.ok?
 
       if meta_created = response.data(:meta_created)
-        msg = "First cut of meta file #{meta_created[:path]} has been created in module dirctory; edit and then invoke push-clone-changes"
-        response = GitRepo.add_file(repo_branch,meta_created[:path],meta_created[:content],msg)
+        msg = "First cut of meta file #{meta_created["path"]} has been created in module dirctory; edit and then invoke push-clone-changes"
+        response = GitRepo.add_file(repo_branch,meta_created["path"],meta_created["content"],msg)
       end
       response
     end
