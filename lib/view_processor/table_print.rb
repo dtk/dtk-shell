@@ -82,12 +82,8 @@ module DTK
 
               if print_error_table && k.include?('error')
                 
-                structured_element.errors = OpenStruct.new
-                structured_element.errors.message =  "Must pass daemon_user to Class[Thin] at /etc/puppet/modules/thin/manifests/init.pp:1 on node ip-10-29-238-116.ec2.internal\n"
-
                 error_message = value_of(structured_element, v)
-
-                
+                             
 
                 # here we see if there was an error if not we will skip this
                 # if so we add it to @error_data
