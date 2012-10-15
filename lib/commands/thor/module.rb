@@ -39,6 +39,7 @@ module DTK::Client
       }
       response = GitRepo.initialize_repo_and_push(:component_module,module_name,branch_info,repo_url)
       return response unless response.ok?
+      repo_branch =  response.data(:repo_branch)
 
       post_body = {
         :repo_id => repo_id,
@@ -46,7 +47,14 @@ module DTK::Client
         :module_name => module_name,
         :scaffold_if_no_meta => true
       }
-      post rest_url("component_module/update_repo_and_add_meta_data"), post_body
+      response = post(rest_url("component_module/update_repo_and_add_meta_data"),post_body)
+      return response unless response.ok?
+
+      if meta_created = response.data(:meta_created)
+        msg = "First cut of meta file #{meta_created["path"]} has been created in module dirctory; edit and then invoke push-clone-changes"
+        response = GitRepo.add_file(repo_branch,meta_created["path"],meta_created["content"],msg)
+      end
+      response
     end
 
     #### end: create and delete commands ###
@@ -70,7 +78,7 @@ module DTK::Client
       response.render_table(:component)
     end
 
-    desc "[MODULE-ID/NAME] show-components", "List all components for given component module."
+    desc "MODULE-ID/NAME show-components", "List all components for given component module."
     #TODO: support info on remote
     def show_components(component_module_id)
       post_body = {
@@ -190,6 +198,11 @@ module DTK::Client
       module_name,repo_url,branch = response.data(:module_name,:repo_url,:workspace_branch)
       dtk_require_from_base('command_helpers/git_repo')
       response = GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+
+      if response.ok?
+        # this goes to unix like shell input
+        unix_shell(response['data']['module_directory'])
+      end
       response
     end
 
@@ -207,7 +220,7 @@ module DTK::Client
       dtk_require_from_base('command_helpers/git_repo')
       response = GitRepo.push_changes(:component_module,response.data(:module_name))
       return response unless response.ok?
-      post_body.merge!(:diffs => response.data(:diffs))
+      post_body.merge!(:json_diffs => JSON.generate(response.data(:diffs)))
 
       post rest_url("component_module/update_model_from_clone"), post_body
     end

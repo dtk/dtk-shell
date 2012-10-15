@@ -83,6 +83,7 @@ module DTK
               if print_error_table && k.include?('error')
                 
                 error_message = value_of(structured_element, v)
+                            
 
                 # here we see if there was an error if not we will skip this
                 # if so we add it to @error_data
@@ -172,12 +173,15 @@ module DTK
 
       def print
         # hirb print out of our evaluated data in order defined
-        table @evaluated_data,:fields => @order_definition
+        table(@evaluated_data,{:fields => @order_definition,:escape_special_chars => true })
 
         # in case there were error we print those errors
         unless @error_data.empty?
-          puts "\nERROR LIST".colorize(:red)
-          table @error_data, :fields => [ :id, :message ]
+          printf "\nERRORS: \n\n"
+          #table(@error_data,{:fields => [ :id, :message ]})
+          @error_data.each do |error_row| 
+            printf "%15s %s\n", error_row.id.colorize(:yellow), error_row.message.colorize(:red)
+          end
         end
       end
 

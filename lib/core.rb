@@ -50,7 +50,7 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
       
       # if error_internal.first == true
       if error_internal
-        raise DTK::Client::DtkError, "[INTERNAL ERROR] DTK has encountered an error: #{error_msg}. See DTK log for more details."
+        raise DTK::Client::DtkError, "DTK Server has encountered an internal error: #{error_msg}. See DTK log for more details."
       else
         # if usage error occured, display message to console and display that same message to log
         raise DTK::Client::DtkError, "Following error occured: #{error_msg}." 
@@ -74,7 +74,6 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
     puts e.message
   rescue DTK::Client::DtkError => e
     # this are expected application errors
-    puts e.message
     DtkLogger.instance.error(e.message)
   rescue Exception => e
     # All errors for task will be handled here

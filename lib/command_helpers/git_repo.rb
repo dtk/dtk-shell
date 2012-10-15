@@ -26,13 +26,24 @@ module DTK; module Client
       end
     end
 
+    #TODO: this does not push; may make that an option
+    def add_file(repo_branch,path,content,msg=nil)
+      Response.wrap_helper_actions() do
+        ret = Hash.new
+        repo_branch.add_file(path,content)
+        repo_branch.add_file_command(path)
+        ret["message"] = msg if msg
+        ret
+      end
+    end
+
     #TODO: not treating versions yet
     def push_changes(type,module_name,opts={})
       Response.wrap_helper_actions() do
         repo_dir = local_repo_dir(type,module_name)
         repo = create(repo_dir)
         diffs = push_repo_changes_aux(repo,opts)
-        {:diffs => diffs}
+        {"diffs" => diffs}
       end
     end
 
@@ -76,12 +87,12 @@ module DTK; module Client
         #create and commit workspace branch
         repo_lib_branch.add_branch?(ws_branch)
         repo_ws_branch = create(repo_dir,ws_branch)
-        repo_ws_branch.push()
         #push changes
+        repo_ws_branch.push()
 
         #remove lib branch
         repo_ws_branch.remove_branch?(lib_branch)
-        ret
+        {"repo_branch" => repo_ws_branch}
       end
     end
 
@@ -108,7 +119,6 @@ module DTK; module Client
 
       #check if merge needed
       merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch)
-      pp [:debug,pp_module(repo),:merge_rel,merge_rel]
       if merge_rel == :equal
         diffs
       elsif [:branchpoint,:local_behind].include?(merge_rel)

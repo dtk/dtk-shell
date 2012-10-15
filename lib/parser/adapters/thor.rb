@@ -1,7 +1,10 @@
 require 'thor'
 require 'thor/group'
+require 'readline'
+require 'colorize'
 
 dtk_require("../../shell/interactive_wizard")
+dtk_require("../../util/os_util")
 
 
 module DTK
@@ -103,7 +106,8 @@ module DTK
         return tier_1.sort, tier_2.sort
       end
 
-      no_tasks do 
+      no_tasks do
+        include DTK::Client::OsUtil
         # Method not implemented error
         def not_implemented
           raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
@@ -139,6 +143,55 @@ module DTK
           print "\b\b\b\b\b Refreshing..."
           STDOUT.flush
           puts 
+        end
+
+        ##
+        # Method that will execute until interupted as unix like shell. As input takes
+        # path to desire directory from where unix shell can execute normaly.
+        #
+        def unix_shell(path=nil)
+
+          if is_windows?
+            puts "[NOTICE] Unix shell interaction is currenly not supported on Windows."
+            return
+          end
+
+          application_dir     = Dir.getwd()
+          # if no directory provided we are using application shell
+          path = path || application_dir
+          # we need to change path like this since system call 'cd' is not supported
+          Dir.chdir(path)
+          puts "[NOTICE] You are switching to unix-shell, to path #{path}"
+          begin
+            while line = Readline.readline("unix-shell: ".colorize(:yellow), true)
+              begin
+                line = line.chomp()
+                break if line.eql?('exit')
+                # since we are not able to support cd command due to ruby specific restrictions
+                # we will be using chdir to this.
+                if (line.match(/^cd /))
+                  # remove cd part of command
+                  line = line.gsub(/^cd /,'')
+                  # does the command start with '/'
+                  if (line.match(/^\//))
+                    # if so just go to desired line
+                    Dir.chdir(line)
+                  else
+                    # we created wanted path 
+                    Dir.chdir("#{Dir.getwd()}/#{line}")
+                  end
+                else
+                  system(line)        
+                end
+              rescue Exception => e
+                puts e.message
+              end
+            end
+          rescue Interrupt
+            puts ""
+            # do nothing else
+          end
+          puts "[NOTICE] You are leaving unix-shell."
         end
       end
 

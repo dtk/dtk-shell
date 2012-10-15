@@ -1,5 +1,6 @@
 class Thor
   class << self
+    # NOTE: Class is loaded automaticly in dtk-shell
 
     @@shell_context = nil
 
