@@ -198,6 +198,11 @@ module DTK::Client
       module_name,repo_url,branch = response.data(:module_name,:repo_url,:workspace_branch)
       dtk_require_from_base('command_helpers/git_repo')
       response = GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+
+      if response.ok?
+        # this goes to unix like shell input
+        unix_shell(response['data']['module_directory'])
+      end
       response
     end
 
