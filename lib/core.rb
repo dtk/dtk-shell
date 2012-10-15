@@ -74,6 +74,7 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
     puts e.message
   rescue DTK::Client::DtkError => e
     # this are expected application errors
+    puts e.message
     DtkLogger.instance.error(e.message)
   rescue Exception => e
     # All errors for task will be handled here
