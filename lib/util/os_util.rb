@@ -1,3 +1,5 @@
+dtk_require_from_base('domain/response')
+
 module DTK
   module Client
     module OsUtil
@@ -6,7 +8,7 @@ module DTK
       end
 
       def is_windows?
-        RUBY_PLATFORM.downcase.include?('mswin')
+        RUBY_PLATFORM =~ /mswin|mingw|cygwin/
       end
 
       def is_linux?
@@ -26,14 +28,23 @@ module DTK
 				end
       end
 
-      def get_home_dir
-        if is_windows?
-          "#{ENV(HOMEDRIVE)}#{ENV(HOMEPATH)}\\dtk"
-        else
-          File.expand_path('~/dtk')
-        end
+      def dtk_home_dir
+        return "#{home_dir}dtk"
       end
-      
+
+      def home_dir
+        return (is_windows? ? "#{ENV(HOMEDRIVE)}#{ENV(HOMEPATH)}\\" : "#{ENV["HOME"]}/")
+      end
+
+      def module_clone_location(module_location)
+        return (module_location.start_with?('/') ? module_location : "#{home_dir}#{module_location}")
+      end
+
+      private
+
+      def seperator
+        return (is_windows? ? "\\" : "/")
+      end
     end
   end
 end

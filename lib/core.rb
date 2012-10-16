@@ -9,9 +9,11 @@ require 'pp'
 #RestClient.log = STDOUT
 
 dtk_require_from_base('domain/response')
+dtk_require_from_base('util/os_util')
 
 
 def top_level_execute(command=nil,argv=nil,shell_execute=false)
+  include DTK::Client::OsUtil
   begin
     $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
     argv ||= ARGV
@@ -146,7 +148,8 @@ module DTK
       end
       def set_defaults()
         self[:server_port] = 7000
-        self[:component_modules_dir] = "#{ENV["HOME"]}/component_modules"
+        puts ::Config::Configuration.get(:module_location)
+        self[:component_modules_dir] = module_clone_location(::Config::Configuration.get(:module_location))
       end
       CONFIG_FILE = File.expand_path("~/.dtkclient")
       def load_config_file()
