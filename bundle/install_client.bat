@@ -19,7 +19,7 @@ call :create_config_log
 
 goto :EOF
 
-
+:: check if rubygems is avaialble on PATH
 :check_for_ruby_gems
 call :ProgInPath gem
 IF "%PROG%" == "" (
@@ -30,6 +30,7 @@ IF "%PROG%" == "" (
 )
 goto :EOF
 
+:: check if ruby is avaialble on PATH
 :check_for_ruby
 call :ProgInPath ruby.exe
 IF "%PROG%" == "" (
@@ -46,6 +47,7 @@ REM echo %output%
 REM TBD
 goto :EOF
 
+:: add the abh gem repository to the sources list
 :add_abh_gem_repository
 gem sources | findstr /i %abh_gem_repository% > %TMP%\gemsources.txt
 set gemsources=
@@ -78,6 +80,7 @@ echo server_port=%port%   >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
 touch %log_file%
 goto :EOF
 
+:: function for checking if executables are available in PATH
 :ProgInPath
 set PROG=%~$PATH:1
 goto :EOF
