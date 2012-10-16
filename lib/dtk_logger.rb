@@ -8,7 +8,7 @@ require File.expand_path('./util/os_util', File.dirname(__FILE__))
 class DtkLogger
 
   #
-  LOG_FILE_NAME           = 'dtk-client.log'
+  LOG_FILE_NAME           = 'client.log'
   LOG_MB_SIZE             = 2
   LOG_NUMBER_OF_OLD_FILES = 10
   DEVELOPMENT_MODE        = Config::Configuration.get(:application,:development_mode)
@@ -17,16 +17,20 @@ class DtkLogger
   include DTK::Client::OsUtil
 
   def initialize
+    log_location_dir = get_log_location()
     begin
-      home_dir = `cd ~;pwd`.chomp
-      file = File.open("#{get_log_location()}/#{LOG_FILE_NAME}", "a")
-      @logger = Logger.new(file, LOG_NUMBER_OF_OLD_FILES, LOG_MB_SIZE * 1024000)
-
-      @logger.formatter = proc do |severity, datetime, progname, msg|
-        "[#{datetime}] #{severity} -- : #{msg}\n"
+      if File.directory?(log_location_dir)
+        file = File.open("#{get_log_location()}/#{LOG_FILE_NAME}", "a")
+        @logger = Logger.new(file, LOG_NUMBER_OF_OLD_FILES, LOG_MB_SIZE * 1024000)
+        
+        @logger.formatter = proc do |severity, datetime, progname, msg|
+          "[#{datetime}] #{severity} -- : #{msg}\n"
+        end
+      else
+        no_log_dir(log_location_dir)
       end
-    rescue SystemCallError => e
-      no_log_found
+     rescue Errno::EACCES
+      no_log_permissions(log_location_dir)
     end
   end
 
@@ -58,12 +62,15 @@ class DtkLogger
   private
 
   def log_created?
-    #no_log_found if @logger.nil?
+    #no log found if @logger.nil?
     return !@logger.nil?
   end
 
-  def no_log_found
-    puts "[WARNING] Log file cannot be found please add it manually or re-install DTK client. Missing log #{get_log_location()}/#{LOG_FILE_NAME}"
+  def no_log_dir(dir)
+    puts "[WARNING] Log directory (#{dir}) does not exist; please add it manually or re-install DTK client."
   end
 
+  def no_log_permissions(dir)
+    puts "[WARNING] User (#{DTK::Common::Aux.running_process_user()}) does not have permissions to create a log file in log directory (#{dir})"
+  end
 end

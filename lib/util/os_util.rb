@@ -22,7 +22,7 @@ module DTK
 	  "#{ENV['APPDATA']}\\DTK"
 	else
 	  # returns log_path for current user e.g /var/log/user1
-	  "/var/log/#{Common::Aux.running_process_user()}"
+	  "/var/log/dtk/#{Common::Aux.running_process_user()}"
 	end
       end
     end

@@ -2,6 +2,7 @@ require 'rubygems'
 require File.expand_path("require_first", File.dirname(__FILE__))
 #TODO: should be common gem
 dtk_require_dtk_common("hash_object")
+dtk_require_dtk_common("auxiliary")
 
 ########
 dtk_require("auxiliary")
