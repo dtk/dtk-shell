@@ -23,7 +23,7 @@ describe DTK::Client::Target do
     end
   end
 
-  # for previously taken target_id, do list none|nodes|assemblies
+  # for previously taken target_id, do list nodes|assemblies
   context "#list command" do
   	unless $target_id.nil?
   		list.each do |list_element|

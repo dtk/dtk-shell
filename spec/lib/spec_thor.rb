@@ -65,6 +65,11 @@ module SpecThor
     $stdout = STDERR
   end
 
+  def unindent(num=nil)
+    regex = num ? /^\s{#{num}}/ : /^\s*/
+    gsub(regex, '').chomp
+  end
+
   private 
 
   ##
