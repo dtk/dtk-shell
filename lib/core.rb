@@ -137,6 +137,8 @@ module DTK
     class Config < Hash
       include Singleton
       include ParseFile
+      include DTK::Client::OsUtil
+      
       def self.[](k)
         Config.instance[k]
       end
@@ -148,7 +150,6 @@ module DTK
       end
       def set_defaults()
         self[:server_port] = 7000
-        puts ::Config::Configuration.get(:module_location)
         self[:component_modules_dir] = module_clone_location(::Config::Configuration.get(:module_location))
       end
       CONFIG_FILE = File.expand_path("~/.dtkclient")

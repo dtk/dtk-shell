@@ -40,7 +40,6 @@ module Config
         local_configuration = load_configuration_to_hash(File.expand_path("../#{DEVELOPMENT_CONF}",__FILE__))
         # we override only values from local configuration
         # that way developer does not have updates its local configuration all the time
-        ap local_configuration
         @cache.merge!(local_configuration)
         # if we have loaded local configuration we will not check external
         return
