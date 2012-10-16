@@ -7,7 +7,7 @@ describe DTK::Client::Target do
   # generic test for all task of Thor class
   #test_task_interface(DTK::Client::Target)
 
-  list       = ['none', 'nodes', 'assemblies']
+  list       = ['nodes', 'assemblies']
   $target_id = ''
 
   # list all targets and take one target_id
@@ -27,10 +27,10 @@ describe DTK::Client::Target do
   context "#list command" do
   	unless $target_id.nil?
   		list.each do |list_element|
-        command = "dtk target #{$target_id} list #{list_element}"
+        command = "dtk target #{$target_id} show #{list_element}"
         output  = `#{command}`
 
-        it "should list all targets | nodes | assemblies" do
+        it "should list all nodes | assemblies" do
           output.should match(/(name|id|empty|error)/)
         end
   		end
