@@ -19,12 +19,21 @@ module DTK
 
       def get_log_location
         if is_windows?
-	  "#{ENV['APPDATA']}\\DTK"
-	else
-	  # returns log_path for current user e.g /var/log/user1
-	  "/var/log/dtk/#{Common::Aux.running_process_user()}"
-	end
+	  			"#{ENV['APPDATA']}\\DTK"
+				else
+	  			# returns log_path for current user e.g /var/log/user1
+	  			"/var/log/dtk/#{Common::Aux.running_process_user()}"
+				end
       end
+
+      def get_home_dir
+        if is_windows?
+          "#{ENV(HOMEDRIVE)}#{ENV(HOMEPATH)}\\dtk"
+        else
+          File.expand_path('~/dtk')
+        end
+      end
+      
     end
   end
 end

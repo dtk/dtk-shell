@@ -2,8 +2,8 @@ require 'rest_client'
 require 'json'
 dtk_require("../../dtk_logger")
 
-LOG_SLEEP_TIME   = Config::Configuration.get(:assembly,:tail_log_frequency)
-DEBUG_SLEEP_TIME = Config::Configuration.get(:assembly,:debug_task_frequency)
+LOG_SLEEP_TIME   = Config::Configuration.get(:tail_log_frequency)
+DEBUG_SLEEP_TIME = Config::Configuration.get(:debug_task_frequency)
 
 module DTK::Client
   class Assembly < CommandBaseThor
