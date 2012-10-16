@@ -26,5 +26,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'jenkins-client','~> 0.0.1'
   gem.add_dependency 'colorize','~> 0.5.8'
   gem.add_dependency 'fakeweb','~> 1.3.0'
-  gem.add_dependency 'rdoc','~> 3.0.0'
+  gem.add_dependency 'rdoc','~> 3.12'
 end
