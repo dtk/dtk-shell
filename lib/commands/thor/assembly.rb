@@ -85,6 +85,12 @@ module DTK::Client
             response.render_table(:task_status)
             system('clear')
             response.render_data(true)
+
+            # stop pulling when top level task succeds, fails or timeout
+            unless (response.nil? || response["data"].empty? || response["data"]["status"].empty?)
+              break unless response["data"]["status"].eql? "executing"
+            end
+            
             wait_animation("Watching assembly task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
           end
          rescue Interrupt => e
