@@ -14,32 +14,32 @@ module DTK::Client
        post rest_url("target/create"), post_body
     end
 
-    desc "[TARGET-NAME/ID] list [nodes|assemblies]","List targets or nodes in given targets."
-    method_option :list, :type => :boolean, :default => false
-    def list(about="none",target_id=nil)
+    desc "list","List targets."
+    def list()
+      response  = post rest_url("target/list")
+      response.render_table(:target)
+    end
 
+    desc "TARGET-NAME/ID show [nodes|assemblies]","List nodes or assembly instances in given targets."
+    def show(arg1,arg2)
+      target_id,about = arg2,arg1
       post_body = {
         :target_id => target_id,
-        :assembly_name => about
+        :about => about
       }
 
       case about
-      when "none"
-        response  = post rest_url("target/list")
-        data_type =  :target
-      when "nodes"
-        response  = post rest_url("target/list"), post_body
+        when "nodes"
+        response  = post rest_url("target/info_about"), post_body
         data_type =  :node
-      when "assemblies"
-        response  = post rest_url("target/list"), post_body
+        when "assemblies"
+        response  = post rest_url("target/info_about"), post_body
         data_type =  :assembly
-      else
+       else
         raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
 
-      response.render_table(data_type) unless options.list?
-
-      return response
+      response.render_table(data_type)
     end
     
     desc "create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create assembly template from nodes in target" 
