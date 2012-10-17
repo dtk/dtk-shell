@@ -128,6 +128,18 @@ module DTK
             end
           end
         end
+
+        # User input prompt
+        def user_input(message)
+          trap("INT", "SIG_IGN")
+          while line = Readline.readline("#{message}: ",true)
+            unless line.chomp.empty?
+              trap("INT", false)
+              return line
+            end
+          end          
+        end
+
         # Loading output used to display waiting status
         def wait_animation(message, time_seconds)
           # horizontal dash charcter
