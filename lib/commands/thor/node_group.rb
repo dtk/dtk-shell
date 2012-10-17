@@ -47,7 +47,7 @@ module DTK::Client
     desc "delete NODE-GROUP-ID", "Delete node group"
     def delete(id)
       # Ask user if really want to delete node group, if not then return to dtk-shell without deleting
-      return unless DTK::Client::CommandBaseThor.confirmation_prompt("Are you sure you want to delete node group '#{id}'? (yes|no)")
+      return unless confirmation_prompt("Are you sure you want to delete node group '#{id}'?")
 
       delete_hash = {:id => id}
       post rest_url("node_group/delete"), delete_hash

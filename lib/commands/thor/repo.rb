@@ -13,7 +13,7 @@ module DTK::Client
     desc "delete REPO-ID", "Delete repo"
     def delete(repo_id)
       # Ask user if really want to delete repo, if not then return to dtk-shell without deleting
-      return unless DTK::Client::CommandBaseThor.confirmation_prompt("Are you sure you want to delete repo '#{repo_id}'? (yes|no)")
+      return unless confirmation_prompt("Are you sure you want to delete repo '#{repo_id}'?")
 
       post_body_hash = {:repo_id => repo_id}
       post rest_url("repo/delete"),post_body_hash

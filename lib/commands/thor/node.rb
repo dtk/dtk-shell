@@ -55,7 +55,7 @@ module DTK::Client
     desc "destroy-all", "Delete and destory all target nodes"
     def destroy_all()
       # Ask user if really want to delete and destroy all target node, if not then return to dtk-shell without deleting
-      return unless DTK::Client::CommandBaseThor.confirmation_prompt("Are you sure you want to delete and destroy all target nodes? (yes|no)")
+      return unless confirmation_prompt("Are you sure you want to delete and destroy all target nodes?")
 
       post rest_url("project/destroy_and_delete_nodes")
     end
