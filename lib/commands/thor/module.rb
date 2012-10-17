@@ -1,4 +1,6 @@
 dtk_require_from_base('command_helpers/ssh_processing')
+dtk_require_dtk_common('grit_adapter')
+require 'ap'
 
 module DTK::Client
   class Module < CommandBaseThor
@@ -201,9 +203,47 @@ module DTK::Client
 
       if response.ok?
         # this goes to unix like shell input
-        unix_shell(response['data']['module_directory'])
+        #unix_shell(response['data']['module_directory'])
       end
       response
+    end
+
+    desc "MODULE-NAME edit","Switch to unix editing for given module."
+    def edit(module_name)
+      # if this is not name it will not work, TODO: Add lookahead for this to find name based on ID
+      raise DTK::Client::Error, "Please use module name for edit command." if module_name =~ /^[0-9]+$/
+
+      modules_path    = module_clone_location(::Config::Configuration.get(:module_location))
+      module_location = "#{modules_path}/#{module_name}"
+      # check if there is repository cloned 
+      unless File.directory?(module_location)
+        # TODO: Add would you like to clone this repository dialog
+        response = clone(module_name)
+        unless response.ok?
+          return response
+        end
+      end
+      puts ">>>>>>>> #{module_location}"
+      # here we should have desired module cloned
+      #unix_shell(module_location)
+
+
+      # CODE HERE
+      grit_adapter = DTK::Common::GritAdapter::FileAccess.new(module_location)
+
+      if grit_adapter.changed?
+        grit_adapter.print_status
+        #grit_adapter.add_remove_commit_all("My commit thank you!")
+      else
+        puts "No changes to repository"
+      end
+
+      #grit_adapter.add_file("baba.xml")
+      #grit_adapter.commit("nesto")
+
+      #repo = Grit::Repo.new(location)
+      #repo.status.files.select { |k,v| (v.type =~ /(M|A|D)/ || v.untracked) }
+
     end
 
     desc "MODULE-ID/NAME push-clone-changes [VERSION]", "Push changes from local copy of module to server"
