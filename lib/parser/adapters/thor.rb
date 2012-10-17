@@ -113,14 +113,17 @@ module DTK
           raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
         end
         # Display confirmation prompt and repeat message until expected answer is given
-        def self.confirmation_prompt(message)
+        def confirmation_prompt(message, add_options=true)
           # used to disable skip with ctrl+c
           trap("INT", "SIG_IGN")
-          
+          message += " (yes|no)" if add_options
+
           while line = Readline.readline("#{message}: ", true)
             if (line.eql?("yes") || line.eql?("y"))
+              trap("INT",false)
               return true
             elsif (line.eql?("no") || line.eql?("n"))
+              trap("INT",false)
               return false
             end
           end

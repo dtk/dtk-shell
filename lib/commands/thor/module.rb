@@ -7,7 +7,7 @@ module DTK::Client
     desc "delete MODULE-ID/NAME", "Delete component module and all items contained in it"
     def delete(component_module_id)
       # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
-      return unless DTK::Client::CommandBaseThor.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it? (yes|no)")
+      return unless confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it?")
 
       post_body = {
        :component_module_id => component_module_id
