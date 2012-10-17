@@ -112,6 +112,20 @@ module DTK
         def not_implemented
           raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
         end
+        # Display confirmation prompt when delete action is called
+        def self.confirmation_prompt(message)
+          trap("INT", "SIG_IGN")
+          puts message
+
+          while line = Readline.readline
+            if (line.eql?("Y") || line.eql?("y"))
+              return true
+            elsif (line.eql?("N") || line.eql?("n"))
+              return false
+            end
+            puts message
+          end
+        end
         # Loading output used to display waiting status
         def wait_animation(message, time_seconds)
           # horizontal dash charcter
