@@ -118,9 +118,9 @@ module DTK
           puts message
 
           while line = Readline.readline
-            if (line.eql?("Y") || line.eql?("y"))
+            if (line.eql?("yes") || line.eql?("y"))
               return true
-            elsif (line.eql?("N") || line.eql?("n"))
+            elsif (line.eql?("no") || line.eql?("n"))
               return false
             end
             puts message
