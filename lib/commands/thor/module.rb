@@ -1,6 +1,5 @@
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_dtk_common('grit_adapter')
-require 'ap'
 
 module DTK::Client
   class Module < CommandBaseThor
@@ -186,11 +185,13 @@ module DTK::Client
       post rest_url("component_module/promote_as_new_version"), post_body
     end
 
-    #### end: commands to manage workspace and promote changes from workspace to library ###
-
-    #### end: commands related to cloning to and pushing from local clone
+    ##
+    #
+    # internal_trigger: this flag means that other method (internal) has trigger this.
+    #                   This will change behaviour of method
+    #
     desc "MODULE-ID/NAME clone [VERSION]", "Clone into client the component module files"
-    def clone(arg1,arg2=nil)
+    def clone(arg1,arg2=nil,internal_trigger=false)
       component_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1]) 
       post_body = {
         :component_module_id => component_module_id
@@ -205,8 +206,12 @@ module DTK::Client
       response = GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
 
       if response.ok?
-        # this goes to unix like shell input
-        #unix_shell(response['data']['module_directory'])
+        puts "Module '#{module_name}' has been successfully cloned!"
+        unless internal_trigger
+          if confirmation_prompt("Would you like to edit cloned module now?")
+            return edit(module_name)
+          end
+        end
       end
       response
     end
@@ -220,23 +225,29 @@ module DTK::Client
       module_location = "#{modules_path}/#{module_name}"
       # check if there is repository cloned 
       unless File.directory?(module_location)
-        # TODO: Add would you like to clone this repository dialog
-        response = clone(module_name)
-        unless response.ok?
-          return response
+        if confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now?")
+          response = clone(module_name,nil,true)
+          # if error return
+          unless response.ok?
+            return response
+          end
+        else
+          # user choose not to clone needed module
+          return
         end
       end
-      puts ">>>>>>>> #{module_location}"
+
       # here we should have desired module cloned
-      #unix_shell(module_location)
-
-
-      # CODE HERE
+      unix_shell(module_location)
       grit_adapter = DTK::Common::GritAdapter::FileAccess.new(module_location)
 
       if grit_adapter.changed?
         grit_adapter.print_status
-        #grit_adapter.add_remove_commit_all("My commit thank you!")
+        if confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?")
+          commit_msg = user_input("Commit message")
+          grit_adapter.add_remove_commit_all(commit_msg)
+          grit_adapter.push()
+        end
       else
         puts "No changes to repository"
       end
