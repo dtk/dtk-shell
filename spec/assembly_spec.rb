@@ -15,7 +15,7 @@ describe DTK::Client::Assembly do
     output = `dtk assembly list`
 
     it "should have assembly listing" do
-      output.should match(/(assembly|id|empty)/)
+      output.should match(/(assembly|id|empty|error)/)
     end
 
     unless output.nil?
@@ -31,7 +31,7 @@ describe DTK::Client::Assembly do
         output = `#{command}`
 
         it "should list all #{list_element} for assembly with id #{$assembly_id}" do
-          output.should match(/(id|name|empty)/)
+          output.should match(/(id|name|empty|error)/)
         end
       end
     end
@@ -46,19 +46,19 @@ describe DTK::Client::Assembly do
     process_status = $?
 
     it "should have assembly converge listing" do
-      output.should match(/(converge|empty)/)
+      output.should match(/(converge|empty|error)/)
     end
 
     it "should have assembly info listing" do
-      output.should match(/(info|empty)/)
+      output.should match(/(info|empty|error)/)
     end
 
     it "should have assembly remove-component listing" do
-      output.should match(/(remove-component|empty)/)
+      output.should match(/(remove-component|empty|error)/)
     end
 
     it "should have assembly list listing" do
-      output.should match(/(list|empty)/)
+      output.should match(/(list|empty|error)/)
     end
 
   end
