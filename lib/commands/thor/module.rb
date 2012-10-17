@@ -216,7 +216,7 @@ module DTK::Client
       response
     end
 
-    desc "MODULE-NAME edit","Switch to unix editing for given module."
+    desc "MODULE-ID/NAME edit","Switch to unix editing for given module."
     def edit(module_name)
       # if this is not name it will not work, TODO: Add lookahead for this to find name based on ID
       raise DTK::Client::Error, "Please use module name for edit command." if module_name =~ /^[0-9]+$/
