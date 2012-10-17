@@ -15,7 +15,6 @@
 # NOTE: Default will be used if there some parameters missing in other configuration
 #
 require 'singleton'
-require 'ap'
 
 dtk_require_from_base('util/os_util')
 
