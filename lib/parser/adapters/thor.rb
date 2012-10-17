@@ -112,6 +112,19 @@ module DTK
         def not_implemented
           raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
         end
+        # Display confirmation prompt and repeat message until expected answer is given
+        def self.confirmation_prompt(message)
+          # used to disable skip with ctrl+c
+          trap("INT", "SIG_IGN")
+          
+          while line = Readline.readline("#{message}: ", true)
+            if (line.eql?("yes") || line.eql?("y"))
+              return true
+            elsif (line.eql?("no") || line.eql?("n"))
+              return false
+            end
+          end
+        end
         # Loading output used to display waiting status
         def wait_animation(message, time_seconds)
           # horizontal dash charcter
