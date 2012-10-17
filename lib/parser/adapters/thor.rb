@@ -112,18 +112,17 @@ module DTK
         def not_implemented
           raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
         end
-        # Display confirmation prompt when delete action is called
+        # Display confirmation prompt and repeat message until expected answer is given
         def self.confirmation_prompt(message)
+          # used to disable skip with ctrl+c
           trap("INT", "SIG_IGN")
-          puts message
-
-          while line = Readline.readline
+          
+          while line = Readline.readline("#{message}: ", true)
             if (line.eql?("yes") || line.eql?("y"))
               return true
             elsif (line.eql?("no") || line.eql?("n"))
               return false
             end
-            puts message
           end
         end
         # Loading output used to display waiting status

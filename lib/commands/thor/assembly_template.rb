@@ -119,6 +119,9 @@ module DTK::Client
 
     desc "delete ASSEMBLY-NAME/ID", "Delete assembly template"
     def delete(assembly_id)
+      # Ask user if really want to delete assembly-template, if not then return to dtk-shell without deleting
+      return unless DTK::Client::CommandBaseThor.confirmation_prompt("Are you sure you want to delete assembly-template '#{assembly_id}'? (yes|no)")
+
       post_body = {
         :assembly_id => assembly_id,
         :subtype => :template

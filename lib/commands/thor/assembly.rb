@@ -198,6 +198,9 @@ module DTK::Client
 
     desc "delete-and-destroy ASSEMBLY-ID", "Delete assembly instance, termining any nodes taht have been spun up"
     def delete_and_destroy(assembly_id)
+      # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
+      return unless DTK::Client::CommandBaseThor.confirmation_prompt("Are you sure you want to delete assembly '#{assembly_id}'? (yes|no)")
+
       post_body = {
         :assembly_id => assembly_id,
         :subtype => :instance

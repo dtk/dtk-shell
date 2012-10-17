@@ -99,6 +99,9 @@ module DTK::Client
 
     desc "delete SERVICE-NAME/ID", "Delete service module and all items contained in it"
     def delete(service_module_id)
+      # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
+      return unless DTK::Client::CommandBaseThor.confirmation_prompt("Are you sure you want to delete service-module '#{service_module_id}' and all items contained in it? (yes|no)")
+
       post_body = {
        :service_module_id => service_module_id
       }
