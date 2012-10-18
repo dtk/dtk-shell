@@ -15,7 +15,7 @@ module DTK::Client
       return response
     end
 
-    desc "status [TASK-ID]", "Return task status; if no TASK-ID then information about most recent task"
+    desc "[TASK-NAME/ID] status", "Return task status; if no TASK-ID then information about most recent task"
     method_option "detail-level",:default => "summary", :aliases => "-d", :desc => "detail level to report task status"
     def status(task_id=nil)
       detail_level = options["detail-level"]
