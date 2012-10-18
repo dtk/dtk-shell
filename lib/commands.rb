@@ -7,13 +7,18 @@ module DTK
       end
 
       def get(url)
-        @conn.get(self.class,url)
+        get_connection.get(self.class,url)
       end
       def post(url,body=nil)
-        @conn.post(self.class,url,body)
+        get_connection.post(self.class,url,body)
       end
+
       def rest_url(route)
-        @conn.rest_url(route)
+        get_connection.rest_url(route)
+      end
+
+      def get_connection
+        @conn ||= DTK::Client::Conn.new()
       end
 
       def self.handle_argument_error(task, error) 

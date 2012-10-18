@@ -218,8 +218,27 @@ module DTK::Client
 
     desc "MODULE-ID/NAME edit","Switch to unix editing for given module."
     def edit(module_name)
-      # if this is not name it will not work, TODO: Add lookahead for this to find name based on ID
-      raise DTK::Client::Error, "Please use module name for edit command." if module_name =~ /^[0-9]+$/
+
+      # if this is not name it will not work, we need module name
+      if module_name =~ /^[0-9]+$/
+        module_id   = module_name
+        module_name = nil
+        # TODO: See with Rich if there is better way to resolve this
+        response = DTK::Client::CommandBaseThor.get_cached_response(:module, "component_module/list")
+
+        if response.ok?
+          unless response['data'].nil?
+            response['data'].each do |module_item|
+              if module_id.to_i == (module_item['id'])
+                module_name = module_item['display_name']
+                break
+              end
+            end
+          end
+        end
+
+        raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if module_name.nil? 
+      end
 
       modules_path    = module_clone_location(::Config::Configuration.get(:module_location))
       module_location = "#{modules_path}/#{module_name}"
@@ -318,6 +337,7 @@ module DTK::Client
     # we allow change only for valid ID/NAME
 
     no_tasks do
+
       def self.valid_id?(value, conn)
         @conn    = conn if @conn.nil?
         response = get_cached_response(:module_component, "component_module/list")
