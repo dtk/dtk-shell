@@ -277,8 +277,7 @@ module DTK::Client
         end
       end
 
-      #TODO: needed to shift data because table_print does not yet handle .. :results => Array and want to iterate over array
-      #TODO: Need better mechanism than set_data
+      #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
       response.set_data(*response.data(:results))
       response.render_table(:netstat_data)
     end
