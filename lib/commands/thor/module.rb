@@ -293,6 +293,9 @@ module DTK::Client
       dtk_require_from_base('command_helpers/git_repo')
       response = GitRepo.push_changes(:component_module,response.data(:module_name))
       return response unless response.ok?
+      if response.data(:diffs).empty?
+        raise DTK::Client::DtkError, "No changes to push"
+      end
       post_body.merge!(:json_diffs => JSON.generate(response.data(:diffs)))
 
       post rest_url("component_module/update_model_from_clone"), post_body

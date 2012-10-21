@@ -88,7 +88,10 @@ module DTK::Client
 
             # stop pulling when top level task succeds, fails or timeout
             if response and response.data and response.data.first
-              break unless response.data.first["status"].eql? "executing"
+              #TODO: may fix in server, but now top can have non executing state but a concurrent branch can execute; so
+              #chanding bloew for time being
+              #break unless response.data.first["status"].eql? "executing"
+              break unless response.data.find{|r|r["status"].eql? "executing"}
             end
             
             wait_animation("Watching assembly task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
@@ -199,7 +202,7 @@ module DTK::Client
     desc "delete-and-destroy ASSEMBLY-ID", "Delete assembly instance, termining any nodes taht have been spun up"
     def delete_and_destroy(assembly_id)
       # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
-      return unless confirmation_prompt("Are you sure you want to delete assembly '#{assembly_id}'?")
+      return unless confirmation_prompt("Are you sure you want to delete and destroy assembly '#{assembly_id}' and its nodes?")
 
       post_body = {
         :assembly_id => assembly_id,
