@@ -46,6 +46,7 @@ module DTK
             @print_error_table ||= print_error_table
 
             # if response is empty, response status is ok but no data is passed back
+      File.open("/tmp/t6","w"){|f|PP.pp([data.class,data],f)}
             if data.empty?
               @render_view = RenderView::SIMPLE_LIST
               if data.kind_of?(Array)

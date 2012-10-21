@@ -20,12 +20,10 @@ module DTK::Client
     end
 
     desc "list", "List all assembly templates."
-    method_option :list, :type => :boolean, :default => false
     def list()
       response = post rest_url("assembly/list"), {:subtype => 'template'}
       data_type = :assembly_template
-      response.render_table(data_type) unless options.list?
-      response
+      response.render_table(data_type) 
     end
 
 #    desc "[ASSEMBLY-TEMPLATE-NAME/ID] show [nodes|components|targets]", "List all nodes/components/targets for given assembly template."

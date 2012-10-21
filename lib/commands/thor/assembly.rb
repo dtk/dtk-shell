@@ -276,7 +276,11 @@ module DTK::Client
           sleep GetNetStatsSleep
         end
       end
-      response
+
+      #TODO: needed to shift data because table_print does not yet handle .. :results => Array and want to iterate over array
+      #TODO: Need better mechanism than set_data
+      response.set_data(*response.data(:results))
+      response.render_table(:netstat_data)
     end
     GetNetStatsTries = 6
     GetNetStatsSleep = 0.5
