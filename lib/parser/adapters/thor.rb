@@ -65,6 +65,12 @@ module DTK
 
         if time_difference
           response = post rest_url(url), subtype
+          # we do not want to catch is if it is not valid
+          if response.nil? || response.empty?
+            DtkLogger.instance.debug("Response was nil or empty for that reason we did not cache it.")
+            return response
+          end
+
           @@cached_response.store(clazz, {:response => response, :ts => current_ts})
         end
 
