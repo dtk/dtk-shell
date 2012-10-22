@@ -20,7 +20,8 @@ class DtkLogger
     log_location_dir = get_log_location()
     begin
       if File.directory?(log_location_dir)
-        file = File.open("#{get_log_location()}/#{LOG_FILE_NAME}", "a")
+        file = File.open(file_path(), "a")
+        file.sync = true
         @logger = Logger.new(file, LOG_NUMBER_OF_OLD_FILES, LOG_MB_SIZE * 1024000)
         
         @logger.formatter = proc do |severity, datetime, progname, msg|
@@ -32,6 +33,10 @@ class DtkLogger
      rescue Errno::EACCES
       no_log_permissions(log_location_dir)
     end
+  end
+
+  def file_path()
+    "#{get_log_location()}/#{LOG_FILE_NAME}"
   end
 
   def debug(log_text, sttdout_out=false)

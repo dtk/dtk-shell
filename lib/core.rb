@@ -58,7 +58,7 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
         raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
       elsif error_internal
         DtkLogger.instance.error(error_msg)
-        raise DTK::Client::DtkError, "DTK Server has encountered an internal error. See DTK log for more details."
+        raise DTK::Client::DtkError, "DTK Server has encountered an internal error. See DTK log (#{DtkLogger.instance.file_path()}) for more details."
       else
         # if usage error occured, display message to console and display that same message to log
         raise DTK::Client::DtkError, "Following error occured: #{error_msg}." 
