@@ -27,6 +27,7 @@ module DTK::Client
       #first check that there is a directory there and it is not already a git repo
       response = GitRepo.check_local_dir_exists(:component_module,module_name)
       return response unless response.ok?
+      module_directory = response.data(:module_directory)
 
       #first make call to server to create an empty repo
       post_body = {
@@ -55,7 +56,7 @@ module DTK::Client
       return response unless response.ok?
 
       if meta_created = response.data(:meta_created)
-        msg = "First cut of meta file #{meta_created["path"]} has been created in module dirctory; edit and then invoke push-clone-changes"
+        msg = "First cut of meta file (#{meta_created["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
         response = GitRepo.add_file(repo_branch,meta_created["path"],meta_created["content"],msg)
       end
       response

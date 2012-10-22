@@ -63,7 +63,7 @@ module DTK; module Client
         unless File.directory?(local_repo_dir)
           raise ErrorUsage.new("The content for module (#{module_name}) should be put in directory (#{local_repo_dir})")
         end
-        ret
+        {"module_directory" => local_repo_dir}
       end
     end
 
