@@ -55,9 +55,11 @@ export PATH=$PATH:/home/user/dtk-client/bin
 Development configuration setup
 ----------------------
 
-- Copy `production_configuration.yml` from `lib/config`
-- Rename copied file to `local_configuration.yml` and place it in `lib/config`
+- Copy `default.conf` from `lib/config`
+- Rename copied file to `local.conf` and place it in `lib/config`
 - Set configuration at will, local configuration is git ignored
+
+NOTE: There is client configuration which can be found in `~/dtk/client.conf`. Local configuration takes presedence over any other configuration.
 
 Configuration Setup
 ----------------------
