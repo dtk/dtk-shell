@@ -38,11 +38,13 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
     # check for errors in response
     unless response_ruby_obj["errors"].nil?
       error_internal  = false
+      error_timeout   = nil
       error_backtrace = nil
 
       error_msg      = response_ruby_obj['errors'].map{|e| e["message"].gsub(/\.$/,"") unless e["message"].nil?}.join(". ")
       
-      response_ruby_obj["errors"].each do |e| 
+      response_ruby_obj["errors"].each do |e|
+        error_timeout   ||= e["errors"].first["code"]
         error_internal  ||= e["internal"]
         error_backtrace ||= e["backtrace"]
       end
@@ -51,7 +53,9 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
       error_msg = error_msg.empty? ? '' : "#{error_msg}"
       
       # if error_internal.first == true
-      if error_internal
+      if error_timeout == "timeout"
+        raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
+      elsif error_internal
         DtkLogger.instance.error(error_msg)
         raise DTK::Client::DtkError, "DTK Server has encountered an internal error. See DTK log for more details."
       else

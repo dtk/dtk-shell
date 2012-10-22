@@ -87,6 +87,7 @@ module DTK::Client
             response.render_data(true)
 
             # stop pulling when top level task succeds, fails or timeout
+
             if response and response.data and response.data.first
               #TODO: may fix in server, but now top can have non executing state but a concurrent branch can execute; so
               #chanding bloew for time being
