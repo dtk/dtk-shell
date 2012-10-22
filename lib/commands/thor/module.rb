@@ -262,11 +262,24 @@ module DTK::Client
 
       if grit_adapter.changed?
         grit_adapter.print_status
-        if confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?")
+
+        # check to see if auto commit flag
+        auto_commit  = ::Config::Configuration.get(:auto_commit_changes)
+        confirmed_ok = false
+
+        # if there is no auto commit ask for confirmation
+        unless auto_commit
+          confirmed_ok = confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?") 
+        end
+
+        if (auto_commit || confirmed_ok)
+          puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
           commit_msg = user_input("Commit message")
           grit_adapter.add_remove_commit_all(commit_msg)
           grit_adapter.push()
         end
+
+        puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
       else
         puts "No changes to repository"
       end
