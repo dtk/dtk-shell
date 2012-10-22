@@ -14,6 +14,7 @@ module DTK
       extend  CommandBase
       @@cached_response = {}
       TIME_DIFF         = 3  #second(s)
+
       
       def initialize(args, opts, config)
         @conn = config[:conn]

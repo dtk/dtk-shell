@@ -23,7 +23,7 @@ module Config
     include ::DTK::Client::OsUtil
     include Singleton
 
-    EXTERNAL_APP_CONF = "application.conf"
+    EXTERNAL_APP_CONF = "client.conf"
     DEVELOPMENT_CONF  = 'local.conf'
     DEFAULT_CONF      = 'default.conf'
 

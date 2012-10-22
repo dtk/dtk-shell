@@ -218,8 +218,27 @@ module DTK::Client
 
     desc "MODULE-ID/NAME edit","Switch to unix editing for given module."
     def edit(module_name)
-      # if this is not name it will not work, TODO: Add lookahead for this to find name based on ID
-      raise DTK::Client::Error, "Please use module name for edit command." if module_name =~ /^[0-9]+$/
+
+      # if this is not name it will not work, we need module name
+      if module_name =~ /^[0-9]+$/
+        module_id   = module_name
+        module_name = nil
+        # TODO: See with Rich if there is better way to resolve this
+        response = DTK::Client::CommandBaseThor.get_cached_response(:module, "component_module/list")
+
+        if response.ok?
+          unless response['data'].nil?
+            response['data'].each do |module_item|
+              if module_id.to_i == (module_item['id'])
+                module_name = module_item['display_name']
+                break
+              end
+            end
+          end
+        end
+
+        raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if module_name.nil? 
+      end
 
       modules_path    = module_clone_location(::Config::Configuration.get(:module_location))
       module_location = "#{modules_path}/#{module_name}"
@@ -243,11 +262,24 @@ module DTK::Client
 
       if grit_adapter.changed?
         grit_adapter.print_status
-        if confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?")
+
+        # check to see if auto commit flag
+        auto_commit  = ::Config::Configuration.get(:auto_commit_changes)
+        confirmed_ok = false
+
+        # if there is no auto commit ask for confirmation
+        unless auto_commit
+          confirmed_ok = confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?") 
+        end
+
+        if (auto_commit || confirmed_ok)
+          puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
           commit_msg = user_input("Commit message")
           grit_adapter.add_remove_commit_all(commit_msg)
           grit_adapter.push()
         end
+
+        puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
       else
         puts "No changes to repository"
       end
@@ -274,6 +306,9 @@ module DTK::Client
       dtk_require_from_base('command_helpers/git_repo')
       response = GitRepo.push_changes(:component_module,response.data(:module_name))
       return response unless response.ok?
+      if response.data(:diffs).empty?
+        raise DTK::Client::DtkError, "No changes to push"
+      end
       post_body.merge!(:json_diffs => JSON.generate(response.data(:diffs)))
 
       post rest_url("component_module/update_model_from_clone"), post_body
@@ -296,8 +331,8 @@ module DTK::Client
       }
       response = post(rest_url("component_module/add_user_direct_access"),post_body)
       return response unless response.ok?
-      repo_manager_footprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_footprint,:repo_manager_dns)
-      SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_footprint)
+      repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
+      SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
       response
     end
 
@@ -318,6 +353,7 @@ module DTK::Client
     # we allow change only for valid ID/NAME
 
     no_tasks do
+
       def self.valid_id?(value, conn)
         @conn    = conn if @conn.nil?
         response = get_cached_response(:module_component, "component_module/list")
