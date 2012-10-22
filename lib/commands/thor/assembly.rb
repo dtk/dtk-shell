@@ -87,8 +87,12 @@ module DTK::Client
             response.render_data(true)
 
             # stop pulling when top level task succeds, fails or timeout
-            unless (response.nil? || response["data"].empty? || response["data"]["status"].empty?)
-              break unless response["data"]["status"].eql? "executing"
+            unless (response.nil? || response["data"].nil? || response["data"]["status"].nil?)
+              # if response["data"]["status"].eql? "failed"
+              #   break unless response["errors"].nil?
+              # else
+                break unless response["data"]["status"].eql? "executing"
+              # end
             end
             
             wait_animation("Watching assembly task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
