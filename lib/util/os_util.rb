@@ -33,7 +33,7 @@ module DTK
       end
 
       def home_dir
-        return (is_windows? ? "#{ENV(HOMEDRIVE)}#{ENV(HOMEPATH)}\\" : "#{ENV["HOME"]}/")
+        return (is_windows? ? "#{ENV['HOMEDRIVE']}#{ENV['HOMEPATH']}\\" : "#{ENV['HOME'"']}/")
       end
 
       def module_clone_location(module_location)
