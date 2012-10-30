@@ -41,7 +41,7 @@ module DTK
       end
 
       private
-
+      
       def seperator
         return (is_windows? ? "\\" : "/")
       end

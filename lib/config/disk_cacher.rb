@@ -13,7 +13,7 @@ class DiskCacher
   end
   def fetch(url, max_age=0, use_mock_up=true)
     file = MD5.hexdigest(url)
-    file_path = File.join("", @cache_dir, file)
+    file_path = File.join(@cache_dir, file)
 
     # TODO: Remove this
     if use_mock_up
