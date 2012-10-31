@@ -40,11 +40,10 @@ module DTK::Client
       # API descriptor
     end    
 
-    #TODO: not supported yet
-    #desc "node-group", "Add/Destroy/List available groups of nodes."
-    #def node_group
-    #  # API descriptor
-    #end
+    desc "node-group", "Add/Destroy/List available groups of nodes."
+    def node_group
+      # API descriptor
+    end
 
     desc "node-template", "Commands to list and query node templates."
     def node_template
