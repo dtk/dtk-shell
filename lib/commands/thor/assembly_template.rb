@@ -137,14 +137,11 @@ module DTK::Client
         
         unless (response.nil? || response.empty? || response['data'].nil?)
           response['data'].each do |element|
-            if (element['id'].to_s==value || element['display_name'].to_s==value)
-              return true 
-            else
-              return false
-            end
+            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
           end
+          return false
         end
-        
+
         # if response is ok but response['data'] is nil, display warning message
         DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
         return false
