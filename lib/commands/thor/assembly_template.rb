@@ -7,6 +7,10 @@ module DTK::Client
       PPColumns.get(:assembly_template)
     end
 
+    def self.whoami()
+      return :assembly_template, "assembly/list", {:subtype => 'template'}
+    end
+
     desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."
     method_option :list, :type => :boolean, :default => false
     def info(assembly_id=nil)
@@ -126,46 +130,6 @@ module DTK::Client
       }
       post rest_url("assembly/delete"), post_body
     end
-
-    # we make valid methods to make sure that when context changing
-    # we allow change only for valid ID/NAME
-
-    no_tasks do
-      def self.valid_id?(value, conn)
-        @conn    = conn if @conn.nil?
-        response = get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template'})
-        
-        unless (response.nil? || response.empty? || response['data'].nil?)
-          response['data'].each do |element|
-            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
-          end
-          return false
-        end
-
-        # if response is ok but response['data'] is nil, display warning message
-        DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
-        return false
-      end
-
-      def self.get_identifiers(conn)
-        @conn    = conn if @conn.nil?
-        response = get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template'})
-
-        unless (response.nil? || response.empty?)
-          unless response['data'].nil?
-            identifiers = []
-            response['data'].each do |element|
-               identifiers << element['display_name']
-            end
-            return identifiers
-          end
-        end
-        # if response is ok but response['data'] is nil, display warning message
-        DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
-        return []
-      end
-    end
-
   end
 end
 
