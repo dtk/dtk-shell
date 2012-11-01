@@ -3,6 +3,7 @@
 #
 require 'singleton'
 require 'logger'
+require 'colorize'
 require File.expand_path('./util/os_util', File.dirname(__FILE__))
 
 class DtkLogger
@@ -50,12 +51,12 @@ class DtkLogger
   end
 
   def warn(log_text, sttdout_out=false)
-    puts log_text if sttdout_out || DEVELOPMENT_MODE
+    puts log_text.colorize(:yellow) if sttdout_out || DEVELOPMENT_MODE
     @logger.warn(log_text) if log_created?
   end
 
   def error(log_text, sttdout_out=false)
-    puts log_text if sttdout_out || DEVELOPMENT_MODE
+    puts log_text.colorize(:red) if sttdout_out || DEVELOPMENT_MODE
     @logger.error(log_text) if log_created?
   end
 

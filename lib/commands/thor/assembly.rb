@@ -315,17 +315,18 @@ module DTK::Client
       end
     end
 
-    desc "tail LOG-NAME","Tail specified number of lines from log"
-    def tail(log_name,assembly_id)
-      puts "========================================================================================================================"
+    desc "ASSEMBLY-NAME/ID tail NODE-NAME/ID LOG-PATH","Tail specified number of lines from log"
+    def tail(node_identifier,log_path,assembly_id)
+      puts "=====================> Tail log - #{log_path}"
       last_line = nil
-      while true
-        begin
+      begin
+        while true
           post_body = {
-            :assembly_id => assembly_id,
-            :subtype     => 'instance',
-            :start_line  => last_line,
-            :log_path    => log_name
+            :assembly_id     => assembly_id,
+            :subtype         => 'instance',
+            :start_line      => last_line,
+            :node_identifier => node_identifier,
+            :log_path        => log_path
           }
           
           response = post rest_url("assembly/initiate_get_log"), post_body
@@ -339,23 +340,44 @@ module DTK::Client
           }
 
           # number of re-tries
-          5.downto(1) do
+          3.downto(1) do
+            #trap("INT", "SIG_IGN")
             response = post(rest_url("assembly/get_action_results"),action_body)
+
+            # server has found an error
+            if response.data(:results)['error']
+              raise DTK::Client::DtkError, response.data(:results)['error']
+            end
+
             break if response.data(:is_complete)
 
-            sleep(LOG_SLEEP_TIME)
+            sleep(1)
           end
 
-          raise DTK::Client::DtkError, "Error while logging there was no successful response after 5 tries." unless response.data(:is_complete)
+          raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
 
-          output = response.data(:results).first[1]["output"]
+          # due to complicated response we change its formating
+          response = response.data(:results).first[1]
+
+          unless response["error"].nil?
+            raise DTK::Client::DtkError, response["error"]
+          end
+
+          output = response["output"]
           puts output unless output.empty?
-          last_line = response.data(:results).first[1]["last_line"]
-        rescue Interrupt => e
-          return
+          last_line = response["last_line"]
+          sleep(LOG_SLEEP_TIME)
         end
-     end
-     puts "========================================================================================================================"
+      rescue DTK::Client::DtkError => e
+        raise e
+      rescue Exception => e
+        # WARNING: This will catch any exception due to problem with post method which will throw exceptions if 
+        # interrupted. Beware that other errors will be trapped here too
+        return nil
+      ensure
+        puts ""
+        puts "=====================> Tail END"
+      end
     end
     
   end
