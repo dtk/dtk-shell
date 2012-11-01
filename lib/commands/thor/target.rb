@@ -64,13 +64,13 @@ module DTK::Client
         @conn    = conn if @conn.nil?
         response = get_cached_response(:target, "target/list")
 
-        unless (response.nil? || response.empty?)
-          unless response['data'].nil?
-            response['data'].each do |element|
-              return true if (element['id'].to_s==value || element['display_name'].to_s==value)
-            end
-          end       
+        unless (response.nil? || response.empty? || response['data'].nil?)
+          response['data'].each do |element|
+            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+          end
+          return false
         end
+        
         # if response is ok but response['data'] is nil, display warning message
         DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
         return false
