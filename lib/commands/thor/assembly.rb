@@ -252,17 +252,18 @@ module DTK::Client
       post_body = {
         :assembly_id => assembly_id
       }
+
       response = post(rest_url("assembly/initiate_get_netstats"),post_body)
       return response unless response.ok?
+
       action_results_id = response.data(:action_results_id)
-      end_loop = false
-      response = nil
-      count = 0
-      ret_only_if_complete = true
+      end_loop, response, count, ret_only_if_complete = false, nil, 0, true
+
       until end_loop do
         post_body = {
           :action_results_id => action_results_id,
-          :return_only_if_complete => ret_only_if_complete
+          :return_only_if_complete => ret_only_if_complete,
+          :disable_post_processing => false
         }
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
@@ -308,18 +309,42 @@ module DTK::Client
       end
     end
 
-    desc "tail [POSITION_TO_START] [BUFFER_SIZE]","Tail specified number of lines from log"
-    def tail(start_line=nil, buffer_size=0)
+    desc "tail LOG-NAME","Tail specified number of lines from log"
+    def tail(log_name,assembly_id)
       puts "========================================================================================================================"
+      last_line = nil
       while true
         begin
-          raise DTK::Client::DtkError, "Rich,you need to setup endpoint here."
-          # url goes here this is which I used for local testing
-          response = get "http://172.20.12.58:3000/generate_log/generate?start=#{start_line}&num=#{buffer_size}&format=json"
-          puts response["data"]
+          post_body = {
+            :assembly_id => assembly_id,
+            :subtype     => 'instance',
+            :start_line  => last_line,
+            :log_path    => log_name
+          }
           
-          start_line = response["last_position"].to_i
-          sleep(LOG_SLEEP_TIME)
+          response = post rest_url("assembly/initiate_get_log"), post_body
+          return response unless response.ok?
+
+          action_results_id = response.data(:action_results_id)
+          action_body = {
+            :action_results_id => action_results_id,
+            :return_only_if_complete => true,
+            :disable_post_processing => true
+          }
+
+          # number of re-tries
+          5.downto(1) do
+            response = post(rest_url("assembly/get_action_results"),action_body)
+            break if response.data(:is_complete)
+
+            sleep(LOG_SLEEP_TIME)
+          end
+
+          raise DTK::Client::DtkError, "Error while logging there was no successful response after 5 tries." unless response.data(:is_complete)
+
+          output = response.data(:results).first[1]["output"]
+          puts output unless output.empty?
+          last_line = response.data(:results).first[1]["last_line"]
         rescue Interrupt => e
           return
         end
