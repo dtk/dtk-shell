@@ -34,7 +34,7 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
 
     # call proper thor class and task
     command_class = DTK::Client.const_get "#{cap_form(command)}"
-    response_ruby_obj = command_class.execute_from_cli(conn,argv,shell_execute)     
+    response_ruby_obj = command_class.execute_from_cli(conn,argv,shell_execute)
 
     # check for errors in response
     unless response_ruby_obj["errors"].nil?
