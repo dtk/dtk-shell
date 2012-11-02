@@ -102,6 +102,16 @@ module DTK::Client
       post rest_url("node_group/add_component"), post_body
     end
 
+    desc "NODE-GROUP-NAME/ID delete-component COMPONENT-ID", "Delete component from  node group"
+    def delete_component(arg1,arg2)
+      node_group_id,component_id = [arg2,arg1]
+      post_body = {
+        :node_group_id => node_group_id,
+        :component_id => component_id
+      }
+      post rest_url("node_group/delete_component"), post_body
+    end
+
 
     #TODO: may deprecate
 =begin
