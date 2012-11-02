@@ -12,6 +12,33 @@ module DTK::Client
       post rest_url("node_group/list"), search_hash.post_body_hash()
     end
 
+    #TODO: may write common inherited version of set_required_params accross commands that need it
+    desc "NODE-GROUP-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
+    def set_required_params(node_group_id)
+      post_body = {
+        :node_group_id => node_group_id,
+        :subtype     => 'instance',
+        :filter      => 'required_unset_attributes'
+      }
+      response = post rest_url("node_group/get_attributes"), post_body
+      return response unless response.ok?
+      missing_params = response.data
+      if missing_params.empty?
+        response.set_data('Message' => "No parameters to set.")
+        response
+      else
+        param_bindings = DTK::Shell::InteractiveWizard.new.resolve_missing_params(missing_params)
+        post_body = {
+          :node_group_id => node_group_id,
+          :av_pairs_hash => param_bindings.inject(Hash.new){|h,r|h.merge(r[:id] => r[:value])}
+        }
+        response = post rest_url("node_group/set_attributes"), post_body
+        return response unless response.ok?
+        response.data
+      end
+    end
+
+
     desc "create NODE-GROUP-NAME", "Create node group"
     method_option "in-target",:aliases => "-t" ,
       :type => :numeric, 
@@ -98,7 +125,7 @@ module DTK::Client
     no_tasks do
       def self.valid_id?(value, conn)
         @conn    = conn if @conn.nil?
-        response = get_cached_response(:assembly, "node_group/list")
+        response = get_cached_response(:node_group, "node_group/list")
         
         unless (response.nil? || response.empty?)
           unless response['data'].nil?
@@ -113,7 +140,7 @@ module DTK::Client
       def self.get_identifiers(conn)
         ret = Array.new
         @conn    = conn if @conn.nil?
-        response = get_cached_response(:assembly, "node_group/list")
+        response = get_cached_response(:node_group, "node_group/list")
 
         unless (response.nil? || response.empty?)
           unless response['data'].nil?
