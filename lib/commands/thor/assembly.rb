@@ -12,6 +12,12 @@ module DTK::Client
       PPColumns.get(:assembly)
     end
 
+    # return information specifc for this class
+    def self.whoami()
+      # identifier, list endpoint, subtype
+      return :assembly, "assembly/list", nil
+    end
+
     desc "ASSEMBLY-NAME/ID promote-to-library", "Update or create library assembly using workspace assembly"
     def promote_to_library(assembly_id)
       post_body = {
@@ -252,17 +258,18 @@ module DTK::Client
       post_body = {
         :assembly_id => assembly_id
       }
+
       response = post(rest_url("assembly/initiate_get_netstats"),post_body)
       return response unless response.ok?
+
       action_results_id = response.data(:action_results_id)
-      end_loop = false
-      response = nil
-      count = 0
-      ret_only_if_complete = true
+      end_loop, response, count, ret_only_if_complete = false, nil, 0, true
+
       until end_loop do
         post_body = {
           :action_results_id => action_results_id,
-          :return_only_if_complete => ret_only_if_complete
+          :return_only_if_complete => ret_only_if_complete,
+          :disable_post_processing => false
         }
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
@@ -290,7 +297,7 @@ module DTK::Client
         :assembly_id => assembly_id,
         :subtype     => 'instance'
       }
-      response = post rest_url("assembly/get_missing_parameters"), post_body
+      response = post rest_url("assembly/get_attributes_missing_values"), post_body
       return response unless response.ok?
       missing_params = response.data
       if missing_params.empty?
@@ -308,65 +315,68 @@ module DTK::Client
       end
     end
 
-    desc "tail [POSITION_TO_START] [BUFFER_SIZE]","Tail specified number of lines from log"
-    def tail(start_line=nil, buffer_size=0)
-      puts "========================================================================================================================"
-      while true
-        begin
-          raise DTK::Client::DtkError, "Rich,you need to setup endpoint here."
-          # url goes here this is which I used for local testing
-          response = get "http://172.20.12.58:3000/generate_log/generate?start=#{start_line}&num=#{buffer_size}&format=json"
-          puts response["data"]
+    desc "ASSEMBLY-NAME/ID tail NODE-NAME/ID LOG-PATH","Tail specified number of lines from log"
+    def tail(node_identifier,log_path,assembly_id)
+      puts "=====================> Tail log - #{log_path}"
+      last_line = nil
+      begin
+        while true
+          post_body = {
+            :assembly_id     => assembly_id,
+            :subtype         => 'instance',
+            :start_line      => last_line,
+            :node_identifier => node_identifier,
+            :log_path        => log_path
+          }
           
-          start_line = response["last_position"].to_i
-          sleep(LOG_SLEEP_TIME)
-        rescue Interrupt => e
-          return
-        end
-     end
-     puts "========================================================================================================================"
-    end
+          response = post rest_url("assembly/initiate_get_log"), post_body
+          return response unless response.ok?
 
-  
+          action_results_id = response.data(:action_results_id)
+          action_body = {
+            :action_results_id => action_results_id,
+            :return_only_if_complete => true,
+            :disable_post_processing => true
+          }
 
-   #######
+          # number of re-tries
+          3.downto(1) do
+            #trap("INT", "SIG_IGN")
+            response = post(rest_url("assembly/get_action_results"),action_body)
 
-    # we make valid methods to make sure that when context changing
-    # we allow change only for valid ID/NAME
-
-    no_tasks do
-      def self.valid_id?(value, conn)
-        @conn    = conn if @conn.nil?
-        response = get_cached_response(:assembly, "assembly/list")
-        
-        unless (response.nil? || response.empty? || response['data'].nil?)
-          response['data'].each do |element|
-            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
-          end
-          return false
-        end
-        
-        # if response is ok but response['data'] is nil, display warning message
-        DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
-        return false
-      end
-
-      def self.get_identifiers(conn)
-        @conn    = conn if @conn.nil?
-        response = get_cached_response(:assembly, "assembly/list")
-
-        unless (response.nil? || response.empty?)
-          unless response['data'].nil?
-            identifiers = []
-            response['data'].each do |element|
-               identifiers << element['display_name']
+            # server has found an error
+            if response.data(:results)['error']
+              raise DTK::Client::DtkError, response.data(:results)['error']
             end
-            return identifiers
+
+            break if response.data(:is_complete)
+
+            sleep(1)
           end
-          # if response is ok but response['data'] is nil, display warning message
-          DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")          
+
+          raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
+
+          # due to complicated response we change its formating
+          response = response.data(:results).first[1]
+
+          unless response["error"].nil?
+            raise DTK::Client::DtkError, response["error"]
+          end
+
+          output = response["output"]
+          puts output unless output.empty?
+          last_line = response["last_line"]
+          sleep(LOG_SLEEP_TIME)
         end
-        return []
+      rescue DTK::Client::DtkError => e
+        raise e
+      rescue Exception => e
+        # WARNING: This will catch any exception due to problem with post method which will throw exceptions if 
+        # interrupted. Beware that other errors will be trapped here too
+        return nil
+      ensure
+        puts ""
+        puts "=====================> Tail END"
       end
     end
     

@@ -5,6 +5,10 @@ module DTK::Client
       PPColumns.get(:component)
     end
 
+    def self.whoami()
+      return :component_template, "component/list", {:subtype => 'template'}
+    end
+
     desc "COMPONENT-NAME/ID info", "Get information about given component template."
     method_option :list, :type => :boolean, :default => false
     def info(component_id=nil)
@@ -65,46 +69,7 @@ module DTK::Client
 
       return response
     end
-
-    # we make valid methods to make sure that when context changing
-    # we allow change only for valid ID/NAME
-
-    no_tasks do
-      def self.valid_id?(value, conn)
-        @conn    = conn if @conn.nil?
-        response = get_cached_response(:component_template, "component/list", {:subtype => 'template'})
-
-        unless (response.nil? || response.empty? || response['data'].nil?)
-          response['data'].each do |element|
-            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
-          end
-          return false
-        end
-        
-        # if response is ok but response['data'] is nil, display warning message
-        DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
-        return false
-      end
-
-      def self.get_identifiers(conn)
-        @conn    = conn if @conn.nil?
-        response = get_cached_response(:component_template, "component/list", {:subtype => 'template'})
-
-        unless (response.nil? || response.empty?)
-          unless response['data'].nil?
-            identifiers = []
-            response['data'].each do |element|
-               identifiers << element['display_name']
-            end
-            return identifiers
-          end
-        end
-        # if response is ok but response['data'] is nil, display warning message
-        DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
-        return []
-      end
-    end
-
+    
   end
 end
 

@@ -1,6 +1,10 @@
 module DTK::Client
   class Task < CommandBaseThor
 
+    def self.whoami()
+      return :task, "task/list", nil
+    end
+
     desc "list [--list]","List tasks"
     method_option :list, :type => :boolean, :default => false
     def list()
@@ -82,45 +86,6 @@ module DTK::Client
       @@count += 1
       return true if (@@count * TASK_STATUS_POLLING_INTERVAL) > TASK_STATUS_MAX_TIME
       %w{succeeded failed}.include?(response.data(:status))
-    end
-
-     # we make valid methods to make sure that when context changing
-    # we allow change only for valid ID/NAME
-
-    no_tasks do
-      def self.valid_id?(value, conn)
-        @conn    = conn if @conn.nil?
-        response = get_cached_response(:task, "task/list")
-
-        unless (response.nil? || response.empty? || response['data'].nil?)
-          response['data'].each do |element|
-            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
-          end
-          return false
-        end
-        
-        # if response is ok but response['data'] is nil, display warning message
-        DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
-        return false
-      end
-
-      def self.get_identifiers(conn)
-        @conn    = conn if @conn.nil?
-        response = get_cached_response(:task, "task/list")
-
-        unless (response.nil? || response.empty?)
-          unless response['data'].nil?
-            identifiers = []
-            response['data'].each do |element|
-               identifiers << element['display_name']
-            end
-            return identifiers
-          end
-        end
-        # if response is ok but response['data'] is nil, display warning message
-        DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
-        return []
-      end
     end
 
   end

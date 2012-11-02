@@ -3,6 +3,7 @@
 require 'rubygems'
 require 'singleton'
 require 'restclient'
+require 'colorize'
 require 'json'
 require 'pp'
 #TODO: for testing; fix by pass in commadn line argument
@@ -51,7 +52,7 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
       end
 
       # normalize it for display
-      error_msg = error_msg.empty? ? '' : "#{error_msg}"
+      error_msg = error_msg.empty? ? 'No error description found' : "#{error_msg}"
       
       # if error_internal.first == true
       if error_code == "timeout"
@@ -82,7 +83,7 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
     puts e.message
   rescue DTK::Client::DtkError => e
     # this are expected application errors
-    puts e.message
+    puts e.message.colorize(:red)
     DtkLogger.instance.error(e.message)
   rescue Exception => e
     # All errors for task will be handled here

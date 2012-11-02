@@ -113,6 +113,46 @@ module DTK
         return tier_1.sort, tier_2.sort
       end
 
+      # we make valid methods to make sure that when context changing
+      # we allow change only for valid ID/NAME
+      def self.valid_id?(value, conn)
+        @conn    = conn if @conn.nil?
+
+        clazz, endpoint, subtype = whoami()
+        response = get_cached_response(clazz, endpoint, subtype)
+        
+        unless (response.nil? || response.empty? || response['data'].nil?)
+          response['data'].each do |element|
+            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+          end
+          return false
+        end
+        
+        # if response is ok but response['data'] is nil, display warning message
+        DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
+        return false
+      end
+
+      def self.get_identifiers(conn)
+        @conn    = conn if @conn.nil?
+        clazz, endpoint, subtype = whoami()
+        response = get_cached_response(clazz, endpoint, subtype)
+
+        unless (response.nil? || response.empty?)
+          unless response['data'].nil?
+            identifiers = []
+            response['data'].each do |element|
+               identifiers << element['display_name']
+            end
+            return identifiers
+          end
+          # if response is ok but response['data'] is nil, display warning message
+          DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")          
+        end
+        return []
+      end
+  
+
       no_tasks do
         include DTK::Client::OsUtil
         # Method not implemented error
