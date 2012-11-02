@@ -15,15 +15,15 @@ module DTK::Client
       response.render_table(:node)
     end
 
-    desc "NODE-NAME/ID show components","List components that are the node instance."
+    desc "NODE-NAME/ID show components","List components that are on the node instance."
     def show(*rotated_args)
       #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
-      node_id,about  = rotate_args(rotated_args)
+      node_id,about = rotate_args(rotated_args)
 
       post_body = {
         :node_id => node_id,
-        :subtype     => 'instance',
-        :about       => about
+        :subtype => 'instance',
+        :about   => about
       }
 
       case about

@@ -24,6 +24,7 @@ module DTK::Client
         :display_name => name,
         :type => "node_group_instance"
       }
+      #TODO: migrate to newer method stype than save
       save_hash[:parent_id] = target_id if target_id
       post rest_url("node_group/save"), save_hash
     end
@@ -35,6 +36,27 @@ module DTK::Client
 
       delete_hash = {:id => id}
       post rest_url("node_group/delete"), delete_hash
+    end
+
+    desc "NODE-GROUP-NAME/ID show components","List components that are on the node group."
+    def show(*rotated_args)
+      #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
+      node_group_id,about = rotate_args(rotated_args)
+
+      post_body = {
+        :node_group_id => node_group_id,
+        :about         => about
+      }
+
+      case about
+        when "components":
+          data_type = :component
+        else
+          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+      end
+
+      response = post rest_url("node_group/info_about"), post_body
+      response.render_table(data_type)
     end
 
     desc "members NODE-GROUP-ID", "Node group members"
@@ -51,6 +73,7 @@ module DTK::Client
       }
       post rest_url("node_group/add_component"), post_body
     end
+
 
     #TODO: may deprecate
 =begin
