@@ -16,6 +16,11 @@ require 'rubygems'
 
 # GLOBAL IDENTIFIER
 $shell_mode = true
+ALIAS_COMMANDS = {
+  'ls' => 'list', 
+  'cd' => 'cc',
+  'rm' => 'delete'
+}
 
 # METHODS
 
@@ -70,6 +75,14 @@ def change_context(args)
     return @context.shell_prompt
   end
 end
+
+# support for alias commands (ls for list etc.)
+def preprocess_commands(original_command)
+  command = ALIAS_COMMANDS[original_command]
+  # return command if alias for specific command exist in predefined ALIAS_COMMANDS
+  # else return entered command because there is no alias for it
+  return (command.nil? ? original_command : command)
+end
 # RUNTIME PART - STARTS HERE
 
 begin
@@ -99,6 +112,9 @@ begin
       args = Shellwords.split(line)
       cmd = args.shift
 
+      # support command alias (ls for list etc.)
+      cmd = preprocess_commands(cmd)
+      
       if ('cc' == cmd)
         # in case there is no params we just reload command
         args << "/" if args.empty?
