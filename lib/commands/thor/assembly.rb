@@ -147,7 +147,7 @@ module DTK::Client
     end
 
     #TODO: put in flag to control detail level
-    desc "ASSEMBLY-NAME/ID show nodes|components|tasks|add-on [FILTER] [--list]","List nodes, components, add-ons, or tasks associated with assembly."
+    desc "ASSEMBLY-NAME/ID show nodes|components|attributes|tasks|add-on [FILTER] [--list]","List nodes, components, attributes, add-ons, or tasks associated with assembly."
     method_option :list, :type => :boolean, :default => false
     def show(*rotated_args)
       #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
