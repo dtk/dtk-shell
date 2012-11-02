@@ -38,7 +38,6 @@ module DTK::Client
       end
     end
 
-
     desc "create NODE-GROUP-NAME", "Create node group"
     method_option "in-target",:aliases => "-t" ,
       :type => :numeric, 
@@ -65,7 +64,7 @@ module DTK::Client
       post rest_url("node_group/delete"), delete_hash
     end
 
-    desc "NODE-GROUP-NAME/ID show components","List components that are on the node group."
+    desc "NODE-GROUP-NAME/ID show components|attributes","List components or attributes that are on the node group."
     def show(*rotated_args)
       #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
       node_group_id,about = rotate_args(rotated_args)
@@ -78,6 +77,8 @@ module DTK::Client
       case about
         when "components":
           data_type = :component
+        when "attributes":
+          data_type = :attribute
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
