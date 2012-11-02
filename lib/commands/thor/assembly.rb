@@ -1,6 +1,7 @@
 require 'rest_client'
 require 'json'
 dtk_require("../../dtk_logger")
+dtk_require("../../util/os_util")
 
 LOG_SLEEP_TIME   = Config::Configuration.get(:tail_log_frequency)
 DEBUG_SLEEP_TIME = Config::Configuration.get(:debug_task_frequency)
@@ -132,7 +133,7 @@ module DTK::Client
     end
 
     desc "list","List asssembly instances"
-    method_option :list, :type => :boolean, :default => false
+    method_option :list, :aliases => '-ls', :type => :boolean, :default => false
     def list()
       data_type = :assembly
       response = post rest_url("assembly/list"), {:subtype  => 'instance'}
@@ -316,68 +317,99 @@ module DTK::Client
       end
     end
 
-    desc "ASSEMBLY-NAME/ID tail NODE-NAME/ID LOG-PATH","Tail specified number of lines from log"
+    desc "ASSEMBLY-NAME/ID tail NODE-NAME/ID LOG-PATH [--more]","Tail specified number of lines from log"
+    method_option :more, :type => :boolean, :default => false
     def tail(node_identifier,log_path,assembly_id)
-      puts "=====================> Tail log - #{log_path}"
       last_line = nil
       begin
-        while true
-          post_body = {
-            :assembly_id     => assembly_id,
-            :subtype         => 'instance',
-            :start_line      => last_line,
-            :node_identifier => node_identifier,
-            :log_path        => log_path
-          }
-          
-          response = post rest_url("assembly/initiate_get_log"), post_body
-          return response unless response.ok?
 
-          action_results_id = response.data(:action_results_id)
-          action_body = {
-            :action_results_id => action_results_id,
-            :return_only_if_complete => true,
-            :disable_post_processing => true
-          }
+        file_path = File.join('/tmp',"dtk_tail_#{Time.now.to_i}.tmp")
+        tail_temp_file = File.open(file_path,"a")
 
-          # number of re-tries
-          3.downto(1) do
-            #trap("INT", "SIG_IGN")
-            response = post(rest_url("assembly/get_action_results"),action_body)
+        file_ready = false
 
-            # server has found an error
-            if response.data(:results)['error']
-              raise DTK::Client::DtkError, response.data(:results)['error']
+        t1 = Thread.new do
+          while true
+            post_body = {
+              :assembly_id     => assembly_id,
+              :subtype         => 'instance',
+              :start_line      => last_line,
+              :node_identifier => node_identifier,
+              :log_path        => log_path
+            }
+            
+            response = post rest_url("assembly/initiate_get_log"), post_body
+            return response unless response.ok?
+
+            action_results_id = response.data(:action_results_id)
+            action_body = {
+              :action_results_id => action_results_id,
+              :return_only_if_complete => true,
+              :disable_post_processing => true
+            }
+
+            # number of re-tries
+            3.downto(1) do
+              response = post(rest_url("assembly/get_action_results"),action_body)
+
+              # server has found an error
+              if response.data(:results)['error']
+                raise DTK::Client::DtkError, response.data(:results)['error']
+              end
+
+              break if response.data(:is_complete)
+
+              sleep(1)
             end
 
-            break if response.data(:is_complete)
+            raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
 
-            sleep(1)
+            # due to complicated response we change its formating
+            response = response.data(:results).first[1]
+
+            unless response["error"].nil?
+              raise DTK::Client::DtkError, response["error"]
+            end
+
+            # removing invalid chars from log
+            output = response["output"].gsub(/`/,'\'')
+
+            unless output.empty?
+              file_ready = true
+              tail_temp_file << output 
+              tail_temp_file.flush
+            end
+
+            last_line = response["last_line"]
+            sleep(LOG_SLEEP_TIME)
           end
-
-          raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
-
-          # due to complicated response we change its formating
-          response = response.data(:results).first[1]
-
-          unless response["error"].nil?
-            raise DTK::Client::DtkError, response["error"]
-          end
-
-          output = response["output"]
-          puts output unless output.empty?
-          last_line = response["last_line"]
-          sleep(LOG_SLEEP_TIME)
         end
+
+        t2 = Thread.new do
+          # ramp up time
+          begin
+            if options.more?
+              system("tail -f #{file_path} | more")
+            else
+              # needed ramp up time for t1 to start writting to file
+              while not file_ready
+                sleep(0.5)
+              end
+              system("less +F #{file_path}")
+            end
+          ensure
+            # wheter application resolves normaly or is interrupted
+            # t1 will be killed
+            t1.exit()
+          end
+        end
+        
+        t1.join()
+        t2.join()
+
       rescue DTK::Client::DtkError => e
+        t2.exit()
         raise e
-      rescue Exception => e
-        # WARNING: This will catch any exception due to problem with post method which will throw exceptions if 
-        # interrupted. Beware that other errors will be trapped here too
-        return nil
-      ensure
-        puts ""
-        puts "=====================> Tail END"
       end
     end
     
