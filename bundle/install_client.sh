@@ -4,7 +4,7 @@
 # GLOBAL VAR
 
 abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
-log_location="/var/log/${SUDO_USER}"
+log_location="/var/log/dtk/${SUDO_USER}"
 
 
 # FUNCTIONS BEGIN
@@ -136,19 +136,15 @@ install_gem "dtk-client"
 log_file=${log_location}/dtk-client.log
 # check if there is log file if not create it
 if [ -f ${log_file} ]; then
-  echo "DTK client log file already exists $log_file. Continuing installation ..."
-else
-# check if the log location directory exists; if not then create it
-if [[ ! -d ${log_location} ]]; then
-  mkdir -p ${log_location}
-fi;
-  `touch $log_file`
-  `chmod 666 $log_file`
-  if [ -f $log_file ]; then
+    echo "DTK client log file already exists $log_file. Continuing installation ..."
+elif [[ ! -d ${log_location} ]]; then
+    mkdir -p ${log_location}
+    touch $log_file
+    chmod 666 $log_file
+elif [ -f $log_file ]; then
     echo "Created DTK Client log file $file_path!"
-  else
+else
     echo "[WARNING] Unable to create DTK Client log file at $file_path!"
-  fi
 fi
 
 # check if there is already configuration
