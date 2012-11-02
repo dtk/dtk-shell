@@ -29,7 +29,7 @@ module DTK
               else 
                 "#{param_info['display_name']} (#{param_info['description']})"
               end
-            string_identifier = description.colorize(:green) + " (#{param_info['datatype'].upcase})".colorize(:yellow)
+            string_identifier = description.colorize(:green) + " [#{param_info['datatype'].upcase}]".colorize(:yellow)
 
             puts "Please enter #{string_identifier}:"
             while line = Readline.readline(": ", true)
