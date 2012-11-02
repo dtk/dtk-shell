@@ -15,8 +15,30 @@ module DTK::Client
       response.render_table(:node)
     end
 
-    LibraryTypes = ["image"]
-    TargetTypes = ["staged","instance"]
+    desc "NODE-NAME/ID show components","List components that are the node instance."
+    def show(*rotated_args)
+      #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
+      node_id,about  = rotate_args(rotated_args)
+
+      post_body = {
+        :node_id => node_id,
+        :subtype     => 'instance',
+        :about       => about
+      }
+
+      case about
+        when "components":
+          data_type = :component
+        #TODO: treat
+        #when "attributes":
+        #  data_type = :attribute
+        else
+          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+      end
+
+      response = post rest_url("node/info_about"), post_body
+      response.render_table(data_type)
+    end
 
     desc "add-to-group NODE-ID NODE-GROUP-ID", "Add node to group"
     def add_to_group(node_id,node_group_id)
