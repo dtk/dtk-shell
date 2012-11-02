@@ -296,9 +296,10 @@ module DTK::Client
     def set_required_params(assembly_id)
       post_body = {
         :assembly_id => assembly_id,
-        :subtype     => 'instance'
+        :subtype     => 'instance',
+        :filter      => 'required_unset_attributes'
       }
-      response = post rest_url("assembly/get_missing_parameters"), post_body
+      response = post rest_url("assembly/get_attributes"), post_body
       return response unless response.ok?
       missing_params = response.data
       if missing_params.empty?

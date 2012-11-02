@@ -51,7 +51,7 @@ module DTK
           error_response ||= @mock_up_response
           user_provided_params, checkup_hash = [], {}
 
-          puts "\nResponse returned errors, please fill in missing data.\n"
+          puts "\nPlease fill in missing data.\n"
           error_response.each do |error|
 
             string_identifier = error['description'].colorize(:green) + " (#{error['datatype'].upcase})".colorize(:yellow)
