@@ -196,7 +196,7 @@ elif [[ ${autoinstall} == "true" ]]; then
 fi;
 
 # set default values
-if [ $port == "" ]; then
+if [[ $port == "" ]]; then
   port="7000"
 fi
 
