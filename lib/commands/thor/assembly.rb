@@ -297,7 +297,7 @@ module DTK::Client
         :assembly_id => assembly_id,
         :subtype     => 'instance'
       }
-      response = post rest_url("assembly/get_missing_parameters"), post_body
+      response = post rest_url("assembly/get_attributes_missing_values"), post_body
       return response unless response.ok?
       missing_params = response.data
       if missing_params.empty?
