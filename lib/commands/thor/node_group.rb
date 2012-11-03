@@ -38,21 +38,20 @@ module DTK::Client
       end
     end
 
-    desc "create NODE-GROUP-NAME", "Create node group"
+    desc "create NODE-GROUP-NAME [-t TARGET-ID] [--spans-target]", "Create node group"
     method_option "in-target",:aliases => "-t" ,
       :type => :numeric, 
       :banner => "TARGET-ID",
       :desc => "Target (id) to create node group in"
+    method_option "spans-target", :type => :boolean, :default => false
     def create(name)
       target_id = options["in-target"]
-      save_hash = {
-        :parent_model_name => "target",
-        :display_name => name,
-        :type => "node_group_instance"
+      post_body = {
+        :display_name => name
       }
-      #TODO: migrate to newer method stype than save
-      save_hash[:parent_id] = target_id if target_id
-      post rest_url("node_group/save"), save_hash
+      post_body[:target_id] = target_id if target_id
+      post_body[:spans_target] = true if options["spans-target"]
+      post rest_url("node_group/create"), post_body
     end
 
     desc "delete NODE-GROUP-ID", "Delete node group"
@@ -60,8 +59,8 @@ module DTK::Client
       # Ask user if really want to delete node group, if not then return to dtk-shell without deleting
       return unless confirmation_prompt("Are you sure you want to delete node group '#{id}'?")
 
-      delete_hash = {:id => id}
-      post rest_url("node_group/delete"), delete_hash
+      post_body = {:node_group_id => id}
+      post rest_url("node_group/delete"), post_body
     end
 
     desc "NODE-GROUP-NAME/ID show components|attributes","List components or attributes that are on the node group."
@@ -87,9 +86,13 @@ module DTK::Client
       response.render_table(data_type)
     end
 
-    desc "members NODE-GROUP-ID", "Node group members"
+    desc "NODE-GROUP-NAME/ID members", "List node group members"
     def members(node_group_id)
-      get rest_url("node_group/members/#{node_group_id.to_s}")
+      post_body = {
+        :node_group_id => node_group_id
+      }
+      response = post rest_url("node_group/get_members"), post_body
+      response.render_table(:node)
     end
 
     desc "NODE-GROUP-NAME/ID add-component COMPONENT-TEMPLATE-ID", "Add component template to node group"

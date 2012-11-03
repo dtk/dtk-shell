@@ -17,7 +17,7 @@
       "dns_name": "external_ref.dns_name",
       "size": "external_ref.size.split('.').last",
       "instance_id": "external_ref.instance_id",
-      "node_type": "node_type",
+      "node_type": "dtk_type",
       "zone": "external_ref.availability_zone",
       "os": "os_type",
       "id": "dtk_id"
