@@ -13,7 +13,7 @@ module DTK
       include CommandBase
       extend  CommandBase
       @@cached_response = {}
-      TIME_DIFF         = 3  #second(s)
+      TIME_DIFF         = 2  #second(s)
 
       
       def initialize(args, opts, config)
@@ -129,8 +129,8 @@ module DTK
         end
         
         # if response is ok but response['data'] is nil, display warning message
-        DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")
-        return false
+        DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")
+        return true
       end
 
       def self.get_identifiers(conn)
@@ -147,7 +147,7 @@ module DTK
             return identifiers
           end
           # if response is ok but response['data'] is nil, display warning message
-          DtkLogger.instance.warn("Response data is nil, please check if your request is valid.")          
+          DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")          
         end
         return []
       end
