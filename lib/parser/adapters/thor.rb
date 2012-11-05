@@ -193,20 +193,20 @@ module DTK
           h_dash = ["2014".hex].pack("U")
 
           print message
-          print " [   ]"
+          print " [     ]"
           STDOUT.flush
           time_seconds.downto(1) do
             1.upto(4) do |i|
-              next_output = "\b\b\b\b\b"
+              next_output = "\b\b\b\b\b\b\b"
               case
                when i % 4 == 0
-                 next_output += "[ #{h_dash} ]"
+                next_output  += "[ =   ]"
                when i % 3 == 0
-                next_output += "[ / ]"
+                 next_output += "[  =  ]"
                when i % 2 == 0
-                next_output += "[ | ]"
+                next_output  += "[   = ]"
                else
-                next_output += "[ \\ ]"
+                next_output  += "[  =  ]"
               end
 
               print next_output
@@ -215,7 +215,7 @@ module DTK
             end
           end
           # remove loading animation
-          print "\b\b\b\b\b Refreshing..."
+          print "\b\b\b\b\b\b\bRefreshing..."
           STDOUT.flush
           puts 
         end
