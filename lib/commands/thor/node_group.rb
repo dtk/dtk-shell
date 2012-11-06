@@ -1,9 +1,9 @@
-dtk_require_from_base('command_helpers/task_status')
+dtk_require_common_commands('thor/task_status')
 module DTK::Client
   class NodeGroup < CommandBaseThor
-   no_tasks do
-    include TaskStatusMixin
-   end
+    no_tasks do
+      include TaskStatusMixin
+    end
 
     def self.pretty_print_cols()
       PPColumns.get(:node_group)
