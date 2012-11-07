@@ -13,6 +13,10 @@ module DTK
         get_connection.post(self.class,url,body)
       end
 
+      def post_file(url,body=nil)
+        get_connection.post_file(self.class,url,body)
+      end
+
       def rest_url(route)
         get_connection.rest_url(route)
       end

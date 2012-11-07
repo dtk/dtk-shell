@@ -135,6 +135,7 @@ module DTK::Client
     desc "list","List asssembly instances"
     method_option :list, :aliases => '-ls', :type => :boolean, :default => false
     def list()
+
       data_type = :assembly
       response = post rest_url("assembly/list"), {:subtype  => 'instance'}
 

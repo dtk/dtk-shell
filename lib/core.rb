@@ -190,6 +190,10 @@ module DTK
         Response.new(command_class,json_parse_if_needed(post_raw(url,body)))
       end
 
+      def post_file(command_class,url,body=nil)
+        Response.new(command_class,json_parse_if_needed(post_raw(url,body,{:content_type => 'avro/binary'})))
+      end
+
       def connection_error?
         return !@connection_error.nil?
       end
@@ -230,11 +234,12 @@ module DTK
       ####
       RestClientWrapper = Common::Response::RestClientWrapper
       DefaultRestOpts = {:timeout => 20, :open_timeout => 0.5, :error_response_class => Client::Response::Error}
+
       def get_raw(url)
         RestClientWrapper.get_raw(url,DefaultRestOpts.merge(:cookies => @cookies))
       end
-      def post_raw(url,body)
-        RestClientWrapper.post_raw(url,body,DefaultRestOpts.merge(:cookies => @cookies))
+      def post_raw(url,body,params={})
+        RestClientWrapper.post_raw(url,body,DefaultRestOpts.merge(:cookies => @cookies).merge(params))
       end
 
       def json_parse_if_needed(item)
