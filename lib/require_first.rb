@@ -17,6 +17,10 @@ def dtk_require_from_base(*files_x)
   dtk_require(*files_x)
 end
 
+def dtk_require_common_commands(*files_x)
+  dtk_require_from_base(*files_x.map{|f|"commands/common/#{f}"})
+end
+
 def dtk_nested_require(dir,*files_x)
   files = (files_x.first.kind_of?(Array) ? files_x.first : files_x) 
   caller_dir = caller.first.gsub(/\/[^\/]+$/,"")

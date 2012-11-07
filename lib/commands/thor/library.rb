@@ -16,42 +16,37 @@ module DTK::Client
       not_implemented
     end
     
-    desc "[LIBRARY ID/NAME] list [nodes|components|assemblies]","List libraries, or if type specified type those types in library, possible values nodes, components, assemblies"
-    method_option :list, :type => :boolean, :default => false
-    def list(selected_type='none', library_id=nil)
+    desc "list","List libraries."
+    def list()
       # sets data type to be used when printing table
-      data_type = :library
-
+      #TODO: move away from old-sytle list rest call
       search_hash = SearchHash.new()
       search_hash.cols = pretty_print_cols()
+      response = post rest_url("library/list"), search_hash.post_body_hash
+      response.render_table(:library)
+    end
 
-        if library_id.nil?
-        # there is no library id
-        response = post rest_url("library/list"), search_hash.post_body_hash
-      else
-        # we include library id in search
-        search_hash.filter = [:eq, ":library_library_id", library_id ]
-
-        response = case selected_type.downcase
-        when "nodes"
-          search_hash.cols,data_type = PPColumns.get(:node), :node
-          response = post rest_url("node/list"),search_hash.post_body_hash
-        when "components"
-          search_hash.cols, data_type = PPColumns.get(:component), :component
-          post rest_url("component/list"),search_hash.post_body_hash
-        when "assemblies"
-          # TODO: Filter libraries via assemblie is not working need to talk to Rich
-          search_hash.cols, data_type = PPColumns.get(:assembly), :assembly
-          post rest_url("assembly/list_from_library"),search_hash.post_body_hash
-        else
-          raise DTK::Client::DtkError, "Not supported type '#{selected_type}' for given command."
-        end
+    desc "[LIBRARY ID/NAME] show nodes|components|assemblies","Show nodes, components, or assemblies associated with library"
+    def show(arg1,arg2)
+      library_id,about = [arg2,arg1]
+      # sets data type to be used when printing table
+      case about
+       when "assemblies"
+        data_type = :assembly_template
+       when "nodes"
+        data_type = :node_template
+       when "components"
+        data_type = :component
+       else
+        raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
 
-      # sets table render
-      response.render_table(data_type) unless options.list?
-
-      return response
+      post_body = {
+        :library_id => library_id,
+        :about => about
+      }
+      response = post rest_url("library/info_about"), post_body
+      response.render_table(data_type)
     end
 
     desc "[LIBRARY ID/NAME] import-service-module REMOTE-SERVICE-MODULE[,...]", "Import remote service module into library"

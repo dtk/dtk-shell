@@ -1,5 +1,10 @@
+dtk_require_common_commands('thor/task_status')
 module DTK::Client
   class NodeGroup < CommandBaseThor
+    no_tasks do
+      include TaskStatusMixin
+    end
+
     def self.pretty_print_cols()
       PPColumns.get(:node_group)
     end
@@ -115,6 +120,31 @@ module DTK::Client
       post rest_url("node_group/delete_component"), post_body
     end
 
+    desc "NODE-GROUP-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
+    method_option "commit_msg",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    def converge(node_group_id)
+      # create task
+      post_body = {
+        :node_group_id => node_group_id
+      }
+      post_body.merge!(:commit_msg => options["commit_msg"]) if options["commit_msg"]
+
+      response = post rest_url("node_group/create_task"), post_body
+      return response unless response.ok?
+
+      # execute task
+      task_id = response.data(:task_id)
+      post rest_url("task/execute"), "task_id" => task_id
+    end
+
+    desc "NODE-GROUP-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
+    method_option :wait, :type => :boolean, :default => false
+    def task_status(node_group_id)
+      task_status_aux(node_group_id,:node_group,options)
+    end
 
     #TODO: may deprecate
 =begin
