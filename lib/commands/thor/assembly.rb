@@ -317,9 +317,13 @@ module DTK::Client
       end
     end
 
-    desc "ASSEMBLY-NAME/ID tail NODE-NAME/ID LOG-PATH [--more]","Tail specified number of lines from log"
+    desc "ASSEMBLY-NAME/ID tail NODE-NAME/ID LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
     method_option :more, :type => :boolean, :default => false
-    def tail(node_identifier,log_path,assembly_id)
+    def tail(*rotated_args)
+      # def tail(node_identifier,log_path,grep_option = nil,assembly_id = nil)
+      # need to use rotate_args because last two parameters can't be nil
+      assembly_id,node_identifier,log_path,grep_option = rotate_args(rotated_args)
+     
       last_line = nil
       begin
 
@@ -335,11 +339,15 @@ module DTK::Client
               :subtype         => 'instance',
               :start_line      => last_line,
               :node_identifier => node_identifier,
-              :log_path        => log_path
+              :log_path        => log_path,
+              :grep_option     => grep_option
             }
-            
+
             response = post rest_url("assembly/initiate_get_log"), post_body
-            return response unless response.ok?
+
+            unless response.ok?
+              raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond."
+            end
 
             action_results_id = response.data(:action_results_id)
             action_body = {
@@ -406,7 +414,8 @@ module DTK::Client
         
         t1.join()
         t2.join()
-
+      rescue Interrupt
+        t2.exit()
       rescue DTK::Client::DtkError => e
         t2.exit()
         raise e
