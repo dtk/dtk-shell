@@ -38,19 +38,13 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
 
     # check for errors in response
     unless response_ruby_obj["errors"].nil?
+         
       error_internal  = false
       error_backtrace = nil
       error_code      = nil
 
-      error_msg       = response_ruby_obj['errors'].map{|e| e["message"].gsub(/\.$/,"") unless e["message"].nil?}.join(". ")
+      error_msg       = response_ruby_obj['errors'].map{|e| e["error"].gsub(/\.$/,"") unless e["error"].nil?}.join(". ")
       
-
-      response_ruby_obj["errors"].each do |e|
-        error_code        = e["errors"].first["code"] unless e["errors"].nil?
-        error_internal  ||= e["internal"]
-        error_backtrace ||= e["backtrace"]
-      end
-
       # normalize it for display
       error_msg = error_msg.empty? ? 'No error description found' : "#{error_msg}"
       
