@@ -13,7 +13,7 @@ module DTK::Client
     	# read require files and encode them
       request_body = {}
     	files.each do |file_name|
-    		raise DTK::Client::DtkError, "Unable to load fie: #file_name}" unless File.exists?(file_name)
+    		raise DTK::Client::DtkError, "Unable to load file: #{file_name}" unless File.exists?(file_name)
         # reason for this to file dues to previus match
         agent_name = file_name.match(MATCH_FILE_NAME)[0]
     		File.open(file_name) { |file| request_body.store(agent_name,Base64.encode64(file.read)) }
