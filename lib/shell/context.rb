@@ -168,13 +168,10 @@ module DTK
       # get class identifiers for given thor command, returns array of identifiers
       def get_command_identifiers(thor_command_name)
         command_clazz = get_command_class(thor_command_name)
-        if command_clazz.respond_to?(:get_identifiers)
+        if command_clazz.respond_to?(:whoami) && command_clazz.respond_to?(:get_identifiers)
           return command_clazz.get_identifiers(@conn)
         end
 
-        # if not implemented we are going to let it in the context
-        # TODO: Removed this 'put' after this has been implemented where needed
-        puts "[DEV] Implement 'get_identifiers' method for thor command class: #{thor_command_name} "
         return []
       end
 

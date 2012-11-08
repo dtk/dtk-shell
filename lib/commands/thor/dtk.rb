@@ -87,6 +87,11 @@ module DTK::Client
     def task
       # API descriptor
     end
+
+    desc "developer", "DEV tools only available to developers."
+    def developer
+      # API descriptor
+    end
     
     # we do not need help here
     remove_task(:help,{:undefine => false})
