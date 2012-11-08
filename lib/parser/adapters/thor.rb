@@ -154,7 +154,6 @@ module DTK
   
 
       no_tasks do
-        include DTK::Client::OsUtil
         # Method not implemented error
         def not_implemented
           raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
@@ -226,7 +225,7 @@ module DTK
         #
         def unix_shell(path=nil)
 
-          if is_windows?
+          if OsUtil.is_windows?
             puts "[NOTICE] Unix shell interaction is currenly not supported on Windows."
             return
           end

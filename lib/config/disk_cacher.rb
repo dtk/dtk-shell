@@ -5,10 +5,8 @@ require File.expand_path('../util/os_util', File.dirname(__FILE__))
 
 class DiskCacher
 
-  include DTK::Client::OsUtil
 
-  def initialize(cache_dir=get_temp_location)
-    # this is the dir where we store our cache
+  def initialize(cache_dir=DTK::Client::OsUtil.get_temp_location())
     @cache_dir = cache_dir
   end
   def fetch(url, max_age=0, use_mock_up=true)

@@ -99,6 +99,11 @@ end
 
 prompt = DTK::Shell::Context::DTK_ROOT_PROMPT
 
+DTK::Shell::Context.load_session_history().each do |c|
+  Readline::HISTORY.push(c)
+end
+
+
 begin
   while line = Readline.readline(prompt, true)
     begin
@@ -172,6 +177,9 @@ begin
 rescue Interrupt => e
   #system('stty', stty_save) # Restore
   puts
+ensure
+  # save users history
+  DTK::Shell::Context.save_session_history(Readline::HISTORY.to_a)
   exit
 end
 

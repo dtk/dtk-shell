@@ -15,10 +15,9 @@ class DtkLogger
   DEVELOPMENT_MODE        = Config::Configuration.get(:development_mode)
 
   include Singleton
-  include DTK::Client::OsUtil
 
   def initialize
-    log_location_dir = get_log_location()
+    log_location_dir = DTK::Client::OsUtil.get_log_location()
     begin
       if File.directory?(log_location_dir)
         file = File.open(file_path(), "a")
@@ -37,7 +36,7 @@ class DtkLogger
   end
 
   def file_path()
-    "#{get_log_location()}/#{LOG_FILE_NAME}"
+    "#{DTK::Client::OsUtil.get_log_location()}/#{LOG_FILE_NAME}"
   end
 
   def debug(log_text, sttdout_out=false)

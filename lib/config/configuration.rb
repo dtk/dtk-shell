@@ -20,7 +20,6 @@ dtk_require_from_base('util/os_util')
 
 module Config
   class Configuration
-    include ::DTK::Client::OsUtil
     include Singleton
 
     EXTERNAL_APP_CONF = "client.conf"
@@ -45,7 +44,7 @@ module Config
       end
 
       # We load this if there is no local configuration
-      external_file_location = dtk_home_dir() + "/#{EXTERNAL_APP_CONF}"
+      external_file_location = ::DTK::Client::OsUtil.dtk_home_dir() + "/#{EXTERNAL_APP_CONF}"
       if File.exist?(external_file_location)
         external_configuration = load_configuration_to_hash(external_file_location)
         @cache.merge!(external_configuration)

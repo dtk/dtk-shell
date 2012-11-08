@@ -14,7 +14,7 @@ dtk_require_from_base('util/os_util')
 
 
 def top_level_execute(command=nil,argv=nil,shell_execute=false)
-  include DTK::Client::OsUtil
+  extend DTK::Client::OsUtil
   begin
     $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
     argv ||= ARGV
@@ -137,7 +137,6 @@ module DTK
     class Config < Hash
       include Singleton
       include ParseFile
-      include DTK::Client::OsUtil
       
       def self.[](k)
         Config.instance[k]
@@ -150,7 +149,7 @@ module DTK
       end
       def set_defaults()
         self[:server_port] = 7000
-        self[:component_modules_dir] = module_clone_location(::Config::Configuration.get(:module_location))
+        self[:component_modules_dir] = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
       end
       CONFIG_FILE = File.expand_path("~/.dtkclient")
       def load_config_file()
