@@ -1,5 +1,6 @@
 require 'rest_client'
 require 'json'
+require 'colorize'
 dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
 dtk_require_common_commands('thor/task_status')
@@ -289,7 +290,6 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID tail NODE-NAME/ID LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
     method_option :more, :type => :boolean, :default => false
     def tail(*rotated_args)
-      # def tail(node_identifier,log_path,grep_option = nil,assembly_id = nil)
       # need to use rotate_args because last two parameters can't be nil
       assembly_id,node_identifier,log_path,grep_option = rotate_args(rotated_args)
      
@@ -387,6 +387,72 @@ module DTK::Client
         t2.exit()
       rescue DTK::Client::DtkError => e
         t2.exit()
+        raise e
+      end
+    end
+
+    desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN [GREP-PATTERN]","Grep log from multiple nodes"
+    def grep(*rotated_args)
+      # need to use rotate_args because last two parameters can't be nil
+     assembly_id,log_path,node_pattern,grep_pattern = rotate_args(rotated_args)
+      
+      begin
+        post_body = {
+          :assembly_id     => assembly_id,
+          :subtype         => 'instance',
+          :log_path        => log_path,
+          :node_pattern    => node_pattern,
+          :grep_pattern    => grep_pattern
+        }
+
+        response = post rest_url("assembly/initiate_grep"), post_body
+
+        unless response.ok?
+          raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond."
+        end
+
+        action_results_id = response.data(:action_results_id)
+        action_body = {
+          :action_results_id => action_results_id,
+          :return_only_if_complete => true,
+          :disable_post_processing => true
+        }
+
+        # number of re-tries
+        3.downto(1) do
+          response = post(rest_url("assembly/get_action_results"),action_body)
+
+          # server has found an error
+          if response.data(:results)['error']
+            raise DTK::Client::DtkError, response.data(:results)['error']
+          end
+
+          break if response.data(:is_complete)
+
+          sleep(1)
+        end
+
+        raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
+        
+        console_width = ENV["COLUMNS"].to_i
+
+        response.data(:results).each do |r|
+          raise DTK::Client::DtkError, r[1]["error"] if r[1]["error"]
+
+          if r[1]["output"].empty?
+            puts "NODE-ID #{r[0].inspect.colorize(:green)} - Log does not contain data that matches you pattern #{grep_pattern}!" 
+          else
+            puts "\n"
+            console_width.times do
+              print "="
+            end
+            puts "NODE-ID: #{r[0].inspect.colorize(:green)}\n"
+            puts "Log output:\n"
+            puts r[1]["output"].gsub(/`/,'\'')
+          end
+        end
+        
+      rescue DTK::Client::DtkError => e
         raise e
       end
     end
