@@ -140,6 +140,7 @@ if [ -f ${log_file} ]; then
     echo "DTK client log file already exists $log_file. Continuing installation ..."
 elif [[ ! -d ${log_location} ]]; then
     mkdir -p ${log_location}
+    chown ${SUDO_USER} ${log_location}
     touch $log_file
     chmod 666 $log_file
 elif [ -f $log_file ]; then
