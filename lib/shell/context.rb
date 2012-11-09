@@ -1,6 +1,7 @@
 require File.expand_path('../commands/thor/dtk', File.dirname(__FILE__))
 require File.expand_path('../auxiliary',         File.dirname(__FILE__))
 require 'active_support/core_ext/string/inflections'
+require 'json'
 
 module DTK
   module Shell
@@ -8,8 +9,10 @@ module DTK
       include DTK::Client::Aux
 
       # client commands
-      CLIENT_COMMANDS = ['cc','exit','clear']
-      DTK_ROOT_PROMPT = "dtk:/>"
+      CLIENT_COMMANDS       = ['cc','exit','clear']
+      DTK_ROOT_PROMPT       = "dtk:/>"
+      COMMAND_HISTORY_LIMIT = 200
+      HISTORY_LOCATION      = DTK::Client::OsUtil.dtk_user_app_folder + "shell_history"
 
       # current holds context (list of commands) for active context e.g. dtk:\library>
       attr_accessor :current
@@ -165,13 +168,10 @@ module DTK
       # get class identifiers for given thor command, returns array of identifiers
       def get_command_identifiers(thor_command_name)
         command_clazz = get_command_class(thor_command_name)
-        if command_clazz.respond_to?(:get_identifiers)
+        if command_clazz.respond_to?(:whoami) && command_clazz.respond_to?(:get_identifiers)
           return command_clazz.get_identifiers(@conn)
         end
 
-        # if not implemented we are going to let it in the context
-        # TODO: Removed this 'put' after this has been implemented where needed
-        puts "[DEV] Implement 'get_identifiers' method for thor command class: #{thor_command_name} "
         return []
       end
 
@@ -206,6 +206,35 @@ module DTK
         @cached_tasks.store("#{command_name}_2",tier_2_tasks)
       end
 
+
+      # PART OF THE CODE USED FOR WORKING WITH DTK::Shell HISTORY
+      public
+
+      def self.load_session_history()
+        return [] unless is_there_history_file()
+        content = File.open('/etc/dtk/haris/shell_history','r').read
+        return (content.empty? ? [] : JSON.parse(content))
+      end
+
+      def self.save_session_history(array_of_commands)
+        return [] unless is_there_history_file()
+        # make sure we only save up to 'COMMAND_HISTORY_LIMIT' commands
+        if array_of_commands.size > COMMAND_HISTORY_LIMIT
+          array_of_commands = array_of_commands[-COMMAND_HISTORY_LIMIT,COMMAND_HISTORY_LIMIT+1]
+        end
+
+        File.open('/etc/dtk/haris/shell_history','w').write array_of_commands.to_json
+      end
+
+      private
+
+      def self.is_there_history_file()
+        unless File.exists? HISTORY_LOCATION
+          DtkLogger.instance.info "[INFO] Session shell history has been disabled, please create file '#{HISTORY_LOCATION}' to enable it."
+          return false
+        end
+        return true
+      end
     end
   end
 end

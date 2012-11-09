@@ -245,7 +245,7 @@ module DTK::Client
         raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if module_name.nil? 
       end
 
-      modules_path    = module_clone_location(::Config::Configuration.get(:module_location))
+      modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
       module_location = "#{modules_path}/#{module_name}"
       # check if there is repository cloned 
       unless File.directory?(module_location)

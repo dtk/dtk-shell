@@ -14,7 +14,7 @@ dtk_require_from_base('util/os_util')
 
 
 def top_level_execute(command=nil,argv=nil,shell_execute=false)
-  include DTK::Client::OsUtil
+  extend DTK::Client::OsUtil
   begin
     $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
     argv ||= ARGV
@@ -38,12 +38,17 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
 
     # check for errors in response
     unless response_ruby_obj["errors"].nil?
-         
+
+      error_msg       = ""
       error_internal  = false
       error_backtrace = nil
       error_code      = nil
 
-      error_msg       = response_ruby_obj['errors'].map{|e| e["error"].gsub(/\.$/,"") unless e["error"].nil?}.join(". ")
+      response_ruby_obj['errors'].each do |err|
+        error_msg      +=  err["message"] unless err["message"].nil?
+        error_msg      +=  err["error"]   unless err["error"].nil?
+        error_internal ||= err["internal"]
+      end
       
       # normalize it for display
       error_msg = error_msg.empty? ? 'No error description found' : "#{error_msg}"
@@ -52,8 +57,7 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
       if error_code == "timeout"
         raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
       elsif error_internal
-        DtkLogger.instance.error(error_msg)
-        raise DTK::Client::DtkError, "DTK Server has encountered an internal error. See DTK log (#{DtkLogger.instance.file_path()}) for more details."
+        raise DTK::Client::DtkError, "[SERVER INTERNAL ERROR] #{error_msg}"
       else
         # if usage error occured, display message to console and display that same message to log
         raise DTK::Client::DtkError, "Following error occured: #{error_msg}." 
@@ -137,7 +141,6 @@ module DTK
     class Config < Hash
       include Singleton
       include ParseFile
-      include DTK::Client::OsUtil
       
       def self.[](k)
         Config.instance[k]
@@ -150,7 +153,7 @@ module DTK
       end
       def set_defaults()
         self[:server_port] = 7000
-        self[:component_modules_dir] = module_clone_location(::Config::Configuration.get(:module_location))
+        self[:component_modules_dir] = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
       end
       CONFIG_FILE = File.expand_path("~/.dtkclient")
       def load_config_file()

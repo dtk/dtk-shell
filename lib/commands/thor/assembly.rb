@@ -4,6 +4,7 @@ require 'colorize'
 dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
 dtk_require_common_commands('thor/task_status')
+dtk_require_common_commands('thor/set_required_params')
 
 LOG_SLEEP_TIME   = Config::Configuration.get(:tail_log_frequency)
 DEBUG_SLEEP_TIME = Config::Configuration.get(:debug_task_frequency)
@@ -13,6 +14,7 @@ module DTK::Client
 
     no_tasks do
       include TaskStatusMixin
+      include SetRequiredParamsMixin
     end
 
     def self.pretty_print_cols()
@@ -264,27 +266,7 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
     def set_required_params(assembly_id)
-      post_body = {
-        :assembly_id => assembly_id,
-        :subtype     => 'instance',
-        :filter      => 'required_unset_attributes'
-      }
-      response = post rest_url("assembly/get_attributes"), post_body
-      return response unless response.ok?
-      missing_params = response.data
-      if missing_params.empty?
-        response.set_data('Message' => "No parameters to set.")
-        response
-      else
-        param_bindings = DTK::Shell::InteractiveWizard.new.resolve_missing_params(missing_params)
-        post_body = {
-          :assembly_id => assembly_id,
-          :av_pairs_hash => param_bindings.inject(Hash.new){|h,r|h.merge(r[:id] => r[:value])}
-        }
-        response = post rest_url("assembly/set_attributes"), post_body
-        return response unless response.ok?
-        response.data
-      end
+      set_required_params_aux(assembly_id,:assembly,:instance)
     end
 
     desc "ASSEMBLY-NAME/ID tail NODE-NAME/ID LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
