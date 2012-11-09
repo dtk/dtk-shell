@@ -1,5 +1,11 @@
+dtk_require_common_commands('thor/task_status')
+dtk_require_common_commands('thor/set_required_params')
 module DTK::Client
   class Node < CommandBaseThor
+    no_tasks do
+      include TaskStatusMixin
+      include SetRequiredParamsMixin
+    end
 
     def self.pretty_print_cols()
       PPColumns.get(:node)
@@ -40,6 +46,11 @@ module DTK::Client
       response.render_table(data_type)
     end
 
+    desc "NODE-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
+    def set_required_params(node_id)
+      set_required_params_aux(node_id,:node)
+    end
+
     desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-ID", "Add component template to node"
     def add_component(arg1,arg2)
       node_id,component_template_id = [arg2,arg1]
@@ -60,6 +71,19 @@ module DTK::Client
       post rest_url("node/delete_component"), post_body
     end
 
+    desc "destroy NODE-NAME/ID", "Delete and destroy (terminate) node"
+    def destroy(node_id)
+      post_body = {
+        :node_id => node_id
+      }
+      # Ask user if really want to delete and destroy, if not then return to dtk-shell without deleting
+      return unless confirmation_prompt("Are you sure you want to destroy and delete node (#{node_id})?")
+
+      post rest_url("node/destroy_and_delete"), post_body
+    end
+
+=begin
+TODO: not used yet
     desc "add-to-group NODE-ID NODE-GROUP-ID", "Add node to group"
     def add_to_group(node_id,node_group_id)
       post_body = {
@@ -68,16 +92,7 @@ module DTK::Client
       }
       post rest_url("node/add_to_group"), post_body
     end
-
-    #TODO: temp for testing; should be on target
-    desc "destroy-all", "Delete and destory all target nodes"
-    def destroy_all()
-      # Ask user if really want to delete and destroy all target node, if not then return to dtk-shell without deleting
-      return unless confirmation_prompt("Are you sure you want to delete and destroy all target nodes?")
-
-      post rest_url("project/destroy_and_delete_nodes")
-    end
-    
+=end
   end
 end
 
