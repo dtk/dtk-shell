@@ -40,6 +40,26 @@ module DTK::Client
       response.render_table(data_type)
     end
 
+    desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-ID", "Add component template to node"
+    def add_component(arg1,arg2)
+      node_id,component_template_id = [arg2,arg1]
+      post_body = {
+        :node_id => node_id,
+        :component_template_id => component_template_id
+      }
+      post rest_url("node/add_component"), post_body
+    end
+
+    desc "NODE-NAME/ID delete-component COMPONENT-ID", "Delete component from node"
+    def delete_component(arg1,arg2)
+      node_id,component_id = [arg2,arg1]
+      post_body = {
+        :node_id => node_id,
+        :component_id => component_id
+      }
+      post rest_url("node/delete_component"), post_body
+    end
+
     desc "add-to-group NODE-ID NODE-GROUP-ID", "Add node to group"
     def add_to_group(node_id,node_group_id)
       post_body = {
