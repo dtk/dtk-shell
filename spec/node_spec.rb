@@ -12,25 +12,7 @@ describe DTK::Client::Node do
   	output  = `#{command}`
 
   	it "should list all nodes" do
-  		output.should match(/(node|id|empty|error)/)
-  	end
-  end
-
-  context "#list -t" do
-  	command = "dtk node list -t"
-  	output  = `#{command}`
-
-  	it "should list nodes only in targets" do
-  		output.should match(/(node|id|empty|error)/)
-  	end
-  end
-
-  context "#list -l" do
-  	command = "dtk node list -l"
-  	output  = `#{command}`
-
-  	it "should list nodes only in libraries" do
-  		output.should match(/(node|id|empty|error)/)
+  		output.should match(/(node|id|empty|error|unable)/)
   	end
   end
 
