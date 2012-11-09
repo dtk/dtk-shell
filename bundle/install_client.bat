@@ -1,4 +1,4 @@
-@echo off
+::@echo off
 :: This script clear terminal and starts installation process of dtk client.
 
 :: GLOBAL VAR
@@ -12,8 +12,8 @@ call :check_for_ruby
 call :check_for_ruby_gems 
 call :add_abh_gem_repository
 
-call gem install dtk-common --no-ri
-call gem install dtk-client
+::call gem install dtk-common --no-ri
+call gem install dtk-client --no-ri --no-rdoc
 
 call :create_config_log
 
@@ -78,6 +78,15 @@ echo server_host=%server% >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
 echo server_port=%port%   >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
 
 touch %log_file%
+
+::create dtk dir in user's home
+if not exist %HOMEDRIVE%%HOMEPATH%\dtk (
+  mkdir  %HOMEDRIVE%%HOMEPATH%\dtk
+  )
+if not exist %HOMEDRIVE%%HOMEPATH%\dtk\shell_history.dat (
+  touch %HOMEDRIVE%%HOMEPATH%\dtk\shell_history.dat
+  )
+
 goto :EOF
 
 :: function for checking if executables are available in PATH
