@@ -1,14 +1,15 @@
 dtk_require_common_commands('thor/task_status')
+dtk_require_common_commands('thor/set_required_params')
 module DTK::Client
   class NodeGroup < CommandBaseThor
     no_tasks do
       include TaskStatusMixin
+      include SetRequiredParamsMixin
     end
 
     def self.pretty_print_cols()
       PPColumns.get(:node_group)
     end
-
 
     def self.whoami()
       return :node_group, "node_group/list", nil
@@ -22,30 +23,9 @@ module DTK::Client
       post rest_url("node_group/list"), search_hash.post_body_hash()
     end
 
-    #TODO: may write common inherited version of set_required_params accross commands that need it
     desc "NODE-GROUP-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
     def set_required_params(node_group_id)
-      post_body = {
-        :node_group_id => node_group_id,
-        :subtype     => 'instance',
-        :filter      => 'required_unset_attributes'
-      }
-      response = post rest_url("node_group/get_attributes"), post_body
-      return response unless response.ok?
-      missing_params = response.data
-      if missing_params.empty?
-        response.set_data('Message' => "No parameters to set.")
-        response
-      else
-        param_bindings = DTK::Shell::InteractiveWizard.new.resolve_missing_params(missing_params)
-        post_body = {
-          :node_group_id => node_group_id,
-          :av_pairs_hash => param_bindings.inject(Hash.new){|h,r|h.merge(r[:id] => r[:value])}
-        }
-        response = post rest_url("node_group/set_attributes"), post_body
-        return response unless response.ok?
-        response.data
-      end
+      set_required_params_aux(node_group_id,:node_group)
     end
 
     desc "create NODE-GROUP-NAME [-t TARGET-ID] [--spans-target]", "Create node group"
@@ -115,7 +95,7 @@ module DTK::Client
       post rest_url("node_group/add_component"), post_body
     end
 
-    desc "NODE-GROUP-NAME/ID delete-component COMPONENT-ID", "Delete component from  node group"
+    desc "NODE-GROUP-NAME/ID delete-component COMPONENT-ID", "Delete component from node group"
     def delete_component(arg1,arg2)
       node_group_id,component_id = [arg2,arg1]
       post_body = {

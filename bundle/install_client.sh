@@ -5,6 +5,7 @@
 
 abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
 log_location="/var/log/dtk/${SUDO_USER}"
+etc_location="/etc/dtk/"
 
 
 # FUNCTIONS BEGIN
@@ -139,6 +140,7 @@ if [ -f ${log_file} ]; then
     echo "DTK client log file already exists $log_file. Continuing installation ..."
 elif [[ ! -d ${log_location} ]]; then
     mkdir -p ${log_location}
+    chown ${SUDO_USER} ${log_location}
     touch $log_file
     chmod 666 $log_file
 elif [ -f $log_file ]; then
@@ -167,6 +169,18 @@ if [ -f $file_path ]; then
     rm $file_path
   fi
 fi
+
+#create dtk dir in /etc
+etc_location_full=${etc_location}/${SUDO_USER}
+if [[ ! -d ${etc_location_full} ]]; then
+  mkdir -p ${etc_location_full}
+  chown ${SUDO_USER} ${etc_location_full}
+fi
+if [[ ! -f ${etc_location_full}/shell_history.dat ]]; then
+  touch ${etc_location_full}/shell_history.dat
+  chown ${SUDO_USER} ${etc_location_full}/shell_history.dat
+fi
+
 
 #: << 'END'
 if [[ ${autoinstall} == "false" ]]; then

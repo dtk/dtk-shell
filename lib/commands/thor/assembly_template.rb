@@ -77,7 +77,7 @@ module DTK::Client
       }
       post_body.merge!(:target_id => options["in-target"]) if options["in-target"]
       post_body.merge!(:name => name) if name
-      return post rest_url("assembly/stage"), post_body
+      post rest_url("assembly/stage"), post_body
     end
 
     desc "ASSEMBLY-TEMPLATE-NAME/ID deploy [INSTANCE-NAME] [-m COMMIT-MSG]", "Stage and deploy assembly template in target."
