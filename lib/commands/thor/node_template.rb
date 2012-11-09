@@ -44,24 +44,20 @@ module DTK::Client
       post rest_url("node/image_upgrade"), post_body
     end
 
-    desc "NODE-NAME/ID stage TARGET-NAME/ID", "Stage indentified target for given node template."
-    method_option :list, :type => :boolean, :default => false
-    def stage(target_id, node_id=nil)
-      data_type = :node
-
+    #TODO: move to form desc "NODE-TEMPLATE-NAME/ID stage [INSTANCE-NAME]"
+    #will then have to reverse arguments
+    desc "stage NODE-TEMPLATE-ID [INSTANCE-NAME]", "Stage node template in target."
+    method_option "in-target",:aliases => "-t" ,
+      :type => :numeric, 
+      :banner => "TARGET-ID",
+      :desc => "Target (id) to create assembly in" 
+    def stage(node_template_id,name=nil)
       post_body = {
-        :node_id => node_id
+        :node_template_id => node_template_id
       }
-
-      unless target_id.nil?
-        post_body.merge!({:target_id => target_id})
-      end
-      
-      response = post rest_url("node/stage"), post_body
-
-      response.render_table(data_type) unless options.list?
-
-      return response
+      post_body.merge!(:target_id => options["in-target"]) if options["in-target"]
+      post_body.merge!(:name => name) if name
+      post rest_url("node/stage"), post_body
     end
   end
 end

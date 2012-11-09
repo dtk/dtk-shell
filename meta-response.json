@@ -26,6 +26,7 @@
   "node_template": {
     "order": [
       "name",
+      "id",
       "os",
       "template_type",
       "image_id",
@@ -33,6 +34,7 @@
       "region"
     ],
     "mapping": {
+      "id": "dtk_id",
       "name": "display_name",
       "os": "os_type",
       "template_type": "dtk_type",
