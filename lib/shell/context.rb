@@ -223,7 +223,7 @@ module DTK
           array_of_commands = array_of_commands[-COMMAND_HISTORY_LIMIT,COMMAND_HISTORY_LIMIT+1]
         end
 
-        File.open('/etc/dtk/haris/shell_history','w').write array_of_commands.to_json
+        File.open(HISTORY_LOCATION,'w').write array_of_commands.to_json
       end
 
       private
