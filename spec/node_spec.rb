@@ -12,7 +12,7 @@ describe DTK::Client::Node do
   	output  = `#{command}`
 
   	it "should list all nodes" do
-  		output.should match(/(node|id|empty|error|unable)/)
+  		output.should match(/(node|id|empty|error|WARNING)/)
   	end
   end
 

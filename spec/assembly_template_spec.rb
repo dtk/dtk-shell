@@ -15,7 +15,7 @@ describe DTK::Client::AssemblyTemplate do
     output = `dtk assembly-template list`
 
     it "should contain assemblies" do
-      output.should match(/(assembly|id|empty|Missing|error)/)
+      output.should match(/(assembly|id|empty|Missing|error|WARNING)/)
     end
 
     unless output.nil?
@@ -31,7 +31,7 @@ describe DTK::Client::AssemblyTemplate do
         output  = `#{command}`
 
         it "should list all #{list_element} for assembly-template with id #{$assembly_template_id}" do
-          output.should match(/(name|id|empty|error)/)
+          output.should match(/(name|id|empty|error|WARNING)/)
         end
       end
 	  end
