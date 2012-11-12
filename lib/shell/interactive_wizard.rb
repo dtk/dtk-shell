@@ -33,8 +33,9 @@ module DTK
 
             puts "Please enter #{string_identifier}:"
             while line = Readline.readline(": ", true)
-              user_provided_params << {:id => param_info['id'], :value => line}
-              checkup_hash[param_info['description'].to_sym] = line
+              id = param_info['id']
+              user_provided_params << {:id => id, :value => line}
+              checkup_hash[id] = {:value => line, :description => description}
               break
             end
             
@@ -64,8 +65,10 @@ module DTK
 
       def pretty_print_provided_user_info(user_information)
         puts PP_LINE_HEAD
-        user_information.each do |key,value|
-          printf "%48s : %s\n", key.to_s.colorize(:green), value.colorize(:yellow)
+        user_information.each do |key,info|
+          description = info[:description]
+          value = info[:value]
+          printf "%48s : %s\n", description.colorize(:green), value.colorize(:yellow)
         end
         puts PP_LINE
         puts
