@@ -373,18 +373,22 @@ module DTK::Client
       end
     end
 
-    desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN [GREP-PATTERN]","Grep log from multiple nodes"
+    desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [STOP-ON-FIRST-MATCH]","Grep log from multiple nodes"
     def grep(*rotated_args)
       # need to use rotate_args because last two parameters can't be nil
-     assembly_id,log_path,node_pattern,grep_pattern = rotate_args(rotated_args)
-      
+    assembly_id,log_path,node_pattern,grep_pattern,stop_on_first_match = rotate_args(rotated_args)
+    
+    unless (stop_on_first_match.nil? || stop_on_first_match.eql?('false') || stop_on_first_match.eql?('true'))  
+      raise DTK::Client::DtkError, "STOP-ON-FIRST-MATCH parameter should be set to true or false."
+    end
       begin
         post_body = {
-          :assembly_id     => assembly_id,
-          :subtype         => 'instance',
-          :log_path        => log_path,
-          :node_pattern    => node_pattern,
-          :grep_pattern    => grep_pattern
+          :assembly_id         => assembly_id,
+          :subtype             => 'instance',
+          :log_path            => log_path,
+          :node_pattern        => node_pattern,
+          :grep_pattern        => grep_pattern,
+          :stop_on_first_match => stop_on_first_match
         }
 
         response = post rest_url("assembly/initiate_grep"), post_body

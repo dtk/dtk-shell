@@ -212,7 +212,7 @@ module DTK
 
       def self.load_session_history()
         return [] unless is_there_history_file()
-        content = File.open('/etc/dtk/haris/shell_history','r').read
+        content = File.open(HISTORY_LOCATION,'r').read
         return (content.empty? ? [] : JSON.parse(content))
       end
 
