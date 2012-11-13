@@ -1,6 +1,6 @@
 source 'http://rubygems.org'
 
-gem 'dtk-client', :group => :deploy
+#gem 'dtk-client', :group => :deploy
 gem 'rest-client','1.6.7'
 gem 'json','1.7.4'
 gem 'rspec'
