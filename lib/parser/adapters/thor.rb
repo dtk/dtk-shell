@@ -45,11 +45,14 @@ module DTK
             if (argv.size < required_params + 1)
               raise DTK::Client::DtkError, "Method 'dtk #{argv[1]}' requires at least #{required_params-argv.size} argument."
             end
-
+            
             # first element goes on the end
             argv << argv.shift
           end
         end
+
+        # if task name is not in first place, switch arguments positions
+        argv << argv.shift unless all_task_names.include?(argv[0])
 
         argv
       end
