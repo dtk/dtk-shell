@@ -269,7 +269,7 @@ module DTK::Client
       set_required_params_aux(assembly_id,:assembly,:instance)
     end
 
-    desc "ASSEMBLY-NAME/ID tail NODE-NAME/ID LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
+    desc "ASSEMBLY-NAME/ID tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
     method_option :more, :type => :boolean, :default => false
     def tail(*rotated_args)
       # need to use rotate_args because last two parameters can't be nil
@@ -297,7 +297,7 @@ module DTK::Client
             response = post rest_url("assembly/initiate_get_log"), post_body
 
             unless response.ok?
-              raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond."
+              raise DTK::Client::DtkError, "Error while getting log from server, there was no successful response."
             end
 
             action_results_id = response.data(:action_results_id)
@@ -373,14 +373,14 @@ module DTK::Client
       end
     end
 
-    desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [STOP-ON-FIRST-MATCH]","Grep log from multiple nodes"
+    desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first_match]","Grep log from multiple nodes"
+    method_option :first_match, :type => :boolean, :default => false
     def grep(*rotated_args)
       # need to use rotate_args because last two parameters can't be nil
-    assembly_id,log_path,node_pattern,grep_pattern,stop_on_first_match = rotate_args(rotated_args)
+    assembly_id,log_path,node_pattern,grep_pattern = rotate_args(rotated_args)
     
-    unless (stop_on_first_match.nil? || stop_on_first_match.eql?('false') || stop_on_first_match.eql?('true'))  
-      raise DTK::Client::DtkError, "STOP-ON-FIRST-MATCH parameter should be set to true or false."
-    end
+    stop_on_first_match = true if options.first_match?
+   
       begin
         post_body = {
           :assembly_id         => assembly_id,
@@ -394,7 +394,7 @@ module DTK::Client
         response = post rest_url("assembly/initiate_grep"), post_body
 
         unless response.ok?
-          raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond."
+          raise DTK::Client::DtkError, "Error while getting log from server, there was no successful response."
         end
 
         action_results_id = response.data(:action_results_id)
@@ -409,8 +409,10 @@ module DTK::Client
           response = post(rest_url("assembly/get_action_results"),action_body)
 
           # server has found an error
-          if response.data(:results)['error']
-            raise DTK::Client::DtkError, response.data(:results)['error']
+          unless response.data.nil?
+            if response.data(:results)['error']
+              raise DTK::Client::DtkError, response.data(:results)['error']
+            end
           end
 
           break if response.data(:is_complete)
