@@ -23,6 +23,16 @@ module DTK::Client
       post rest_url("node_group/list"), search_hash.post_body_hash()
     end
 
+    desc "NODE-GROUP-NAME/ID set ATTRIBUTE-ID VALUE", "Set node group attribute value"
+    def set(attr_id,value,node_group_id)
+      post_body = {
+        :node_group_id => node_group_id,
+        :pattern => attr_id,
+        :value => value
+      }
+      post rest_url("node_group/set_attributes"), post_body
+    end
+
     desc "NODE-GROUP-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
     def set_required_params(node_group_id)
       set_required_params_aux(node_group_id,:node_group)
