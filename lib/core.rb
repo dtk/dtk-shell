@@ -63,8 +63,8 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
       elsif error_internal
         raise DTK::Client::DtkError, "[SERVER INTERNAL ERROR] #{error_msg}"
       else
-        # if usage error occured, display message to console and display that same message to log
-        raise DTK::Client::DtkError, "Following error occured: #{error_msg}." 
+        # if usage error occurred, display message to console and display that same message to log
+        raise DTK::Client::DtkError, "Following error occurred: #{error_msg}." 
       end
     end
 
