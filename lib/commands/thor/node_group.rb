@@ -20,7 +20,8 @@ module DTK::Client
       search_hash = SearchHash.new()
       search_hash.cols = pretty_print_cols()
       search_hash.filter = [:oneof, ":type", ["node_group_instance"]]
-      post rest_url("node_group/list"), search_hash.post_body_hash()
+      response = post rest_url("node_group/list"), search_hash.post_body_hash()
+      response.render_table(:node_group)
     end
 
     desc "NODE-GROUP-NAME/ID set ATTRIBUTE-ID VALUE", "Set node group attribute value"
