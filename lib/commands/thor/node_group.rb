@@ -96,7 +96,7 @@ module DTK::Client
       response.render_table(:node)
     end
 
-    desc "NODE-GROUP-NAME/ID add-component COMPONENT-TEMPLATE-ID", "Add component template to node group"
+    desc "NODE-GROUP-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node group"
     def add_component(arg1,arg2)
       node_group_id,component_template_id = [arg2,arg1]
       post_body = {

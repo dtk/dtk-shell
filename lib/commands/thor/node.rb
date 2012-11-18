@@ -60,7 +60,7 @@ module DTK::Client
       set_required_params_aux(node_id,:node)
     end
 
-    desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-ID", "Add component template to node"
+    desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node"
     def add_component(arg1,arg2)
       node_id,component_template_id = [arg2,arg1]
       post_body = {
