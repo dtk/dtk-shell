@@ -15,10 +15,19 @@ module DTK::Client
       return :node, "node/list", nil
     end
     
-    desc "list","List node insatnces"
+    desc "list","List node instances"
     def list()
       response = post rest_url("node/list")
       response.render_table(:node)
+    end
+
+    desc "NODE-NAME/ID info","Info about node"
+    def info(node_id)
+      post_body = {
+        :node_id => node_id,
+        :subtype => 'instance',
+      }
+       post rest_url("node/info"), post_body
     end
 
     desc "NODE-NAME/ID show components","List components that are on the node instance."
