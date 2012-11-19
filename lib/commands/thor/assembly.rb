@@ -312,8 +312,10 @@ module DTK::Client
               response = post(rest_url("assembly/get_action_results"),action_body)
 
               # server has found an error
-              if response.data(:results)['error']
-                raise DTK::Client::DtkError, response.data(:results)['error']
+              unless response.data(:results).nil?
+                if response.data(:results)['error']
+                  raise DTK::Client::DtkError, response.data(:results)['error']
+                end
               end
 
               break if response.data(:is_complete)
@@ -409,7 +411,7 @@ module DTK::Client
           response = post(rest_url("assembly/get_action_results"),action_body)
 
           # server has found an error
-          unless response.data.nil?
+          unless response.data(:results).nil?
             if response.data(:results)['error']
               raise DTK::Client::DtkError, response.data(:results)['error']
             end
