@@ -50,9 +50,9 @@ module DTK
             argv << argv.shift
           end
         end
-
+        
         # if task name is not in first place, switch arguments positions
-        argv << argv.shift unless all_task_names.include?(argv[0])
+        argv << argv.shift unless (all_task_names.include?(argv[0]) || argv.empty?)
 
         argv
       end
