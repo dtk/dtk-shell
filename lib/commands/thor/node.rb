@@ -15,10 +15,19 @@ module DTK::Client
       return :node, "node/list", nil
     end
     
-    desc "list","List node insatnces"
+    desc "list","List node instances"
     def list()
       response = post rest_url("node/list")
       response.render_table(:node)
+    end
+
+    desc "NODE-NAME/ID info","Info about node"
+    def info(node_id)
+      post_body = {
+        :node_id => node_id,
+        :subtype => 'instance',
+      }
+       post rest_url("node/info"), post_body
     end
 
     desc "NODE-NAME/ID show components","List components that are on the node instance."
@@ -35,9 +44,8 @@ module DTK::Client
       case about
         when "components":
           data_type = :component
-        #TODO: treat
-        #when "attributes":
-        #  data_type = :attribute
+        when "attributes":
+          data_type = :attribute
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
@@ -46,12 +54,22 @@ module DTK::Client
       response.render_table(data_type)
     end
 
+    desc "NODE-NAME/ID set ATTRIBUTE-ID VALUE", "Set node group attribute value"
+    def set(attr_id,value,node_id)
+      post_body = {
+        :node_id => node_id,
+        :pattern => attr_id,
+        :value => value
+      }
+      post rest_url("node/set_attributes"), post_body
+    end
+
     desc "NODE-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
     def set_required_params(node_id)
       set_required_params_aux(node_id,:node)
     end
 
-    desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-ID", "Add component template to node"
+    desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node"
     def add_component(arg1,arg2)
       node_id,component_template_id = [arg2,arg1]
       post_body = {
@@ -69,6 +87,32 @@ module DTK::Client
         :component_id => component_id
       }
       post rest_url("node/delete_component"), post_body
+    end
+
+    desc "NODE-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
+    method_option "commit_msg",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    def converge(node_id)
+      # create task
+      post_body = {
+        :node_id => node_id
+      }
+      post_body.merge!(:commit_msg => options["commit_msg"]) if options["commit_msg"]
+
+      response = post rest_url("node/create_task"), post_body
+      return response unless response.ok?
+
+      # execute task
+      task_id = response.data(:task_id)
+      post rest_url("task/execute"), "task_id" => task_id
+    end
+
+    desc "NODE-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
+    method_option :wait, :type => :boolean, :default => false
+    def task_status(node_id)
+      task_status_aux(node_id,:node,options)
     end
 
     desc "destroy NODE-NAME/ID", "Delete and destroy (terminate) node"
