@@ -217,12 +217,24 @@ module DTK::Client
       nil
     end
 
-    desc "ASSEMBLY-NAME/ID remove-component COMPONENT-ID","Removes component from targeted assembly."
-    def remove_component(component_id,assembly_id)
+    desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node"
+    def add_component(arg1,arg2,arg3)
+      assembly_id,node_id,component_template_id = [arg3,arg1,arg2]
       post_body = {
-        :id => component_id
+        :assembly_id => assembly_id,
+        :node_id => node_id,
+        :component_template_id => component_template_id
       }
-      response = post(rest_url("component/delete"),post_body)
+      post rest_url("assembly/add_component"), post_body
+    end
+
+    desc "ASSEMBLY-NAME/ID delete-component COMPONENT-ID","Delete component from assembly"
+    def delete_component(component_id,assembly_id)
+      post_body = {
+        :assembly_id => assembly_id,
+        :component_id => component_id
+      }
+      response = post(rest_url("assembly/delete_component"),post_body)
     end
 
 
