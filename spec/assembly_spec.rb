@@ -53,9 +53,10 @@ describe DTK::Client::Assembly do
       output.should match(/(info|empty|error)/)
     end
 
-    it "should have assembly remove-component listing" do
-      output.should match(/(remove-component|empty|error)/)
-    end
+    # remove-component command is not in the list
+    # it "should have assembly remove-component listing" do
+    #   output.should match(/(remove-component|empty|error)/)
+    # end
 
     it "should have assembly list listing" do
       output.should match(/(list|empty|error)/)
