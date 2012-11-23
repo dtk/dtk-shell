@@ -36,7 +36,7 @@ module DTK::Client
       post rest_url("task/create_task_from_pending_changes"),post_hash_body
     end
 
-    desc "execute TASK-ID", "Execute task"
+    desc "TASK-NAME/ID execute", "Execute task"
     def execute(task_id)
       post rest_url("task/execute"), :task_id => task_id
     end
