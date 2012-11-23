@@ -45,11 +45,14 @@ module DTK
             if (argv.size < required_params + 1)
               raise DTK::Client::DtkError, "Method 'dtk #{argv[1]}' requires at least #{required_params-argv.size} argument."
             end
-
+            
             # first element goes on the end
             argv << argv.shift
           end
         end
+        
+        # if task name is not in first place, switch arguments positions
+        argv << argv.shift unless (all_task_names.include?(argv[0]) || argv.empty?)
 
         argv
       end
@@ -117,18 +120,22 @@ module DTK
       # we allow change only for valid ID/NAME
       def self.valid_id?(value, conn)
         @conn    = conn if @conn.nil?
-
         clazz, endpoint, subtype = whoami()
-        response = get_cached_response(clazz, endpoint, subtype)
-        
-        unless (response.nil? || response.empty? || response['data'].nil?)
-          response['data'].each do |element|
-            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+
+        # when server is busy, we try 3 times to get response and then prints warning if response is not ok
+        3.downto(1) do
+          response = get_cached_response(clazz, endpoint, subtype)
+          
+          unless (response.nil? || response.empty? || response['data'].nil?)
+            response['data'].each do |element|
+              return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+            end
+            return false
           end
-          return false
+
+          sleep(1)
         end
-        
-        # if response is ok but response['data'] is nil, display warning message
+
         DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")
         return true
       end
@@ -136,19 +143,25 @@ module DTK
       def self.get_identifiers(conn)
         @conn    = conn if @conn.nil?
         clazz, endpoint, subtype = whoami()
-        response = get_cached_response(clazz, endpoint, subtype)
 
-        unless (response.nil? || response.empty?)
-          unless response['data'].nil?
-            identifiers = []
-            response['data'].each do |element|
-               identifiers << element['display_name']
-            end
-            return identifiers
+        # when server is busy, we try 3 times to get response and then prints warning if response is not ok
+        3.downto(1) do
+          response = get_cached_response(clazz, endpoint, subtype)
+
+          unless (response.nil? || response.empty?)
+            unless response['data'].nil?
+              identifiers = []
+              response['data'].each do |element|
+                 identifiers << element['display_name']
+              end
+              return identifiers
+            end          
           end
-          # if response is ok but response['data'] is nil, display warning message
-          DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")          
+
+          sleep(1)
         end
+
+        DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")
         return []
       end
   

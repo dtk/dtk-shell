@@ -114,7 +114,7 @@ module DTK
                 # when chaining comands there are situations where more complex strcture
                 # e.g. external_ref.region will not be there. So we are handling that case
                 # make sure when in development to disable this TODO: better solution needed
-                raise DTK::Client::DtkError,"Error with missing metadata occured. There is a mistake in table metadata or unexpected data presented to table view."
+                raise DTK::Client::DtkError,"Error with missing metadata occurred. There is a mistake in table metadata or unexpected data presented to table view."
               end
             end 
           end

@@ -50,7 +50,7 @@ module DTK::Client
     method_option "in-target",:aliases => "-t" ,
       :type => :numeric, 
       :banner => "TARGET-ID",
-      :desc => "Target (id) to create assembly in" 
+      :desc => "Target (id) to create node insatnce in" 
     def stage(node_template_id,name=nil)
       post_body = {
         :node_template_id => node_template_id

@@ -20,7 +20,18 @@ module DTK::Client
       search_hash = SearchHash.new()
       search_hash.cols = pretty_print_cols()
       search_hash.filter = [:oneof, ":type", ["node_group_instance"]]
-      post rest_url("node_group/list"), search_hash.post_body_hash()
+      response = post rest_url("node_group/list"), search_hash.post_body_hash()
+      response.render_table(:node_group)
+    end
+
+    desc "NODE-GROUP-NAME/ID set ATTRIBUTE-ID VALUE", "Set node group attribute value"
+    def set(attr_id,value,node_group_id)
+      post_body = {
+        :node_group_id => node_group_id,
+        :pattern => attr_id,
+        :value => value
+      }
+      post rest_url("node_group/set_attributes"), post_body
     end
 
     desc "NODE-GROUP-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
@@ -85,7 +96,7 @@ module DTK::Client
       response.render_table(:node)
     end
 
-    desc "NODE-GROUP-NAME/ID add-component COMPONENT-TEMPLATE-ID", "Add component template to node group"
+    desc "NODE-GROUP-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node group"
     def add_component(arg1,arg2)
       node_group_id,component_template_id = [arg2,arg1]
       post_body = {

@@ -4,10 +4,8 @@
       "id",
       "name",
       "node_type",
-      "region",
       "instance_id",
       "size",
-      "zone",
       "os",
       "dns_name"
     ],
@@ -21,6 +19,16 @@
       "zone": "external_ref.availability_zone",
       "os": "os_type",
       "id": "dtk_id"
+    }
+  },
+  "node_group": {
+    "order": [
+      "name",
+      "id"
+    ],
+    "mapping": {
+      "id": "dtk_id",
+      "name": "display_name"
     }
   },
   "node_template": {
