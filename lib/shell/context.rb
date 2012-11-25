@@ -9,7 +9,7 @@ module DTK
       include DTK::Client::Aux
 
       # client commands
-      CLIENT_COMMANDS       = ['cc','exit','clear']
+      CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs']
       DTK_ROOT_PROMPT       = "dtk:/>"
       COMMAND_HISTORY_LIMIT = 200
       HISTORY_LOCATION      = DTK::Client::OsUtil.dtk_user_app_folder + "shell_history"
@@ -17,11 +17,12 @@ module DTK
       # current holds context (list of commands) for active context e.g. dtk:\library>
       attr_accessor :current
       attr_accessor :active_commands
+      attr_accessor :dirs
 
       ROOT_TASKS = DTK::Client::Dtk.task_names
       
       def initialize
-        @cached_tasks, @active_commands = {}, []
+        @cached_tasks, @active_commands, @dirs = {}, [], []
         @conn = DTK::Client::Conn.new()
 
         # if connection parameters are not set up properly, print warning and exit dtk_shell
@@ -65,6 +66,11 @@ module DTK
         comp = proc { |s| context_commands.grep( /^#{Regexp.escape(s)}/ ) }
 
         Readline.completion_proc = comp
+      end
+
+      def push_context()
+        @current_path = "/#{@active_commands.join('/')}"
+        @dirs.unshift(@current_path) unless @current_path.nil?
       end
 
       # resets context

@@ -125,15 +125,15 @@ module DTK
         # when server is busy, we try 3 times to get response and then prints warning if response is not ok
         3.downto(1) do
           response = get_cached_response(clazz, endpoint, subtype)
-          
+
           unless (response.nil? || response.empty? || response['data'].nil?)
             response['data'].each do |element|
               return true if (element['id'].to_s==value || element['display_name'].to_s==value)
             end
             return false
           end
-
-          sleep(1)
+          
+          sleep(2)
         end
 
         DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")
@@ -158,7 +158,7 @@ module DTK
             end          
           end
 
-          sleep(1)
+          sleep(2)
         end
 
         DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")

@@ -24,7 +24,7 @@ ALIAS_COMMANDS = {
 
 # METHODS
 
-def change_context(args)
+def change_context(args, push_context=false)
   return DTK::Shell::Context::DTK_ROOT_PROMPT if args.empty?
 
   begin
@@ -32,15 +32,14 @@ def change_context(args)
     if args.instance_of?(Array) && args.size > 1
       args = args.join('/')
     end
-
     # first command is the one we take context from
     command = args.first
 
     # check for root of context
-    if '/'.eql?(command[0,1])
+    if ('/'.eql?(command[0,1]))
       @context.reset()
       next_command = command[1,command.size]
-      return change_context(next_command)
+      return change_context(next_command,push_context)
     end
 
     # for multi context e.g. `cc library/public`
@@ -59,14 +58,15 @@ def change_context(args)
       @context.remove_last_command
       # since we support two level max this will be tier 1 command or root
       command = @context.tier_1_command
-    else 
+    else
       # validates command
       @context.command_valid?(command)
       # set command to context
-      @context.insert_active_command(command)
+      @context.insert_active_command(command) unless @context.tier_2?
     end
 
     # loads context for given command
+    @context.push_context() if push_context
     @context.load_context(command)
 
   rescue DTK::Shell::Error => e
@@ -95,7 +95,7 @@ rescue DTK::Client::DtkError => e
   exit
 end
 
-@t1 = nil
+@t1   = nil
 
 prompt = DTK::Shell::Context::DTK_ROOT_PROMPT
 
@@ -125,6 +125,16 @@ begin
         args << "/" if args.empty?
         # changes context based on passed args
         prompt = change_context(args)
+      elsif ('popc' == cmd)
+          args = []
+          @context.dirs.shift()
+          args << (@context.dirs.first.nil? ? '/' : @context.dirs.first)
+          prompt = change_context(args)
+      elsif ('pushc' == cmd)
+          args << (@context.dirs[1] if args.empty?)
+          prompt = change_context(args,true)
+      elsif ('dirs' == cmd)
+        puts @context.dirs.inspect
       else
         # if e.g "list libraries" is sent instead of "library list" we reverse commands
         # and still search for 'library list', this happens only on root
