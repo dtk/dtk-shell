@@ -36,6 +36,28 @@ module DTK::Client
       post rest_url("assembly/promote_to_library"), post_body
     end
 
+      desc "ASSEMBLY-NAME/ID start", "Starts all assembly's nodes"
+    def start(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id
+      }
+
+      response = post rest_url("assembly/start"), post_body
+
+      task_id = response.data(:task_id)
+      response = post(rest_url("task/execute"), "task_id" => task_id)
+    end
+
+    desc "ASSEMBLY-NAME/ID stop", "Stops all assembly's nodes"
+    def stop(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id
+      }
+
+      post rest_url("assembly/stop"), post_body
+    end
+
+
     desc "ASSEMBLY-NAME/ID create-new-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Create a new assembly template from workspace assembly" 
     def create_new_template(arg1,arg2,arg3)
       #assembly_id is in last position
@@ -160,6 +182,19 @@ module DTK::Client
      
       return response
     end
+
+=begin HELPER FUNCTION DEV
+    desc "delete-all", "nenene"
+    def delete_all()
+      response = list()
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require 'ap'
+    
+      response.data.each do |assembly|
+        ap delete_and_destroy(assembly['id'])
+      end
+    end
+=end
 
     desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
     def list_smoketests(assembly_id)
