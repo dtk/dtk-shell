@@ -1,8 +1,13 @@
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_dtk_common('grit_adapter')
+dtk_require_common_commands('thor/clone')
 
 module DTK::Client
   class Module < CommandBaseThor
+
+    no_tasks do
+      include CloneMixin
+    end
 
     def self.whoami()
       return :module_component, "component_module/list", nil
@@ -198,27 +203,7 @@ module DTK::Client
     desc "MODULE-ID/NAME clone [VERSION]", "Clone into client the component module files"
     def clone(arg1,arg2=nil,internal_trigger=false)
       component_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1]) 
-      post_body = {
-        :component_module_id => component_module_id
-      }
-      post_body.merge!(:version => version) if version
-
-      response = post(rest_url("component_module/create_workspace_branch"),post_body)
-      return response unless response.ok?
-
-      module_name,repo_url,branch = response.data(:module_name,:repo_url,:workspace_branch)
-      dtk_require_from_base('command_helpers/git_repo')
-      response = GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
-
-      if response.ok?
-        puts "Module '#{module_name}' has been successfully cloned!"
-        unless internal_trigger
-          if confirmation_prompt("Would you like to edit cloned module now?")
-            return edit(module_name)
-          end
-        end
-      end
-      response
+      clone_aux(:component_module,component_module_id,version,internal_trigger)
     end
 
     desc "MODULE-ID/NAME edit","Switch to unix editing for given module."

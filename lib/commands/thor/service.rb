@@ -1,8 +1,14 @@
 #TODO: may be consistent on whether service module id or service module name used as params
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_from_base('command_helpers/git_repo')
+dtk_require_common_commands('thor/clone')
+
 module DTK::Client
   class Service < CommandBaseThor
+
+    no_tasks do
+      include CloneMixin
+    end
 
     def self.pretty_print_cols()
       PPColumns.get(:service_module)
@@ -90,6 +96,18 @@ module DTK::Client
       }
       post rest_url("service_module/pull_from_remote"), post_body
     end
+
+    ##
+    #
+    # internal_trigger: this flag means that other method (internal) has trigger this.
+    #                   This will change behaviour of method
+    #
+    desc "SERVICE-ID/NAME clone [VERSION]", "Clone into client the service module files"
+    def clone(arg1,arg2=nil,internal_trigger=false)
+      service_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1]) 
+      clone_aux(:service_module,service_module_id,version,internal_trigger)
+    end
+
 
     # TODO: Check to see if we are deleting this
     desc "create SERVICE-NAME [library_id]", "Create an empty service module in library"
