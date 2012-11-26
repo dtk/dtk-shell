@@ -2,12 +2,14 @@
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_from_base('command_helpers/git_repo')
 dtk_require_common_commands('thor/clone')
+dtk_require_common_commands('thor/push_clone_changes')
 
 module DTK::Client
   class Service < CommandBaseThor
 
     no_tasks do
       include CloneMixin
+      include PushCloneChangesMixin
     end
 
     def self.pretty_print_cols()
@@ -108,6 +110,12 @@ module DTK::Client
       clone_aux(:service_module,service_module_id,version,internal_trigger)
     end
 
+    desc "SERVICE-ID/NAME push-clone-changes [VERSION]", "Push changes from local copy of service module to server"
+    def push_clone_changes(arg1,arg2=nil)
+      service_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1])
+      push_clone_changes_aux(:service_module,service_module_id,version)
+    end
+
 
     # TODO: Check to see if we are deleting this
     desc "create SERVICE-NAME [library_id]", "Create an empty service module in library"
@@ -165,7 +173,7 @@ module DTK::Client
       #require put here so dont necessarily have to install jenkins client gems
 
       dtk_require_from_base('command_helpers/jenkins_client')
-      response = get rest_url("service_module/workspace_branch_info/#{service_module_id.to_s}")
+      response = get rest_url("service_module/deprecate_workspace_branch_info/#{service_module_id.to_s}")
       unless response.ok?
         errors_message = ''
         response['errors'].each { |error| errors_message += ", reason='#{error['code']}' message='#{error['message']}'" }
