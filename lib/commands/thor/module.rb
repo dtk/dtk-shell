@@ -1,8 +1,15 @@
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_dtk_common('grit_adapter')
+dtk_require_common_commands('thor/clone')
+dtk_require_common_commands('thor/push_clone_changes')
 
 module DTK::Client
   class Module < CommandBaseThor
+
+    no_tasks do
+      include CloneMixin
+      include PushCloneChangesMixin
+    end
 
     def self.whoami()
       return :module_component, "component_module/list", nil
@@ -198,27 +205,7 @@ module DTK::Client
     desc "MODULE-ID/NAME clone [VERSION]", "Clone into client the component module files"
     def clone(arg1,arg2=nil,internal_trigger=false)
       component_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1]) 
-      post_body = {
-        :component_module_id => component_module_id
-      }
-      post_body.merge!(:version => version) if version
-
-      response = post(rest_url("component_module/create_workspace_branch"),post_body)
-      return response unless response.ok?
-
-      module_name,repo_url,branch = response.data(:module_name,:repo_url,:workspace_branch)
-      dtk_require_from_base('command_helpers/git_repo')
-      response = GitRepo.create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
-
-      if response.ok?
-        puts "Module '#{module_name}' has been successfully cloned!"
-        unless internal_trigger
-          if confirmation_prompt("Would you like to edit cloned module now?")
-            return edit(module_name)
-          end
-        end
-      end
-      response
+      clone_aux(:component_module,component_module_id,version,internal_trigger)
     end
 
     desc "MODULE-ID/NAME edit","Switch to unix editing for given module."
@@ -300,23 +287,7 @@ module DTK::Client
     desc "MODULE-ID/NAME push-clone-changes [VERSION]", "Push changes from local copy of module to server"
     def push_clone_changes(arg1,arg2=nil)
       component_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1])
-      post_body = {
-        :component_module_id => component_module_id
-      }
-      post_body.merge!(:version => version) if version 
-
-      response =  post(rest_url("component_module/workspace_branch_info"),post_body) 
-      return response unless response.ok?
-
-      dtk_require_from_base('command_helpers/git_repo')
-      response = GitRepo.push_changes(:component_module,response.data(:module_name))
-      return response unless response.ok?
-      if response.data(:diffs).empty?
-        raise DTK::Client::DtkError, "No changes to push"
-      end
-      post_body.merge!(:json_diffs => JSON.generate(response.data(:diffs)))
-
-      post rest_url("component_module/update_model_from_clone"), post_body
+      push_clone_changes_aux(:component_module,component_module_id,version)
     end
 
     #### end: commands related to cloning to and pushing from local clone

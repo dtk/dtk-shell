@@ -133,9 +133,7 @@ module DTK::Client
       response = post rest_url("assembly/list"), {:subtype  => 'instance'}
 
       # set render view to be used
-      unless options.list?
-        response.render_table(data_type)
-      end
+      response.render_table(data_type) unless options.list?
      
       response
     end

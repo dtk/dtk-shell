@@ -158,6 +158,7 @@ module DTK
       def set_defaults()
         self[:server_port] = 7000
         self[:component_modules_dir] = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
+        self[:service_modules_dir] = OsUtil.service_clone_location(::Config::Configuration.get(:service_location))
       end
       CONFIG_FILE = File.expand_path("~/.dtkclient")
       def load_config_file()
