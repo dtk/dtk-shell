@@ -16,9 +16,12 @@ module DTK::Client
     end
     
     desc "list","List node instances"
+    method_option :list, :aliases => '-ls', :type => :boolean, :default => false
     def list()
       response = post rest_url("node/list")
-      response.render_table(:node)
+
+      response.render_table(:node) unless options.list?
+      response
     end
 
     desc "NODE-NAME/ID info","Info about node"
