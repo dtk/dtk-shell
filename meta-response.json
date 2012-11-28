@@ -7,6 +7,7 @@
       "instance_id",
       "size",
       "os",
+      "op_status",
       "dns_name"
     ],
     "mapping": {
@@ -18,6 +19,7 @@
       "node_type": "dtk_type",
       "zone": "external_ref.availability_zone",
       "os": "os_type",
+      "op_status": "admin_op_status",
       "id": "dtk_id"
     }
   },
