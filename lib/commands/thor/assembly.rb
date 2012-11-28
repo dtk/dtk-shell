@@ -42,9 +42,45 @@ module DTK::Client
         :assembly_id => assembly_id
       }
 
+      # we expect action result ID
       response = post rest_url("assembly/start"), post_body
+      action_result_id = response.data(:action_results_id)
 
-      task_id = response.data(:task_id)
+      6.times do
+
+        action_body = {
+          :action_results_id => action_result_id,
+          :using_simple_queue      => true
+        }
+        response = post(rest_url("assembly/get_action_results"),action_body)
+
+        if response['errors']
+          return response
+        end
+
+        break unless response.data(:result).nil?
+
+
+        # server has found an error
+=begin
+        unless (response.data(:results).nil? || response.data(:results).empty?)
+          if response.data(:results)['error']
+            raise DTK::Client::DtkError, response.data(:results)['error']
+          end
+        end
+
+        break if response.data(:results).first[1]['task_id']
+=end
+
+        puts "Waiting for nodes to be ready ..."
+        sleep(10)
+      end
+
+      if response.data(:result).nil?
+        raise DTK::Client::DtkError, "Server seems to be taking to long to start assembly nodes."
+      end
+
+      task_id = response.data(:result)['task_id']
       response = post(rest_url("task/execute"), "task_id" => task_id)
     end
 
@@ -353,7 +389,7 @@ module DTK::Client
             }
 
             # number of re-tries
-            3.downto(1) do
+            3.times do
               response = post(rest_url("assembly/get_action_results"),action_body)
 
               # server has found an error
