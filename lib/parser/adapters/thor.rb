@@ -133,7 +133,7 @@ module DTK
             return false
           end
           
-          sleep(2)
+          sleep(1)
         end
 
         DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")
@@ -158,7 +158,7 @@ module DTK
             end          
           end
 
-          sleep(2)
+          sleep(1)
         end
 
         DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")
