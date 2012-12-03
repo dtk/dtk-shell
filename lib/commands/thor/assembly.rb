@@ -36,64 +36,28 @@ module DTK::Client
       post rest_url("assembly/promote_to_library"), post_body
     end
 
-      desc "ASSEMBLY-NAME/ID start", "Starts all assembly's nodes"
-    def start(assembly_id)
-      post_body = {
-        :assembly_id => assembly_id
-      }
+    desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
+    def start(node_pattern, assembly_id=nil)
 
-      # we expect action result ID
-      response = post rest_url("assembly/start"), post_body
-
-     
-      return response  if response.data(:errors)
-      action_result_id = response.data(:action_results_id)
-
-      6.times do
-
-        action_body = {
-          :action_results_id => action_result_id,
-          :using_simple_queue      => true
-        }
-        response = post(rest_url("assembly/get_action_results"),action_body)
-
-        if response['errors']
-          return response
-        end
-
-        break unless response.data(:result).nil?
-
-
-        # server has found an error
-=begin
-        unless (response.data(:results).nil? || response.data(:results).empty?)
-          if response.data(:results)['error']
-            raise DTK::Client::DtkError, response.data(:results)['error']
-          end
-        end
-
-        break if response.data(:results).first[1]['task_id']
-=end
-
-        puts "Waiting for nodes to be ready ..."
-        sleep(10)
+      # TODO: Fix problem we need to specify ASSEMBLY ID as last parameter
+      # TODO: Temp fix
+      if assembly_id.nil?
+        assembly_id  = node_pattern
+        node_pattern = nil
       end
 
-      if response.data(:result).nil?
-        raise DTK::Client::DtkError, "Server seems to be taking to long to start assembly nodes."
-      end
-
-      task_id = response.data(:result)['task_id']
-      response = post(rest_url("task/execute"), "task_id" => task_id)
+      assembly_start(assembly_id, node_pattern)
     end
 
-    desc "ASSEMBLY-NAME/ID stop", "Stops all assembly's nodes"
-    def stop(assembly_id)
-      post_body = {
-        :assembly_id => assembly_id
-      }
+    desc "ASSEMBLY-NAME/ID stop [NODE-ID-PATTERN]", "Stops all assembly's nodes, specific nodes can be selected via node id regex."
+    def stop(node_pattern, assembly_id=nil)
+      # TODO: Temp fix
+      if assembly_id.nil?
+        assembly_id  = node_pattern
+        node_pattern = nil
+      end
 
-      post rest_url("assembly/stop"), post_body
+      assembly_stop(assembly_id, node_pattern)
     end
 
 
@@ -220,7 +184,7 @@ module DTK::Client
       return response
     end
 
-=begin HELPER FUNCTION DEV
+=begin
     desc "delete-all", "nenene"
     def delete_all()
       response = list()
@@ -232,6 +196,7 @@ module DTK::Client
       end
     end
 =end
+
 
     desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
     def list_smoketests(assembly_id)

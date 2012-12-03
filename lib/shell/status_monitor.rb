@@ -76,7 +76,7 @@ module DTK
 
             if response.ok?
               DTK::Shell::TaskStatusThread.current.status = response.data['status'].upcase
-            else
+            else                
               DTK::Shell::TaskStatusThread.current.status = "RESPONSE NOT OK, RESPONSE: #{response}"
             end
 

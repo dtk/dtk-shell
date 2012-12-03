@@ -171,6 +171,10 @@ module DTK
         def not_implemented
           raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
         end
+
+        def is_numeric_id?(possible_id)             
+          return !possible_id.match(/^[0-9]+$/).nil?
+        end
         # Display confirmation prompt and repeat message until expected answer is given
         def confirmation_prompt(message, add_options=true)
           # used to disable skip with ctrl+c
@@ -280,7 +284,70 @@ module DTK
           end
           puts "[NOTICE] You are leaving unix-shell."
         end
+
+        ##
+        # SHARED CODE - CODE SHARED BETWEEN 2 or more COMMAND ENTITIES
+        ##
+        # ASSEMBLY & NODE CODE
+        ## 
+
+        def assembly_start(assembly_id, node_pattern_filter)
+
+             
+
+          post_body = {
+            :assembly_id  => assembly_id,
+            :node_pattern => node_pattern_filter
+          }
+
+          # we expect action result ID
+          response = post rest_url("assembly/start"), post_body
+          return response  if response.data(:errors)
+
+          action_result_id = response.data(:action_results_id)
+
+          6.times do
+            action_body = {
+              :action_results_id => action_result_id,
+              :using_simple_queue      => true
+            }
+            response = post(rest_url("assembly/get_action_results"),action_body)
+
+            if response['errors']
+              return response
+            end
+
+            break unless response.data(:result).nil?
+
+            puts "Waiting for nodes to be ready ..."
+            sleep(10)
+          end
+
+          if response.data(:result).nil?
+            raise DTK::Client::DtkError, "Server seems to be taking too long to start node(s)."
+          end
+
+          task_id = response.data(:result)['task_id']
+          post(rest_url("task/execute"), "task_id" => task_id)
+        end
+
+        def assembly_stop(assembly_id, node_pattern_filter)
+          post_body = {
+            :assembly_id => assembly_id,
+            :node_pattern => node_pattern_filter
+          }
+
+          post rest_url("assembly/stop"), post_body
+        end
+
+        ##
+        # SHARED CODE - CODE END
+        ##
       end
+
+
+
+
 
       ##
       # This is fix where we wanna exclude basename print when using dtk-shell.

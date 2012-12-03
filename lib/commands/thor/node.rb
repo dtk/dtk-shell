@@ -129,6 +129,32 @@ module DTK::Client
       post rest_url("node/destroy_and_delete"), post_body
     end
 
+
+
+    desc "NODE-NAME/ID start", "Start node instance."
+    def start(node_id)
+      assembly_id,node_id = get_assembly_and_node_id(node_id)
+      assembly_start(assembly_id, node_id)
+    end
+
+    desc "NODE-NAME/ID stop", "Stop node instance."
+    def stop(node_id)
+      assembly_id, node_id = get_assembly_and_node_id(node_id)
+      assembly_stop(assembly_id, node_id)
+    end
+
+    no_tasks do
+      # get numeric ID, from possible name id
+      def get_assembly_and_node_id(node_name_or_id)
+        response = info(node_name_or_id)
+        unless response.ok?
+          raise DTK::Client::DtkError, "Unable to retrive node information, please try again."
+        end      
+
+        return response.data(:assembly_id), response.data(:id)
+      end
+    end
+
 =begin
 TODO: not used yet
     desc "add-to-group NODE-ID NODE-GROUP-ID", "Add node to group"
