@@ -14,7 +14,7 @@
       "name": "display_name",
       "region": "external_ref.region",
       "dns_name": "external_ref.dns_name",
-      "size": "external_ref.size && external_ref.size.split('.').last",
+      "size": "external_ref.size",
       "instance_id": "external_ref.instance_id",
       "node_type": "dtk_type",
       "zone": "external_ref.availability_zone",
