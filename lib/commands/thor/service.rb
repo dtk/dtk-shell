@@ -20,14 +20,6 @@ module DTK::Client
       return :service_module, "service_module/list", nil
     end
     
-    ##TODO: templ debug
-    desc "debug-get-project-trees","debug-get-project-trees"
-    def debug_get_project_trees()
-      get rest_url('service_module/debug_get_project_trees')
-    end
-
-    ##TODO: end: temp debug
-
     desc "SERVICE-NAME/ID info", "Provides information about specified service module"
     def info(service_module_id)
       post_body = {
@@ -104,13 +96,13 @@ module DTK::Client
     # internal_trigger: this flag means that other method (internal) has trigger this.
     #                   This will change behaviour of method
     #
-    desc "SERVICE-ID/NAME clone [VERSION]", "Clone into client the service module files"
+    desc "SERVICE-NAME/ID clone [VERSION]", "Clone into client the service module files"
     def clone(arg1,arg2=nil,internal_trigger=false)
       service_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1]) 
       clone_aux(:service_module,service_module_id,version,internal_trigger)
     end
 
-    desc "SERVICE-ID/NAME push-clone-changes [VERSION]", "Push changes from local copy of service module to server"
+    desc "SERVICE-NAME/ID push-clone-changes [VERSION]", "Push changes from local copy of service module to server"
     def push_clone_changes(arg1,arg2=nil)
       service_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1])
       push_clone_changes_aux(:service_module,service_module_id,version)
