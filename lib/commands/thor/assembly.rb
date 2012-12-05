@@ -99,11 +99,11 @@ module DTK::Client
       :banner => "COUNT",
       :desc => "Number of sub-assemblies to add"
     def add(arg1,arg2)
-      assembly_id,service_add_on_id = [arg2,arg1]
+      assembly_id,service_add_on_name = [arg2,arg1]
       # create task
       post_body = {
         :assembly_id => assembly_id,
-        :service_add_on_id => :service_add_on_id
+        :service_add_on_name => service_add_on_name
       }
       post_body.merge!(:count => options["count"]) if options["count"]
       post rest_url("assembly/add_sub_assembly"), post_body
