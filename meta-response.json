@@ -223,11 +223,13 @@
   },
   "service_add_on": {
     "order": [
-       "type",
+       "id",
+       "name",
        "description"
     ],
     "mapping": {
-       "type": "dtk_type",
+       "id": "dtk_id",
+       "name": "display_name",
        "description": "description"
    }
   },

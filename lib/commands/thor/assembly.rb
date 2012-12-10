@@ -95,21 +95,30 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
-    desc "ASSEMBLY-NAME/ID add ADD-ON-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly instance"
+    desc "ASSEMBLY-NAME/ID add EXTENSION-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly"
     method_option "count",:aliases => "-n" ,
       :type => :string, #integer 
       :banner => "COUNT",
       :desc => "Number of sub-assemblies to add"
     def add(arg1,arg2)
-      assembly_id, add_on_type = [arg2,arg1]
+      assembly_id,service_add_on_name = [arg2,arg1]
       # create task
       post_body = {
         :assembly_id => assembly_id,
-        :add_on_type => add_on_type
+        :service_add_on_name => service_add_on_name
       }
       post_body.merge!(:count => options["count"]) if options["count"]
       post rest_url("assembly/add_sub_assembly"), post_body
       @@invalidate_map << :assembly
+    end
+
+    desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to teh assembly" 
+    def possible_extensions(assembly_id)
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      response = post(rest_url("assembly/list_possible_add_ons"),post_body)
+      response.render_table(:service_add_on)
     end
 
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
@@ -145,7 +154,7 @@ module DTK::Client
     end
 
     #TODO: put in flag to control detail level
-    desc "ASSEMBLY-NAME/ID show nodes|components|attributes|tasks|add-on [FILTER] [--list]","List nodes, components, attributes, add-ons, or tasks associated with assembly."
+    desc "ASSEMBLY-NAME/ID show nodes|components|attributes|tasks [FILTER] [--list]","List nodes, components, attributes or tasks associated with assembly."
     method_option :list, :type => :boolean, :default => false
     def show(*rotated_args)
       #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
@@ -172,8 +181,6 @@ module DTK::Client
           data_type = :attribute
         when "tasks":
           data_type = :task
-        when "add-on":
-          data_type = :service_add_on
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
