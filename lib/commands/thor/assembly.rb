@@ -34,6 +34,7 @@ module DTK::Client
       }
 
       post rest_url("assembly/promote_to_library"), post_body
+      @@invalidate_map << :library
     end
 
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
@@ -71,6 +72,7 @@ module DTK::Client
         :assembly_template_name => assembly_template_name
       }
       post rest_url("assembly/create_new_template"), post_body
+      @@invalidate_map << :assembly_template
     end
 
     desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
@@ -107,6 +109,7 @@ module DTK::Client
       }
       post_body.merge!(:count => options["count"]) if options["count"]
       post rest_url("assembly/add_sub_assembly"), post_body
+      @@invalidate_map << :assembly
     end
 
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
@@ -225,6 +228,7 @@ module DTK::Client
         :subtype => :instance
       }
       post rest_url("assembly/delete"), post_body
+      @@invalidate_map << :assembly
     end
 
     desc "ASSEMBLY-NAME/ID set ATTRIBUTE-PATTERN VALUE", "Set target assembly attributes"

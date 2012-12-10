@@ -13,7 +13,8 @@ module DTK
       include CommandBase
       extend  CommandBase
       @@cached_response = {}
-      TIME_DIFF         = 2  #second(s)
+      @@invalidate_map = []
+      TIME_DIFF         = 60  #second(s)
 
       
       def initialize(args, opts, config)
@@ -61,12 +62,13 @@ module DTK
       # if difference is greater than TIME_DIFF we send request again, if not we use
       # response from cache
       def self.get_cached_response(clazz, url, subtype=nil)
+        puts @@invalidate_map.inspect
         current_ts = Time.now.to_i
         # if @@cache_response is empty return true if not than return time difference between
         # current_ts and ts stored in cache
         time_difference = @@cached_response[clazz].nil? ? true : ((current_ts - @@cached_response[clazz][:ts]) > TIME_DIFF)
 
-        if time_difference
+        if (time_difference || @@invalidate_map.include?(clazz))
           response = post rest_url(url), subtype
           # we do not want to catch is if it is not valid
           if response.nil? || response.empty?
@@ -74,6 +76,7 @@ module DTK
             return response
           end
 
+          @@invalidate_map.delete(clazz) if (@@invalidate_map.include?(clazz))
           @@cached_response.store(clazz, {:response => response, :ts => current_ts})
         end
 
