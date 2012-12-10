@@ -8,6 +8,7 @@ module DTK::Client
         :type =>  "required by"
       }
       post rest_url("dependency/add_component_dependency"), post_body
+      @@invalidate_map = :component
     end
   end
 end

@@ -117,6 +117,8 @@ module DTK::Client
       }
       post_body.merge!(:library_id => library_id) if library_id
       post rest_url("service_module/create"), post_body
+      # when changing context send request for getting latest services instead of getting from cache
+      @@invalidate_map = :service
     end
 
     desc "delete SERVICE-NAME/ID", "Delete service module and all items contained in it"
@@ -128,6 +130,8 @@ module DTK::Client
        :service_module_id => service_module_id
       }
       post rest_url("service_module/delete"), post_body
+      # when changing context send request for getting latest services instead of getting from cache
+      @@invalidate_map = :service
     end
 
     desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"

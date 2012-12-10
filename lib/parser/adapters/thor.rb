@@ -62,7 +62,6 @@ module DTK
       # if difference is greater than TIME_DIFF we send request again, if not we use
       # response from cache
       def self.get_cached_response(clazz, url, subtype=nil)
-        puts @@invalidate_map.inspect
         current_ts = Time.now.to_i
         # if @@cache_response is empty return true if not than return time difference between
         # current_ts and ts stored in cache

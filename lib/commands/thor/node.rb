@@ -127,6 +127,7 @@ module DTK::Client
       return unless confirmation_prompt("Are you sure you want to destroy and delete node (#{node_id})?")
 
       post rest_url("node/destroy_and_delete"), post_body
+      @@invalidate_map = :node
     end
 
 

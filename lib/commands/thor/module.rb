@@ -29,6 +29,7 @@ module DTK::Client
       module_name = response.data(:module_name)
       dtk_require_from_base('command_helpers/git_repo')
       GitRepo.unlink_local_clone?(:component_module,module_name)
+      @@invalidate_map = :module
     end
 
     desc "create MODULE-NAME [LIBRARY-NAME/ID]", "Create new module from local clone"
@@ -70,6 +71,7 @@ module DTK::Client
         msg = "First cut of meta file (#{meta_created["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
         response = GitRepo.add_file(repo_branch,meta_created["path"],meta_created["content"],msg)
       end
+      @@invalidate_map = :module
       response
     end
 
@@ -133,6 +135,7 @@ module DTK::Client
        :remote_module_name => remote_module_name
       }
       post rest_url("component_module/delete_remote"), post_body
+      @@invalidate_map = :module
     end
 
 
@@ -177,6 +180,7 @@ module DTK::Client
       post_body.merge!(:version => version) if version
 
       post rest_url("component_module/promote_to_library"), post_body
+      @@invalidate_map = :library
     end
 
     #TODO: may also provide an optional library argument to create in new library
@@ -195,6 +199,7 @@ module DTK::Client
       end
 
       post rest_url("component_module/promote_as_new_version"), post_body
+      @@invalidate_map = :library
     end
 
     ##
