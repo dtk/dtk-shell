@@ -66,6 +66,7 @@ module DTK::Client
       }
       post_body.merge!(:library_id => library_id) if library_id
       post rest_url("service_module/create"), post_body
+      # when changing context send request for getting latest libraries instead of getting from cache
       @@invalidate_map = :library
     end
 
@@ -76,6 +77,7 @@ module DTK::Client
       }
       post_body.merge!(:library_id => library_id) if library_id
       post rest_url("component_module/delete"), post_body
+      # when changing context send request for getting latest libraries instead of getting from cache
       @@invalidate_map = :library
     end
   end

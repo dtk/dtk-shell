@@ -29,6 +29,7 @@ module DTK::Client
       module_name = response.data(:module_name)
       dtk_require_from_base('command_helpers/git_repo')
       GitRepo.unlink_local_clone?(:component_module,module_name)
+      # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map = :module
     end
 

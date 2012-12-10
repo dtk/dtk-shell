@@ -34,6 +34,7 @@ module DTK::Client
       }
 
       post rest_url("assembly/promote_to_library"), post_body
+      # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :library
     end
 
@@ -72,6 +73,7 @@ module DTK::Client
         :assembly_template_name => assembly_template_name
       }
       post rest_url("assembly/create_new_template"), post_body
+      # when changing context send request for getting latest assembly_templates instead of getting from cache
       @@invalidate_map << :assembly_template
     end
 
@@ -109,6 +111,7 @@ module DTK::Client
       }
       post_body.merge!(:count => options["count"]) if options["count"]
       post rest_url("assembly/add_sub_assembly"), post_body
+      # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
     end
 
@@ -235,6 +238,7 @@ module DTK::Client
         :subtype => :instance
       }
       post rest_url("assembly/delete"), post_body
+      # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
     end
 
