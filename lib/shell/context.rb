@@ -224,12 +224,18 @@ module DTK
 
       def self.save_session_history(array_of_commands)
         return [] unless is_there_history_file()
-        # make sure we only save up to 'COMMAND_HISTORY_LIMIT' commands
-        if array_of_commands.size > COMMAND_HISTORY_LIMIT
-          array_of_commands = array_of_commands[-COMMAND_HISTORY_LIMIT,COMMAND_HISTORY_LIMIT+1]
+        # we filter the list to remove neighbour duplicates
+        filtered_commands = []
+        array_of_commands.each_with_index do |a,i|
+          filtered_commands << a if (a != array_of_commands[i+1])
         end
 
-        File.open(HISTORY_LOCATION,'w').write array_of_commands.to_json
+        # make sure we only save up to 'COMMAND_HISTORY_LIMIT' commands
+        if filtered_commands.size > COMMAND_HISTORY_LIMIT
+          filtered_commands = filtered_commands[-COMMAND_HISTORY_LIMIT,COMMAND_HISTORY_LIMIT+1]
+        end
+
+        File.open(HISTORY_LOCATION,'w').write filtered_commands.to_json
       end
 
       private
