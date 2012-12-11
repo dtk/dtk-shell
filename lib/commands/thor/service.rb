@@ -3,6 +3,10 @@ dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_from_base('command_helpers/git_repo')
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/push_clone_changes')
+dtk_require_from_base("dtk_logger")
+dtk_require_from_base("util/os_util")
+dtk_require_common_commands('thor/task_status')
+dtk_require_common_commands('thor/set_required_params')
 
 module DTK::Client
   class Service < CommandBaseThor
@@ -65,6 +69,7 @@ module DTK::Client
       }
       post_body.merge!(:library_id => library_id) if library_id
       post rest_url("service_module/import"), post_body
+      @@invalidate_map << :service_module
     end
 
     desc "SERVICE-NAME/ID export", "Export service module to remote repo"
@@ -118,7 +123,7 @@ module DTK::Client
       post_body.merge!(:library_id => library_id) if library_id
       post rest_url("service_module/create"), post_body
       # when changing context send request for getting latest services instead of getting from cache
-      @@invalidate_map = :service
+      @@invalidate_map << :service_module
     end
 
     desc "delete SERVICE-NAME/ID", "Delete service module and all items contained in it"
@@ -131,7 +136,7 @@ module DTK::Client
       }
       post rest_url("service_module/delete"), post_body
       # when changing context send request for getting latest services instead of getting from cache
-      @@invalidate_map = :service
+      @@invalidate_map << :service_module
     end
 
     desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"

@@ -66,7 +66,7 @@ module DTK
         # if @@cache_response is empty return true if not than return time difference between
         # current_ts and ts stored in cache
         time_difference = @@cached_response[clazz].nil? ? true : ((current_ts - @@cached_response[clazz][:ts]) > TIME_DIFF)
-
+        
         if (time_difference || @@invalidate_map.include?(clazz))
           response = post rest_url(url), subtype
           # we do not want to catch is if it is not valid
@@ -74,8 +74,8 @@ module DTK
             DtkLogger.instance.debug("Response was nil or empty for that reason we did not cache it.")
             return response
           end
-
-          @@invalidate_map.delete(clazz) if (@@invalidate_map.include?(clazz))
+          
+          @@invalidate_map.delete(clazz) if (@@invalidate_map.include?(clazz) && response["status"].eql?('ok'))
           @@cached_response.store(clazz, {:response => response, :ts => current_ts})
         end
 
@@ -124,18 +124,13 @@ module DTK
         @conn    = conn if @conn.nil?
         clazz, endpoint, subtype = whoami()
 
-        # when server is busy, we try 3 times to get response and then prints warning if response is not ok
-        3.downto(1) do
-          response = get_cached_response(clazz, endpoint, subtype)
+        response = get_cached_response(clazz, endpoint, subtype)
 
-          unless (response.nil? || response.empty? || response['data'].nil?)
-            response['data'].each do |element|
-              return true if (element['id'].to_s==value || element['display_name'].to_s==value)
-            end
-            return false
+        unless (response.nil? || response.empty? || response['data'].nil?)
+          response['data'].each do |element|
+            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
           end
-          
-          sleep(1)
+          return false
         end
 
         DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")
@@ -146,21 +141,16 @@ module DTK
         @conn    = conn if @conn.nil?
         clazz, endpoint, subtype = whoami()
 
-        # when server is busy, we try 3 times to get response and then prints warning if response is not ok
-        3.downto(1) do
-          response = get_cached_response(clazz, endpoint, subtype)
+        response = get_cached_response(clazz, endpoint, subtype)
 
-          unless (response.nil? || response.empty?)
-            unless response['data'].nil?
-              identifiers = []
-              response['data'].each do |element|
-                 identifiers << element['display_name']
-              end
-              return identifiers
-            end          
-          end
-
-          sleep(1)
+        unless (response.nil? || response.empty?)
+          unless response['data'].nil?
+            identifiers = []
+            response['data'].each do |element|
+               identifiers << element['display_name']
+            end
+            return identifiers
+          end          
         end
 
         DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")

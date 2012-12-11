@@ -17,7 +17,7 @@ module DTK::Client
       }
        post rest_url("target/create"), post_body
        # when changing context send request for getting latest targets instead of getting from cache
-      @@invalidate_map = :target
+      @@invalidate_map << :target
     end
 
     desc "list","List targets."
@@ -56,7 +56,7 @@ module DTK::Client
       }
       post rest_url("target/create_assembly_template"), post_body
       # when changing context send request for getting latest assembly_templates instead of getting from cache
-      @@invalidate_map = :assembly_template
+      @@invalidate_map << :assembly_template
     end
 
     desc "TARGET-NAME/ID converge", "Converges target instance"

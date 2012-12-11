@@ -9,7 +9,7 @@ module DTK::Client
       search_hash.cols = pretty_print_cols()
       post rest_url("repo/list"), search_hash.post_body_hash()
       # when changing context send request for getting latest repo list instead of getting from cache
-      @@invalidate_map = :repo
+      @@invalidate_map << :repo
     end
 
     desc "delete REPO-ID", "Delete repo"
@@ -20,7 +20,7 @@ module DTK::Client
       post_body_hash = {:repo_id => repo_id}
       post rest_url("repo/delete"),post_body_hash
       # when changing context send request for getting latest repo list instead of getting from cache
-      @@invalidate_map = :repo
+      @@invalidate_map << :repo
     end
 
     desc "sync REPO-ID", "Synchronize target repo from actual files"

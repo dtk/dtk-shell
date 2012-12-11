@@ -173,7 +173,7 @@ begin
 
         # when 'delete' or 'delete-and-destroy' command is executed reload cached tasks with latest commands
         unless (args.nil? || args.empty?)
-          @context.reload_cached_tasks(cmd) if args.first.include?('delete')
+          @context.reload_cached_tasks(cmd) if (args.first.include?('delete') || args.first.include?('import'))
         end
 
         # check execution status, prints status to sttout
