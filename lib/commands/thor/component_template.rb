@@ -64,9 +64,9 @@ module DTK::Client
       end
       
       response = post rest_url("component/stage"), post_body
+      @@invalidate_map << :component_template
 
       response.render_table(data_type) unless options.list?
-
       return response
     end
     

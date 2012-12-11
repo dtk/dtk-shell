@@ -58,6 +58,8 @@ module DTK::Client
       post_body.merge!(:target_id => options["in-target"]) if options["in-target"]
       post_body.merge!(:name => name) if name
       post rest_url("node/stage"), post_body
+      # when changing context send request for getting latest node_templates instead of getting from cache
+      @@invalidate_map << :node_template
     end
   end
 end

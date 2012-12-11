@@ -2,6 +2,11 @@
 
 # GLOBAL IDENTIFIER
 $shell_mode = false
+require File.expand_path('../lib/client', File.dirname(__FILE__))
+require File.expand_path('../lib/parser/adapters/thor',    File.dirname(__FILE__))
+Dir[File.expand_path('../lib/shell/parse_monkey_patch.rb', File.dirname(__FILE__))].each {|file| require file }
+
+
 
 # take command to be executed, rest of arguments are going to be used 
 # as provided arguments. Under DTK task there is summarization of all
@@ -9,4 +14,5 @@ $shell_mode = false
 command = ARGV.shift if ARGV.size > 0
 
 require File.expand_path('../lib/client', File.dirname(__FILE__))
+
 top_level_execute(command)

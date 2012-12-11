@@ -62,7 +62,7 @@ module DTK
 
         # we load thor command class identifiers for autocomplete context list
         context_commands.concat(get_command_identifiers(command_name)) if tier_1?
-
+        
         comp = proc { |s| context_commands.grep( /^#{Regexp.escape(s)}/ ) }
 
         Readline.completion_proc = comp

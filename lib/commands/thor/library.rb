@@ -66,6 +66,8 @@ module DTK::Client
       }
       post_body.merge!(:library_id => library_id) if library_id
       post rest_url("service_module/create"), post_body
+      # when changing context send request for getting latest libraries instead of getting from cache
+      @@invalidate_map << :library
     end
 
     desc "[LIBRARY ID/NAME] delete-service-component COMPONENT-MODULE-NAME","Delete component module and all items contained in it"
@@ -75,6 +77,8 @@ module DTK::Client
       }
       post_body.merge!(:library_id => library_id) if library_id
       post rest_url("component_module/delete"), post_body
+      # when changing context send request for getting latest libraries instead of getting from cache
+      @@invalidate_map << :library
     end
   end
 end
