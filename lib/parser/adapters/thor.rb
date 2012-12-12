@@ -298,7 +298,9 @@ module DTK
 
           action_result_id = response.data(:action_results_id)
 
-          6.times do
+          # bigger number here due to possibilty of multiple nodes
+          # taking too much time to be ready
+          18.times do
             action_body = {
               :action_results_id => action_result_id,
               :using_simple_queue      => true
