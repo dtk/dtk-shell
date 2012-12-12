@@ -27,7 +27,7 @@ module DTK
       def initialize
         @threads        = []
         @finished_tasks = []
-        @conn           = DTK::Client::Conn.new()
+        @conn           = DTK::Client::Session.get_connection()
       end
 
       def self.start_monitoring(task_id)

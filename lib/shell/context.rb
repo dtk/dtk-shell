@@ -22,8 +22,9 @@ module DTK
       ROOT_TASKS = DTK::Client::Dtk.task_names
       
       def initialize
+
         @cached_tasks, @active_commands, @dirs = {}, [], []
-        @conn = DTK::Client::Conn.new()
+        @conn = DTK::Client::Session.get_connection()
 
         # if connection parameters are not set up properly, print warning and exit dtk_shell
         exit if validate_connection(@conn)

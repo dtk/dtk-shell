@@ -10,7 +10,6 @@ Dir[File.expand_path('../lib/shell/*.rb', File.dirname(__FILE__))].each {|file| 
 require 'shellwords'
 require 'readline'
 require 'thor'
-require 'rubygems'
 
 #ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
 

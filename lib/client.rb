@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'bundler/setup'
 require File.expand_path("require_first", File.dirname(__FILE__))
 #TODO: should be common gem
 dtk_require_dtk_common("hash_object")
