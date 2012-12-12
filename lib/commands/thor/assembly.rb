@@ -229,17 +229,21 @@ module DTK::Client
     end
 
     desc "delete-and-destroy ASSEMBLY-ID", "Delete assembly instance, termining any nodes taht have been spun up"
+    method_option :force, :aliases => '-f', :type => :boolean, :default => false
     def delete_and_destroy(assembly_id)
-      # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
-      return unless confirmation_prompt("Are you sure you want to delete and destroy assembly '#{assembly_id}' and its nodes?")
+      unless options.force?
+        # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
+        return unless confirmation_prompt("Are you sure you want to delete and destroy assembly '#{assembly_id}' and its nodes?")
+      end
 
       post_body = {
         :assembly_id => assembly_id,
         :subtype => :instance
       }
-      post rest_url("assembly/delete"), post_body
+      response = post rest_url("assembly/delete"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
+      return response
     end
 
     desc "ASSEMBLY-NAME/ID set ATTRIBUTE-PATTERN VALUE", "Set target assembly attributes"
