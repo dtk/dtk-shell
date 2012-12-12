@@ -33,9 +33,11 @@ module DTK::Client
         :assembly_id => assembly_id
       }
 
-      post rest_url("assembly/promote_to_library"), post_body
+      response = post rest_url("assembly/promote_to_library"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :library
+      
+      return response
     end
 
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
@@ -72,9 +74,11 @@ module DTK::Client
         :service_module_name => service_module_name,
         :assembly_template_name => assembly_template_name
       }
-      post rest_url("assembly/create_new_template"), post_body
+      response = post rest_url("assembly/create_new_template"), post_body
       # when changing context send request for getting latest assembly_templates instead of getting from cache
       @@invalidate_map << :assembly_template
+
+      return response
     end
 
     desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
@@ -110,9 +114,11 @@ module DTK::Client
         :service_add_on_name => service_add_on_name
       }
       post_body.merge!(:count => options["count"]) if options["count"]
-      post rest_url("assembly/add_sub_assembly"), post_body
+      response = post rest_url("assembly/add_sub_assembly"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
+
+      return response
     end
 
     desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to teh assembly" 
@@ -243,6 +249,7 @@ module DTK::Client
       response = post rest_url("assembly/delete"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
+      
       return response
     end
 

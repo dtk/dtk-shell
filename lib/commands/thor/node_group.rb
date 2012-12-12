@@ -52,9 +52,11 @@ module DTK::Client
       }
       post_body[:target_id] = target_id if target_id
       post_body[:spans_target] = true if options["spans-target"]
-      post rest_url("node_group/create"), post_body
+      response = post rest_url("node_group/create"), post_body
       # when changing context send request for getting latest node_groups instead of getting from cache
       @@invalidate_map << :node_group
+
+      return response
     end
 
     desc "delete NODE-GROUP-ID", "Delete node group"
@@ -63,9 +65,11 @@ module DTK::Client
       return unless confirmation_prompt("Are you sure you want to delete node group '#{id}'?")
 
       post_body = {:node_group_id => id}
-      post rest_url("node_group/delete"), post_body
+      response = post rest_url("node_group/delete"), post_body
       # when changing context send request for getting latest node_groups instead of getting from cache
       @@invalidate_map << :node_group
+
+      return response
     end
 
     desc "NODE-GROUP-NAME/ID show components|attributes","List components or attributes that are on the node group."
@@ -107,9 +111,11 @@ module DTK::Client
         :node_group_id => node_group_id,
         :component_template_id => component_template_id
       }
-      post rest_url("node_group/add_component"), post_body
+      response = post rest_url("node_group/add_component"), post_body
       # when changing context send request for getting latest node_groups instead of getting from cache
       @@invalidate_map << :node_group
+
+      return response
     end
 
     desc "NODE-GROUP-NAME/ID delete-component COMPONENT-ID", "Delete component from node group"
@@ -119,9 +125,11 @@ module DTK::Client
         :node_group_id => node_group_id,
         :component_id => component_id
       }
-      post rest_url("node_group/delete_component"), post_body
+      response = post rest_url("node_group/delete_component"), post_body
       # when changing context send request for getting latest node_groups instead of getting from cache
       @@invalidate_map << :node_group
+
+      return response
     end
 
     desc "NODE-GROUP-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"

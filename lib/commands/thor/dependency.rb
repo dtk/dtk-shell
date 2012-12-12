@@ -7,8 +7,10 @@ module DTK::Client
         :other_component_id => other_component_id,
         :type =>  "required by"
       }
-      post rest_url("dependency/add_component_dependency"), post_body
+      response = post rest_url("dependency/add_component_dependency"), post_body
       @@invalidate_map << :component_template
+
+      return response
     end
   end
 end

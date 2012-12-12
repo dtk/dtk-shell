@@ -135,8 +135,10 @@ module DTK::Client
       post_body = {
        :remote_module_name => remote_module_name
       }
-      post rest_url("component_module/delete_remote"), post_body
+      response = post rest_url("component_module/delete_remote"), post_body
       @@invalidate_map << :module_component
+
+      return response
     end
 
 
@@ -180,8 +182,10 @@ module DTK::Client
       }
       post_body.merge!(:version => version) if version
 
-      post rest_url("component_module/promote_to_library"), post_body
+      response = post rest_url("component_module/promote_to_library"), post_body
       @@invalidate_map << :library
+
+      return response
     end
 
     #TODO: may also provide an optional library argument to create in new library
@@ -199,8 +203,10 @@ module DTK::Client
         post_body.merge!(:existing_version => existing_version)
       end
 
-      post rest_url("component_module/promote_as_new_version"), post_body
+      response = post rest_url("component_module/promote_as_new_version"), post_body
       @@invalidate_map << :library
+
+      return response
     end
 
     ##
