@@ -189,6 +189,11 @@ module DTK
       def self.get_connection()
         Session.instance.conn
       end
+
+      def self.logout()
+        # from this point @conn is not valid, since there are no cookies set
+        Session.instance.conn.logout()
+      end
     end
 
     class Conn
@@ -244,6 +249,14 @@ module DTK
           @cookies = response.cookies
         end
       end
+
+      def logout()
+        response = post rest_url("user/logout")
+        raise DTK::Client::DtkError, "Failed to logout, and terminate session!" unless response.ok?
+        @cookies = nil
+      end
+
+
       def get_credentials()
         cred_file = File.expand_path("~/.dtkclient")
         raise DTK::Client::DtkError,"Authorization configuration file (#{cred_file}) does not exist" unless File.exists?(cred_file)

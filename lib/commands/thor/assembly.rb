@@ -81,6 +81,13 @@ module DTK::Client
       return response
     end
 
+    desc "",""
+    def logout()
+      puts "Doing logout"
+      DTK::Client::Session.logout()
+    end
+
+
     desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string, 
@@ -161,18 +168,7 @@ module DTK::Client
      
       response
     end
-
-    desc "",""
-    def logout()
-      response = post_raw rest_url("user/logout")
-      # DEBUG SNIPPET >>> REMOVE <<<
-      require 'ap'
-      ap response
-
-      response
-    end
-         
-
+     
     #TODO: put in flag to control detail level
     desc "ASSEMBLY-NAME/ID show nodes|components|attributes|tasks [FILTER] [--list]","List nodes, components, attributes or tasks associated with assembly."
     method_option :list, :type => :boolean, :default => false
