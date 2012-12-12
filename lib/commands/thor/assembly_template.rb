@@ -77,9 +77,11 @@ module DTK::Client
       }
       post_body.merge!(:target_id => options["in-target"]) if options["in-target"]
       post_body.merge!(:name => name) if name
-      post rest_url("assembly/stage"), post_body
+      response = post rest_url("assembly/stage"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
+
+      return response
     end
 
     desc "ASSEMBLY-TEMPLATE-NAME/ID deploy [INSTANCE-NAME] [-m COMMIT-MSG]", "Stage and deploy assembly template in target."
@@ -118,8 +120,6 @@ module DTK::Client
 
       return response unless response.ok?
       ret.add_data_value!(:task_id,task_id)
-      # when changing context send request for getting latest assemblies instead of getting from cache
-      @@invalidate_map << :assembly
     end
 
 
@@ -132,9 +132,11 @@ module DTK::Client
         :assembly_id => assembly_id,
         :subtype => :template
       }
-      post rest_url("assembly/delete"), post_body
+      response = post rest_url("assembly/delete"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly_template
+
+      return response
     end
   end
 end

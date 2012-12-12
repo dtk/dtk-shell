@@ -15,9 +15,11 @@ module DTK::Client
         :target_name => target_id,
         :description => description
       }
-       post rest_url("target/create"), post_body
+      response = post rest_url("target/create"), post_body
        # when changing context send request for getting latest targets instead of getting from cache
       @@invalidate_map << :target
+
+      return response
     end
 
     desc "list","List targets."
@@ -54,9 +56,11 @@ module DTK::Client
         :service_module_name => service_module_name,
         :assembly_name => assembly_name
       }
-      post rest_url("target/create_assembly_template"), post_body
+      response = post rest_url("target/create_assembly_template"), post_body
       # when changing context send request for getting latest assembly_templates instead of getting from cache
       @@invalidate_map << :assembly_template
+
+      return response
     end
 
     desc "TARGET-NAME/ID converge", "Converges target instance"

@@ -13,7 +13,7 @@ module DTK
       include CommandBase
       extend  CommandBase
       @@cached_response = {}
-      @@invalidate_map = []
+      @@invalidate_map  = []
       TIME_DIFF         = 60  #second(s)
 
       
@@ -74,7 +74,7 @@ module DTK
             DtkLogger.instance.debug("Response was nil or empty for that reason we did not cache it.")
             return response
           end
-          
+
           @@invalidate_map.delete(clazz) if (@@invalidate_map.include?(clazz) && response["status"].eql?('ok'))
           @@cached_response.store(clazz, {:response => response, :ts => current_ts})
         end

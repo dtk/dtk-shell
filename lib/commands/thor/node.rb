@@ -126,8 +126,10 @@ module DTK::Client
       # Ask user if really want to delete and destroy, if not then return to dtk-shell without deleting
       return unless confirmation_prompt("Are you sure you want to destroy and delete node (#{node_id})?")
 
-      post rest_url("node/destroy_and_delete"), post_body
+      response = post rest_url("node/destroy_and_delete"), post_body
       @@invalidate_map << :node
+
+      return response
     end
 
 
