@@ -98,9 +98,6 @@ module DTK::Client
 
       response = stage(arg1,arg2)
 
-      require 'ap'
-      ap response
-
       return response unless response.ok?
 
       # create task      
