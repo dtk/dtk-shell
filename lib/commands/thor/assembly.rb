@@ -80,14 +80,7 @@ module DTK::Client
 
       return response
     end
-
-    desc "",""
-    def logout()
-      puts "Doing logout"
-      DTK::Client::Session.logout()
-    end
-
-
+    
     desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string, 
@@ -166,8 +159,8 @@ module DTK::Client
 
         # set render view to be used
         response.render_table(data_type) unless options.list?
-       
-        response
+
+        return response
       else
         #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
         assembly_id,about,filter = rotate_args(rotated_args)
@@ -198,6 +191,8 @@ module DTK::Client
         end
 
         response = post rest_url("assembly/info_about"), post_body
+
+           
         # set render view to be used
         unless options.list?
           response.render_table(data_type)

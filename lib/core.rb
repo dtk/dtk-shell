@@ -224,6 +224,13 @@ module DTK
         return !@connection_error.nil?
       end
 
+      def logout()
+        response = get_raw rest_url("user/process_logout")
+           
+        raise DTK::Client::DtkError, "Failed to logout, and terminate session!" unless response
+        @cookies = nil
+      end
+
       ##
       # Method will warn user that connection could not be established. User should check configuration
       # to make sure that connection is properly set.
@@ -245,17 +252,10 @@ module DTK
         response = post_raw rest_url("user/process_login"),creds
         if response.kind_of?(Common::Response) and not response.ok?
           @connection_error = response
-        else
+        else             
           @cookies = response.cookies
         end
       end
-
-      def logout()
-        response = post rest_url("user/logout")
-        raise DTK::Client::DtkError, "Failed to logout, and terminate session!" unless response.ok?
-        @cookies = nil
-      end
-
 
       def get_credentials()
         cred_file = File.expand_path("~/.dtkclient")
