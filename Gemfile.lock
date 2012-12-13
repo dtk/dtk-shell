@@ -58,7 +58,7 @@ PLATFORMS
 DEPENDENCIES
   activesupport (= 3.2.7)
   awesome_print
-  bundler (~> 1.1.5)
+  bundler (>= 1.1.5)
   colorize (= 0.5.8)
   dtk-common (~> 0.1.1)
   erubis (= 2.7.0)
