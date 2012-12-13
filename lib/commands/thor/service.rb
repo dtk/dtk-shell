@@ -130,7 +130,7 @@ module DTK::Client
       return response
     end
 
-    desc "delete SERVICE-NAME/ID", "Delete service module and all items contained in it"
+    desc "delete SERVICE-ID", "Delete service module and all items contained in it"
     def delete(service_module_id)
       # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
       return unless confirmation_prompt("Are you sure you want to delete service-module '#{service_module_id}' and all items contained in it?")
@@ -175,7 +175,7 @@ module DTK::Client
       post rest_url("service_module/remove_user_direct_access"), post_body
     end
 
-    desc "create-jenkins-project SERVICE-NAME/ID", "Create Jenkins project for service module"
+    desc "create-jenkins-project SERVICE-ID", "Create Jenkins project for service module"
     def create_jenkins_project(service_module_id)
       #require put here so dont necessarily have to install jenkins client gems
 

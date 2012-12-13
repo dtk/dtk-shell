@@ -126,7 +126,8 @@ module DTK::Client
       task_status_aux(node_id,:node,options)
     end
 
-    desc "destroy NODE-NAME/ID", "Delete and destroy (terminate) node"
+    # desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
+    desc "destroy NODE-ID", "Delete and destroy (terminate) node"
     def destroy(node_id)
       post_body = {
         :node_id => node_id
