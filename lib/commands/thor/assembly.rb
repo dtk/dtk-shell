@@ -81,6 +81,13 @@ module DTK::Client
       return response
     end
 
+    desc "",""
+    def logout()
+      puts "Doing logout"
+      DTK::Client::Session.logout()
+    end
+
+
     desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string, 
@@ -232,9 +239,12 @@ module DTK::Client
     end
 
     desc "delete-and-destroy ASSEMBLY-ID", "Delete assembly instance, termining any nodes taht have been spun up"
+    method_option :force, :aliases => '-f', :type => :boolean, :default => false
     def delete_and_destroy(assembly_id)
-      # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
-      return unless confirmation_prompt("Are you sure you want to delete and destroy assembly '#{assembly_id}' and its nodes?")
+      unless options.force?
+        # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
+        return unless confirmation_prompt("Are you sure you want to delete and destroy assembly '#{assembly_id}' and its nodes?")
+      end
 
       post_body = {
         :assembly_id => assembly_id,

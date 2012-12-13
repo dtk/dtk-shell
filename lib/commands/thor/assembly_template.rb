@@ -96,6 +96,7 @@ module DTK::Client
       assembly_template_id,name = (arg2.nil? ? [arg1] : [arg2,arg1])
 
       response = stage(arg1,arg2)
+
       return response unless response.ok?
 
       # create task      
@@ -105,7 +106,8 @@ module DTK::Client
         :commit_msg => options["commit_msg"]||"Initial deploy"
       }
 
-      ret = response = post(rest_url("assembly/create_task"), post_body)
+      ret = response = post(rest_url("assembly/create_task"), post_body)        
+
       return response unless response.ok?
 
       # execute task
@@ -119,6 +121,11 @@ module DTK::Client
 
       return response unless response.ok?
       ret.add_data_value!(:task_id,task_id)
+
+      # when changing context send request for getting latest assemblies instead of getting from cache
+      @@invalidate_map << :assembly
+
+      return ret
     end
 
 

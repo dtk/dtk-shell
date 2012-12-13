@@ -1,6 +1,7 @@
 #TODO: user common utils in DTK::Common::Rest
 
 require 'rubygems'
+require 'bundler/setup'
 require 'singleton'
 require 'restclient'
 require 'colorize'
@@ -26,8 +27,7 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
     command = command.gsub("-","_")
 
     load_command(command)
-
-    conn = DTK::Client::Conn.new()
+    conn = DTK::Client::Session.get_connection()
 
     # if connection parameters are not set up properly then don't execute any command
     return if validate_connection(conn)
@@ -172,6 +172,30 @@ module DTK
       end
     end
 
+
+    ##
+    # Session Singleton we will use to hold connection instance, just a singleton wrapper.
+    # During shell input it will be needed only once, so singleton was obvious solution.
+    #
+    class Session
+      include Singleton
+
+      attr_reader :conn
+
+      def initialize()
+        @conn = DTK::Client::Conn.new()
+      end
+
+      def self.get_connection()
+        Session.instance.conn
+      end
+
+      def self.logout()
+        # from this point @conn is not valid, since there are no cookies set
+        Session.instance.conn.logout()
+      end
+    end
+
     class Conn
       def initialize()
         @cookies = Hash.new
@@ -225,6 +249,14 @@ module DTK
           @cookies = response.cookies
         end
       end
+
+      def logout()
+        response = post rest_url("user/logout")
+        raise DTK::Client::DtkError, "Failed to logout, and terminate session!" unless response.ok?
+        @cookies = nil
+      end
+
+
       def get_credentials()
         cred_file = File.expand_path("~/.dtkclient")
         raise DTK::Client::DtkError,"Authorization configuration file (#{cred_file}) does not exist" unless File.exists?(cred_file)

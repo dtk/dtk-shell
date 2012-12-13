@@ -11,6 +11,7 @@ gem 'grit','2.5.0'
 gem 'jenkins-client','0.0.1'
 gem 'hirb','0.7.0'
 gem 'colorize','0.5.8'
+gem 'awesome_print'
 # used to mock up metadata response for table_print
 # TODO: Remove this when implemntation is set on server side
 gem 'fakeweb','1.3.0'
