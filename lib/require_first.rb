@@ -41,11 +41,15 @@ def dtk_nested_require(dir,*files_x)
 end
 
 def dtk_require_dtk_common(common_library)
-  # use gem if there, else common folder
-  if is_dtk_common_installed?
+  # use common folder else common gem
+  common_folder = determine_common_folder()
+
+  if common_folder
+    dtk_require("../../" + common_folder + "/lib/#{common_library}")
+  elsif is_dtk_common_installed?
     require common_library
   else
-    dtk_require("../../" + determine_common_folder() + "/lib/#{common_library}")
+    raise DTK::Client::DtkError,"Common directory/gem not found, please make sure that you have cloned dtk-common folder or installed dtk common gem!"
   end
 end
 
@@ -73,5 +77,5 @@ def determine_common_folder
     return folder if File.directory?(path)
   end
 
-  raise DTK::Client::DtkError,"Common directory not found, please make sure that you have cloned dtk-common folder!"
+  return nil
 end

@@ -187,6 +187,8 @@ rescue Interrupt => e
   #system('stty', stty_save) # Restore
   puts
 ensure
+  # logout
+  DTK::Client::Session.logout()
   # save users history
   DTK::Shell::Context.save_session_history(Readline::HISTORY.to_a)
   exit
