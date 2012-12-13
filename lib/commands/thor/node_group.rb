@@ -15,14 +15,14 @@ module DTK::Client
       return :node_group, "node_group/list", nil
     end
 
-    desc "list","List Node groups"
-    def list()
-      search_hash = SearchHash.new()
-      search_hash.cols = pretty_print_cols()
-      search_hash.filter = [:oneof, ":type", ["node_group_instance"]]
-      response = post rest_url("node_group/list"), search_hash.post_body_hash()
-      response.render_table(:node_group)
-    end
+    # desc "list","List Node groups"
+    # def list()
+    #   search_hash = SearchHash.new()
+    #   search_hash.cols = pretty_print_cols()
+    #   search_hash.filter = [:oneof, ":type", ["node_group_instance"]]
+    #   response = post rest_url("node_group/list"), search_hash.post_body_hash()
+    #   response.render_table(:node_group)
+    # end
 
     desc "NODE-GROUP-NAME/ID set ATTRIBUTE-ID VALUE", "Set node group attribute value"
     def set(attr_id,value,node_group_id)
@@ -72,27 +72,35 @@ module DTK::Client
       return response
     end
 
-    desc "NODE-GROUP-NAME/ID show components|attributes","List components or attributes that are on the node group."
-    def show(*rotated_args)
-      #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
-      node_group_id,about = rotate_args(rotated_args)
+    desc "[NODE-GROUP-NAME/ID] list [components|attributes]","List components or attributes that are on the node group."
+    def list(*rotated_args)
+      if (rotated_args.size == 0) 
+        search_hash = SearchHash.new()
+        search_hash.cols = pretty_print_cols()
+        search_hash.filter = [:oneof, ":type", ["node_group_instance"]]
+        response = post rest_url("node_group/list"), search_hash.post_body_hash()
+        response.render_table(:node_group)
+      else
+        #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
+        node_group_id,about = rotate_args(rotated_args)
 
-      post_body = {
-        :node_group_id => node_group_id,
-        :about         => about
-      }
+        post_body = {
+          :node_group_id => node_group_id,
+          :about         => about
+        }
 
-      case about
-        when "components":
-          data_type = :component
-        when "attributes":
-          data_type = :attribute
-        else
-          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+        case about
+          when "components":
+            data_type = :component
+          when "attributes":
+            data_type = :attribute
+          else
+            raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+        end
+
+        response = post rest_url("node_group/info_about"), post_body
+        response.render_table(data_type)
       end
-
-      response = post rest_url("node_group/info_about"), post_body
-      response.render_table(data_type)
     end
 
     desc "NODE-GROUP-NAME/ID members", "List node group members"

@@ -149,58 +149,55 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
-    desc "list","List asssembly instances"
-    method_option :list, :aliases => '-ls', :type => :boolean, :default => false
-    def list()
-
-      data_type = :assembly
-      response = post rest_url("assembly/list"), {:subtype  => 'instance'}
-
-      # set render view to be used
-      response.render_table(data_type) unless options.list?
-     
-      response
-    end
-
     #TODO: put in flag to control detail level
-    desc "ASSEMBLY-NAME/ID show nodes|components|attributes|tasks [FILTER] [--list]","List nodes, components, attributes or tasks associated with assembly."
+    desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
     method_option :list, :type => :boolean, :default => false
-    def show(*rotated_args)
-      #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
-      assembly_id,about,filter = rotate_args(rotated_args)
-      about ||= "none"
-      #TODO: need to detect if two args given by list [nodes|components|tasks FILTER
-      #can make sure that first arg is not one of [nodes|components|tasks] but these could be names of assembly (although unlikely); so would then need to
-      #look at form of FILTER
-      response = ""
+    def list(*rotated_args)
+      if (rotated_args.size == 0)
+        data_type = :assembly
+        response = post rest_url("assembly/list"), {:subtype  => 'instance'}
 
-      post_body = {
-        :assembly_id => assembly_id,
-        :subtype     => 'instance',
-        :about       => about,
-        :filter      => filter
-      }
+        # set render view to be used
+        response.render_table(data_type) unless options.list?
+       
+        response
+      else
+        #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
+        assembly_id,about,filter = rotate_args(rotated_args)
+        about ||= "none"
+        #TODO: need to detect if two args given by list [nodes|components|tasks FILTER
+        #can make sure that first arg is not one of [nodes|components|tasks] but these could be names of assembly (although unlikely); so would then need to
+        #look at form of FILTER
+        response = ""
 
-      case about
-        when "nodes":
-          data_type = :node
-        when "components":
-          data_type = :component
-        when "attributes":
-          data_type = :attribute
-        when "tasks":
-          data_type = :task
-        else
-          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+        post_body = {
+          :assembly_id => assembly_id,
+          :subtype     => 'instance',
+          :about       => about,
+          :filter      => filter
+        }
+
+        case about
+          when "nodes":
+            data_type = :node
+          when "components":
+            data_type = :component
+          when "attributes":
+            data_type = :attribute
+          when "tasks":
+            data_type = :task
+          else
+            raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+        end
+
+        response = post rest_url("assembly/info_about"), post_body
+        # set render view to be used
+        unless options.list?
+          response.render_table(data_type)
+        end
+       
+        return response
       end
-
-      response = post rest_url("assembly/info_about"), post_body
-      # set render view to be used
-      unless options.list?
-        response.render_table(data_type)
-      end
-     
-      return response
     end
 
 =begin

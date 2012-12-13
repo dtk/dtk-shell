@@ -15,38 +15,37 @@ module DTK::Client
     def info(library_id=nil)
       not_implemented
     end
-    
-    desc "list","List libraries."
-    def list()
-      # sets data type to be used when printing table
-      #TODO: move away from old-sytle list rest call
-      search_hash = SearchHash.new()
-      search_hash.cols = pretty_print_cols()
-      response = post rest_url("library/list"), search_hash.post_body_hash
-      response.render_table(:library)
-    end
 
-    desc "[LIBRARY ID/NAME] show nodes|components|assemblies","Show nodes, components, or assemblies associated with library"
-    def show(arg1,arg2)
-      library_id,about = [arg2,arg1]
-      # sets data type to be used when printing table
-      case about
-       when "assemblies"
-        data_type = :assembly_template
-       when "nodes"
-        data_type = :node_template
-       when "components"
-        data_type = :component
-       else
-        raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+    desc "[LIBRARY ID/NAME] list [nodes|components|assemblies]","Show nodes, components, or assemblies associated with library"
+    # def show(arg1,arg2)
+    def list(*rotated_args)
+      if (rotated_args.size == 0)
+        search_hash = SearchHash.new()
+        search_hash.cols = pretty_print_cols()
+        response = post rest_url("library/list"), search_hash.post_body_hash
+        response.render_table(:library)
+      else
+        # library_id,about = [arg2,arg1]
+        library_id,about = rotate_args(rotated_args)
+        # sets data type to be used when printing table
+        case about
+         when "assemblies"
+          data_type = :assembly_template
+         when "nodes"
+          data_type = :node_template
+         when "components"
+          data_type = :component
+         else
+          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+        end
+
+        post_body = {
+          :library_id => library_id,
+          :about => about
+        }
+        response = post rest_url("library/info_about"), post_body
+        response.render_table(data_type)
       end
-
-      post_body = {
-        :library_id => library_id,
-        :about => about
-      }
-      response = post rest_url("library/info_about"), post_body
-      response.render_table(data_type)
     end
 
     desc "[LIBRARY ID/NAME] import-service-module REMOTE-SERVICE-MODULE[,...]", "Import remote service module into library"

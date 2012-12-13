@@ -124,13 +124,17 @@ module DTK
         @conn    = conn if @conn.nil?
         clazz, endpoint, subtype = whoami()
 
-        response = get_cached_response(clazz, endpoint, subtype)
-
-        unless (response.nil? || response.empty? || response['data'].nil?)
-          response['data'].each do |element|
-            return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+        3.downto(1) do
+          response = get_cached_response(clazz, endpoint, subtype)
+          unless (response.nil? || response.empty? || response['data'].nil?)
+            response['data'].each do |element|
+              return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+            end
+            return false
           end
-          return false
+
+          break if response["status"].eql?('ok')
+          sleep(1)
         end
 
         DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")
@@ -141,16 +145,20 @@ module DTK
         @conn    = conn if @conn.nil?
         clazz, endpoint, subtype = whoami()
 
-        response = get_cached_response(clazz, endpoint, subtype)
+        3.downto(1) do
+          response = get_cached_response(clazz, endpoint, subtype)
+          unless (response.nil? || response.empty?)
+            unless response['data'].nil?
+              identifiers = []
+              response['data'].each do |element|
+                 identifiers << element['display_name']
+              end
+              return identifiers
+            end          
+          end
 
-        unless (response.nil? || response.empty?)
-          unless response['data'].nil?
-            identifiers = []
-            response['data'].each do |element|
-               identifiers << element['display_name']
-            end
-            return identifiers
-          end          
+          break if response["status"].eql?('ok')
+          sleep(1)
         end
 
         DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")

@@ -23,45 +23,44 @@ module DTK::Client
       post rest_url("assembly/info"), post_body
     end
 
-    desc "list", "List all assembly templates."
-    def list()
-      response = post rest_url("assembly/list"), {:subtype => 'template'}
-      data_type = :assembly_template
-      response.render_table(data_type) 
-    end
-
 #    desc "[ASSEMBLY-TEMPLATE-NAME/ID] show [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
     #TODO: temporaily taking out target option
-    desc "ASSEMBLY-TEMPLATE-NAME/ID show nodes|components", "List all nodes/components for given assembly template."
+    desc "[ASSEMBLY-TEMPLATE-NAME/ID] list [nodes|components]", "List all nodes/components for given assembly template."
     method_option :list, :type => :boolean, :default => false
-    def show(arg1,arg2)
-      assembly_id, about = [arg2,arg1] 
+    def list(*rotated_args)
+      if (rotated_args.size == 0)
+        response = post rest_url("assembly/list"), {:subtype => 'template'}
+        data_type = :assembly_template
+        response.render_table(data_type)
+      else
+        assembly_id, about = rotate_args(rotated_args)
 
-      post_body = {
-        :assembly_id => assembly_id,
-        :subtype => 'template',
-        :about => about
-      }
+        post_body = {
+          :assembly_id => assembly_id,
+          :subtype => 'template',
+          :about => about
+        }
 
-      case about
-      when 'nodes'
-        response = post rest_url("assembly/info_about"), post_body
-        data_type = :node_template
-      when 'components'
-        response = post rest_url("assembly/info_about"), post_body
-        data_type = :component
+        case about
+        when 'nodes'
+          response = post rest_url("assembly/info_about"), post_body
+          data_type = :node_template
+        when 'components'
+          response = post rest_url("assembly/info_about"), post_body
+          data_type = :component
 =begin
       when 'targets'
         response = post rest_url("assembly/info_about"), post_body
         data_type = :target
 =end
-      else
-        raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+        else
+          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+        end
+
+        response.render_table(data_type) unless options.list?
+
+        response
       end
-
-      response.render_table(data_type) unless options.list?
-
-      response
     end
 
     desc "ASSEMBLY-TEMPLATE-NAME/ID stage [INSTANCE-NAME]", "Stage assembly template in target."

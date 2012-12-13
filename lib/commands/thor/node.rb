@@ -15,14 +15,14 @@ module DTK::Client
       return :node, "node/list", nil
     end
     
-    desc "list","List node instances"
-    method_option :list, :aliases => '-ls', :type => :boolean, :default => false
-    def list()
-      response = post rest_url("node/list")
+    # desc "list","List node instances"
+    # method_option :list, :aliases => '-ls', :type => :boolean, :default => false
+    # def list()
+    #   response = post rest_url("node/list")
 
-      response.render_table(:node) unless options.list?
-      response
-    end
+    #   response.render_table(:node) unless options.list?
+    #   response
+    # end
 
     desc "NODE-NAME/ID info","Info about node"
     def info(node_id)
@@ -33,28 +33,36 @@ module DTK::Client
        post rest_url("node/info"), post_body
     end
 
-    desc "NODE-NAME/ID show components","List components that are on the node instance."
-    def show(*rotated_args)
-      #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
-      node_id,about = rotate_args(rotated_args)
+    desc "[NODE-NAME/ID] list [components|attributes]","List components that are on the node instance."
+    method_option :list, :type => :boolean, :default => false
+    def list(*rotated_args)
+      if (rotated_args.size == 0)
+        response = post rest_url("node/list")
 
-      post_body = {
-        :node_id => node_id,
-        :subtype => 'instance',
-        :about   => about
-      }
+        response.render_table(:node) unless options.list?
+        response
+      else
+        #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
+        node_id,about = rotate_args(rotated_args)
 
-      case about
-        when "components":
-          data_type = :component
-        when "attributes":
-          data_type = :attribute
-        else
-          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+        post_body = {
+          :node_id => node_id,
+          :subtype => 'instance',
+          :about   => about
+        }
+
+        case about
+          when "components":
+            data_type = :component
+          when "attributes":
+            data_type = :attribute
+          else
+            raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+        end
+
+        response = post rest_url("node/info_about"), post_body
+        response.render_table(data_type)
       end
-
-      response = post rest_url("node/info_about"), post_body
-      response.render_table(data_type)
     end
 
     desc "NODE-NAME/ID set ATTRIBUTE-ID VALUE", "Set node group attribute value"
