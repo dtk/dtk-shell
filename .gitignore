@@ -2,3 +2,4 @@ lib/config/local.conf
 test_scripts
 dtk*.gem
 test.rb
+Gemfile.lock

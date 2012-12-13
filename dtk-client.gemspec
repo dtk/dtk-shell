@@ -16,15 +16,17 @@ Gem::Specification.new do |gem|
   gem.version       = DtkClient::VERSION
 
   gem.add_dependency 'bundler','>= 1.1.5'
-  gem.add_dependency 'json','~> 1.7.4'
+  gem.add_dependency 'json','1.7.4'
   gem.add_dependency 'hirb','~> 0.7.0'
   gem.add_dependency 'thor','~> 0.15.4'
   gem.add_dependency 'activesupport','~> 3.2.7'
   gem.add_dependency 'erubis','~> 2.7.0'
+  gem.add_dependency 'rspec','~> 2.11.0'
   gem.add_dependency 'grit','~> 2.5.0'
-  gem.add_dependency 'dtk-common','~> 0.1.0'
+  gem.add_dependency 'dtk-common','>= 0.1.0'
   gem.add_dependency 'jenkins-client','~> 0.0.1'
   gem.add_dependency 'colorize','~> 0.5.8'
   gem.add_dependency 'fakeweb','~> 1.3.0'
+  gem.add_dependency 'awesome_print','~> 1.1.0'
   gem.add_dependency 'rdoc','~> 3.12'
 end
