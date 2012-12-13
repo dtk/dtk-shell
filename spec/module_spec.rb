@@ -20,10 +20,10 @@ describe DTK::Client::Module do
     end
   end
 
-  # for previously taken module_id, do show-components
+  # for previously taken module_id, do list-components
   context "#list/command" do
     unless $module_id.nil?
-      command = "dtk module #{$module_id} show-components"
+      command = "dtk module #{$module_id} list-components"
       output  = `#{command}`
 
       it "should list all components for module with id #{$module_id}" do

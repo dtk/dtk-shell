@@ -23,11 +23,11 @@ describe DTK::Client::Assembly do
     end
   end
 
-  # for previously taken assembly_id, do show nodes|components|tasks
+  # for previously taken assembly_id, do list nodes|components|tasks
   context "#list/command" do
     unless $assembly_id.nil?
       list.each do |list_element|
-        command = "dtk assembly #{$assembly_id} show #{list_element}"
+        command = "dtk assembly #{$assembly_id} list #{list_element}"
         output = `#{command}`
 
         it "should list all #{list_element} for assembly with id #{$assembly_id}" do

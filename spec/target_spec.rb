@@ -27,7 +27,7 @@ describe DTK::Client::Target do
   context "#list command" do
   	unless $target_id.nil?
   		list.each do |list_element|
-        command = "dtk target #{$target_id} show #{list_element}"
+        command = "dtk target #{$target_id} list #{list_element}"
         output  = `#{command}`
 
         it "should list all nodes | assemblies" do

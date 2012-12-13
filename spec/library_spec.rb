@@ -27,7 +27,7 @@ describe DTK::Client::Library do
   context "Dtk CLI list specific library" do
   	unless $library_id.nil?
   	  list.each do |list_element|
-        command = "dtk library #{$library_id} show #{list_element}"
+        command = "dtk library #{$library_id} list #{list_element}"
         output = `#{command}`
 
         it "should list all #{list_element} for library with id #{$library_id}" do

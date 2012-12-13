@@ -23,11 +23,11 @@ describe DTK::Client::AssemblyTemplate do
     end
   end
 
-  # for previously taken assembly_template_id, do show nodes|components|targets
+  # for previously taken assembly_template_id, do list nodes|components|targets
   context "#list command" do
   	unless $assembly_template_id.nil?
       list.each do |list_element|
-        command = "dtk assembly-template #{$assembly_template_id} show #{list_element}"
+        command = "dtk assembly-template #{$assembly_template_id} list #{list_element}"
         output  = `#{command}`
 
         it "should list all #{list_element} for assembly-template with id #{$assembly_template_id}" do
