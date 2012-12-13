@@ -34,7 +34,13 @@ class Thor
           else
             if @@shell_context.tier_1?
               # remove optional data if tier 1 (DTK-211) TODO: Refactor this
-              help_item.first.gsub!(list_optional_data[0],'') unless list_optional_data.nil?
+              # help_item.first.gsub!(list_optional_data[0],'') unless list_optional_data.nil?
+
+              unless list_optional_data.nil?
+                list_optional_data.each do |item|
+                  help_item.first.gsub!(item,'') unless item.include?('--')
+                end
+              end
 
               # if it contains [] it is optional and will be available on both tiers
               if matched_data[0].include?('[')
@@ -46,7 +52,7 @@ class Thor
               # TODO: Better solution for this type of problems (DTK-211)
               unless list_optional_data.nil?
                 for i in 1..list_optional_data.size
-                  help_item.first.gsub!(list_optional_data[i].to_s,'')
+                  help_item.first.gsub!(list_optional_data[i].to_s,'') if list_optional_data[i].to_s.include?('--')
                 end
               end
 
