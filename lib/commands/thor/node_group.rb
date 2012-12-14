@@ -60,9 +60,12 @@ module DTK::Client
     end
 
     desc "delete NODE-GROUP-ID", "Delete node group"
+    method_option :force, :aliases => '-f', :type => :boolean, :default => false
     def delete(id)
-      # Ask user if really want to delete node group, if not then return to dtk-shell without deleting
-      return unless confirmation_prompt("Are you sure you want to delete node group '#{id}'?")
+      unless options.force?
+        # Ask user if really want to delete node group, if not then return to dtk-shell without deleting
+        return unless confirmation_prompt("Are you sure you want to delete node group '#{id}'?")
+      end
 
       post_body = {:node_group_id => id}
       response = post rest_url("node_group/delete"), post_body

@@ -128,12 +128,15 @@ module DTK::Client
 
     # desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
     desc "destroy NODE-ID", "Delete and destroy (terminate) node"
+    method_option :force, :aliases => '-f', :type => :boolean, :default => false
     def destroy(node_id)
       post_body = {
         :node_id => node_id
       }
-      # Ask user if really want to delete and destroy, if not then return to dtk-shell without deleting
-      return unless confirmation_prompt("Are you sure you want to destroy and delete node (#{node_id})?")
+      unless options.force?
+        # Ask user if really want to delete and destroy, if not then return to dtk-shell without deleting
+        return unless confirmation_prompt("Are you sure you want to destroy and delete node (#{node_id})?")
+      end
 
       response = post rest_url("node/destroy_and_delete"), post_body
       @@invalidate_map << :node
