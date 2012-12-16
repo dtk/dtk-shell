@@ -144,7 +144,10 @@ module DTK::Client
       return response
     end
 
-
+    desc "NODE-NAME/ID op-status", "Get node operational status"
+    def op_status(node_id)
+      post rest_url("node/get_op_status"), :node_id => node_id
+    end
 
     desc "NODE-NAME/ID start", "Start node instance."
     def start(node_id)
