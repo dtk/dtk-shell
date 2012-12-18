@@ -16,6 +16,7 @@ Gem::Specification.new do |gem|
   gem.version       = DtkClient::VERSION
 
   gem.add_dependency 'bundler','>= 1.1.5'
+  gem.add_dependency 'ruby-debug','>= 0.10.4'
   gem.add_dependency 'json','1.7.4'
   gem.add_dependency 'hirb','~> 0.7.0'
   gem.add_dependency 'thor','~> 0.15.4'
