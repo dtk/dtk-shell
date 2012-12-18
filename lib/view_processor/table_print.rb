@@ -1,6 +1,8 @@
 require 'hirb'
 require 'ostruct'
 require 'colorize'
+require 'rest_client'
+require 'json'
 
 dtk_require("../config/disk_cacher")
 
@@ -28,6 +30,10 @@ module DTK
     class DtkResponse
 
       include Hirb::Console
+      include CommandBase
+      extend  CommandBase
+
+
 
       attr_accessor :command_name, :order_defintion, :evaluated_data
 
@@ -123,11 +129,8 @@ module DTK
       end
 
       def get_metadata
-        # TODO: replace this with proper call, 1200000 is age of the request in this case 20 mins
-        content = DiskCacher.new.fetch("http://localhost/mockup/get_table_metadata", ::Config::Configuration.get(:meta_table_ttl))
-        #FakeWeb.register_uri(:get, "http://localhost/mockup/get_table_metadata", :body => "Hello World!")
-        #response = Net::HTTP.get(URI.parse("http://localhost/mockup/get_table_metadata"))
-        #content = File.open(File.expand_path('../../test.json',File.dirname(__FILE__)),'rb').read
+        content = DiskCacher.new.fetch("table_metadata", ::Config::Configuration.get(:meta_table_ttl))
+
         raise DTK::Client::DtkError, "Table metadata is empty, please contact DTK team." if content.empty?
         return JSON.parse(content)
       end
