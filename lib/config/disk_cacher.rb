@@ -2,23 +2,19 @@ require 'net/http'
 require 'md5'
 require 'fakeweb'
 require File.expand_path('../util/os_util', File.dirname(__FILE__))
+dtk_require("../commands")
 
 class DiskCacher
-
+  include DTK::Client::CommandBase
+  extend DTK::Client::CommandBase
 
   def initialize(cache_dir=DTK::Client::OsUtil.get_temp_location())
     @cache_dir = cache_dir
   end
-  def fetch(url, max_age=0, use_mock_up=true)
-    file = MD5.hexdigest(url)
-    file_path = File.join(@cache_dir, file)
 
-    # TODO: Remove this
-    if use_mock_up
-      FakeWeb.register_uri(:get, "http://localhost/mockup/get_table_metadata", :body => File.open(File.expand_path('../../meta-response.json',File.dirname(__FILE__)),'rb').read)
-      FakeWeb.register_uri(:get, "http://localhost/mockup/get_const_metadata", :body => File.open(File.expand_path('../../meta-constants-response.json',File.dirname(__FILE__)),'rb').read)
-      FakeWeb.register_uri(:get, "http://localhost/mockup/get_pp_metadata",    :body => File.open(File.expand_path('../../meta-pretty-print-response.json',File.dirname(__FILE__)),'rb').read)
-    end
+  def fetch(file_name, max_age=0, use_mock_up=true)
+    file = MD5.hexdigest(file_name)
+    file_path = File.join(@cache_dir, file)
 
     # we check if the file -- a MD5 hexdigest of the URL -- exists
     #  in the dir. If it does and the data is fresh, we just read
@@ -28,11 +24,14 @@ class DiskCacher
     end
 
     # if the file does not exist (or if the data is not fresh), we
-    #  make an HTTP request and save it to a file
+    #  make an get request and save it to a file
     response_string = ""
+    @response = get rest_url("metadata/get_metadata/#{file_name}")
 
-    file = File.open(file_path, "w") do |data|
-      data << response_string=Net::HTTP.get_response(URI.parse(url)).body
+    if (@response["status"] == "ok")
+      file = File.open(file_path, "w") do |data|
+        data << response_string = @response["data"]
+      end
     end
 
     return response_string

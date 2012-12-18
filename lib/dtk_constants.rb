@@ -6,7 +6,8 @@ class PPColumns
   include Singleton
 
   def initialize
-    content = DiskCacher.new.fetch("http://localhost/mockup/get_const_metadata", ::Config::Configuration.get(:meta_constants_ttl))
+    # content = DiskCacher.new.fetch("http://localhost/mockup/get_const_metadata", ::Config::Configuration.get(:meta_constants_ttl))
+    content = DiskCacher.new.fetch("const_metadata", ::Config::Configuration.get(:meta_constants_ttl))
     raise DTK::Client::DtkError, "Require constants metadata is empty, please contact DTK team." if content.empty?
     @constants = JSON.parse(content)
   end
