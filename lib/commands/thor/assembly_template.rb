@@ -130,7 +130,7 @@ module DTK::Client
 
 
     desc "delete ASSEMBLY-NAME/ID", "Delete assembly template"
-    method_option :force, :aliases => '-f', :type => :boolean, :default => false
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(assembly_id)
       unless options.force?
         # Ask user if really want to delete assembly-template, if not then return to dtk-shell without deleting

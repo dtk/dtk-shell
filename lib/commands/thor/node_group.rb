@@ -60,7 +60,7 @@ module DTK::Client
     end
 
     desc "delete NODE-GROUP-ID", "Delete node group"
-    method_option :force, :aliases => '-f', :type => :boolean, :default => false
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(id)
       unless options.force?
         # Ask user if really want to delete node group, if not then return to dtk-shell without deleting

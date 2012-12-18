@@ -128,7 +128,7 @@ module DTK::Client
 
     # desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
     desc "destroy NODE-ID", "Delete and destroy (terminate) node"
-    method_option :force, :aliases => '-f', :type => :boolean, :default => false
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def destroy(node_id)
       post_body = {
         :node_id => node_id

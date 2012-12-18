@@ -234,7 +234,7 @@ module DTK::Client
     end
 
     desc "delete-and-destroy ASSEMBLY-ID", "Delete assembly instance, termining any nodes taht have been spun up"
-    method_option :force, :aliases => '-f', :type => :boolean, :default => false
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(assembly_id)
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting

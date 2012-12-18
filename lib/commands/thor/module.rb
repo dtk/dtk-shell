@@ -17,7 +17,7 @@ module DTK::Client
 
     #### create and delete commands ###
     desc "delete MODULE-ID/NAME", "Delete component module and all items contained in it"
-    method_option :force, :aliases => '-f', :type => :boolean, :default => false
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(component_module_id)
       unless options.force?
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting

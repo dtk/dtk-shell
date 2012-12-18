@@ -11,7 +11,7 @@ module DTK::Client
     end
 
     desc "delete REPO-ID", "Delete repo"
-    method_option :force, :aliases => '-f', :type => :boolean, :default => false
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(repo_id)
       unless options.force?
         # Ask user if really want to delete repo, if not then return to dtk-shell without deleting
