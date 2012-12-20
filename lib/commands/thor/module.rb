@@ -82,7 +82,7 @@ module DTK::Client
         :module_name => module_name,
         :scaffold_if_no_dsl => true
       }
-      response = post(rest_url("component_module/update_repo_and_add_dsl_data"),post_body)
+      response = post(rest_url("component_module/update_repo_and_add_dsl"),post_body)
       return response unless response.ok?
 
       if dsl_created = response.data(:dsl_created)
