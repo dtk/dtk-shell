@@ -58,7 +58,9 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
       error_msg = error_msg.empty? ? 'No error description found' : "#{error_msg}"
       
       # if error_internal.first == true
-      if error_code == "timeout"
+      if error_code == "forbidden"
+        raise DTK::Client::DtkError, "[FORBIDDEN] Your session has been suspended or timed out, please log in again."
+      elsif error_code == "timeout"
         raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
       elsif error_internal
         raise DTK::Client::DtkError, "[SERVER INTERNAL ERROR] #{error_msg}"
