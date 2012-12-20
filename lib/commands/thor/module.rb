@@ -15,6 +15,20 @@ module DTK::Client
       return :module_component, "component_module/list", nil
     end
 
+#TODO: in for testing; may remove
+    desc "MODULE-ID/NAME dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
+    def dsl_upgrade(arg1,arg2=nil)
+      component_module_id,dsl_version = (arg2 ? [arg2,arg1] : [arg1])
+      dsl_version ||= MostRecentDSLVersion
+      post_body = {
+        :component_module_id => component_module_id,
+        :dsl_version => dsl_version
+      }
+       post rest_url("component_module/create_new_dsl_version"),post_body
+    end
+    MostRecentDSLVersion = 2
+### end
+
     #### create and delete commands ###
     desc "delete MODULE-ID/NAME", "Delete component module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
@@ -66,14 +80,14 @@ module DTK::Client
         :repo_id => repo_id,
         :library_id => library_id,
         :module_name => module_name,
-        :scaffold_if_no_meta => true
+        :scaffold_if_no_dsl => true
       }
-      response = post(rest_url("component_module/update_repo_and_add_meta_data"),post_body)
+      response = post(rest_url("component_module/update_repo_and_add_dsl_data"),post_body)
       return response unless response.ok?
 
-      if meta_created = response.data(:meta_created)
-        msg = "First cut of meta file (#{meta_created["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
-        response = GitRepo.add_file(repo_branch,meta_created["path"],meta_created["content"],msg)
+      if dsl_created = response.data(:dsl_created)
+        msg = "First cut of dsl file (#{dsl_created["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
+        response = GitRepo.add_file(repo_branch,dsl_created["path"],dsl_created["content"],msg)
       end
       @@invalidate_map << :module_component
       response
