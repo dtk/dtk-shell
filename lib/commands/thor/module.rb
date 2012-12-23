@@ -16,6 +16,11 @@ module DTK::Client
     end
 
 #TODO: in for testing; may remove
+    desc "MODULE-ID/NAME test-generate-dsl", "Test generating DSL from implementation"
+    def test_generate_dsl(component_module_id)
+      post rest_url("component_module/test_generate_dsl"),{:component_module_id => component_module_id}
+    end
+
     desc "MODULE-ID/NAME dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
     def dsl_upgrade(arg1,arg2=nil)
       component_module_id,dsl_version = (arg2 ? [arg2,arg1] : [arg1])
