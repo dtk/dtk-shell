@@ -47,7 +47,7 @@ function check_for_ruby_gems {
 
 # checks that git is configured properly
 function check_git_config {
-  if [[ `command -v git 2>&1` ]]; then
+  if [[ `command -v gitz 2>&1` ]]; then
     if [[ ! `git config --get user.name` ]]; then
       echo "Git username not set. Please set it before continuing installation."
       echo "Command for setting username:"
@@ -61,6 +61,9 @@ function check_git_config {
       git_misconfigured=1
     fi;
     [[ $git_misconfigured == 1 ]] && exit 1
+  else
+    echo "Please install Git before using DTK Client. Installation will now continue, but some features will not work until Git is installed."
+    sleep 3
   fi;
 }
 
