@@ -134,7 +134,7 @@ module DTK::Client
     def delete(assembly_id)
       unless options.force?
         # Ask user if really want to delete assembly-template, if not then return to dtk-shell without deleting
-        return unless confirmation_prompt("Are you sure you want to delete assembly-template '#{assembly_id}'?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete assembly-template '#{assembly_id}'?")
       end
 
       post_body = {

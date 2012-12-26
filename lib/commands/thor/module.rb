@@ -40,7 +40,7 @@ module DTK::Client
     def delete(component_module_id)
       unless options.force?
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it?")
       end
 
       post_body = {
@@ -270,7 +270,7 @@ module DTK::Client
       module_location = "#{modules_path}/#{module_name}"
       # check if there is repository cloned 
       unless File.directory?(module_location)
-        if confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now?")
+        if Console.confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now?")
           response = clone(module_name,nil,true)
           # if error return
           unless response.ok?
@@ -283,7 +283,7 @@ module DTK::Client
       end
 
       # here we should have desired module cloned
-      unix_shell(module_location)
+      Console.unix_shell(module_location)
       grit_adapter = DTK::Common::GritAdapter::FileAccess.new(module_location)
 
       if grit_adapter.changed?
@@ -295,7 +295,7 @@ module DTK::Client
 
         # if there is no auto commit ask for confirmation
         unless auto_commit
-          confirmed_ok = confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?") 
+          confirmed_ok = Console.confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?") 
         end
 
         if (auto_commit || confirmed_ok)

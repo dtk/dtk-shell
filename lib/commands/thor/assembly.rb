@@ -133,7 +133,7 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
     def task_status(assembly_id)
-      task_status_aux(assembly_id,:assembly,options)
+      task_status_aux(assembly_id,:assembly,options.wait?)
     end
 
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
@@ -206,11 +206,9 @@ module DTK::Client
     desc "delete-all", "nenene"
     def delete_all()
       response = list()
-      # DEBUG SNIPPET >>> REMOVE <<<
-      require 'ap'
     
       response.data.each do |assembly|
-        ap delete_and_destroy(assembly['id'])
+        delete_and_destroy(assembly['id'])
       end
     end
 =end
@@ -238,7 +236,7 @@ module DTK::Client
     def delete_and_destroy(assembly_id)
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
-        return unless confirmation_prompt("Are you sure you want to delete and destroy assembly '#{assembly_id}' and its nodes?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy assembly '#{assembly_id}' and its nodes?")
       end
 
       post_body = {

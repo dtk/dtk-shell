@@ -5,6 +5,8 @@ require 'colorize'
 
 dtk_require("../../shell/interactive_wizard")
 dtk_require("../../util/os_util")
+dtk_require("../../util/console")
+dtk_require_common_commands('thor/task_status')
 
 
 module DTK
@@ -12,6 +14,9 @@ module DTK
     class CommandBaseThor < Thor
       include CommandBase
       extend  CommandBase
+      extend  TaskStatusMixin
+      extend  Console
+
       @@cached_response = {}
       @@invalidate_map  = []
       TIME_DIFF         = 60  #second(s)
@@ -25,7 +30,44 @@ module DTK
       def self.execute_from_cli(conn,argv,shell_execution=false)
         @@shell_execution = shell_execution
         ret = start(arg_analyzer(argv),:conn => conn)
+
+        # special case where we have validation reply
+        if ret.kind_of?(Response)
+          if ret.validation_response?
+            ret = action_on_revalidation_response(ret, conn, argv, shell_execution)
+          end
+        end
+
         ret.kind_of?(Response) ? ret : Response::NoOp.new
+      end
+
+      def self.action_on_revalidation_response(validation_response, conn, argv, shell_execution)
+        puts "[NOTICE] #{validation_response.validation_message}"
+        actions = validation_response.validation_actions
+
+        actions.each_with_index do |action, i|
+          if Console.confirmation_prompt("Pre-action '#{action['action']}' neeeded, execute?")
+            # we have hash map with values { :assembly_id => 2123123123, :option_1 => true }
+            # we translate to array of values, with action as first element
+            method_args = action['params'].values.unshift(action['action'])
+            response = self.execute_from_cli(conn, method_args, shell_execution)
+            # we abort if error happens
+            ResponseErrorHandler.check(response)
+
+            if action['wait_for_complete']
+              entity_id, entity_type = action['wait_for_complete']['id'].to_s, action['wait_for_complete']['type']
+              puts "Waiting for task to complete ..."
+              task_status_aux(entity_id,entity_type,true)
+            end
+          else
+            # validation action are being skipped
+            return ""
+          end
+        end
+
+        puts "Executing original action: '#{argv.reverse.join('/')}' ..."
+        # if all executed correctly we run original action
+        return self.execute_from_cli(conn, argv, shell_execution)
       end
 
       # Method will check if there ID/Name before one of the commands if so
@@ -164,7 +206,6 @@ module DTK
         DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")
         return []
       end
-  
 
       no_tasks do
         # Method not implemented error
@@ -174,22 +215,6 @@ module DTK
 
         def is_numeric_id?(possible_id)             
           return !possible_id.match(/^[0-9]+$/).nil?
-        end
-        # Display confirmation prompt and repeat message until expected answer is given
-        def confirmation_prompt(message, add_options=true)
-          # used to disable skip with ctrl+c
-          trap("INT", "SIG_IGN")
-          message += " (yes|no)" if add_options
-
-          while line = Readline.readline("#{message}: ", true)
-            if (line.eql?("yes") || line.eql?("y"))
-              trap("INT",false)
-              return true
-            elsif (line.eql?("no") || line.eql?("n"))
-              trap("INT",false)
-              return false
-            end
-          end
         end
 
         # User input prompt
@@ -203,97 +228,12 @@ module DTK
           end          
         end
 
-        # Loading output used to display waiting status
-        def wait_animation(message, time_seconds)
-          # horizontal dash charcter
-          h_dash = ["2014".hex].pack("U")
-
-          print message
-          print " [     ]"
-          STDOUT.flush
-          time_seconds.downto(1) do
-            1.upto(4) do |i|
-              next_output = "\b\b\b\b\b\b\b"
-              case
-               when i % 4 == 0
-                next_output  += "[ =   ]"
-               when i % 3 == 0
-                 next_output += "[  =  ]"
-               when i % 2 == 0
-                next_output  += "[   = ]"
-               else
-                next_output  += "[  =  ]"
-              end
-
-              print next_output
-              STDOUT.flush
-              sleep(0.25)
-            end
-          end
-          # remove loading animation
-          print "\b\b\b\b\b\b\bRefreshing..."
-          STDOUT.flush
-          puts 
-        end
-
-        ##
-        # Method that will execute until interupted as unix like shell. As input takes
-        # path to desire directory from where unix shell can execute normaly.
-        #
-        def unix_shell(path=nil)
-
-          if OsUtil.is_windows?
-            puts "[NOTICE] Unix shell interaction is currenly not supported on Windows."
-            return
-          end
-
-          application_dir     = Dir.getwd()
-          # if no directory provided we are using application shell
-          path = path || application_dir
-          # we need to change path like this since system call 'cd' is not supported
-          Dir.chdir(path)
-          puts "[NOTICE] You are switching to unix-shell, to path #{path}"
-          begin
-            while line = Readline.readline("unix-shell: ".colorize(:yellow), true)
-              begin
-                line = line.chomp()
-                break if line.eql?('exit')
-                # since we are not able to support cd command due to ruby specific restrictions
-                # we will be using chdir to this.
-                if (line.match(/^cd /))
-                  # remove cd part of command
-                  line = line.gsub(/^cd /,'')
-                  # does the command start with '/'
-                  if (line.match(/^\//))
-                    # if so just go to desired line
-                    Dir.chdir(line)
-                  else
-                    # we created wanted path 
-                    Dir.chdir("#{Dir.getwd()}/#{line}")
-                  end
-                else
-                  system(line)        
-                end
-              rescue Exception => e
-                puts e.message
-              end
-            end
-          rescue Interrupt
-            puts ""
-            # do nothing else
-          end
-          puts "[NOTICE] You are leaving unix-shell."
-        end
-
         ##
         # SHARED CODE - CODE SHARED BETWEEN 2 or more COMMAND ENTITIES
         ##
         # ASSEMBLY & NODE CODE
         ## 
-
-        def assembly_start(assembly_id, node_pattern_filter)
-
-             
+        def assembly_start(assembly_id, node_pattern_filter)             
 
           post_body = {
             :assembly_id  => assembly_id,
@@ -346,9 +286,6 @@ module DTK
         # SHARED CODE - CODE END
         ##
       end
-
-
-
 
 
       ##
