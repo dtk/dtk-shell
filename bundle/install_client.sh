@@ -45,6 +45,28 @@ function check_for_ruby_gems {
   fi
 }
 
+# checks that git is configured properly
+function check_git_config {
+  if [[ `command -v git 2>&1` ]]; then
+    if [[ ! `git config --get user.name` ]]; then
+      echo "Git username not set. Please set it before continuing installation."
+      echo "Command for setting username:"
+      echo "git config --global user.name "User Name""
+      git_misconfigured=1
+    fi;
+    if [[ ! `git config --get user.email` ]]; then
+      echo "Git email not set. Please set it before continuing installation."
+      echo "Command for setting username:"
+      echo "git config --global user.email "me@example.com""
+      git_misconfigured=1
+    fi;
+    [[ $git_misconfigured == 1 ]] && exit 1
+  else
+    echo "Please install Git before using DTK Client. Installation will now continue, but some features will not work until Git is installed."
+    sleep 3
+  fi;
+}
+
 # installs gem if not already installed
 function install_gem {
   gem_exists $1
@@ -101,6 +123,8 @@ if [[ $# == 1 ]] && [[ $1 == "uninstall" ]]; then
   perform_uninstall
   exit 0
 fi;
+
+check_git_config
 
 # check number of arguments
 if [[ $# -ne 0 ]] && [[ $# -ne 4 ]]; then
