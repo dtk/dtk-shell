@@ -10,7 +10,7 @@ module DTK::Client
       }
       post_body.merge!(:version => version) if version 
       
-      response =  post(rest_url("#{module_type}/workspace_branch_info"),post_body) 
+      response =  post(rest_url("#{module_type}/get_workspace_branch_info"),post_body) 
       return response unless response.ok?
       
       dtk_require_from_base('command_helpers/git_repo')
