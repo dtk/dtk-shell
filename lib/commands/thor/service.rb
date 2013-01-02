@@ -188,13 +188,14 @@ module DTK::Client
       }
       post rest_url("service_module/remove_user_direct_access"), post_body
     end
-
+=begin
+TODO: needs to be rewritten
     desc "create-jenkins-project SERVICE-ID", "Create Jenkins project for service module"
     def create_jenkins_project(service_module_id)
       #require put here so dont necessarily have to install jenkins client gems
 
       dtk_require_from_base('command_helpers/jenkins_client')
-      response = get rest_url("service_module/deprecate_workspace_branch_info/#{service_module_id.to_s}")
+      response = get rest_url("service_module/workspace_branch_info/#{service_module_id.to_s}")
       unless response.ok?
         errors_message = ''
         response['errors'].each { |error| errors_message += ", reason='#{error['code']}' message='#{error['message']}'" }
@@ -205,7 +206,7 @@ module DTK::Client
       #TODO: right now JenkinsClient wil throw error if problem; better to create an error resonse
       response
     end
-        
+=end        
   end
 end
 
