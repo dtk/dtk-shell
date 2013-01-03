@@ -183,7 +183,7 @@ module DTK::Client
       response
     end
 
-    desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
+    desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional parameters are path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def remove_direct_access(path_to_key=nil)
       path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
       unless File.file?(path_to_key)

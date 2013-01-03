@@ -38,10 +38,18 @@ module DTK; module Client
     end
 
     #TODO: not treating versions yet
+    #opts can have the following keys
+    #
+    #:remote_repo
+    #:remote_branch
+    #:remote_url
+    #:local_branch
+    #:no_fetch
+    #
     def push_changes(type,module_name,opts={})
       Response.wrap_helper_actions() do
         repo_dir = local_repo_dir(type,module_name)
-        repo = create(repo_dir)
+        repo = create(repo_dir,opts[:local_branch])
         diffs = push_repo_changes_aux(repo,opts)
         {"diffs" => diffs}
       end
@@ -99,8 +107,6 @@ module DTK; module Client
    private
     def push_repo_changes_aux(repo,opts={})
       diffs = Hash.new
-      branch = repo.branch 
-
       #add any file that is untracked
       status = repo.status()
       if status[:untracked]
@@ -112,13 +118,14 @@ module DTK; module Client
       end
       
       unless opts[:no_fetch]
-        repo.fetch(remote())
+        repo.fetch(remote(opts[:remote_repo]))
       end
 
-      remote_branch = remote_branch(branch)
+      local_branch = repo.branch 
+      remote_branch_ref = remote_branch_ref(local_branch,opts)
 
       #check if merge needed
-      merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch)
+      merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch_ref)
       if merge_rel == :equal
         diffs
       elsif [:branchpoint,:local_behind].include?(merge_rel)
@@ -126,10 +133,13 @@ module DTK; module Client
       elsif merge_rel == :local_ahead
         #see if any diffs between fetched remote and local branch
         #this has be done after commit
-        diffs = repo.diff("remotes/#{remote_branch}",branch).ret_summary()
+        diffs = repo.diff("remotes/#{remote_branch_ref}",local_branch).ret_summary()
         return diffs unless diffs.any_diffs?()
 
-        repo.push()
+        if opts[:remote_repo] and opts[:remote_url]
+          repo.add_remote?(opts[:remote_repo],opts[:remote_url])
+        end
+        repo.push(remote_branch_ref)
 
         diffs
       else
@@ -137,11 +147,11 @@ module DTK; module Client
       end
     end
 
-    def remote()
-      "origin"
+    def remote(remote_repo=nil)
+      remote_repo||"origin"
     end
-    def remote_branch(branch)
-      "#{remote()}/#{branch}"
+    def remote_branch_ref(local_branch,opts={})
+      "#{remote(opts[:remote_repo])}/#{opts[:remote_branch]||local_branch}"
     end
 
     def create_or_init(type,repo_dir,branch)
