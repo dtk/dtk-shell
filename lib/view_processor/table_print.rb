@@ -174,10 +174,16 @@ module DTK
         raise DTK::Client::DtkError,"Provided table definition is not valid. Please review your order and mapping for provided definition: \n #{forced_metadata.inspect}"
       end
 
+      def filter_remove_underscore(field)
+        
+      end
+
       def print
+
+        filter_remove_underscore = Proc.new { |header| header.gsub('_',' ')}
         # hirb print out of our evaluated data in order defined
         # Available options can be viewed here: http://tagaholic.me/hirb/doc/classes/Hirb/Helpers/Table.html#M000008
-        table(@evaluated_data,{:fields => @order_definition,:escape_special_chars => true, :resize => false, :vertical => false })
+        table(@evaluated_data,{:fields => @order_definition,:escape_special_chars => true, :resize => false, :vertical => false, :header_filter => filter_remove_underscore })
 
         # in case there were error we print those errors
         unless @error_data.empty?
