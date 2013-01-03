@@ -176,7 +176,8 @@ module DTK
 
       def print
         # hirb print out of our evaluated data in order defined
-        table(@evaluated_data,{:fields => @order_definition,:escape_special_chars => true })
+        # Available options can be viewed here: http://tagaholic.me/hirb/doc/classes/Hirb/Helpers/Table.html#M000008
+        table(@evaluated_data,{:fields => @order_definition,:escape_special_chars => true, :resize => false, :vertical => true })
 
         # in case there were error we print those errors
         unless @error_data.empty?
