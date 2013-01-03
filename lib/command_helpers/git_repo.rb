@@ -116,6 +116,10 @@ module DTK; module Client
       if status.any_changes?() 
         repo.commit("Pushing changes from client") #TODO: make more descriptive
       end
+
+      if opts[:remote_repo] and opts[:remote_repo_url]
+        repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
+      end
       
       unless opts[:no_fetch]
         repo.fetch(remote(opts[:remote_repo]))
@@ -136,9 +140,6 @@ module DTK; module Client
         diffs = repo.diff("remotes/#{remote_branch_ref}",local_branch).ret_summary()
         return diffs unless diffs.any_diffs?()
 
-        if opts[:remote_repo] and opts[:remote_repo_url]
-          repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
-        end
         repo.push(remote_branch_ref)
 
         diffs
