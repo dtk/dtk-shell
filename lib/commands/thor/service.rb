@@ -2,6 +2,7 @@
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_from_base('command_helpers/git_repo')
 dtk_require_common_commands('thor/clone')
+dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/push_clone_changes')
 dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
@@ -13,6 +14,7 @@ module DTK::Client
 
     no_tasks do
       include CloneMixin
+      include PushToRemoteMixin
       include PushCloneChangesMixin
     end
 
@@ -84,10 +86,15 @@ module DTK::Client
 
     desc "SERVICE-NAME/ID push-to-remote", "Push local copy of service module to remote repository."
     def push_to_remote(service_module_id)
+      push_to_remote_aux(:service_module,service_module_id)
+    end
+
+    desc "SERVICE-NAME/ID push-to-remote-legacy", "Push local copy of service module to remote repository."
+    def push_to_remote_legacy(service_module_id)
       post_body = {
        :service_module_id => service_module_id
       }
-      post rest_url("service_module/push_to_remote"), post_body
+      post rest_url("service_module/push_to_remote_legacy"), post_body
     end
 
     desc "SERVICE-NAME/ID pull-from-remote", "Update local service module from remote repository."

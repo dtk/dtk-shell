@@ -1,6 +1,7 @@
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_dtk_common('grit_adapter')
 dtk_require_common_commands('thor/clone')
+dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/push_clone_changes')
 
 module DTK::Client
@@ -8,6 +9,7 @@ module DTK::Client
 
     no_tasks do
       include CloneMixin
+      include PushToRemoteMixin
       include PushCloneChangesMixin
     end
 
@@ -173,13 +175,17 @@ module DTK::Client
       post rest_url("component_module/export"), post_body
     end
 
-    desc "MODULE-ID/NAME push-to-remote", "Push local copy of component module to remote repository."
-    def push_to_remote(component_module_id)
+    desc "MODULE-ID/NAME push-to-remote-legacy", "Push local copy of component module to remote repository."
+    def push_to_remote_legacy(component_module_id)
       post_body = {
         :component_module_id => component_module_id
       }
 
-      post rest_url("component_module/push_to_remote"), post_body
+      post rest_url("component_module/push_to_remote_legacy"), post_body
+    end
+    desc "MODULE-ID/NAME push-to-remote", "Push local copy of component module to remote repository."
+    def push_to_remote(component_module_id)
+      push_to_remote_aux(:component_module,component_module_id)
     end
 
     desc "MODULE-ID/NAME pull-from-remote", "Update local component module from remote repository."
