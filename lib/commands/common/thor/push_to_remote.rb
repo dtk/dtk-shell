@@ -21,7 +21,7 @@ module DTK::Client
       dtk_require_from_base('command_helpers/git_repo')
       module_name = response.data(:module_name)
       opts = {
-        :remote_url => response.data(:remote_url),
+        :remote_repo_url => response.data(:remote_repo_url),
         :remote_repo => response.data(:remote_repo),
         :remote_branch => response.data(:remote_branch)
       }
