@@ -42,7 +42,7 @@ module DTK; module Client
     #
     #:remote_repo
     #:remote_branch
-    #:remote_url
+    #:remote_repo_url
     #:local_branch
     #:no_fetch
     #
@@ -136,8 +136,8 @@ module DTK; module Client
         diffs = repo.diff("remotes/#{remote_branch_ref}",local_branch).ret_summary()
         return diffs unless diffs.any_diffs?()
 
-        if opts[:remote_repo] and opts[:remote_url]
-          repo.add_remote?(opts[:remote_repo],opts[:remote_url])
+        if opts[:remote_repo] and opts[:remote_repo_url]
+          repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
         end
         repo.push(remote_branch_ref)
 
