@@ -14,7 +14,9 @@ module DTK::Client
       rsa_pub_key = File.open(path_to_key){|f|f.read}
       post_body = {
         id_field => module_id,
-        :rsa_pub_key => rsa_pub_key.chomp
+        :rsa_pub_key => rsa_pub_key.chomp,
+        :access_rights => "rw",
+        :action => "push"
       }
       response = post(rest_url("#{module_type}/check_remote_auth"),post_body)
 
