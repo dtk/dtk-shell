@@ -2,6 +2,7 @@ dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_dtk_common('grit_adapter')
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/push_to_remote')
+dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
 
 module DTK::Client
@@ -10,6 +11,7 @@ module DTK::Client
     no_tasks do
       include CloneMixin
       include PushToRemoteMixin
+      include PullFromRemoteMixin
       include PushCloneChangesMixin
     end
 
@@ -190,11 +192,7 @@ module DTK::Client
 
     desc "MODULE-ID/NAME pull-from-remote", "Update local component module from remote repository."
     def pull_from_remote(component_module_id)
-      post_body = {
-        :component_module_id => component_module_id
-      }
-
-      post rest_url("component_module/pull_from_remote"), post_body
+      pull_from_remote_aux(:component_module,component_module_id)
     end
 
     #### end: commands to interact with remote repo ###
