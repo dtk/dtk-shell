@@ -18,7 +18,7 @@ module DTK::Client
         :access_rights => "rw",
         :action => "push"
       }
-      response = post(rest_url("#{module_type}/check_remote_auth"),post_body)
+      response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
 
       dtk_require_from_base('command_helpers/git_repo')
       module_name = response.data(:module_name)
