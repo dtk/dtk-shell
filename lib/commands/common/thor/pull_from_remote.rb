@@ -27,7 +27,23 @@ module DTK::Client
         :remote_repo => response.data(:remote_repo),
         :remote_branch => response.data(:remote_branch)
       }
-      GitRepo.pull_changes(module_type,module_name,opts)
+      response = GitRepo.pull_changes(module_type,module_name,opts)
+      return response unless response.ok?
+      if response.data(:diffs).empty?
+        raise DtkError, "No changes to pull from remote"
+      end
+
+      response = GitRepo.push_changes(module_type,module_name)
+      return response unless response.ok?
+      if response.data(:diffs).empty?
+        raise DTK::Client::DtkError, "Unexepected that there are no diffs with workspace"
+      end
+
+      post_body = {
+        id_field => module_id,
+        :json_diffs => JSON.generate(response.data(:diffs))
+      }
+      post rest_url("#{module_type}/update_model_from_clone"), post_body
     end
 
   end
