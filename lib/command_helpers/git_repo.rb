@@ -37,6 +37,11 @@ module DTK; module Client
       end
     end
 
+    def local_clone_exists?(type,module_name)                  
+      repo_dir = local_repo_dir(type,module_name)
+      File.directory?("#{repo_dir}/.git")
+    end
+
     #TODO: not treating versions yet
     #opts can have the following keys
     #
