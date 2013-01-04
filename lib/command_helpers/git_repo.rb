@@ -55,6 +55,23 @@ module DTK; module Client
       end
     end
 
+    #TODO: not treating versions yet
+    #opts can have the following keys
+    #
+    #:remote_repo
+    #:remote_branch
+    #:remote_repo_url
+    #:local_branch
+    #
+    def pull_changes(type,module_name,opts={})
+      Response.wrap_helper_actions() do
+        repo_dir = local_repo_dir(type,module_name)
+        repo = create(repo_dir,opts[:local_branch])
+        diffs = pull_repo_changes_aux(repo,opts)
+        {"diffs" => diffs}
+      end
+    end
+
     #if local clone exists remove its .git directory
     def unlink_local_clone?(type,module_name,version=nil)
       local_repo_dir = local_repo_dir(type,module_name,version)
@@ -147,6 +164,38 @@ module DTK; module Client
         raise Error.new("Unexpected merge_rel (#{merge_rel})")
       end
     end
+
+    def pull_repo_changes_aux(repo,opts={})
+      diffs = Hash.new
+      if opts[:remote_repo] and opts[:remote_repo_url]
+        repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
+      end
+      repo.fetch(remote(opts[:remote_repo]))
+
+      local_branch = repo.branch 
+      remote_branch_ref = remote_branch_ref(local_branch,opts)
+
+      #check if merge needed
+      merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch_ref)
+      if merge_rel == :equal
+        diffs
+      elsif [:branchpoint,:local_ahead].include?(merge_rel)
+#        raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pulled from server")
+        raise Error.new("TODO: need to write code when there is a branchpoint or local_ahead")
+      elsif merge_rel == :local_behind
+        #see if any diffs between fetched remote and local branch
+        #this has be done after commit
+        diffs = repo.diff("remotes/#{remote_branch_ref}",local_branch).ret_summary()
+        return diffs unless diffs.any_diffs?()
+
+        repo.merge(remote_branch_ref)
+
+        diffs
+      else
+        raise Error.new("Unexpected merge_rel (#{merge_rel})")
+      end
+    end
+
 
     def remote(remote_repo=nil)
       remote_repo||"origin"
