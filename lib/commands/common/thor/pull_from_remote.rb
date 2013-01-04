@@ -26,8 +26,8 @@ module DTK::Client
       if GitRepo.local_clone_exists?(module_type,module_name)
         unless rsa_pub_key
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
-          PullFromRemote.perform_locally(module_type,module_id,module_name,remote_params)
         end
+        PullFromRemote.perform_locally(module_type,module_id,module_name,remote_params)
       else
         PullFromRemote.perform_on_server(module_type,module_id,module_name,remote_params)
       end
@@ -36,6 +36,7 @@ module DTK::Client
     module PullFromRemote 
       extend CommandBase
       def self.perform_locally(module_type,module_id,module_name,remote_params)
+        opts = remote_params
         response = GitRepo.pull_changes(module_type,module_name,opts)
         return response unless response.ok?
         if response.data(:diffs).empty?
@@ -56,7 +57,10 @@ module DTK::Client
       end
 
       def self.perform_on_server(module_type,module_id,module_name,remote_params)
-        post_body = remote_params.merge(id_field(module_type) => module_id)
+        post_body = {
+          id_field(module_type) => module_id,
+          :remote_repo => remote_params[:remote_repo]
+        }
         post rest_url("#{module_type}/pull_from_remote"), post_body
       end
       
