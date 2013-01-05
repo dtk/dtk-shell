@@ -197,39 +197,18 @@ module DTK::Client
 
     #### end: commands to interact with remote repo ###
 
-    #### commands to manage workspace and promote changes from workspace to library ###
-    desc "MODULE-ID/NAME promote-to-library [VERSION]", "Update library module with changes from workspace"
-    def promote_to_library(arg1,arg2=nil)
-      #component_module_id is in last position, which coudl be arg1 or arg2
-      component_module_id,version = (arg2 ? [arg2,arg1] : [arg1])
-
-      post_body = {
-        :component_module_id => component_module_id
-      }
-      post_body.merge!(:version => version) if version
-
-      response = post rest_url("component_module/promote_to_library"), post_body
-      @@invalidate_map << :library
-
-      return response
-    end
-
-    #TODO: may also provide an optional library argument to create in new library
-    desc "MODULE-ID/NAME promote-new-version [EXISTING-VERSION] NEW-VERSION", "Promote workspace module as new version of module in library from workspace"
-    def promote_new_version(arg1,arg2,arg3=nil)
+    #### commands to manage workspace and versioning ###
+    desc "MODULE-ID/NAME create-new-version NEW-VERSION", "Snapshot current state of module as a new version"
+    def create_new_version(arg1,arg2)
       #component_module_id is in last position
-      component_module_id,new_version,existing_version = 
-        (arg3 ? [arg3,arg2,arg1] : [arg2,arg1])
+      component_module_id,new_version = [arg2,arg1]
 
       post_body = {
         :component_module_id => component_module_id,
         :new_version => new_version
       }
-      if existing_version
-        post_body.merge!(:existing_version => existing_version)
-      end
 
-      response = post rest_url("component_module/promote_as_new_version"), post_body
+      response = post rest_url("component_module/create_new_version"), post_body
       @@invalidate_map << :library
 
       return response
