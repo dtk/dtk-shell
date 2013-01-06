@@ -80,13 +80,19 @@ module DTK::Client
       set_required_params_aux(node_id,:node)
     end
 
-    desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node"
+    desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-NAME [-v version]", "Add component template to node"
+    method_option "version",:aliases => "-v" ,
+      :type => :string, 
+      :banner => "VERSION",
+      :desc => "Version"
     def add_component(arg1,arg2)
-      node_id,component_template_id = [arg2,arg1]
+      node_id,component_template_name = [arg2,arg1]
       post_body = {
         :node_id => node_id,
-        :component_template_id => component_template_id
+        :component_template_name => component_template_name
       }
+      post_body.merge!(:version => options[:version]) if options[:version]
+
       post rest_url("node/add_component"), post_body
     end
 
