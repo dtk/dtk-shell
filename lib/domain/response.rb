@@ -32,8 +32,9 @@ module DTK
           Error::Usage.new("message"=> e.to_s)
          rescue => e
           error_hash =  {
-            "message"=> e.to_s,
-            "backtrace" => e.backtrace
+            "message"=> e.inspect,
+            "backtrace" => e.backtrace,
+            "on_client" => true
             }
           Error::Internal.new(error_hash)
         end

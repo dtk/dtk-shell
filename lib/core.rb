@@ -94,11 +94,12 @@ module DTK
             error_backtrace = nil
             error_code      = nil
             error_timeout   = nil
-
+            error_on_server = nil
             response_ruby_obj['errors'].each do |err|
               error_msg      +=  err["message"] unless err["message"].nil?
               error_msg      +=  err["error"]   unless err["error"].nil?
               error_internal ||= err["internal"]
+              error_on_server = true unless err["on_client"]
               unless err["errors"].nil?
                 error_code   =  err["errors"].first["code"]
               end
@@ -113,7 +114,8 @@ module DTK
             elsif error_code == "timeout"
               raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
             elsif error_internal
-              raise DTK::Client::DtkError, "[SERVER INTERNAL ERROR] #{error_msg}"
+              where = (error_on_server ? "SERVER" : "CLIENT")
+              raise DTK::Client::DtkError, "[#{where} INTERNAL ERROR] #{error_msg}"
             else
               # if usage error occurred, display message to console and display that same message to log
               raise DTK::Client::DtkError, "Following error occurred: #{error_msg}." 
