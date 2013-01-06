@@ -21,7 +21,6 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
 
     include DTK::Client::Aux
 
-
     command = command || $0.gsub(Regexp.new("^.+/"),"")
     command = command.gsub("-","_")
 
@@ -90,19 +89,17 @@ module DTK
           unless response_ruby_obj["errors"].nil?
 
             error_msg       = ""
-            error_internal  = false
+            error_internal  = nil
             error_backtrace = nil
             error_code      = nil
             error_timeout   = nil
             error_on_server = nil
             response_ruby_obj['errors'].each do |err|
-              error_msg      +=  err["message"] unless err["message"].nil?
-              error_msg      +=  err["error"]   unless err["error"].nil?
-              error_internal ||= err["internal"]
+              error_msg       +=  err["message"] unless err["message"].nil?
+              error_msg       +=  err["error"]   unless err["error"].nil?
               error_on_server = true unless err["on_client"]
-              unless err["errors"].nil?
-                error_code   =  err["errors"].first["code"]
-              end
+              error_code      = err["code"]||(err["errors"] && err["errors"].first["code"])
+              error_internal  ||= (err["internal"] or error_code == "not_found") #"not_found" code is at Ramaze level; so error_internal not set
             end
             
             # normalize it for display
