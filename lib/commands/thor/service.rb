@@ -123,6 +123,10 @@ module DTK::Client
 
 
     desc "SERVICE-NAME/ID lock-component-version COMPONENT-TEMPLATE-NAME -v VERSION", "Lock use of component template in service assemblies to a  specfic version"
+    method_option "version",:aliases => "-v" ,
+    :type => :string, 
+    :banner => "VERSION",
+    :desc => "Version"
     def lock_component_version(arg1,arg2)
       service_module_id,component_template_name = [arg2,arg1]
       post_body = {
