@@ -75,6 +75,28 @@ def change_context(args, push_context=false)
   end
 end
 
+def change_advanced_context(pairs)
+  begin
+   
+    pairs.each do |pair|
+      pair.each do |k,v|
+        @context.advanced_command_valid(k,v)
+        @context.insert_active_command(k)
+        @context.load_context(k)
+        @context.insert_active_command(v)
+        @context.load_context(v)
+      end
+      
+    end
+
+  rescue DTK::Shell::Error => e
+    puts e.message
+  ensure
+    return @context.shell_prompt
+  end
+end
+
+
 # support for alias commands (ls for list etc.)
 def preprocess_commands(original_command)
   command = ALIAS_COMMANDS[original_command]
@@ -122,8 +144,15 @@ begin
       if ('cc' == cmd)
         # in case there is no params we just reload command
         args << "/" if args.empty?
-        # changes context based on passed args
-        prompt = change_context(args)
+
+        if (args.to_s.match(/.\/./) && !args.to_s.start_with?('/'))
+          @context.valid_pairs(args)
+          pairs = @context.get_pairs(args)
+          prompt = change_advanced_context(pairs)
+        else
+          #changes context based on passed args
+          prompt = change_context(args)
+        end
       elsif ('popc' == cmd)
           args = []
           @context.dirs.shift()

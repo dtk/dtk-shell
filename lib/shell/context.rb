@@ -1,5 +1,6 @@
 require File.expand_path('../commands/thor/dtk', File.dirname(__FILE__))
 require File.expand_path('../auxiliary',         File.dirname(__FILE__))
+require File.expand_path('../advanced_context',         File.dirname(__FILE__))
 require 'active_support/core_ext/string/inflections'
 require 'json'
 
@@ -7,6 +8,7 @@ module DTK
   module Shell
     class Context
       include DTK::Client::Aux
+      include DTK::Client::Advanced_Context
 
       # client commands
       CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs']
@@ -49,7 +51,7 @@ module DTK
         # when switching to tier 2 we need to use command name from tier one
         # e.g. cc library/public, we are caching context under library_1, library_2
         # so getting context for 'public' will not work and we use than library
-        command_name = tier_1_command if tier_2?
+        command_name = tier_1_command if (tier_2? && !command_name.nil?)
 
         # if there is no new context (current) we use old one
         @current = sub_tasks_names(command_name) || @current
@@ -60,13 +62,29 @@ module DTK
 
         # holder for commands to be used since we do not want to remember all of them
         context_commands = @current
-
         # we load thor command class identifiers for autocomplete context list
-        context_commands.concat(get_command_identifiers(command_name)) if tier_1?
-        
-        comp = proc { |s| context_commands.grep( /^#{Regexp.escape(s)}/ ) }
+        context_commands.concat(get_command_identifiers(command_name)) if (tier_1? && !command_name.nil?)
 
+        comp = proc { |s| context_commands.grep( /^#{Regexp.escape(s)}/ ) }
         Readline.completion_proc = comp
+      end
+
+      def valid_pairs(args)
+        multiple_commands = args.to_s.split('/')
+        raise DTK::Shell::Error, "Command is not valid." unless valid_command_id_pairs(multiple_commands)
+        # return valid_command_id_pairs(multiple_commands)
+      end
+
+      def get_pairs(args)
+        multiple_commands = args.to_s.split('/')
+        pairs = get_commands_ids(multiple_commands)
+        return pairs
+      end
+
+      def advanced_command_valid(command, id)
+          unless valid_id?(command, id)
+            raise DTK::Shell::Error, "#{command.capitalize} identifier '#{id}' is not valid."
+          end
       end
 
       def push_context()
@@ -103,12 +121,14 @@ module DTK
       
       # Tier 1 = dtk:/library> 
       def tier_1?
-        return @active_commands.size == 1
+        # return @active_commands.size == 1
+        return @active_commands.size%2 != 0
       end
 
       # Tier 2 = dtk:/library/public> 
       def tier_2?
-        return @active_commands.size == 2
+        # return @active_commands.size == 2
+        return ((@active_commands.size%2 == 0) && (@active_commands.size != 0))
       end
 
       # checks if change context command is valid
@@ -127,7 +147,12 @@ module DTK
 
       # returns tier 1 command
       def tier_1_command
-        @active_commands.first
+        size = @active_commands.size
+        if size > 2
+          return @active_commands.size%2==0 ? @active_commands[size-2] : @active_commands[size-1]
+        else
+          return @active_commands.first
+        end
       end
 
       # returns tier 2 command
@@ -149,9 +174,9 @@ module DTK
       def insert_active_command(command)
         @active_commands << command
 
-        if @active_commands.size > 2
-          raise DTK::Shell::Error, "There is error in logic, command chain should be not more than tier 2."
-        end
+        # if @active_commands.size > 2
+        #   raise DTK::Shell::Error, "There is error in logic, command chain should be not more than tier 2."
+        # end
       end
 
       # remove last active command, and returns it

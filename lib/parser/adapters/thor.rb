@@ -82,6 +82,22 @@ module DTK
         return @@cached_response[clazz][:response]
       end
 
+      def self.get_cached_response_advanced(clazz, urls, nested, subtype=nil)
+        main_url = urls.first
+        response = post rest_url(main_url), subtype
+        # we do not want to catch is if it is not valid
+        if response.nil? || response.empty?
+          DtkLogger.instance.debug("Response was nil or empty for that reason we did not cache it.")
+          return response
+        else
+
+        end
+
+        @@cached_response.store(clazz, {:response => response, :ts => current_ts})
+        
+        return @@cached_response[clazz][:response]
+      end
+
       # returns all task names for given thor class with use friendly names (with '-' instead '_')
       def self.task_names     
         task_names = all_tasks().map(&:first).collect { |item| item.gsub('_','-')}
