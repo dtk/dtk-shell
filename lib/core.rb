@@ -13,7 +13,6 @@ require 'pp'
 dtk_require_from_base('domain/response')
 dtk_require_from_base('util/os_util')
 
-
 def top_level_execute(command=nil,argv=nil,shell_execute=false)
   extend DTK::Client::OsUtil
   begin
@@ -36,37 +35,8 @@ def top_level_execute(command=nil,argv=nil,shell_execute=false)
     command_class = DTK::Client.const_get "#{cap_form(command)}"
     response_ruby_obj = command_class.execute_from_cli(conn,argv,shell_execute)
     
-    # check for errors in response
-    unless response_ruby_obj["errors"].nil?
-
-      error_msg       = ""
-      error_internal  = false
-      error_backtrace = nil
-      error_code      = nil
-      error_timeout   = nil
-
-      response_ruby_obj['errors'].each do |err|
-        error_msg      +=  err["message"] unless err["message"].nil?
-        error_msg      +=  err["error"]   unless err["error"].nil?
-        error_internal ||= err["internal"]
-        unless err["errors"].nil?
-          error_code   =  err["errors"].first["code"]
-        end
-      end
-      
-      # normalize it for display
-      error_msg = error_msg.empty? ? 'No error description found' : "#{error_msg}"
-      
-      # if error_internal.first == true
-      if error_code == "timeout"
-        raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
-      elsif error_internal
-        raise DTK::Client::DtkError, "[SERVER INTERNAL ERROR] #{error_msg}"
-      else
-        # if usage error occurred, display message to console and display that same message to log
-        raise DTK::Client::DtkError, "Following error occurred: #{error_msg}." 
-      end
-    end
+    # this will raise error if found
+    DTK::Client::ResponseErrorHandler.check(response_ruby_obj)
 
     # this will find appropriate render adapter and give output, returns boolean
     if print = response_ruby_obj.render_data() 
@@ -113,6 +83,47 @@ end
 
 module DTK
   module Client
+    class ResponseErrorHandler
+      class << self
+        def check(response_ruby_obj)
+          # check for errors in response
+          unless response_ruby_obj["errors"].nil?
+
+            error_msg       = ""
+            error_internal  = false
+            error_backtrace = nil
+            error_code      = nil
+            error_timeout   = nil
+
+            response_ruby_obj['errors'].each do |err|
+              error_msg      +=  err["message"] unless err["message"].nil?
+              error_msg      +=  err["error"]   unless err["error"].nil?
+              error_internal ||= err["internal"]
+              unless err["errors"].nil?
+                error_code   =  err["errors"].first["code"]
+              end
+            end
+            
+            # normalize it for display
+            error_msg = error_msg.empty? ? 'No error description found' : "#{error_msg}"
+            
+            # if error_internal.first == true
+            if error_code == "forbidden"
+              raise DTK::Client::DtkError, "[FORBIDDEN] Your session has been suspended or timed out, please log in again."
+            elsif error_code == "timeout"
+              raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
+            elsif error_internal
+              raise DTK::Client::DtkError, "[SERVER INTERNAL ERROR] #{error_msg}"
+            else
+              # if usage error occurred, display message to console and display that same message to log
+              raise DTK::Client::DtkError, "Following error occurred: #{error_msg}." 
+            end
+          end
+        end
+      end
+    end
+
+
     class Log
       #TODO Stubs
       def self.info(msg)

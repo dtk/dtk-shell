@@ -1,8 +1,8 @@
 module DTK::Client
   module TaskStatusMixin
-      def task_status_aux(id,type,options)
+      def task_status_aux(id,type,wait_flag)
         id_field = "#{type}_id".to_sym
-        if options.wait?
+        if wait_flag
           # there will be infinite loop until intereputed with CTRL+C
           begin
             response = nil
@@ -12,6 +12,7 @@ module DTK::Client
                 :format => :table
               }
               response = post rest_url("#{type}/task_status"), post_body
+
               response.render_table(:task_status)
               system('clear')
               response.render_data(true)
@@ -21,10 +22,15 @@ module DTK::Client
                 #TODO: may fix in server, but now top can have non executing state but a concurrent branch can execute; so
                 #chanding bloew for time being
                 #break unless response.data.first["status"].eql? "executing"
-                break unless response.data.find{|r|r["status"].eql? "executing"}
+                # TODO: There is bug where we do not see executing status on start so we have to wait until at 
+                # least one 'successed' has been found
+                is_executing = response.data.find{|r|r["status"].eql? "executing"}
+                is_succedded = response.data.find{|r|r["status"].eql? "succeeded"}
+
+                break if (!is_executing && is_succedded) 
               end
             
-              wait_animation("Watching #{type} task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
+              Console.wait_animation("Watching '#{type}' task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
             end
           rescue Interrupt => e
             puts ""

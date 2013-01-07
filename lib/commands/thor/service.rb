@@ -135,7 +135,7 @@ module DTK::Client
     def delete(service_module_id)
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless confirmation_prompt("Are you sure you want to delete service-module '#{service_module_id}' and all items contained in it?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete service-module '#{service_module_id}' and all items contained in it?")
       end
 
       post_body = {
@@ -144,6 +144,17 @@ module DTK::Client
       response = post rest_url("service_module/delete"), post_body
       # when changing context send request for getting latest services instead of getting from cache
       @@invalidate_map << :service_module
+
+      return response
+    end
+
+    desc "delete-remote REMOTE-MODULE", "Delete remote service module"
+    def delete_remote(remote_module_name)
+      post_body = {
+       :remote_module_name => remote_module_name
+      }
+      response = post rest_url("service_module/delete_remote"), post_body
+      @@invalidate_map << :module_service
 
       return response
     end

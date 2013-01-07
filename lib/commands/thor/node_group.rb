@@ -64,7 +64,7 @@ module DTK::Client
     def delete(id)
       unless options.force?
         # Ask user if really want to delete node group, if not then return to dtk-shell without deleting
-        return unless confirmation_prompt("Are you sure you want to delete node group '#{id}'?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete node group '#{id}'?")
       end
 
       post_body = {:node_group_id => id}
@@ -166,7 +166,7 @@ module DTK::Client
     desc "NODE-GROUP-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
     def task_status(node_group_id)
-      task_status_aux(node_group_id,:node_group,options)
+      task_status_aux(node_group_id,:node_group,options.wait?)
     end
 
     #TODO: may deprecate

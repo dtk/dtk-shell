@@ -15,13 +15,32 @@ module DTK::Client
       return :module_component, "component_module/list", nil
     end
 
+#TODO: in for testing; may remove
+    desc "MODULE-ID/NAME test-generate-dsl", "Test generating DSL from implementation"
+    def test_generate_dsl(component_module_id)
+      post rest_url("component_module/test_generate_dsl"),{:component_module_id => component_module_id}
+    end
+
+    desc "MODULE-ID/NAME dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
+    def dsl_upgrade(arg1,arg2=nil)
+      component_module_id,dsl_version = (arg2 ? [arg2,arg1] : [arg1])
+      dsl_version ||= MostRecentDSLVersion
+      post_body = {
+        :component_module_id => component_module_id,
+        :dsl_version => dsl_version
+      }
+       post rest_url("component_module/create_new_dsl_version"),post_body
+    end
+    MostRecentDSLVersion = 2
+### end
+
     #### create and delete commands ###
     desc "delete MODULE-ID/NAME", "Delete component module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(component_module_id)
       unless options.force?
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it?")
       end
 
       post_body = {
@@ -66,14 +85,14 @@ module DTK::Client
         :repo_id => repo_id,
         :library_id => library_id,
         :module_name => module_name,
-        :scaffold_if_no_meta => true
+        :scaffold_if_no_dsl => true
       }
-      response = post(rest_url("component_module/update_repo_and_add_meta_data"),post_body)
+      response = post(rest_url("component_module/update_repo_and_add_dsl"),post_body)
       return response unless response.ok?
 
-      if meta_created = response.data(:meta_created)
-        msg = "First cut of meta file (#{meta_created["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
-        response = GitRepo.add_file(repo_branch,meta_created["path"],meta_created["content"],msg)
+      if dsl_created = response.data(:dsl_created)
+        msg = "First cut of dsl file (#{dsl_created["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
+        response = GitRepo.add_file(repo_branch,dsl_created["path"],dsl_created["content"],msg)
       end
       @@invalidate_map << :module_component
       response
@@ -251,7 +270,7 @@ module DTK::Client
       module_location = "#{modules_path}/#{module_name}"
       # check if there is repository cloned 
       unless File.directory?(module_location)
-        if confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now?")
+        if Console.confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now?")
           response = clone(module_name,nil,true)
           # if error return
           unless response.ok?
@@ -264,7 +283,7 @@ module DTK::Client
       end
 
       # here we should have desired module cloned
-      unix_shell(module_location)
+      Console.unix_shell(module_location)
       grit_adapter = DTK::Common::GritAdapter::FileAccess.new(module_location)
 
       if grit_adapter.changed?
@@ -276,7 +295,7 @@ module DTK::Client
 
         # if there is no auto commit ask for confirmation
         unless auto_commit
-          confirmed_ok = confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?") 
+          confirmed_ok = Console.confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?") 
         end
 
         if (auto_commit || confirmed_ok)

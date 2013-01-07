@@ -1,5 +1,7 @@
 module DTK::Client
   module CloneMixin
+
+    extend Console
     ##
     #
     # internal_trigger: this flag means that other method (internal) has trigger this.
@@ -23,7 +25,7 @@ module DTK::Client
       if response.ok?
         puts "Module '#{module_name}' has been successfully cloned!"
         unless internal_trigger
-          if confirmation_prompt("Would you like to edit cloned module now?")
+          if Console.confirmation_prompt("Would you like to edit cloned module now?")
             return edit(module_name)
           end
         end
