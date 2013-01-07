@@ -36,33 +36,34 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-    desc "[SERVICE-NAME/ID] list [assemblies] [--remote]","List local or remote service modules or assemblies associated to it."
-    method_option :list, :type => :boolean, :default => false
+    desc "[SERVICE-NAME/ID] list [assemblies] [--remote]","List service modules or assemblies/component-templates associated with it."
     method_option :remote, :type => :boolean, :default => false
-    def list(about="none",service_module_id=nil)
+    def list(about=nil,service_module_id=nil)
       post_body = {
        :service_module_id => service_module_id,
       }
+      if about.nil?
+        action = (options.remote? ? "list_remote" : "list")
+        response = post rest_url("service_module/#{action}")
+        data_type = :module
+      else
+        if options.remote?
+          #TODO: this is temp; will shortly support this
+          raise DTK::Client::DtkError, "Not supported '--remote' option when listing service module assemblies or component templates"
+        end
+        post_body.merge!(:about => about)
 
-      case about
-       when "none":
-         action = (options.remote? ? "list_remote" : "list")
-         response = post rest_url("service_module/#{action}")
-         data_type = :module
-       when "assemblies":
-         if options.remote?
-           #TODO: this is temp; will shortly support this
-           raise DTK::Client::DtkError, "Not supported '--remote' option when listing service module assemblies"
-         end
-         response = post rest_url("service_module/list_assemblies"),post_body
-         data_type = :assembly
-       else 
-         raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+        response = post rest_url("service_module/info_about"),post_body
+        case about
+         when "assemblies"
+          data_type = :assembly
+         when "components"
+          data_type = :component
+         else 
+          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+        end
       end
-
-      response.render_table(data_type) unless options.list?
-
-      return response
+      response.render_table(data_type)
     end
 
     # TODO: Duplicate of library import ... should we delete this one?
