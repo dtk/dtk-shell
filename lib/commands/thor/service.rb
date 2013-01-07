@@ -122,6 +122,19 @@ module DTK::Client
     end
 
 
+    desc "SERVICE-NAME/ID lock-component-version COMPONENT-TEMPLATE-NAME -v VERSION", "Lock use of component template in service assemblies to a  specfic version"
+    def lock_component_version(arg1,arg2)
+      service_module_id,component_template_name = [arg2,arg1]
+      post_body = {
+        :service_module_id => service_module_id,
+        :component_template_name => component_template_name
+      }
+      post_body.merge!(:version => options["version"]) if options["version"]
+      response = post rest_url("service_module/lock_component_version"), post_body
+      @@invalidate_map << :service_module
+      response
+    end
+
     # TODO: Check to see if we are deleting this
     desc "create SERVICE-NAME [library_id]", "Create an empty service module in library"
     def create(module_name,library_id=nil)
