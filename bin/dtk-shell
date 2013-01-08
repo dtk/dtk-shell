@@ -33,7 +33,6 @@ def change_context(args, push_context=false)
     end
     # first command is the one we take context from
     command = args.first
-
     # check for root of context
     if ('/'.eql?(command[0,1]))
       @context.reset()
@@ -46,6 +45,7 @@ def change_context(args, push_context=false)
       multiple_commands = command.split('/')
       # last command will continue to run in this flow
       command = multiple_commands.pop
+
       # use recursion to load all other commands first, second, ...
       # flow will continue with last command left to load (see above)
       multiple_commands.each { |m_command| change_context(m_command) }
@@ -77,22 +77,25 @@ end
 
 def change_advanced_context(pairs)
   begin
-   
-    pairs.each do |pair|
-      pair.each do |k,v|
-        @context.advanced_command_valid(k,v)
-        @context.insert_active_command(k)
-        @context.load_context(k)
-        @context.insert_active_command(v)
-        @context.load_context(v)
-      end
+    pair = pairs.pop
+    
+    if pair.kind_of?(Array)
+      change_advanced_context(pairs)
       
+      @context.advanced_command_valid(pair)
+      load_advanced_context(pair)
     end
-
   rescue DTK::Shell::Error => e
     puts e.message
   ensure
     return @context.shell_prompt
+  end
+end
+
+def load_advanced_context(pair)
+  pair.each do |element|
+    @context.insert_active_command(element)
+    @context.load_context(element)
   end
 end
 

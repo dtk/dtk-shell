@@ -71,20 +71,23 @@ module DTK
 
       def valid_pairs(args)
         multiple_commands = args.to_s.split('/')
-        raise DTK::Shell::Error, "Command is not valid." unless valid_command_id_pairs(multiple_commands)
-        # return valid_command_id_pairs(multiple_commands)
+        is_valid, command = valid_command_id_pairs(multiple_commands)
+        raise DTK::Shell::Error, "Command '#{command}' is not valid." unless is_valid
       end
 
       def get_pairs(args)
         multiple_commands = args.to_s.split('/')
-        pairs = get_commands_ids(multiple_commands)
+        is_valid, pairs = get_commands_ids(multiple_commands)
+        raise DTK::Shell::Error, "Command => id pairs are not valid." unless is_valid
         return pairs
       end
 
-      def advanced_command_valid(command, id)
-          unless valid_id?(command, id)
-            raise DTK::Shell::Error, "#{command.capitalize} identifier '#{id}' is not valid."
-          end
+      def advanced_command_valid(pair)
+        command, id = pair[0], pair[1]
+        
+        unless valid_id?(command, id)
+          raise DTK::Shell::Error, "#{command.capitalize} identifier '#{id}' is not valid."
+        end
       end
 
       def push_context()

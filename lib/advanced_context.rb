@@ -11,7 +11,9 @@ module DTK
         index            = ASSEMBLY_LEVELS.include?(commands.first) ? ASSEMBLY_LEVELS.index(commands.first) : 0
 
         for i in 0..commands.size-1
-          return false unless commands[i] == ASSEMBLY_LEVELS[i+index]
+          unless commands[i] == ASSEMBLY_LEVELS[i+index]
+            return false, commands[i]
+          end
         end
         
         return true
@@ -23,12 +25,15 @@ module DTK
         index            = ASSEMBLY_LEVELS.include?(commands.first) ? ASSEMBLY_LEVELS.index(commands.first) : 0
 
         for i in 0..commands.size-1
-          raise DTK::Shell::Error, "#{commands[i]} doesn not belong to Assembly level." unless commands[i] == ASSEMBLY_LEVELS[i+index]
+          unless commands[i] == ASSEMBLY_LEVELS[i+index]
+            return false, command_id_pairs
+          end
           # store command,id pairs e.g. 'node' => 'bootstrap-node-2'
-          command_id_pairs << {commands[i] => ids[i]}
+          # command_id_pairs << {commands[i] => ids[i]}
+          command_id_pairs << [commands[i], ids[i]]
         end
 
-        return command_id_pairs
+        return true, command_id_pairs
       end
 
       def split_commands_ids(multiple_commands)
