@@ -201,11 +201,11 @@ module DTK::Client
     desc "MODULE-ID/NAME create-new-version NEW-VERSION", "Snapshot current state of module as a new version"
     def create_new_version(arg1,arg2)
       #component_module_id is in last position
-      component_module_id,new_version = [arg2,arg1]
+      component_module_id,version = [arg2,arg1]
 
       post_body = {
         :component_module_id => component_module_id,
-        :new_version => new_version
+        :version => version
       }
 
       response = post rest_url("component_module/create_new_version"), post_body
