@@ -123,19 +123,19 @@ module DTK::Client
     end
 
 
-    desc "SERVICE-NAME/ID set-component-version COMPONENT-TEMPLATE-NAME -v VERSION", "Set the version of the component template to use in the service's assemblies"
+    desc "SERVICE-NAME/ID set-module-version COMPONENT-MODULE-NAME -v VERSION", "Set the version of the component module to use in the service's assemblies"
     method_option "version",:aliases => "-v" ,
     :type => :string, 
     :banner => "VERSION",
     :desc => "Version"
-    def set_component_version(arg1,arg2)
-      service_module_id,component_template_name = [arg2,arg1]
+    def set_module_version(arg1,arg2)
+      service_module_id,component_module_id = [arg2,arg1]
       post_body = {
         :service_module_id => service_module_id,
-        :component_template_name => component_template_name
+        :component_module_id => component_module_id
       }
       post_body.merge!(:version => options["version"]) if options["version"]
-      response = post rest_url("service_module/set_component_version"), post_body
+      response = post rest_url("service_module/set_component_module_version"), post_body
       @@invalidate_map << :service_module
       response
     end
