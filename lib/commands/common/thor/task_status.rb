@@ -13,10 +13,7 @@ module DTK::Client
               }
               response = post rest_url("#{type}/task_status"), post_body
 
-              if response["status"].eql?('notok')
-                raise DTK::Client::DtkError, "Following error occurred: #{response['errors'].first['message']}."
-                break
-              end
+              raise DTK::Client::DtkError, "Following error occurred: #{response['errors'].first['message']}." if response["status"].eql?('notok')
 
               response.render_table(:task_status)
               system('clear')
