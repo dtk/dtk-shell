@@ -238,7 +238,8 @@ module DTK::Client
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
         #used form "+'?' because ?" confused emacs ruby rendering
-        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy assembly '#{assembly_id}' and its nodes"+'?')
+        what = (assembly_ids.split(',').size == 1 ? "assembly" : "assemblies")
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_ids}' and its nodes"+'?')
       end
       response = nil
       assembly_ids.split(',').each do |assembly_id|
