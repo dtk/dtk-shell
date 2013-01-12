@@ -29,7 +29,11 @@ module DTK::Client
     method_option :list, :type => :boolean, :default => false
     def list(*rotated_args)
       if (rotated_args.size == 0)
-        response = post rest_url("assembly/list"), {:subtype => 'template'}
+        post_body = {
+          :subtype => 'template',
+          :detail_level => 'nodes'
+        }
+        response = post rest_url("assembly/list"), post_body
         data_type = :assembly_template
         response.render_table(data_type)
       else
