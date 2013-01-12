@@ -36,7 +36,7 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-    desc "[SERVICE-NAME/ID] list [assemblies] [--remote]","List service modules or assemblies/component-templates associated with it."
+    desc "[SERVICE-NAME/ID] list [assemblies] [--remote]","List service modules or assembly/component templates associated with it."
     method_option :remote, :type => :boolean, :default => false
     def list(about=nil,service_module_id=nil)
       post_body = {
@@ -56,7 +56,7 @@ module DTK::Client
         response = post rest_url("service_module/info_about"),post_body
         case about
          when "assemblies"
-          data_type = :assembly
+          data_type = :assembly_template
          when "components"
           data_type = :component
          else 
