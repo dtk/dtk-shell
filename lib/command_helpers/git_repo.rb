@@ -37,9 +37,14 @@ module DTK; module Client
       end
     end
 
+    def local_clone_dir_exists?(type,module_name)
+      ret = local_repo_dir(type,module_name)
+      File.directory?(ret) && ret
+    end
     def local_clone_exists?(type,module_name)                  
       repo_dir = local_repo_dir(type,module_name)
-      File.directory?("#{repo_dir}/.git")
+      ret = "#{repo_dir}/.git"
+      File.directory?(ret) && ret
     end
 
     #TODO: not treating versions yet

@@ -66,17 +66,24 @@ module DTK::Client
       response.render_table(data_type)
     end
 
-    # TODO: Duplicate of library import ... should we delete this one?
-    desc "import REMOTE-SERVICE-NAME [library_id]", "Import remote service module into library"
-    def import(service_module_name,library_id=nil)
+    desc "import REMOTE-SERVICE-NAME", "Import remote service module into local environment"
+    def import(remote_module_name)
+      dtk_require_from_base('command_helpers/git_repo')
+      local_module_name = remote_module_name
+      version = nil
+      if clone_dir = GitRepo.local_clone_dir_exists?(:service_module,local_module_name)
+        raise DtkError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
+      end
       post_body = {
-       :remote_module_name => service_module_name
+        :remote_module_name => remote_module_name,
+        :local_module_name => local_module_name
       }
-      post_body.merge!(:library_id => library_id) if library_id
       response = post rest_url("service_module/import"), post_body
       @@invalidate_map << :service_module
 
-      return response
+      return response unless response.ok?
+      module_name,repo_url,branch = response.data(:module_name,:repo_url,:workspace_branch)
+      GitRepo.create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
     end
 
     desc "SERVICE-NAME/ID export", "Export service module to remote repo"
