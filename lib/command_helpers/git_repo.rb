@@ -81,6 +81,13 @@ module DTK; module Client
         {"diffs" => diffs}
       end
     end
+    def pull_changes?(type,module_name,opts={})
+      if local_clone_exists?(type,module_name)
+        pull_changes(type,module_name,opts)
+      else
+        Response.wrap_helper_actions() 
+      end
+    end
 
     #if local clone exists remove its .git directory
     def unlink_local_clone?(type,module_name,version=nil)

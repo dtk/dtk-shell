@@ -24,9 +24,9 @@ module DTK
         @render_data_type = nil
       end
 
-      def self.wrap_helper_actions(&block)
+      def self.wrap_helper_actions(data={},&block)
         begin
-          results = yield
+          results = (block ? yield : data)
           Ok.new(results)
          rescue ErrorUsage => e
           Error::Usage.new("message"=> e.to_s)
