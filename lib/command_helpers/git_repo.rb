@@ -156,6 +156,10 @@ module DTK; module Client; class CommandHelper
         diffs
       elsif [:branchpoint,:local_behind].include?(merge_rel)
         raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to server")
+      elsif merge_rel == :no_remote_ref
+        repo.push(remote_branch_ref)
+        #TODO: should update diffs; below will return empty diffs, where real diffs shoudl be everything
+        diffs
       elsif merge_rel == :local_ahead
         #see if any diffs between fetched remote and local branch
         #this has be done after commit
