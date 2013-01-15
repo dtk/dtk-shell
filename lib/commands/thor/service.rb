@@ -54,7 +54,7 @@ module DTK::Client
 
         response = post rest_url("service_module/info_about"),post_body
         case about
-         when "assembly-template"
+         when "assembly-templates"
           data_type = :assembly_template
          when "components"
           data_type = :component
