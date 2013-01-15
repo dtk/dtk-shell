@@ -150,13 +150,22 @@ module DTK::Client
       :banner => "VERSION",
       :desc => "Version"
 
-    def import(remote_modules, library_id=nil)
+    def import(remote_module_name)
+      local_module_name = remote_module_name
+      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:service_module,local_module_name)
+        raise DtkError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
+      end
       post_body = {
-       :remote_module_names => remote_modules.split(",")
+        :remote_module_name => remote_module_name,
+        :local_module_name => local_module_name
       }
-      post_body.merge!(:library_id => library_id) if library_id
+      post_body.merge!(:version => options["version"]) if options["version"]
+      response = post rest_url("component_module/import"), post_body
+      @@invalidate_map << :module_component
 
-      post rest_url("component_module/import"), post_body
+      return response unless response.ok?
+      module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
+      Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
     end
 
     desc "delete-remote REMOTE-MODULE", "Delete remote component module"
@@ -164,10 +173,7 @@ module DTK::Client
       post_body = {
        :remote_module_name => remote_module_name
       }
-      response = post rest_url("component_module/delete_remote"), post_body
-      @@invalidate_map << :module_component
-
-      return response
+      post rest_url("component_module/delete_remote"), post_body
     end
 
 
