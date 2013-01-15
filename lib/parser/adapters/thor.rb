@@ -9,15 +9,17 @@ dtk_require("../../util/console")
 dtk_require_common_commands('thor/task_status')
 dtk_require_from_base("command_helper")
 
-
 module DTK
   module Client
     class CommandBaseThor < Thor
+      dtk_nested_require('thor','common_option_defs')
+
       include CommandBase
       extend  CommandBase
       extend  TaskStatusMixin
       extend  Console
       include CommandHelperMixin
+      extend CommonOptionDefsClassMixin
 
       @@cached_response = {}
       @@invalidate_map  = []

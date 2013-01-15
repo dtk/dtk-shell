@@ -141,31 +141,28 @@ module DTK::Client
     #### end: list and info commands ###
 
     #### commands to interact with remote repo ###
-    desc "import REMOTE-MODULE-NAME [-v VERSION]", "Import remote component module into local environment"
+    
+    #TODO: may put version back in desc "import REMOTE-MODULE-NAME [-v VERSION]", "Import remote component module into local environment"
     #TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     #TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     #if multiple items and failire; stops on first failure
-    method_option "version",:aliases => "-v",
-      :type => :string, 
-      :banner => "VERSION",
-      :desc => "Version"
-
+    #version_method_option
+    desc "import REMOTE-MODULE-NAME","Import remote component module into local environment"
     def import(remote_module_name)
       local_module_name = remote_module_name
-      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:service_module,local_module_name)
+      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name)
         raise DtkError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
       end
       post_body = {
         :remote_module_name => remote_module_name,
         :local_module_name => local_module_name
       }
-      post_body.merge!(:version => options["version"]) if options["version"]
       response = post rest_url("component_module/import"), post_body
       @@invalidate_map << :module_component
 
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
-      Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
+      Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
     end
 
     desc "delete-remote REMOTE-MODULE", "Delete remote component module"
@@ -194,9 +191,11 @@ module DTK::Client
 
       post rest_url("component_module/push_to_remote_legacy"), post_body
     end
-    desc "MODULE-ID/NAME push-to-remote", "Push local copy of component module to remote repository."
+
+    desc "MODULE-ID/NAME push-to-remote [-v VERSION]", "Push local copy of component module to remote repository."
+    version_method_option
     def push_to_remote(component_module_id)
-      push_to_remote_aux(:component_module,component_module_id)
+      push_to_remote_aux(:component_module,component_module_id,options["version"])
     end
 
     desc "MODULE-ID/NAME pull-from-remote", "Update local component module from remote repository."
@@ -228,10 +227,10 @@ module DTK::Client
     # internal_trigger: this flag means that other method (internal) has trigger this.
     #                   This will change behaviour of method
     #
-    desc "MODULE-ID/NAME clone [VERSION]", "Clone into client the component module files"
-    def clone(arg1,arg2=nil,internal_trigger=false)
-      component_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1]) 
-      clone_aux(:component_module,component_module_id,version,internal_trigger)
+    desc "MODULE-ID/NAME clone [-v VERSION]", "Clone into client the component module files"
+    version_method_option
+    def clone(component_module_id,internal_trigger=false)
+      clone_aux(:component_module,component_module_id,options["version"],internal_trigger)
     end
 
     desc "MODULE-ID/NAME edit","Switch to unix editing for given module."
@@ -262,8 +261,8 @@ module DTK::Client
       module_location = "#{modules_path}/#{module_name}"
       # check if there is repository cloned 
       unless File.directory?(module_location)
-        if Console.confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now?")
-          response = clone(module_name,nil,true)
+        if Console.confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now"+'?')
+          response = clone(module_name,true)
           # if error return
           unless response.ok?
             return response

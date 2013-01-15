@@ -115,9 +115,9 @@ module DTK::Client
     # internal_trigger: this flag means that other method (internal) has trigger this.
     #                   This will change behaviour of method
     #
-    desc "SERVICE-NAME/ID clone [VERSION]", "Clone into client the service module files"
-    def clone(arg1,arg2=nil,internal_trigger=false)
-      service_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1]) 
+    desc "SERVICE-NAME/ID clone", "Clone into client the service module files"
+    def clone(service_module_id,internal_trigger=false)
+      version = nil
       clone_aux(:service_module,service_module_id,version,internal_trigger)
     end
 
@@ -129,10 +129,7 @@ module DTK::Client
 
 
     desc "SERVICE-NAME/ID set-module-version COMPONENT-MODULE-NAME -v VERSION", "Set the version of the component module to use in the service's assemblies"
-    method_option "version",:aliases => "-v",
-      :type => :string, 
-      :banner => "VERSION",
-      :desc => "Version"
+    version_method_option
     def set_module_version(arg1,arg2)
       service_module_id,component_module_id = [arg2,arg1]
       post_body = {

@@ -37,17 +37,16 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    def local_clone_dir_exists?(type,module_name)
-      ret = local_repo_dir(type,module_name)
+    def local_clone_dir_exists?(type,module_name,version=nil)
+      ret = local_repo_dir(type,module_name,version)
       File.directory?(ret) && ret
     end
-    def local_clone_exists?(type,module_name)                  
-      repo_dir = local_repo_dir(type,module_name)
+    def local_clone_exists?(type,module_name,version=nil)                  
+      repo_dir = local_repo_dir(type,module_name,version)
       ret = "#{repo_dir}/.git"
       File.directory?(ret) && ret
     end
 
-    #TODO: not treating versions yet
     #opts can have the following keys
     #
     #:remote_repo
@@ -56,9 +55,9 @@ module DTK; module Client; class CommandHelper
     #:local_branch
     #:no_fetch
     #
-    def push_changes(type,module_name,opts={})
+    def push_changes(type,module_name,version,opts={})
       Response.wrap_helper_actions() do
-        repo_dir = local_repo_dir(type,module_name)
+        repo_dir = local_repo_dir(type,module_name,version)
         repo = create(repo_dir,opts[:local_branch])
         diffs = push_repo_changes_aux(repo,opts)
         {"diffs" => diffs}
