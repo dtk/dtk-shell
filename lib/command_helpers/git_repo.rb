@@ -15,17 +15,6 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    def push_all_changes(type,opts={})
-      Response.wrap_helper_actions() do
-        local_repo_dirs(type).map do |repo_dir|
-          repo_name = repo_dir.split("/").last
-          repo = create(repo_dir)
-          diffs = push_repo_changes_aux(repo,opts)
-          {repo_name => diffs.inspect}
-        end
-      end
-    end
-
     #TODO: this does not push; may make that an option
     def add_file(repo_branch,path,content,msg=nil)
       Response.wrap_helper_actions() do

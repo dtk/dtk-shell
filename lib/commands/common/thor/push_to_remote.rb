@@ -20,12 +20,14 @@ module DTK::Client
       }
       post_body.merge!(:version => version) if version
       response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
+      return response unless response.ok?
 
       module_name = response.data(:module_name)
       opts = {
         :remote_repo_url => response.data(:remote_repo_url),
         :remote_repo => response.data(:remote_repo),
-        :remote_branch => response.data(:remote_branch)
+        :remote_branch => response.data(:remote_branch),
+        :local_branch => response.data(:workspace_branch)
       }
       version = response.data(:version)
       response = Helper(:git_repo).push_changes(module_type,module_name,version,opts)
