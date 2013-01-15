@@ -22,8 +22,7 @@ module DTK::Client
       remote_params = response.data_hash_form(:remote_repo_url,:remote_repo,:remote_branch)
 
       #check whether a local module exists to determine whether pull from local clone or try to pull from server
-      dtk_require_from_base('command_helpers/git_repo')
-      if GitRepo.local_clone_exists?(module_type,module_name)
+      if Helper(:git_repo).local_clone_exists?(module_type,module_name)
         unless rsa_pub_key
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
         end
@@ -37,13 +36,13 @@ module DTK::Client
       extend CommandBase
       def self.perform_locally(module_type,module_id,module_name,remote_params)
         opts = remote_params
-        response = GitRepo.pull_changes(module_type,module_name,opts)
+        response = Helper(:git_repo).pull_changes(module_type,module_name,opts)
         return response unless response.ok?
         if response.data(:diffs).empty?
           raise DtkError, "No changes to pull from remote"
         end
         
-        response = GitRepo.push_changes(module_type,module_name)
+        response = Helper(:git_repo).push_changes(module_type,module_name)
         return response unless response.ok?
         if response.data(:diffs).empty?
           raise DTK::Client::DtkError, "Unexepected that there are no diffs with workspace"

@@ -20,14 +20,13 @@ module DTK::Client
       }
       response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
 
-      dtk_require_from_base('command_helpers/git_repo')
       module_name = response.data(:module_name)
       opts = {
         :remote_repo_url => response.data(:remote_repo_url),
         :remote_repo => response.data(:remote_repo),
         :remote_branch => response.data(:remote_branch)
       }
-      response = GitRepo.push_changes(module_type,module_name,opts)
+      response = Helper(:git_repo).push_changes(module_type,module_name,opts)
       return response unless response.ok?
       if response.data(:diffs).empty?
         raise DtkError, "No changes to push"

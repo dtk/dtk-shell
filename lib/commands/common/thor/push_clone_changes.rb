@@ -13,8 +13,7 @@ module DTK::Client
       response =  post(rest_url("#{module_type}/get_workspace_branch_info"),post_body) 
       return response unless response.ok?
       
-      dtk_require_from_base('command_helpers/git_repo')
-      response = GitRepo.push_changes(module_type,response.data(:module_name))
+      response = Helper(:git_repo).push_changes(module_type,response.data(:module_name))
       return response unless response.ok?
       if response.data(:diffs).empty?
         raise DTK::Client::DtkError, "No changes to push"

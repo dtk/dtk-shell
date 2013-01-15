@@ -151,8 +151,7 @@ module DTK::Client
       @@invalidate_map << :assembly_template
       return response unless response.ok?
       module_name,branch = response.data(:module_name,:workspace_branch)
-      dtk_require_from_base('command_helpers/git_repo')
-      GitRepo.pull_changes?(:service_module,module_name,:local_branch => branch)
+      Helper(:git_repo).pull_changes?(:service_module,module_name,:local_branch => branch)
     end
   end
 end

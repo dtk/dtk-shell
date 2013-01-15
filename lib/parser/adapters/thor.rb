@@ -7,6 +7,7 @@ dtk_require("../../shell/interactive_wizard")
 dtk_require("../../util/os_util")
 dtk_require("../../util/console")
 dtk_require_common_commands('thor/task_status')
+dtk_require_from_base("command_helper")
 
 
 module DTK
@@ -16,6 +17,7 @@ module DTK
       extend  CommandBase
       extend  TaskStatusMixin
       extend  Console
+      include CommandHelperMixin
 
       @@cached_response = {}
       @@invalidate_map  = []

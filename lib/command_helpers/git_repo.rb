@@ -3,8 +3,8 @@ dtk_require_dtk_common('errors')
 dtk_require_dtk_common('log') 
 require 'fileutils'
 
-module DTK; module Client
-  class GitRepo; class << self
+module DTK; module Client; class CommandHelper
+  class GitRepo < self; class << self
     def create_clone_with_branch(type,module_name,repo_url,branch,version=nil)
       Response.wrap_helper_actions do 
         modules_dir = modules_dir(type)
@@ -258,6 +258,6 @@ module DTK; module Client
       repo.repo_dir.gsub(Regexp.new("/$"),"").split("/").last
     end
   end; end
-end; end
+end; end; end
 
 

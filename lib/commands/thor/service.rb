@@ -1,6 +1,5 @@
 #TODO: may be consistent on whether service module id or service module name used as params
 dtk_require_from_base('command_helpers/ssh_processing')
-dtk_require_from_base('command_helpers/git_repo')
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
@@ -36,7 +35,7 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-    desc "[SERVICE-NAME/ID] list [assemblies] [--remote]","List service modules or assembly/component templates associated with it."
+    desc "[SERVICE-NAME/ID] list [assembly-templates|components] [--remote]","List service modules or assembly/component templates associated with service module."
     method_option :remote, :type => :boolean, :default => false
     def list(about=nil,service_module_id=nil)
       post_body = {
@@ -55,7 +54,7 @@ module DTK::Client
 
         response = post rest_url("service_module/info_about"),post_body
         case about
-         when "assemblies"
+         when "assembly-template"
           data_type = :assembly_template
          when "components"
           data_type = :component
@@ -68,10 +67,9 @@ module DTK::Client
 
     desc "import REMOTE-SERVICE-NAME", "Import remote service module into local environment"
     def import(remote_module_name)
-      dtk_require_from_base('command_helpers/git_repo')
       local_module_name = remote_module_name
       version = nil
-      if clone_dir = GitRepo.local_clone_dir_exists?(:service_module,local_module_name)
+      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:service_module,local_module_name)
         raise DtkError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
       end
       post_body = {
@@ -83,7 +81,7 @@ module DTK::Client
 
       return response unless response.ok?
       module_name,repo_url,branch = response.data(:module_name,:repo_url,:workspace_branch)
-      GitRepo.create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
+      Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
     end
 
     desc "SERVICE-NAME/ID export", "Export service module to remote repo"
@@ -131,10 +129,10 @@ module DTK::Client
 
 
     desc "SERVICE-NAME/ID set-module-version COMPONENT-MODULE-NAME -v VERSION", "Set the version of the component module to use in the service's assemblies"
-    method_option "version",:aliases => "-v" ,
-    :type => :string, 
-    :banner => "VERSION",
-    :desc => "Version"
+    method_option "version",:aliases => "-v",
+      :type => :string, 
+      :banner => "VERSION",
+      :desc => "Version"
     def set_module_version(arg1,arg2)
       service_module_id,component_module_id = [arg2,arg1]
       post_body = {

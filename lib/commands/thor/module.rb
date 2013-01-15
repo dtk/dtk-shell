@@ -44,7 +44,7 @@ module DTK::Client
     def delete(component_module_id)
       unless options.force?
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
       end
 
       post_body = {
@@ -53,18 +53,15 @@ module DTK::Client
       response = post(rest_url("component_module/delete"), post_body)
       return response unless response.ok?
       module_name = response.data(:module_name)
-      dtk_require_from_base('command_helpers/git_repo')
-      GitRepo.unlink_local_clone?(:component_module,module_name)
+      Helper(:git_repo).unlink_local_clone?(:component_module,module_name)
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :module_component
     end
 
     desc "create MODULE-NAME [LIBRARY-NAME/ID]", "Create new module from local clone"
     def create(module_name,library_id=nil)
-      dtk_require_from_base('command_helpers/git_repo')
-
       #first check that there is a directory there and it is not already a git repo
-      response = GitRepo.check_local_dir_exists(:component_module,module_name)
+      response = Helper(:git_repo).check_local_dir_exists(:component_module,module_name)
       return response unless response.ok?
       module_directory = response.data(:module_directory)
 
@@ -81,7 +78,7 @@ module DTK::Client
         :workspace => response.data(:workspace_branch),
         :library => response.data(:library_branch)
       }
-      response = GitRepo.initialize_repo_and_push(:component_module,module_name,branch_info,repo_url)
+      response = Helper(:git_repo).initialize_repo_and_push(:component_module,module_name,branch_info,repo_url)
       return response unless response.ok?
       repo_branch =  response.data(:repo_branch)
 
@@ -96,7 +93,7 @@ module DTK::Client
 
       if dsl_created = response.data(:dsl_created)
         msg = "First cut of dsl file (#{dsl_created["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
-        response = GitRepo.add_file(repo_branch,dsl_created["path"],dsl_created["content"],msg)
+        response = Helper(:git_repo).add_file(repo_branch,dsl_created["path"],dsl_created["content"],msg)
       end
       @@invalidate_map << :module_component
       response
@@ -144,9 +141,15 @@ module DTK::Client
     #### end: list and info commands ###
 
     #### commands to interact with remote repo ###
-    desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
+    desc "import REMOTE-MODULE-NAME [-v VERSION]", "Import remote component module into local environment"
+    #TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     #TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     #if multiple items and failire; stops on first failure
+    method_option "version",:aliases => "-v",
+      :type => :string, 
+      :banner => "VERSION",
+      :desc => "Version"
+
     def import(remote_modules, library_id=nil)
       post_body = {
        :remote_module_names => remote_modules.split(",")
