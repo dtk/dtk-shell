@@ -127,8 +127,19 @@ module DTK; module Client; class CommandHelper
     end
 
    private
+    #TODO: in common expose Common::GritAdapter at less nested level
+    class DiffSummary < Common::GritAdapter::FileAccess::Diffs::Summary
+      def new_version()
+        new(:new_version => true)
+      end
+      
+      def self.diff(repo,ref1,ref2)
+        new(repo.diff(ref1,ref2).ret_summary())
+      end
+    end
+    
     def push_repo_changes_aux(repo,opts={})
-      diffs = Hash.new
+      diffs = DiffSummary.new()
       #add any file that is untracked
       status = repo.status()
       if status[:untracked]
@@ -158,12 +169,11 @@ module DTK; module Client; class CommandHelper
         raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to server")
       elsif merge_rel == :no_remote_ref
         repo.push(remote_branch_ref)
-        #TODO: should update diffs; below will return empty diffs, where real diffs shoudl be everything
-        diffs
+        DiffSumary.new_version()
       elsif merge_rel == :local_ahead
         #see if any diffs between fetched remote and local branch
         #this has be done after commit
-        diffs = repo.diff("remotes/#{remote_branch_ref}",local_branch).ret_summary()
+        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
         return diffs unless diffs.any_diffs?()
 
         repo.push(remote_branch_ref)
@@ -175,7 +185,7 @@ module DTK; module Client; class CommandHelper
     end
 
     def pull_repo_changes_aux(repo,opts={})
-      diffs = Hash.new
+      diffs = DiffSummary.new
       if opts[:remote_repo] and opts[:remote_repo_url]
         repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
       end
@@ -194,7 +204,7 @@ module DTK; module Client; class CommandHelper
       elsif merge_rel == :local_behind
         #see if any diffs between fetched remote and local branch
         #this has be done after commit
-        diffs = repo.diff("remotes/#{remote_branch_ref}",local_branch).ret_summary()
+        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
         return diffs unless diffs.any_diffs?()
 
         repo.merge(remote_branch_ref)
