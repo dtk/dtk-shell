@@ -129,7 +129,7 @@ module DTK; module Client; class CommandHelper
    private
     #TODO: in common expose Common::GritAdapter at less nested level
     class DiffSummary < Common::GritAdapter::FileAccess::Diffs::Summary
-      def new_version()
+      def self.new_version()
         new(:new_version => true)
       end
       
@@ -169,7 +169,7 @@ module DTK; module Client; class CommandHelper
         raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to server")
       elsif merge_rel == :no_remote_ref
         repo.push(remote_branch_ref)
-        DiffSumary.new_version()
+        DiffSummary.new_version()
       elsif merge_rel == :local_ahead
         #see if any diffs between fetched remote and local branch
         #this has be done after commit
@@ -185,7 +185,7 @@ module DTK; module Client; class CommandHelper
     end
 
     def pull_repo_changes_aux(repo,opts={})
-      diffs = DiffSummary.new
+      diffs = DiffSummary.new()
       if opts[:remote_repo] and opts[:remote_repo_url]
         repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
       end
