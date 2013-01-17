@@ -198,9 +198,10 @@ module DTK::Client
       push_to_remote_aux(:component_module,component_module_id,options["version"])
     end
 
-    desc "MODULE-ID/NAME pull-from-remote", "Update local component module from remote repository."
+    desc "MODULE-ID/NAME pull-from-remote [-v VERSION]", "Update local component module from remote repository."
+    version_method_option
     def pull_from_remote(component_module_id)
-      pull_from_remote_aux(:component_module,component_module_id)
+      pull_from_remote_aux(:component_module,component_module_id,options["version"])
     end
 
     #### end: commands to interact with remote repo ###
