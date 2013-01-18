@@ -142,11 +142,9 @@ module DTK::Client
 
     #### commands to interact with remote repo ###
     
-    #TODO: may put version back in desc "import REMOTE-MODULE-NAME [-v VERSION]", "Import remote component module into local environment"
     #TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     #TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     #if multiple items and failire; stops on first failure
-    #version_method_option
     desc "import REMOTE-MODULE-NAME","Import remote component module into local environment"
     def import(remote_module_name)
       local_module_name = remote_module_name
@@ -165,6 +163,22 @@ module DTK::Client
       Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
     end
 
+    desc "MODULE-ID/NAME import-version VERSION", "Import a specfic version from a linked component module"
+    def import_version(arg1,arg2)
+      component_module_id,version = [arg2,arg1]
+      post_body = {
+        :component_module_id => component_module_id,
+        :version => version
+      }
+      response = post rest_url("component_module/import_version"), post_body
+      @@invalidate_map << :module_component
+
+      return response unless response.ok?
+      module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
+      #TODO: need to check if local clone directory exists
+      Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+    end
+    
     desc "delete-remote REMOTE-MODULE", "Delete remote component module"
     def delete_remote(remote_module_name)
       post_body = {
@@ -172,7 +186,6 @@ module DTK::Client
       }
       post rest_url("component_module/delete_remote"), post_body
     end
-
 
     desc "MODULE-ID/NAME export", "Export component module to remote repository."
     def export(component_module_id)
