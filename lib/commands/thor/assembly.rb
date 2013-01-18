@@ -21,10 +21,18 @@ module DTK::Client
       PPColumns.get(:assembly)
     end
 
+    def self.valid_child?(name_of_sub_context)
+      return [:node].include?(name_of_sub_context.to_sym)
+    end
+
     # return information specifc for this class
     def self.whoami()
       # identifier, list endpoint, subtype
       return :assembly, "assembly/list", nil
+    end
+
+    def self.get_supported_enteties
+      return [:node, :component, :attribute]
     end
 
     desc "ASSEMBLY-NAME/ID promote-to-library", "Update or create library assembly using workspace assembly"

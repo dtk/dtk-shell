@@ -18,5 +18,8 @@ module DTK
   module Shell
     class Error < DTK::Client::Error
     end
+
+    class ExitSignal < DTK::Client::Error
+    end
   end
 end

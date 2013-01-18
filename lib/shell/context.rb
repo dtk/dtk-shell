@@ -7,9 +7,9 @@ require 'json'
 module DTK
   module Shell
     class Context
-      include DTK::Client::Aux
+      extend DTK::Client::Aux
       include DTK::Client::Advanced_Context
-
+      
       # client commands
       CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs']
       DTK_ROOT_PROMPT       = "dtk:/>"
@@ -21,11 +21,17 @@ module DTK
       attr_accessor :active_commands
       attr_accessor :dirs
 
+      # all known commands
       ROOT_TASKS = DTK::Client::Dtk.task_names
-      
+
+
       def initialize
 
         @cached_tasks, @active_commands, @dirs = {}, [], []
+
+        # member used to hold current commands loaded for current command
+        @context_commands = []
+
         @conn = DTK::Client::Session.get_connection()
 
         # if connection parameters are not set up properly, print warning and exit dtk_shell
@@ -45,6 +51,71 @@ module DTK
         end
       end
 
+      def self.get_command_class(command_name)
+        begin
+          return Object.const_get('DTK').const_get('Client').const_get(cap_form(command_name))
+        rescue Exception => e
+          return nil
+        end
+      end
+      
+
+      # get the correct command
+      # /assembly/223232333/nodes/1231232332/attributes
+      def calculate_proper_command(delimited_inputs)
+        # select last word that is enclosed with //
+        # TODO: Fix this later on with proper Regexp           
+        match = "/#{delimited_inputs}".match(/\/(.+)\//)
+        return nil if match.nil?
+
+        inputs = match[1].split('/')
+
+        if ROOT_TASKS.include?(inputs.last)
+          return inputs.last
+        end
+        
+        return nil
+      end
+
+      # this method is used to scan and provide context to be available Readline.complete_proc
+      def dynamic_autocomplete_context(readline_input)
+        inputs = nil
+           
+        n_level_commands = nil
+
+        if readline_input.match /.*\/.*/
+          # one before last
+          command = calculate_proper_command(readline_input)
+
+          unless command.nil?
+            n_level_commands = get_command_identifiers(command)
+          else
+            n_level_commands =  @cached_tasks['dtk']
+          end
+
+          if readline_input.match /.*\/$/
+            # if last character is '/'
+            inputs = readline_input.split(/\//)
+            user_input = ''
+          else
+            # if we have string after last '/'
+            inputs = readline_input.split(/\//)
+            user_input = inputs.pop
+          end
+
+        end
+
+        user_input ||= readline_input
+
+        results = (n_level_commands||@context_commands).grep( /^#{Regexp.escape(user_input)}/ )
+
+        unless inputs.nil?
+          results = results.map { |element| (inputs.join('/') + '/' + element)}
+        end
+
+        return results
+      end
+
       # load context will load list of commands available for given command (passed)
       # to method. Context is list of command available at current tier.
       def load_context(command_name=nil)
@@ -55,18 +126,21 @@ module DTK
 
         # if there is no new context (current) we use old one
         @current = sub_tasks_names(command_name) || @current
-        Readline.completion_append_character = " "
+        
 
         # we add client commands
         @current.concat(CLIENT_COMMANDS).sort!
 
         # holder for commands to be used since we do not want to remember all of them
-        context_commands = @current
-        # we load thor command class identifiers for autocomplete context list
-        context_commands.concat(get_command_identifiers(command_name)) if (tier_1? && !command_name.nil?)
+        @context_commands = @current
+        # we load thor command class identifiers for autocomplete context list        
+        if (tier_1? && !command_name.nil?)
+          @context_commands.concat(get_command_identifiers(command_name))
+        end
 
-        comp = proc { |s| context_commands.grep( /^#{Regexp.escape(s)}/ ) }
-        Readline.completion_proc = comp
+        # logic behind context loading
+        #Readline.completer_word_break_characters=" "
+        Readline.completion_proc = proc { |input| dynamic_autocomplete_context(input) }
       end
 
       def valid_pairs(args)
@@ -117,6 +191,10 @@ module DTK
         return root? ? DTK_ROOT_PROMPT : "dtk:/#{@active_commands.join('/')}>"
       end
 
+      def root_tasks
+        return @cached_tasks['dtk']
+      end
+
       # returns true if context is on root at the moment
       def root?
         return @active_commands.empty?
@@ -134,20 +212,6 @@ module DTK
         return ((@active_commands.size%2 == 0) && (@active_commands.size != 0))
       end
 
-      # checks if change context command is valid
-      def command_valid?(command)
-        if root?
-          unless @current.include? command
-            raise DTK::Shell::Error, "Context '#{command}' not present for current tier."
-          end
-        else
-          # at the moment this is tier 1 
-          unless valid_id?(tier_1_command(), command)
-            raise DTK::Shell::Error, "#{tier_1_command().capitalize} identifier '#{command}' is not valid."
-          end
-        end
-      end
-
       # returns tier 1 command
       def tier_1_command
         size = @active_commands.size
@@ -159,7 +223,7 @@ module DTK
       end
 
       # returns tier 2 command
-      def tier_2_command
+      def last_command
         @active_commands.last
       end
 
@@ -176,10 +240,6 @@ module DTK
       # adds command to current list of active commands
       def insert_active_command(command)
         @active_commands << command
-
-        # if @active_commands.size > 2
-        #   raise DTK::Shell::Error, "There is error in logic, command chain should be not more than tier 2."
-        # end
       end
 
       # remove last active command, and returns it
@@ -188,8 +248,8 @@ module DTK
       end
 
       # calls 'valid_id?' method in Thor class to validate ID/NAME
-      def valid_id?(thor_command_name,value)
-        command_clazz = get_command_class(thor_command_name)
+      def valid_id?(thor_command_name,value)           
+        command_clazz = Context.get_command_class(thor_command_name)
         if command_clazz.respond_to?(:valid_id?)
           return command_clazz.valid_id?(value,@conn)
         end
@@ -202,7 +262,7 @@ module DTK
 
       # get class identifiers for given thor command, returns array of identifiers
       def get_command_identifiers(thor_command_name)
-        command_clazz = get_command_class(thor_command_name)
+        command_clazz = Context.get_command_class(thor_command_name)
         if command_clazz.respond_to?(:whoami) && command_clazz.respond_to?(:get_identifiers)
           return command_clazz.get_identifiers(@conn)
         end
@@ -228,13 +288,9 @@ module DTK
 
       private
 
-      def get_command_class(command_name)
-        Object.const_get('DTK').const_get('Client').const_get(cap_form(command_name))
-      end
-
       def get_latest_tasks(command_name)
         file_name = command_name.gsub('-','_')
-        tier_1_tasks, tier_2_tasks = get_command_class(file_name).tiered_task_names
+        tier_1_tasks, tier_2_tasks = Context.get_command_class(file_name).tiered_task_names
 
         # gets thor command class and then all the task names for that command
         @cached_tasks.store("#{command_name}_1",tier_1_tasks)
@@ -264,7 +320,7 @@ module DTK
           filtered_commands = filtered_commands[-COMMAND_HISTORY_LIMIT,COMMAND_HISTORY_LIMIT+1]
         end
 
-        File.open(HISTORY_LOCATION,'w').write filtered_commands.to_json
+        File.open(HISTORY_LOCATION,'w') { |f| f.write(filtered_commands.to_json) }
       end
 
       private

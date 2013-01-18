@@ -1,16 +1,15 @@
-# require 'lib/spec_thor'
-# include SpecThor
+require File.expand_path('../lib/shell',                   File.dirname(__FILE__))
+require 'ap'
 
-# describe "dtk-shell" do
+describe DTK::Shell do
 
-# # context '#1'do
-# # 	system("echo 'assembly list' | dtk-shell")	
-# # 	#system("echo 'cc assembly'")
-# # end
+  # generic test for all task of Thor class
+  #test_task_interface(DTK::Client::Task)
 
-# # context '#2' do
-# # 	exec('exit')
-# # 	#system("exit")
-# # end
-# end
+  init_shell_context()
 
+  line = 'cc /assembly'
+  ap line
+  execute_shell_command(line,'')
+
+end
