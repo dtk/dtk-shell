@@ -323,10 +323,10 @@ module DTK::Client
 
     end
 
-    desc "MODULE-ID/NAME push-clone-changes [VERSION]", "Push changes from local copy of module to server"
-    def push_clone_changes(arg1,arg2=nil)
-      component_module_id,version = (arg2.nil? ? [arg1] : [arg2,arg1])
-      push_clone_changes_aux(:component_module,component_module_id,version)
+    desc "MODULE-ID/NAME push-clone-changes [-v VERSION]", "Push changes from local copy of module to server"
+    version_method_option
+    def push_clone_changes(component_module_id)
+      push_clone_changes_aux(:component_module,component_module_id,options["version"])
     end
 
     #### end: commands related to cloning to and pushing from local clone
