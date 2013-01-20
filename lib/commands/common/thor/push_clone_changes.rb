@@ -13,13 +13,15 @@ module DTK::Client
       response =  post(rest_url("#{module_type}/get_workspace_branch_info"),post_body) 
       return response unless response.ok?
       
-      response = Helper(:git_repo).push_changes(module_type,response.data(:module_name),version)
+      ret = response = Helper(:git_repo).push_changes(module_type,response.data(:module_name),version)
       return response unless response.ok?
       json_diffs = (response.data(:diffs).empty? ? {} : JSON.generate(response.data(:diffs)))
       commit_sha = response.data(:commit_sha)
       post_body.merge!(:json_diffs => JSON.generate(response.data(:diffs)), :commit_sha => commit_sha)
 
-      post rest_url("#{module_type}/update_model_from_clone"), post_body
+      response = post(rest_url("#{module_type}/update_model_from_clone"),post_body)
+      return response unless response.ok?
+      ret
     end
   end
 end

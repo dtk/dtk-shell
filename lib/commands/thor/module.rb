@@ -20,12 +20,12 @@ module DTK::Client
     end
 
 #TODO: in for testing; may remove
-    desc "MODULE-ID/NAME test-generate-dsl", "Test generating DSL from implementation"
+    desc "MODULE-NAME/ID test-generate-dsl", "Test generating DSL from implementation"
     def test_generate_dsl(component_module_id)
       post rest_url("component_module/test_generate_dsl"),{:component_module_id => component_module_id}
     end
 
-    desc "MODULE-ID/NAME dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
+    desc "MODULE-NAME/ID dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
     def dsl_upgrade(arg1,arg2=nil)
       component_module_id,dsl_version = (arg2 ? [arg2,arg1] : [arg1])
       dsl_version ||= MostRecentDSLVersion
@@ -39,7 +39,7 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete MODULE-ID/NAME", "Delete component module and all items contained in it"
+    desc "delete MODULE-NAME/ID", "Delete component module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(component_module_id)
       unless options.force?
@@ -102,7 +102,7 @@ module DTK::Client
     #### end: create and delete commands ###
 
     #### list and info commands ###
-    desc "MODULE-ID/NAME info", "Get information about given component module."
+    desc "MODULE-NAME/ID info", "Get information about given component module."
     def info(component_module_id)
       post_body = {
         :component_module_id => component_module_id
@@ -120,7 +120,7 @@ module DTK::Client
       response.render_table(:component)
     end
 
-    desc "MODULE-ID/NAME list-components", "List all components for given component module."
+    desc "MODULE-NAME/ID list-components", "List all components for given component module."
     #TODO: support info on remote
     def list_components(component_module_id)
       post_body = {
@@ -163,7 +163,7 @@ module DTK::Client
       Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
     end
 
-    desc "MODULE-ID/NAME import-version VERSION", "Import a specfic version from a linked component module"
+    desc "MODULE-NAME/ID import-version VERSION", "Import a specfic version from a linked component module"
     def import_version(arg1,arg2)
       component_module_id,version = [arg2,arg1]
       post_body = {
@@ -187,7 +187,7 @@ module DTK::Client
       post rest_url("component_module/delete_remote"), post_body
     end
 
-    desc "MODULE-ID/NAME export", "Export component module to remote repository."
+    desc "MODULE-NAME/ID export", "Export component module to remote repository."
     def export(component_module_id)
       post_body = {
         :component_module_id => component_module_id
@@ -196,7 +196,7 @@ module DTK::Client
       post rest_url("component_module/export"), post_body
     end
 
-    desc "MODULE-ID/NAME push-to-remote-legacy", "Push local copy of component module to remote repository."
+    desc "MODULE-NAME/ID push-to-remote-legacy", "Push local copy of component module to remote repository."
     def push_to_remote_legacy(component_module_id)
       post_body = {
         :component_module_id => component_module_id
@@ -205,13 +205,13 @@ module DTK::Client
       post rest_url("component_module/push_to_remote_legacy"), post_body
     end
 
-    desc "MODULE-ID/NAME push-to-remote [-v VERSION]", "Push local copy of component module to remote repository."
+    desc "MODULE-NAME/ID push-to-remote [-v VERSION]", "Push local copy of component module to remote repository."
     version_method_option
     def push_to_remote(component_module_id)
       push_to_remote_aux(:component_module,component_module_id,options["version"])
     end
 
-    desc "MODULE-ID/NAME pull-from-remote [-v VERSION]", "Update local component module from remote repository."
+    desc "MODULE-NAME/ID pull-from-remote [-v VERSION]", "Update local component module from remote repository."
     version_method_option
     def pull_from_remote(component_module_id)
       pull_from_remote_aux(:component_module,component_module_id,options["version"])
@@ -220,7 +220,7 @@ module DTK::Client
     #### end: commands to interact with remote repo ###
 
     #### commands to manage workspace and versioning ###
-    desc "MODULE-ID/NAME create-new-version NEW-VERSION", "Snapshot current state of module as a new version"
+    desc "MODULE-NAME/ID create-new-version NEW-VERSION", "Snapshot current state of module as a new version"
     def create_new_version(arg1,arg2)
       #component_module_id is in last position
       component_module_id,version = [arg2,arg1]
@@ -241,13 +241,13 @@ module DTK::Client
     # internal_trigger: this flag means that other method (internal) has trigger this.
     #                   This will change behaviour of method
     #
-    desc "MODULE-ID/NAME clone [-v VERSION]", "Clone into client the component module files"
+    desc "MODULE-NAME/ID clone [-v VERSION]", "Clone into client the component module files"
     version_method_option
     def clone(component_module_id,internal_trigger=false)
       clone_aux(:component_module,component_module_id,options["version"],internal_trigger)
     end
 
-    desc "MODULE-ID/NAME edit","Switch to unix editing for given module."
+    desc "MODULE-NAME/ID edit","Switch to unix editing for given module."
     def edit(module_name)
 
       # if this is not name it will not work, we need module name
@@ -323,7 +323,7 @@ module DTK::Client
 
     end
 
-    desc "MODULE-ID/NAME push-clone-changes [-v VERSION]", "Push changes from local copy of module to server"
+    desc "MODULE-NAME/ID push-clone-changes [-v VERSION]", "Push changes from local copy of module to server"
     version_method_option
     def push_clone_changes(component_module_id)
       push_clone_changes_aux(:component_module,component_module_id,options["version"])

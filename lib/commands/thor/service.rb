@@ -127,6 +127,11 @@ module DTK::Client
       push_clone_changes_aux(:service_module,service_module_id,version)
     end
 
+    desc "SERVICE-NAME/ID push-clone-changes [-v VERSION]", "Push changes from local copy of module to server"
+    version_method_option
+    def push_clone_changes(service_module_id)
+      push_clone_changes_aux(:service_module,service_module_id,options["version"])
+    end
 
     desc "SERVICE-NAME/ID set-module-version COMPONENT-MODULE-NAME -v VERSION", "Set the version of the component module to use in the service's assemblies"
     version_method_option
