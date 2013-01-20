@@ -48,8 +48,7 @@ module DTK; module Client; class CommandHelper
       Response.wrap_helper_actions() do
         repo_dir = local_repo_dir(type,module_name,version)
         repo = create(repo_dir,opts[:local_branch])
-        diffs = push_repo_changes_aux(repo,opts)
-        {"diffs" => diffs}
+        push_repo_changes_aux(repo,opts)
       end
     end
 
@@ -138,6 +137,9 @@ module DTK; module Client; class CommandHelper
       end
     end
     
+    #returns hash with keys
+    #: diffs - hash with diffs
+    # commit_sha - sha of currenet_commit
     def push_repo_changes_aux(repo,opts={})
       diffs = DiffSummary.new()
       #add any file that is untracked
@@ -162,26 +164,29 @@ module DTK; module Client; class CommandHelper
       remote_branch_ref = remote_branch_ref(local_branch,opts)
 
       #check if merge needed
-      merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch_ref)
+      commit_shas = Hash.new
+      merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
+      commit_sha = nil
       if merge_rel == :equal
-        diffs
+        commit_sha = commit_shas[:other_sha]
       elsif [:branchpoint,:local_behind].include?(merge_rel)
         raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to server")
       elsif merge_rel == :no_remote_ref
         repo.push(remote_branch_ref)
-        DiffSummary.new_version()
+        diffs = DiffSummary.new_version()
+        commit_sha = commit_shas[:local_sha]
       elsif merge_rel == :local_ahead
         #see if any diffs between fetched remote and local branch
         #this has be done after commit
         diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
-        return diffs unless diffs.any_diffs?()
-
-        repo.push(remote_branch_ref)
-
-        diffs
+        if diffs.any_diffs?()
+          repo.push(remote_branch_ref)
+        end
+        raise Error.new("Need to write logic to get sha on pushed remote")
       else
         raise Error.new("Unexpected merge_rel (#{merge_rel})")
       end
+      {"diffs" => diffs, "commit_sha" => commit_sha}
     end
 
     def pull_repo_changes_aux(repo,opts={})
