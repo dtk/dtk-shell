@@ -182,7 +182,7 @@ module DTK; module Client; class CommandHelper
         if diffs.any_diffs?()
           repo.push(remote_branch_ref)
         end
-        raise Error.new("Need to write logic to get sha on pushed remote")
+        commit_sha = repo.find_remote_sha(remote_branch_ref)
       else
         raise Error.new("Unexpected merge_rel (#{merge_rel})")
       end
