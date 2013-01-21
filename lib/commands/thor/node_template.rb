@@ -9,13 +9,14 @@ module DTK::Client
       return :node_template, "node/list", {:subtype => 'template'}
     end
 
-    desc "NODE-NAME/ID info", "Get information about given node template."
+    desc "NODE-TEMPLATE-NAME/ID info", "Get information about given node template."
     method_option :list, :type => :boolean, :default => false
-    def info(node_id=nil)
+    def info(hashed_args)
+      node_template_id = CommandBaseThor.retrieve_arguments([:node_template_id],hashed_args)
       data_type = :node
 
       post_body = {
-        :node_id => node_id,
+        :node_id => node_template_id,
         :subtype => 'template'
       }
       response = post rest_url("node/info"), post_body
@@ -26,7 +27,7 @@ module DTK::Client
     end
 
     desc "list", "List all node templates."
-    def list()
+    def list(hashed_args)
       post_body = {
         :subtype => 'template'
       }
@@ -36,7 +37,8 @@ module DTK::Client
 
     #TODO: this may be moved to just be a utility fn
     desc "image-upgrade OLD-IMAGE-ID NEW-IMAGE-ID", "Upgrade use of OLD-IMAGE-ID to NEW-IMAGE-ID"
-    def image_upgrade(old_image_id,new_image_id)
+    def image_upgrade(hashed_args)
+      old_image_id, new_image_id = CommandBaseThor.retrieve_arguments([:option_1, :option_2],hashed_args)
       post_body = {
         :old_image_id => old_image_id,
         :new_image_id => new_image_id
@@ -51,7 +53,8 @@ module DTK::Client
       :type => :numeric, 
       :banner => "TARGET-ID",
       :desc => "Target (id) to create node insatnce in" 
-    def stage(node_template_id,name=nil)
+    def stage(hashed_args)
+      node_template_id, name = CommandBaseThor.retrieve_arguments([:node_template_id, :option_1],hashed_args)
       post_body = {
         :node_template_id => node_template_id
       }

@@ -27,21 +27,28 @@ module DTK
         super
       end
 
-      def self.execute_from_cli(conn,argv,shell_execution=false)
+      def self.execute_from_cli(conn,method_name,hashed_argv,options_args,shell_execution=false)
         @@shell_execution = shell_execution
-        ret = start(arg_analyzer(argv),:conn => conn)
+        
+        # I am sorry!
+        if method_name == 'help'
+          ret = start([method_name] + hashed_argv[:options],:conn => conn)      
+        else
+          ret = start([method_name, hashed_argv] + options_args,:conn => conn)
+        end
 
         # special case where we have validation reply
         if ret.kind_of?(Response)
           if ret.validation_response?
-            ret = action_on_revalidation_response(ret, conn, argv, shell_execution)
+            ret = action_on_revalidation_response(ret, conn, method_name, hashed_argv, options_args, shell_execution)
           end
         end
 
         ret.kind_of?(Response) ? ret : Response::NoOp.new
       end
 
-      def self.action_on_revalidation_response(validation_response, conn, argv, shell_execution)
+      # TODO: Make sure that server responds with new format of ARGVS
+      def self.action_on_revalidation_response(validation_response, conn, method_name, hashed_argv, options_args, shell_execution)
         puts "[NOTICE] #{validation_response.validation_message}"
         actions = validation_response.validation_actions
 
@@ -49,8 +56,9 @@ module DTK
           if Console.confirmation_prompt("Pre-action '#{action['action']}' neeeded, execute?")
             # we have hash map with values { :assembly_id => 2123123123, :option_1 => true }
             # we translate to array of values, with action as first element
-            method_args = action['params'].values.unshift(action['action'])
-            response = self.execute_from_cli(conn, method_args, shell_execution)
+
+            # def self.execute_from_cli(conn,method_name,hashed_argv,options_args,shell_execution=false)
+            response = self.execute_from_cli(conn, action['action'],  create_hashed_arguments(action['params']),[],shell_execution)
             # we abort if error happens
             ResponseErrorHandler.check(response)
 
@@ -65,40 +73,11 @@ module DTK
           end
         end
 
-        puts "Executing original action: '#{argv.reverse.join('/')}' ..."
+        puts "Executing original action: '#{method_name}' ..."
         # if all executed correctly we run original action
-        return self.execute_from_cli(conn, argv, shell_execution)
+        return self.execute_from_cli(conn,method_name,hashed_argv,options_args,shell_execution)
       end
 
-      # Method will check if there ID/Name before one of the commands if so
-      # it will route it properly by placing ID as last param
-      def self.arg_analyzer(argv)
-        all_task_names = task_names()
-        # we are looking for case when task name is second options and ID/NAME is first
-        unless argv.first == 'help'
-          if (argv.size > 1 && all_task_names.include?(argv[1]))
-
-            # check if required params have been met, see UnboundMethod#arity
-            method_definition = self.instance_method(argv[1].gsub('-','_').to_sym)
-
-            # if negative it means that it has optional parameters, required number is negative value + 1
-            required_params = (method_definition.arity < 0) ? method_definition.arity+1 : method_definition.arity
-
-            # number 1 indicates here TASK NAME
-            if (argv.size < required_params + 1)
-              raise DTK::Client::DtkError, "Method 'dtk #{argv[1]}' requires at least #{required_params-argv.size} argument."
-            end
-            
-            # first element goes on the end
-            argv << argv.shift
-          end
-        end
-        
-        # if task name is not in first place, switch arguments positions
-        argv << argv.shift unless (all_task_names.include?(argv[0]) || argv.empty?)
-
-        argv
-      end
 
       # we take current timestamp and compare it to timestamp stored in @@cached_response
       # if difference is greater than TIME_DIFF we send request again, if not we use
@@ -138,6 +117,41 @@ module DTK
         @@cached_response.store(clazz, {:response => response, :ts => current_ts})
         
         return @@cached_response[clazz][:response]
+      end
+
+      def self.create_hashed_arguments(params, options = [], tasks = [])
+        hashed_argv = {}
+        params.each do |k,v|
+          hashed_argv.store(k.to_sym, v)
+        end
+        hashed_argv.store(:options, options)
+        hashed_argv.store(:tasks, tasks)
+        return hashed_argv
+      end
+
+      # parses hashed params and returns needed ones
+      def self.retrieve_arguments(mapping, hashed_argv)
+        # if we just want to pass simple variable, between methods
+        return hashed_argv unless (hashed_argv.class == Hash)
+
+        results = []
+
+        mapping.each do |key|
+          element = nil
+          matched = key.to_s.match(/option_([0-9]+)/)
+
+          if matched
+            id = matched[1].to_i - 1
+            element = (hashed_argv[:options])[id]
+          else
+            element = hashed_argv[key]
+          end
+
+          results << element
+        end
+
+        # if one element is we avoid using array
+        return ((results.size == 1) ? results.first : results)
       end
 
       # returns all task names for given thor class with use friendly names (with '-' instead '_')

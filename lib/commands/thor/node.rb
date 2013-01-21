@@ -15,17 +15,9 @@ module DTK::Client
       return :node, "node/list", nil
     end
     
-    # desc "list","List node instances"
-    # method_option :list, :aliases => '-ls', :type => :boolean, :default => false
-    # def list()
-    #   response = post rest_url("node/list")
-
-    #   response.render_table(:node) unless options.list?
-    #   response
-    # end
-
     desc "NODE-NAME/ID info","Info about node"
-    def info(node_id)
+    def info(hashed_args)
+      node_id = CommandBaseThor.retrieve_arguments([:node_id],hashed_args)
       post_body = {
         :node_id => node_id,
         :subtype => 'instance',
@@ -35,15 +27,15 @@ module DTK::Client
 
     desc "[NODE-NAME/ID] list [components|attributes]","List components that are on the node instance."
     method_option :list, :type => :boolean, :default => false
-    def list(*rotated_args)
-      if (rotated_args.size == 0)
+    def list(hashed_args)
+      node_id, about = CommandBaseThor.retrieve_arguments([:node_id,:option_1],hashed_args)
+      
+      if node_id.nil?
         response = post rest_url("node/list")
 
         response.render_table(:node) unless options.list?
         response
       else
-        #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
-        node_id,about = rotate_args(rotated_args)
 
         post_body = {
           :node_id => node_id,
@@ -66,7 +58,8 @@ module DTK::Client
     end
 
     desc "NODE-NAME/ID set ATTRIBUTE-ID VALUE", "Set node group attribute value"
-    def set(attr_id,value,node_id)
+    def set(hashed_args)
+      node_id, attr_id, value = CommandBaseThor.retrieve_arguments([:node_id, :option_1, :option_2],hashed_args)
       post_body = {
         :node_id => node_id,
         :pattern => attr_id,
@@ -76,13 +69,14 @@ module DTK::Client
     end
 
     desc "NODE-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
-    def set_required_params(node_id)
+    def set_required_params(hashed_args)
+      node_id = CommandBaseThor.retrieve_arguments([:node_id],hashed_args)
       set_required_params_aux(node_id,:node)
     end
 
     desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node"
-    def add_component(arg1,arg2)
-      node_id,component_template_id = [arg2,arg1]
+    def add_component(hashed_args)
+      node_id,component_template_id = CommandBaseThor.retrieve_arguments([:node_id, :option_1],hashed_args)
       post_body = {
         :node_id => node_id,
         :component_template_id => component_template_id
@@ -91,8 +85,8 @@ module DTK::Client
     end
 
     desc "NODE-NAME/ID delete-component COMPONENT-ID", "Delete component from node"
-    def delete_component(arg1,arg2)
-      node_id,component_id = [arg2,arg1]
+    def delete_component(hashed_args)
+      node_id,component_id = CommandBaseThor.retrieve_arguments([:node_id, :option_1],hashed_args)
       post_body = {
         :node_id => node_id,
         :component_id => component_id
@@ -105,12 +99,13 @@ module DTK::Client
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    def converge(node_id)
+    def converge(hashed_args)
+      node_id = CommandBaseThor.retrieve_arguments([:node_id],hashed_args)
       # create task
       post_body = {
         :node_id => node_id
       }
-      post_body.merge!(:commit_msg => options["commit_msg"]) if options["commit_msg"]
+      post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
 
       response = post rest_url("node/create_task"), post_body
       return response unless response.ok?
@@ -122,14 +117,16 @@ module DTK::Client
 
     desc "NODE-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
-    def task_status(node_id)
+    def task_status(hashed_args)
+      node_id = CommandBaseThor.retrieve_arguments([:node_id],hashed_args)
       task_status_aux(node_id,:node,options.wait?)
     end
 
     # desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
     desc "destroy NODE-ID", "Delete and destroy (terminate) node"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def destroy(node_id)
+    def destroy(hashed_args)
+      node_id = CommandBaseThor.retrieve_arguments([:node_id],hashed_args)
       post_body = {
         :node_id => node_id
       }
@@ -145,18 +142,21 @@ module DTK::Client
     end
 
     desc "NODE-NAME/ID op-status", "Get node operational status"
-    def op_status(node_id)
+    def op_status(hashed_args)
+      node_id = CommandBaseThor.retrieve_arguments([:node_id],hashed_args)
       post rest_url("node/get_op_status"), :node_id => node_id
     end
 
     desc "NODE-NAME/ID start", "Start node instance."
-    def start(node_id)
+    def start(hashed_args)
+      node_id = CommandBaseThor.retrieve_arguments([:node_id],hashed_args)
       assembly_id,node_id = get_assembly_and_node_id(node_id)
       assembly_start(assembly_id, node_id)
     end
 
     desc "NODE-NAME/ID stop", "Stop node instance."
-    def stop(node_id)
+    def stop(hashed_args)
+      node_id = CommandBaseThor.retrieve_arguments([:node_id],hashed_args)
       assembly_id, node_id = get_assembly_and_node_id(node_id)
       assembly_stop(assembly_id, node_id)
     end
@@ -172,18 +172,6 @@ module DTK::Client
         return response.data(:assembly_id), response.data(:id)
       end
     end
-
-=begin
-TODO: not used yet
-    desc "add-to-group NODE-ID NODE-GROUP-ID", "Add node to group"
-    def add_to_group(node_id,node_group_id)
-      post_body = {
-        :node_id => node_id,
-        :node_group_id => node_group_id
-      }
-      post rest_url("node/add_to_group"), post_body
-    end
-=end
   end
 end
 

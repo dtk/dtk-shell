@@ -10,9 +10,11 @@ module DTK::Client
     end
 
     desc "create TARGET-NAME [DESCRIPTION]","Create new target"
-    def create(target_id,description=nil)
+    def create(hashed_args)
+      target_name, description = CommandBaseThor.retrieve_arguments([:option_1,:option_2],hashed_args)
+
       post_body = {
-        :target_name => target_id,
+        :target_name => target_name,
         :description => description
       }
       response = post rest_url("target/create"), post_body
@@ -23,12 +25,12 @@ module DTK::Client
     end
 
     desc "[TARGET-NAME/ID] list [nodes|assemblies]","List nodes or assembly instances in given targets."
-    def list(*rotated_args)
-      if (rotated_args.size == 0)
+    def list(hashed_args)
+      target_id, about = CommandBaseThor.retrieve_arguments([:target_id, :option_1],hashed_args)
+      if target_id.nil?
         response  = post rest_url("target/list")
         response.render_table(:target)
       else
-        target_id,about = rotate_args(rotated_args)
         post_body = {
           :target_id => target_id,
           :about => about
@@ -50,7 +52,8 @@ module DTK::Client
     end
     
     desc "create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create assembly template from nodes in target" 
-    def create_assembly(service_module_name,assembly_name)
+    def create_assembly(hashed_args)
+      service_module_name, assembly_name = CommandBaseThor.retrieve_arguments([:option_1, :option_2],hashed_args)
       post_body = {
         :service_module_name => service_module_name,
         :assembly_name => assembly_name
@@ -63,7 +66,7 @@ module DTK::Client
     end
 
     desc "TARGET-NAME/ID converge", "Converges target instance"
-    def converge(target_id)
+    def converge(hashed_args)
       not_implemented()
     end
     

@@ -4,7 +4,7 @@ module DTK::Client
       PPColumns.get(:project)
     end
     desc "list","List projects"
-    def list()
+    def list(hashed_args)
       search_hash = SearchHash.new()
       search_hash.cols = pretty_print_cols()
       post rest_url("project/list"), search_hash.post_body_hash()

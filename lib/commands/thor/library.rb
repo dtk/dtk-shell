@@ -12,21 +12,21 @@ module DTK::Client
     end
 
     desc "[LIBRARY ID/NAME] info","Info for given library based on specified identifier."
-    def info(library_id=nil)
+    def info(hashed_args)
+      library_id = CommandBaseThor.retrieve_arguments([:library_id],hashed_args)
       not_implemented
     end
 
     desc "[LIBRARY ID/NAME] list [nodes|components|assemblies]","Show nodes, components, or assemblies associated with library"
     # def show(arg1,arg2)
-    def list(*rotated_args)
-      if (rotated_args.size == 0)
+    def list(hashed_args)
+      library_id, about = CommandBaseThor.retrieve_arguments([:library_id, :option_1],hashed_args)
+      if library_id.nil?
         search_hash = SearchHash.new()
         search_hash.cols = pretty_print_cols()
         response = post rest_url("library/list"), search_hash.post_body_hash
         response.render_table(:library)
       else
-        # library_id,about = [arg2,arg1]
-        library_id,about = rotate_args(rotated_args)
         # sets data type to be used when printing table
         case about
          when "assemblies"
@@ -49,7 +49,8 @@ module DTK::Client
     end
 
     desc "[LIBRARY ID/NAME] import-service-module REMOTE-SERVICE-MODULE[,...]", "Import remote service module into library"
-    def import_service_module(service_modules, library_id=nil)
+    def import_service_module(hashed_args)
+      library_id, service_modules = CommandBaseThor.retrieve_arguments([:library_id, :option_1],hashed_args)
       post_body = {
        :remote_module_name => service_modules
       }
@@ -59,7 +60,8 @@ module DTK::Client
     end
 
     desc "[LIBRARY ID/NAME] create-service-component SERVICE-MODULE-NAME", "Create an empty service module in library"
-    def create(module_name,library_id=nil)
+    def create(hashed_args)
+      library_id, module_name = CommandBaseThor.retrieve_arguments([:library_id, :option_1],hashed_args)
       post_body = {
        :module_name => module_name
       }
@@ -72,7 +74,8 @@ module DTK::Client
     end
 
     desc "[LIBRARY ID/NAME] delete-service-component COMPONENT-MODULE-NAME","Delete component module and all items contained in it"
-    def delete(component_module_id)
+    def delete(hashed_args)
+      library_id, component_module_id = CommandBaseThor.retrieve_arguments([:library_id, :option_1],hashed_args)
       post_body = {
        :component_module_id => component_module_id
       }

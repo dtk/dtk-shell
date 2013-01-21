@@ -286,6 +286,47 @@ module DTK
         return cmd, args
       end
 
+
+      def get_command_parameters(cmd,args)
+        hash_params,tasks = {}, []
+        entity_name, method_name = nil, nil
+
+        if root? && !args.empty?
+          # this means that somebody is calling command with assembly/.. method_name
+          entity_name = cmd
+          method_name = args.shift
+          hash_params
+        else
+          (0..(@active_commands.size-1)).step(2) do |i|
+            tasks << @active_commands[i]
+            hash_params.store("#{@active_commands[i]}_id".gsub(/\-/,'_').to_sym, @active_commands[i+1]) if @active_commands[i+1]
+          end
+
+          hash_params.store(:tasks, tasks)
+
+          entity_name = @active_commands.first
+          method_name = cmd
+        end
+
+        # options for the command e.g. --list
+        options_args = args.select { |a| a.match(/^\-\-/)}
+        args = args - options_args
+
+        # options to handle thor options -m MESSAGE
+        thor_options = []
+        args.each_with_index do |e,i|
+          if e.match(/^\-[a-zA-Z]?/)
+            thor_options << e
+            thor_options << args[i+1]
+          end
+        end
+        args = args - thor_options
+
+        hash_params.store(:options, args)
+
+        return entity_name, method_name, hash_params, (options_args + thor_options)
+      end
+
       private
 
       def get_latest_tasks(command_name)
