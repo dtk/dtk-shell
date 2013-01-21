@@ -109,7 +109,7 @@ module DTK
             
             # if error_internal.first == true
             if error_code == "forbidden"
-              raise DTK::Client::DtkError, "[FORBIDDEN] Your session has been suspended or timed out, please log in again."
+              raise DTK::Client::DtkError, "[FORBIDDEN] Your session has been suspended, please log in again."
             elsif error_code == "timeout"
               raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
             elsif error_internal
