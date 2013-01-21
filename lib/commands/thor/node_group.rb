@@ -16,7 +16,7 @@ module DTK::Client
     end
 
     # desc "list","List Node groups"
-    # def list()
+    # def list(hashed_args)
     #   search_hash = SearchHash.new()
     #   search_hash.cols = pretty_print_cols()
     #   search_hash.filter = [:oneof, ":type", ["node_group_instance"]]
@@ -25,7 +25,9 @@ module DTK::Client
     # end
 
     desc "NODE-GROUP-NAME/ID set ATTRIBUTE-ID VALUE", "Set node group attribute value"
-    def set(attr_id,value,node_group_id)
+    def set(hashed_args)
+      node_group_id, attr_id, value = CommandBaseThor.retrieve_arguments([:node_group_id, :option_1,:option_2],hashed_args)
+
       post_body = {
         :node_group_id => node_group_id,
         :pattern => attr_id,
@@ -35,7 +37,8 @@ module DTK::Client
     end
 
     desc "NODE-GROUP-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
-    def set_required_params(node_group_id)
+    def set_required_params(hashed_args)
+      node_group_id = CommandBaseThor.retrieve_arguments([:node_group_id],hashed_args)
       set_required_params_aux(node_group_id,:node_group)
     end
 
@@ -45,7 +48,8 @@ module DTK::Client
       :banner => "TARGET-ID",
       :desc => "Target (id) to create node group in"
     method_option "spans-target", :type => :boolean, :default => false
-    def create(name)
+    def create(hashed_args)
+      name = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
       target_id = options["in-target"]
       post_body = {
         :display_name => name
@@ -61,13 +65,14 @@ module DTK::Client
 
     desc "delete NODE-GROUP-ID", "Delete node group"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete(id)
+    def delete(hashed_args)
+      node_group_id = CommandBaseThor.retrieve_arguments([:node_group_id],hashed_args)
       unless options.force?
         # Ask user if really want to delete node group, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete node group '#{id}'?")
       end
 
-      post_body = {:node_group_id => id}
+      post_body = {:node_group_id => node_group_id}
       response = post rest_url("node_group/delete"), post_body
       # when changing context send request for getting latest node_groups instead of getting from cache
       @@invalidate_map << :node_group
@@ -76,16 +81,16 @@ module DTK::Client
     end
 
     desc "[NODE-GROUP-NAME/ID] list [components|attributes]","List components or attributes that are on the node group."
-    def list(*rotated_args)
-      if (rotated_args.size == 0) 
+    def list(hashed_args)
+      node_group_id, about = CommandBaseThor.retrieve_arguments([:node_group_id, :option_1],hashed_args)
+
+      if node_group_id.nil? 
         search_hash = SearchHash.new()
         search_hash.cols = pretty_print_cols()
         search_hash.filter = [:oneof, ":type", ["node_group_instance"]]
         response = post rest_url("node_group/list"), search_hash.post_body_hash()
         response.render_table(:node_group)
       else
-        #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
-        node_group_id,about = rotate_args(rotated_args)
 
         post_body = {
           :node_group_id => node_group_id,
@@ -107,7 +112,9 @@ module DTK::Client
     end
 
     desc "NODE-GROUP-NAME/ID members", "List node group members"
-    def members(node_group_id)
+    def members(hashed_args)
+      node_group_id = CommandBaseThor.retrieve_arguments([:node_group_id],hashed_args)
+
       post_body = {
         :node_group_id => node_group_id
       }
@@ -116,8 +123,9 @@ module DTK::Client
     end
 
     desc "NODE-GROUP-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node group"
-    def add_component(arg1,arg2)
-      node_group_id,component_template_id = [arg2,arg1]
+    def add_component(hashed_args)
+      node_group_id,component_template_id = CommandBaseThor.retrieve_arguments([:node_group_id, :option_1],hashed_args)
+
       post_body = {
         :node_group_id => node_group_id,
         :component_template_id => component_template_id
@@ -130,8 +138,8 @@ module DTK::Client
     end
 
     desc "NODE-GROUP-NAME/ID delete-component COMPONENT-ID", "Delete component from node group"
-    def delete_component(arg1,arg2)
-      node_group_id,component_id = [arg2,arg1]
+    def delete_component(hashed_args)
+      node_group_id,component_id = CommandBaseThor.retrieve_arguments([:node_group_id, :option_1],hashed_args)
       post_body = {
         :node_group_id => node_group_id,
         :component_id => component_id
@@ -148,12 +156,13 @@ module DTK::Client
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    def converge(node_group_id)
+    def converge(hashed_args)
+      node_group_id = CommandBaseThor.retrieve_arguments([:node_group_id],hashed_args)
       # create task
       post_body = {
         :node_group_id => node_group_id
       }
-      post_body.merge!(:commit_msg => options["commit_msg"]) if options["commit_msg"]
+      post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
 
       response = post rest_url("node_group/create_task"), post_body
       return response unless response.ok?
@@ -165,7 +174,8 @@ module DTK::Client
 
     desc "NODE-GROUP-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
-    def task_status(node_group_id)
+    def task_status(hashed_args)
+      node_group_id = CommandBaseThor.retrieve_arguments([:node_group_id],hashed_args)
       task_status_aux(node_group_id,:node_group,options.wait?)
     end
 

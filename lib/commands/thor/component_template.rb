@@ -11,7 +11,8 @@ module DTK::Client
 
     desc "COMPONENT-NAME/ID info", "Get information about given component template."
     method_option :list, :type => :boolean, :default => false
-    def info(component_id=nil)
+    def info(hashed_args)
+      component_id = CommandBaseThor.retrieve_arguments([:component_id],hashed_args)
       data_type = :component
 
       post_body = {
@@ -27,22 +28,24 @@ module DTK::Client
 
     desc "COMPONENT-NAME/ID list nodes", "List all nodes for given component template."
     method_option :list, :type => :boolean, :default => false
-    def list(nodes='none', component_id=nil)
+    def list(hashed_args)
+      component_id,about = CommandBaseThor.retrieve_arguments([:component_id,:option_1],hashed_args)
+      about ||= 'none'
       data_type = :component
 
       post_body = {
         :component_id => component_id,
         :subtype => 'template',
-        :about   => nodes
+        :about   => about
       }
 
-      case nodes
+      case about
       when 'none'
         response = post rest_url("component/list")
       when 'nodes'
         response = post rest_url("component/list"), post_body
       else
-        raise DTK::Client::DtkError, "Not supported type '#{nodes}' for given command."
+        raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
       end
 
       response.render_table(data_type) unless options.list?
@@ -52,7 +55,8 @@ module DTK::Client
 
     desc "COMPONENT-NAME/ID stage NODE-NAME/ID", "Stage indentified node for given component template."
     method_option :list, :type => :boolean, :default => false
-    def stage(node_id, component_id=nil)
+    def stage(hashed_args)
+      component_id, node_id = CommandBaseThor.retrieve_arguments([:component_id,:option_1],hashed_args)
       data_type = :component
 
       post_body = {
@@ -73,3 +77,5 @@ module DTK::Client
   end
 end
 
+# (def .*\()(.+)(\))
+# $1hashed_args$3

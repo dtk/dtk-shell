@@ -36,7 +36,8 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID promote-to-library", "Update or create library assembly using workspace assembly"
-    def promote_to_library(assembly_id)
+    def promote_to_library(hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
       post_body = {
         :assembly_id => assembly_id
       }
@@ -49,34 +50,23 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
-    def start(node_pattern, assembly_id=nil)
-
-      # TODO: Fix problem we need to specify ASSEMBLY ID as last parameter
-      # TODO: Temp fix
-      if assembly_id.nil?
-        assembly_id  = node_pattern
-        node_pattern = nil
-      end
+    def start(hashed_args)
+      assembly_id, node_pattern = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1],hashed_args)
 
       assembly_start(assembly_id, node_pattern)
     end
 
     desc "ASSEMBLY-NAME/ID stop [NODE-ID-PATTERN]", "Stops all assembly's nodes, specific nodes can be selected via node id regex."
-    def stop(node_pattern, assembly_id=nil)
-      # TODO: Temp fix
-      if assembly_id.nil?
-        assembly_id  = node_pattern
-        node_pattern = nil
-      end
+    def stop(hashed_args)
+      assembly_id, node_pattern = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1],hashed_args)
 
       assembly_stop(assembly_id, node_pattern)
     end
 
 
     desc "ASSEMBLY-NAME/ID create-new-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Create a new assembly template from workspace assembly" 
-    def create_new_template(arg1,arg2,arg3)
-      #assembly_id is in last position
-      assembly_id,service_module_name,assembly_template_name = [arg3,arg1,arg2]
+    def create_new_template(hashed_args)
+      assembly_id, service_module_name, assembly_template_name = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2],hashed_args)
       post_body = {
         :assembly_id => assembly_id,
         :service_module_name => service_module_name,
@@ -94,12 +84,15 @@ module DTK::Client
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    def converge(assembly_id)
+    def converge(hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+
       # create task
       post_body = {
         :assembly_id => assembly_id
       }
-      post_body.merge!(:commit_msg => options["commit_msg"]) if options["commit_msg"]
+
+      post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
 
       response = post rest_url("assembly/create_task"), post_body
       return response unless response.ok?
@@ -114,14 +107,17 @@ module DTK::Client
       :type => :string, #integer 
       :banner => "COUNT",
       :desc => "Number of sub-assemblies to add"
-    def add(arg1,arg2)
-      assembly_id,service_add_on_name = [arg2,arg1]
+    def add(hashed_args)
+      assembly_id,service_add_on_name = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1],hashed_args)
+
       # create task
       post_body = {
         :assembly_id => assembly_id,
         :service_add_on_name => service_add_on_name
       }
-      post_body.merge!(:count => options["count"]) if options["count"]
+
+      post_body.merge!(:count => options.count) if options.count
+
       response = post rest_url("assembly/add_sub_assembly"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
@@ -129,8 +125,10 @@ module DTK::Client
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to teh assembly" 
-    def possible_extensions(assembly_id)
+    desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to the assembly" 
+    def possible_extensions(hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+
       post_body = {
         :assembly_id => assembly_id
       }
@@ -140,12 +138,14 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
-    def task_status(assembly_id)
+    def task_status(hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
       task_status_aux(assembly_id,:assembly,options.wait?)
     end
 
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
-    def run_smoketests(assembly_id)
+    def run_smoketests(hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
       post_body = {
         :assembly_id => assembly_id
       }
@@ -160,8 +160,10 @@ module DTK::Client
     #TODO: put in flag to control detail level
     desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
     method_option :list, :type => :boolean, :default => false
-    def list(*rotated_args)
-      if (rotated_args.size == 0)
+    def list(hashed_args)
+      assembly_id, about, filter = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2],hashed_args)
+
+      if assembly_id.nil?
         data_type = :assembly
         response = post rest_url("assembly/list"), {:subtype  => 'instance'}
 
@@ -170,8 +172,6 @@ module DTK::Client
 
         return response
       else
-        #TODO: working around bug where arguments are rotated; below is just temp workaround to rotate back
-        assembly_id,about,filter = rotate_args(rotated_args)
         about ||= "none"
         #TODO: need to detect if two args given by list [nodes|components|tasks FILTER
         #can make sure that first arg is not one of [nodes|components|tasks] but these could be names of assembly (although unlikely); so would then need to
@@ -210,20 +210,10 @@ module DTK::Client
       end
     end
 
-=begin
-    desc "delete-all", "nenene"
-    def delete_all()
-      response = list()
-    
-      response.data.each do |assembly|
-        delete_and_destroy(assembly['id'])
-      end
-    end
-=end
-
-
     desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
-    def list_smoketests(assembly_id)
+    def list_smoketests(hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+
       post_body = {
         :assembly_id => assembly_id
       }
@@ -231,7 +221,9 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID info", "Return info about assembly instance identified by name/id"
-    def info(assembly_id)
+    def info(hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+
       post_body = {
         :assembly_id => assembly_id,
         :subtype => :instance
@@ -239,9 +231,11 @@ module DTK::Client
       post rest_url("assembly/info"), post_body
     end
 
-    desc "delete-and-destroy ASSEMBLY-ID", "Delete assembly instance, termining any nodes taht have been spun up"
+    desc "delete-and-destroy ASSEMBLY-ID [-y]", "Delete assembly instance, termining any nodes taht have been spun up"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete_and_destroy(assembly_id)
+    def delete_and_destroy(hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy assembly '#{assembly_id}' and its nodes?")
@@ -251,6 +245,7 @@ module DTK::Client
         :assembly_id => assembly_id,
         :subtype => :instance
       }
+
       response = post rest_url("assembly/delete"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
@@ -259,7 +254,8 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID set ATTRIBUTE-PATTERN VALUE", "Set target assembly attributes"
-    def set(pattern,value,assembly_id)
+    def set(hashed_args)
+      assembly_id, pattern, value = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2],hashed_args)
       post_body = {
         :assembly_id => assembly_id,
         :pattern => pattern,
@@ -270,11 +266,12 @@ module DTK::Client
     end
 
     desc "create-jenkins-project ASSEMBLY-TEMPLATE-NAME/ID", "Create Jenkins project for assembly template"
-    def create_jenkins_project(assembly_nid)
+    def create_jenkins_project(hashed_args)
+      assembly_id  = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
       #require put here so dont necessarily have to install jenkins client gems
       dtk_require_from_base('command_helpers/jenkins_client')
       post_body = {
-        :assembly_id => assembly_nid,
+        :assembly_id => assembly_id,
         :subtype => :template
       }
       response = post(rest_url("assembly/info"),post_body)
@@ -286,8 +283,8 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node"
-    def add_component(arg1,arg2,arg3)
-      assembly_id,node_id,component_template_id = [arg3,arg1,arg2]
+    def add_component(hashed_args)
+      assembly_id,node_id,component_template_id = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2],hashed_args)
       post_body = {
         :assembly_id => assembly_id,
         :node_id => node_id,
@@ -297,7 +294,8 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID delete-component COMPONENT-ID","Delete component from assembly"
-    def delete_component(component_id,assembly_id)
+    def delete_component(hashed_args)
+      assembly_id, component_id = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1],hashed_args)
       post_body = {
         :assembly_id => assembly_id,
         :component_id => component_id
@@ -307,7 +305,9 @@ module DTK::Client
 
 
     desc "ASSEMBLY-NAME/ID get-netstats", "Get netstats"
-    def get_netstats(assembly_id)
+    def get_netstats(hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+
       post_body = {
         :assembly_id => assembly_id
       }
@@ -345,15 +345,15 @@ module DTK::Client
     GetNetStatsSleep = 0.5
 
     desc "ASSEMBLY-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
-    def set_required_params(assembly_id)
+    def set_required_params(hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
       set_required_params_aux(assembly_id,:assembly,:instance)
     end
 
     desc "ASSEMBLY-NAME/ID tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
     method_option :more, :type => :boolean, :default => false
-    def tail(*rotated_args)
-      # need to use rotate_args because last two parameters can't be nil
-      assembly_id,node_identifier,log_path,grep_option = rotate_args(rotated_args)
+    def tail(hashed_args)
+      assembly_id,node_identifier,log_path,grep_option = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2,:option_3],hashed_args)
      
       last_line = nil
       begin
@@ -457,70 +457,68 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first_match]","Grep log from multiple nodes"
     method_option :first_match, :type => :boolean, :default => false
-    def grep(*rotated_args)
+    def grep(hashed_args)
       # need to use rotate_args because last two parameters can't be nil
-    assembly_id,log_path,node_pattern,grep_pattern = rotate_args(rotated_args)
-    
-    stop_on_first_match = true if options.first_match?
-   
-      begin
-        post_body = {
-          :assembly_id         => assembly_id,
-          :subtype             => 'instance',
-          :log_path            => log_path,
-          :node_pattern        => node_pattern,
-          :grep_pattern        => grep_pattern,
-          :stop_on_first_match => stop_on_first_match
-        }
+    assembly_id,log_path,node_pattern,grep_pattern = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2,:option_3],hashed_args)
+       
+    begin
+      post_body = {
+        :assembly_id         => assembly_id,
+        :subtype             => 'instance',
+        :log_path            => log_path,
+        :node_pattern        => node_pattern,
+        :grep_pattern        => grep_pattern,
+        :stop_on_first_match => options.first_match?
+      }
 
-        response = post rest_url("assembly/initiate_grep"), post_body
+      response = post rest_url("assembly/initiate_grep"), post_body
 
-        unless response.ok?
-          raise DTK::Client::DtkError, "Error while getting log from server. Message: #{response['errors'][0]['message'].nil? ? 'There was no successful response.' : response['errors'].first['message']}"
-        end
+      unless response.ok?
+        raise DTK::Client::DtkError, "Error while getting log from server. Message: #{response['errors'][0]['message'].nil? ? 'There was no successful response.' : response['errors'].first['message']}"
+      end
 
-        action_results_id = response.data(:action_results_id)
-        action_body = {
-          :action_results_id => action_results_id,
-          :return_only_if_complete => true,
-          :disable_post_processing => true
-        }
+      action_results_id = response.data(:action_results_id)
+      action_body = {
+        :action_results_id => action_results_id,
+        :return_only_if_complete => true,
+        :disable_post_processing => true
+      }
 
-        # number of re-tries
-        3.downto(1) do
-          response = post(rest_url("assembly/get_action_results"),action_body)
+      # number of re-tries
+      3.downto(1) do
+        response = post(rest_url("assembly/get_action_results"),action_body)
 
-          # server has found an error
-          unless response.data(:results).nil?
-            if response.data(:results)['error']
-              raise DTK::Client::DtkError, response.data(:results)['error']
-            end
-          end
-
-          break if response.data(:is_complete)
-
-          sleep(1)
-        end
-
-        raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
-        
-        console_width = ENV["COLUMNS"].to_i
-
-        response.data(:results).each do |r|
-          raise DTK::Client::DtkError, r[1]["error"] if r[1]["error"]
-
-          if r[1]["output"].empty?
-            puts "NODE-ID #{r[0].inspect.colorize(:green)} - Log does not contain data that matches you pattern #{grep_pattern}!" 
-          else
-            puts "\n"
-            console_width.times do
-              print "="
-            end
-            puts "NODE-ID: #{r[0].inspect.colorize(:green)}\n"
-            puts "Log output:\n"
-            puts r[1]["output"].gsub(/`/,'\'')
+        # server has found an error
+        unless response.data(:results).nil?
+          if response.data(:results)['error']
+            raise DTK::Client::DtkError, response.data(:results)['error']
           end
         end
+
+        break if response.data(:is_complete)
+
+        sleep(1)
+      end
+
+      raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
+      
+      console_width = ENV["COLUMNS"].to_i
+
+      response.data(:results).each do |r|
+        raise DTK::Client::DtkError, r[1]["error"] if r[1]["error"]
+
+        if r[1]["output"].empty?
+          puts "NODE-ID #{r[0].inspect.colorize(:green)} - Log does not contain data that matches you pattern #{grep_pattern}!" 
+        else
+          puts "\n"
+          console_width.times do
+            print "="
+          end
+          puts "NODE-ID: #{r[0].inspect.colorize(:green)}\n"
+          puts "Log output:\n"
+          puts r[1]["output"].gsub(/`/,'\'')
+        end
+      end
         
       rescue DTK::Client::DtkError => e
         raise e

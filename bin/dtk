@@ -15,4 +15,8 @@ command = ARGV.shift if ARGV.size > 0
 
 require File.expand_path('../lib/client', File.dirname(__FILE__))
 
-top_level_execute(command)
+$: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
+
+
+# TODO: FIX THIS TO CONVER THIS
+top_level_execute(command, ARGV)

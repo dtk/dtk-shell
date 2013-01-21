@@ -31,6 +31,8 @@ def change_context(args, push_context = false)
 end
 
 def validate_correct_context(args)
+  # jump to root
+  @context.reset if args.to_s.match(/^\//)
   # split original cc command
   entries = args.first.split(/\//)
 
@@ -260,6 +262,79 @@ def execute_shell_command(line, prompt)
       return prompt
     end
     # when using help on root this is needed
+    line = 'dtk help' if (line == 'help' && @context.root?)
+
+    args = Shellwords.split(line)
+    cmd = args.shift
+
+    # support command alias (ls for list etc.)
+    cmd = preprocess_commands(cmd)
+    
+    if ('cc' == cmd)
+      # in case there is no params we just reload command
+      args << "/" if args.empty?
+
+      #if (args.to_s.match(/.\/./) && !args.to_s.start_with?('/'))
+      #  @context.valid_pairs(args)
+      #  pairs = @context.get_pairs(args)
+      #  prompt = change_advanced_context(pairs)
+      #else
+      #  #changes context based on passed args
+      #  prompt = change_context(args)
+      #end
+      
+      prompt = change_context(args)
+    elsif ('popc' == cmd)
+        args = []
+        @context.dirs.shift()
+        args << (@context.dirs.first.nil? ? '/' : @context.dirs.first)
+        prompt = change_context(args)
+    elsif ('pushc' == cmd)
+        args << (@context.dirs[1] if args.empty?)
+        prompt = change_context(args,true)
+    elsif ('dirs' == cmd)
+      puts @context.dirs.inspect
+    else
+
+      temp_dev_flag = true
+      puts "dtk-input > #{cmd} #{args.join(' ')}" if temp_dev_flag
+
+      # send monkey patch class information about context
+      Thor.set_context(@context)
+
+      # we get command and hash params
+      entity_name, method_name, hash_args, options_args = @context.get_command_parameters(cmd,args)
+
+      # execute command via Thor
+      top_level_execute(entity_name, method_name, hash_args, options_args, true)
+
+      # when 'delete' or 'delete-and-destroy' command is executed reload cached tasks with latest commands
+      unless (args.nil? || args.empty?)
+        @context.reload_cached_tasks(cmd) if (args.first.include?('delete') || args.first.include?('import'))
+      end
+
+      # check execution status, prints status to sttout
+      DTK::Shell::StatusMonitor.check_status()
+    end
+
+  rescue DTK::Shell::Error => e
+    puts ">>>>>>>>>>>>>>>>>>>"
+    puts e.message
+  end
+    
+  return prompt
+end
+
+def execute_shell_command_backup(line, prompt)
+   begin
+    # some special cases
+    raise DTK::Shell::ExitSignal if line == 'exit'
+    return prompt if line.empty?
+    if line == 'clear'
+      system('clear')
+      return prompt
+    end
+    # when using help on root this is needed
     line = 'dtk' if (line == 'help' && @context.root?)
 
     args = Shellwords.split(line)
@@ -293,7 +368,7 @@ def execute_shell_command(line, prompt)
     elsif ('dirs' == cmd)
       puts @context.dirs.inspect
     else
-      
+
       # if e.g "list libraries" is sent instead of "library list" we reverse commands
       # and still search for 'library list', this happens only on root
       if !args.empty? && @context.active_commands.empty?

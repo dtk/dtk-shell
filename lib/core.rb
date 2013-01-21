@@ -13,27 +13,21 @@ require 'pp'
 dtk_require_from_base('domain/response')
 dtk_require_from_base('util/os_util')
 
-def top_level_execute(command=nil,argv=nil,shell_execute=false)
+def top_level_execute(entity_name, method_name, hashed_argv=nil,options_args=nil,shell_execute=false)
   extend DTK::Client::OsUtil
   begin
-    $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
-    argv ||= ARGV
-
     include DTK::Client::Aux
 
-
-    command = command || $0.gsub(Regexp.new("^.+/"),"")
-    command = command.gsub("-","_")
-
-    load_command(command)
+    entity_name = entity_name.gsub("-","_")
+    load_command(entity_name)
     conn = DTK::Client::Session.get_connection()
 
     # if connection parameters are not set up properly then don't execute any command
     return if validate_connection(conn)
 
     # call proper thor class and task
-    command_class = DTK::Client.const_get "#{cap_form(command)}"
-    response_ruby_obj = command_class.execute_from_cli(conn,argv,shell_execute)
+    entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
+    response_ruby_obj = entity_class.execute_from_cli(conn,method_name,hashed_argv,options_args,shell_execute)
     
     # this will raise error if found
     DTK::Client::ResponseErrorHandler.check(response_ruby_obj)
@@ -215,19 +209,30 @@ module DTK
       end
       attr_reader :connection_error
 
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require 'ap'
+               
+
       def rest_url(route=nil)
         "http://#{Config[:server_host]}:#{Config[:server_port].to_s}/rest/#{route}"
       end
 
       def get(command_class,url)
+        ap "GET #{url}"
         Response.new(command_class,json_parse_if_needed(get_raw(url)))
       end
 
       def post(command_class,url,body=nil)
+        ap "POST #{url}"
+        ap "params: "
+        ap body
         Response.new(command_class,json_parse_if_needed(post_raw(url,body)))
       end
 
       def post_file(command_class,url,body=nil)
+        ap "POST (FILE) #{url}"
+        ap "params: "
+        ap body
         Response.new(command_class,json_parse_if_needed(post_raw(url,body,{:content_type => 'avro/binary'})))
       end
 

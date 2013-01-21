@@ -13,11 +13,12 @@ module DTK::Client
 
     desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."
     method_option :list, :type => :boolean, :default => false
-    def info(assembly_id=nil)
+    def info(hashed_args)
+      assembly_template_id = CommandBaseThor.retrieve_arguments([:assembly_template_id],hashed_args)
       data_type = :assembly_template
-
+      
       post_body = {
-        :assembly_id => assembly_id,
+        :assembly_id => assembly_template_id,
         :subtype => 'template',
       }
       post rest_url("assembly/info"), post_body
@@ -27,16 +28,16 @@ module DTK::Client
     #TODO: temporaily taking out target option
     desc "[ASSEMBLY-TEMPLATE-NAME/ID] list [nodes|components]", "List all nodes/components for given assembly template."
     method_option :list, :type => :boolean, :default => false
-    def list(*rotated_args)
-      if (rotated_args.size == 0)
+    def list(hashed_args)
+      assembly_template_id, about = CommandBaseThor.retrieve_arguments([:assembly_template_id, :option_1],hashed_args)
+      if assembly_template_id.nil?
         response = post rest_url("assembly/list"), {:subtype => 'template'}
         data_type = :assembly_template
         response.render_table(data_type)
       else
-        assembly_id, about = rotate_args(rotated_args)
-
+        
         post_body = {
-          :assembly_id => assembly_id,
+          :assembly_id => assembly_template_id,
           :subtype => 'template',
           :about => about
         }
@@ -48,11 +49,6 @@ module DTK::Client
         when 'components'
           response = post rest_url("assembly/info_about"), post_body
           data_type = :component
-=begin
-      when 'targets'
-        response = post rest_url("assembly/info_about"), post_body
-        data_type = :target
-=end
         else
           raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
         end
@@ -68,11 +64,11 @@ module DTK::Client
       :type => :numeric, 
       :banner => "TARGET-ID",
       :desc => "Target (id) to create assembly in" 
-    def stage(arg1,arg2=nil)
-      assembly_id,name = (arg2.nil? ? [arg1] : [arg2,arg1])
+    def stage(hashed_args)
+      assembly_template_id, name = CommandBaseThor.retrieve_arguments([:assembly_template_id, :option_1],hashed_args)
 
       post_body = {
-        :assembly_id => assembly_id
+        :assembly_id => assembly_template_id
       }
       post_body.merge!(:target_id => options["in-target"]) if options["in-target"]
       post_body.merge!(:name => name) if name
@@ -92,10 +88,10 @@ module DTK::Client
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    def deploy(arg1,arg2=nil)
-      assembly_template_id,name = (arg2.nil? ? [arg1] : [arg2,arg1])
+    def deploy(hashed_args)
+      # assembly_template_id,name = CommandBaseThor.retrieve_arguments([:assembly_template_id, :option_1],hashed_args)
 
-      response = stage(arg1,arg2)
+      response = stage(hashed_args)
 
       return response unless response.ok?
 
@@ -129,16 +125,17 @@ module DTK::Client
     end
 
 
-    desc "delete ASSEMBLY-NAME/ID", "Delete assembly template"
+    desc "delete ASSEMBLY-TEMPLATE-NAME/ID", "Delete assembly template"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete(assembly_id)
+    def delete(hashed_args)
+      assembly_template_id = CommandBaseThor.retrieve_arguments([:assembly_template_id],hashed_args)
       unless options.force?
         # Ask user if really want to delete assembly-template, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete assembly-template '#{assembly_id}'?")
       end
 
       post_body = {
-        :assembly_id => assembly_id,
+        :assembly_id => assembly_template_id,
         :subtype => :template
       }
       response = post rest_url("assembly/delete"), post_body
