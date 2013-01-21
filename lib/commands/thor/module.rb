@@ -58,25 +58,23 @@ module DTK::Client
       @@invalidate_map << :module_component
     end
 
-    desc "create MODULE-NAME [LIBRARY-NAME/ID]", "Create new module from local clone"
-    def create(module_name,library_id=nil)
-      #first check that there is a directory there and it is not already a git repo
-      response = Helper(:git_repo).check_local_dir_exists(:component_module,module_name)
+    desc "create MODULE-NAME", "Create new module from local clone"
+    def create(module_name)
+      #first check that there is a directory there and it is not already a git repo, and it ha appropriate content
+      response = Helper(:git_repo).check_local_dir_exists_with_content(:component_module,module_name)
       return response unless response.ok?
       module_directory = response.data(:module_directory)
 
       #first make call to server to create an empty repo
       post_body = {
-       :component_module_name => module_name
+        :module_name => module_name
       }
-      post_body.merge!(:library_id => library_id) if library_id
-      response = post rest_url("component_module/create_empty_repo"), post_body
+      response = post rest_url("component_module/create"), post_body
       return response unless response.ok?
 
-      repo_url,repo_id,library_id = response.data(:repo_url,:repo_id,:library_id)
+      repo_url,repo_id = response.data(:repo_url,:repo_id)
       branch_info = {
-        :workspace => response.data(:workspace_branch),
-        :library => response.data(:library_branch)
+        :workspace => response.data(:workspace_branch)
       }
       response = Helper(:git_repo).initialize_repo_and_push(:component_module,module_name,branch_info,repo_url)
       return response unless response.ok?
@@ -84,7 +82,6 @@ module DTK::Client
 
       post_body = {
         :repo_id => repo_id,
-        :library_id => library_id,
         :module_name => module_name,
         :scaffold_if_no_dsl => true
       }

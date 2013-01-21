@@ -85,12 +85,15 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    def check_local_dir_exists(type,module_name,version=nil)
+    def check_local_dir_exists_with_content(type,module_name,version=nil)
       Response.wrap_helper_actions() do
         ret = Hash.new
         local_repo_dir = local_repo_dir(type,module_name,version)
         unless File.directory?(local_repo_dir)
           raise ErrorUsage.new("The content for module (#{module_name}) should be put in directory (#{local_repo_dir})")
+        end
+        if Dir["#{local_repo_dir}/*"].empty?
+          raise ErrorUsage.new("Directory (#{local_repo_dir}) must have ths initial content for module (#{module_name})")
         end
         {"module_directory" => local_repo_dir}
       end
@@ -99,28 +102,16 @@ module DTK; module Client; class CommandHelper
     def initialize_repo_and_push(type,module_name,branch_info,repo_url)
        Response.wrap_helper_actions() do
         ret = Hash.new
-        lib_branch = branch_info[:library]
         ws_branch = branch_info[:workspace]
-
-        ret = Hash.new
         repo_dir = local_repo_dir(type,module_name)
 
-        #first create library branch then workspace branch then remove local branch to library
-        repo_lib_branch = create_or_init(type,repo_dir,lib_branch)      
-        repo_lib_branch.add_or_update_remote(remote(),repo_url)
-        repo_lib_branch.fetch(remote())
-        repo_lib_branch.add_file_command(".")
-        repo_lib_branch.commit("Adding files during initialization")
-        repo_lib_branch.push()
-
         #create and commit workspace branch
-        repo_lib_branch.add_branch?(ws_branch)
-        repo_ws_branch = create(repo_dir,ws_branch)
-        #push changes
+        repo_ws_branch = create_or_init(type,repo_dir,ws_branch)      
+        repo_ws_branch.add_or_update_remote(remote(),repo_url)
+        repo_ws_branch.fetch(remote())
+        repo_ws_branch.add_file_command(".")
+        repo_ws_branch.commit("Adding files during initialization")
         repo_ws_branch.push()
-
-        #remove lib branch
-        repo_ws_branch.remove_branch?(lib_branch)
         {"repo_branch" => repo_ws_branch}
       end
     end
