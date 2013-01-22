@@ -16,11 +16,11 @@ module DTK; module Client; class CommandHelper
     end
 
     #TODO: this does not push; may make that an option
-    def add_file(repo_branch,path,content,msg=nil)
+    def add_file(repo_branch_obj,path,content,msg=nil)
       Response.wrap_helper_actions() do
         ret = Hash.new
-        repo_branch.add_file(path,content)
-        repo_branch.add_file_command(path)
+        repo_branch_obj.add_file(path,content)
+        repo_branch_obj.add_file_command(path)
         ret["message"] = msg if msg
         ret
       end
@@ -106,13 +106,14 @@ module DTK; module Client; class CommandHelper
         repo_dir = local_repo_dir(type,module_name)
 
         #create and commit workspace branch
-        repo_ws_branch = create_or_init(type,repo_dir,ws_branch)      
-        repo_ws_branch.add_or_update_remote(remote(),repo_url)
-        repo_ws_branch.fetch(remote())
-        repo_ws_branch.add_file_command(".")
-        repo_ws_branch.commit("Adding files during initialization")
-        repo_ws_branch.push()
-        {"repo_branch" => repo_ws_branch}
+        repo = create_or_init(type,repo_dir,ws_branch)      
+        repo.add_or_update_remote(remote(),repo_url)
+        repo.fetch(remote())
+        repo.add_file_command(".")
+        repo.commit("Adding files during initialization")
+        repo.push()
+        commit_sha = repo.head_commit_sha()
+        {"repo_branch_obj" => ws_branch,"commit_sha" => commit_sha}
       end
     end
 
