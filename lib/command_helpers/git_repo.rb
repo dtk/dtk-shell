@@ -108,9 +108,8 @@ module DTK; module Client; class CommandHelper
         ret = Hash.new
         repo_dir = local_repo_dir(type,module_name)
 
-        repo = create(repo_dir,branch,:init => true)
+        repo = create(repo_dir,branch,:init => true, :no_initial_commit => true)
         repo.add_remote(remote(),repo_url)
-        repo.create_empty_branch(branch)
         remote_branch = local_branch = branch
         repo.pull(remote_branch,local_branch,remote())
         repo.add_file_command(".")
