@@ -72,13 +72,10 @@ module DTK::Client
       response = post rest_url("component_module/create"), post_body
       return response unless response.ok?
 
-      repo_url,repo_id,module_id = response.data(:repo_url,:repo_id,:module_id)
-      branch_info = {
-        :workspace => response.data(:workspace_branch)
-      }
-      response = Helper(:git_repo).initialize_repo_and_push(:component_module,module_name,branch_info,repo_url)
+      repo_url,repo_id,module_id,branch = response.data(:repo_url,:repo_id,:module_id,:workspace_branch)
+      response = Helper(:git_repo).initialize_client_clone_and_push(:component_module,module_name,branch,repo_url)
       return response unless response.ok?
-      repo_branch_obj,commit_sha =  response.data(:repo_branch_obj,:commit_sha)
+      repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
 
       post_body = {
         :repo_id => repo_id,
@@ -91,7 +88,7 @@ module DTK::Client
 
       if dsl_created = response.data(:dsl_created)
         msg = "First cut of dsl file (#{dsl_created["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
-        response = Helper(:git_repo).add_file(repo_branch_obj,dsl_created["path"],dsl_created["content"],msg)
+        response = Helper(:git_repo).add_file(repo_obj,dsl_created["path"],dsl_created["content"],msg)
       end
       @@invalidate_map << :module_component
       response

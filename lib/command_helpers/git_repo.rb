@@ -16,11 +16,11 @@ module DTK; module Client; class CommandHelper
     end
 
     #TODO: this does not push; may make that an option
-    def add_file(repo_branch_obj,path,content,msg=nil)
+    def add_file(repo_obj,path,content,msg=nil)
       Response.wrap_helper_actions() do
         ret = Hash.new
-        repo_branch_obj.add_file(path,content)
-        repo_branch_obj.add_file_command(path)
+        repo_obj.add_file(path,content)
+        repo_obj.add_file_command(path)
         ret["message"] = msg if msg
         ret
       end
@@ -92,6 +92,9 @@ module DTK; module Client; class CommandHelper
         unless File.directory?(local_repo_dir)
           raise ErrorUsage.new("The content for module (#{module_name}) should be put in directory (#{local_repo_dir})")
         end
+        if File.directory?("#{local_repo_dir}/.git")
+          raise ErrorUsage.new("Directory (#{local_repo_dir} is set as a git repo; to continue it must be a non git repo; this can be handled by shell command 'rm -rf #{local_repo_dir}/.git'")
+        end
         if Dir["#{local_repo_dir}/*"].empty?
           raise ErrorUsage.new("Directory (#{local_repo_dir}) must have ths initial content for module (#{module_name})")
         end
@@ -99,21 +102,22 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    def initialize_repo_and_push(type,module_name,branch_info,repo_url)
+    #makes repo_dir (determined from type and module_name) into a git dir, pulls, adds, content and then pushes
+    def initialize_client_clone_and_push(type,module_name,branch,repo_url)
        Response.wrap_helper_actions() do
         ret = Hash.new
-        ws_branch = branch_info[:workspace]
         repo_dir = local_repo_dir(type,module_name)
 
-        #create and commit workspace branch
-        repo = create_or_init(type,repo_dir,ws_branch)      
-        repo.add_or_update_remote(remote(),repo_url)
-        repo.fetch(remote())
+        repo = create(repo_dir,branch,:init => true)
+        repo.add_remote(remote(),repo_url)
+        repo.create_empty_branch(branch)
+        remote_branch = local_branch = branch
+        repo.pull(remote_branch,local_branch,remote())
         repo.add_file_command(".")
         repo.commit("Adding files during initialization")
         repo.push()
         commit_sha = repo.head_commit_sha()
-        {"repo_branch_obj" => ws_branch,"commit_sha" => commit_sha}
+        {"repo_obj" => repo,"commit_sha" => commit_sha}
       end
     end
 
