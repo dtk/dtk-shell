@@ -129,7 +129,18 @@ module DTK
         return hashed_argv
       end
 
-      # parses hashed params and returns needed ones
+      # Retrives desired arguments (via mapping) from hashed map containing
+      # information about current context, passed paramters and options
+      #
+      # ==== Returns
+      #
+      # params<Array/Object>:: Returns array of found params or if one returns single element
+      #
+      # ==== Paramters
+      #
+      # mapping<Array>:: Mapping of desired keys
+      # hashed_argv<Hash>:: Hash map of current context, parameters and options
+      #
       def self.retrieve_arguments(mapping, hashed_argv)
         # if we just want to pass simple variable, between methods
         return hashed_argv unless (hashed_argv.class == Hash)
@@ -147,11 +158,21 @@ module DTK
             element = hashed_argv[key]
           end
 
-          results << element
+          results << element 
         end
 
         # if one element is we avoid using array
         return ((results.size == 1) ? results.first : results)
+      end
+
+      # matches task_name under tasks, which describe context level at given point
+      def self.is_there_task?(task_name,hashed_argv)
+        hashed_argv[:tasks].include?(task_name.to_sym)
+      end
+
+      # matches task_id under tasks, which describe context level at given point
+      def self.is_there_id?(task_id,hashed_argv)
+        !hashed_argv[task_id.to_sym].nil?
       end
 
       # returns all task names for given thor class with use friendly names (with '-' instead '_')
@@ -192,12 +213,13 @@ module DTK
 
       # we make valid methods to make sure that when context changing
       # we allow change only for valid ID/NAME
-      def self.valid_id?(value, conn)
+      def self.valid_id?(value, conn, hashed_args)
         @conn    = conn if @conn.nil?
-        clazz, endpoint, subtype = whoami()
+        #clazz, endpoint, subtype = whoami()
 
         3.downto(1) do
-          response = get_cached_response(clazz, endpoint, subtype)
+          #response = get_cached_response(clazz, endpoint, subtype)
+          response = validation_list(hashed_args)
           unless (response.nil? || response.empty? || response['data'].nil?)
             response['data'].each do |element|
               return true if (element['id'].to_s==value || element['display_name'].to_s==value)
@@ -213,12 +235,17 @@ module DTK
         return true
       end
 
-      def self.get_identifiers(conn)
+      def self.get_identifiers(conn, hashed_args)
         @conn    = conn if @conn.nil?
-        clazz, endpoint, subtype = whoami()
+        #clazz, endpoint, subtype = whoami()
+
+        # we force raw output
+        # options = Thor::CoreExt::HashWithIndifferentAccess.new({'list' => true})
+
 
         3.downto(1) do
-          response = get_cached_response(clazz, endpoint, subtype)
+          #response = get_cached_response(clazz, endpoint, subtype)
+          response = validation_list(hashed_args)
           unless (response.nil? || response.empty?)
             unless response['data'].nil?
               identifiers = []

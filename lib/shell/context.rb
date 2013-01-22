@@ -39,7 +39,10 @@ module DTK
 
         @cached_tasks.store('dtk', ROOT_TASKS.sort)
 
-        ROOT_TASKS.each do |task_name|
+        # TODO: Do dynamic loading but it is ok solution for now
+        additional_tasks = ['component','attribute']
+
+        (ROOT_TASKS + additional_tasks).each do |task_name|
           # we exclude help since there is no command class for it
           next if task_name.eql? "help"
 
@@ -53,7 +56,7 @@ module DTK
 
       def self.get_command_class(command_name)
         begin
-          return Object.const_get('DTK').const_get('Client').const_get(cap_form(command_name))
+          Object.const_get('DTK').const_get('Client').const_get(cap_form(command_name))
         rescue Exception => e
           return nil
         end
@@ -85,7 +88,7 @@ module DTK
 
         if readline_input.match /.*\/.*/
           # one before last
-          command = calculate_proper_command(readline_input)
+          command = calculate_proper_command(readline_input)         
 
           unless command.nil?
             n_level_commands = get_command_identifiers(command)
@@ -133,10 +136,8 @@ module DTK
 
         # holder for commands to be used since we do not want to remember all of them
         @context_commands = @current
-        # we load thor command class identifiers for autocomplete context list        
-        if (tier_1? && !command_name.nil?)
-          @context_commands.concat(get_command_identifiers(command_name))
-        end
+        # we load thor command class identifiers for autocomplete context list   
+        @context_commands.concat(get_command_identifiers(command_name)) if is_base_command?
 
         # logic behind context loading
         #Readline.completer_word_break_characters=" "
@@ -248,10 +249,12 @@ module DTK
       end
 
       # calls 'valid_id?' method in Thor class to validate ID/NAME
-      def valid_id?(thor_command_name,value)           
+      def valid_id?(thor_command_name,value)
         command_clazz = Context.get_command_class(thor_command_name)
-        if command_clazz.respond_to?(:valid_id?)
-          return command_clazz.valid_id?(value,@conn)
+        if command_clazz.respond_to?(:validation_list) && command_clazz.respond_to?(:valid_id?)
+          # take just hashed arguemnts from multi return method
+          hashed_args = get_command_parameters(thor_command_name,[])[2]
+          return command_clazz.valid_id?(value,@conn, hashed_args)
         end
 
         # if not implemented we are going to let it in the context
@@ -263,8 +266,10 @@ module DTK
       # get class identifiers for given thor command, returns array of identifiers
       def get_command_identifiers(thor_command_name)
         command_clazz = Context.get_command_class(thor_command_name)
-        if command_clazz.respond_to?(:whoami) && command_clazz.respond_to?(:get_identifiers)
-          return command_clazz.get_identifiers(@conn)
+        if command_clazz.respond_to?(:validation_list) && command_clazz.respond_to?(:get_identifiers)
+          # take just hashed arguemnts from multi return method
+          hashed_args = get_command_parameters(thor_command_name,[])[2]             
+          return command_clazz.get_identifiers(@conn, hashed_args)
         end
 
         return []
@@ -286,6 +291,9 @@ module DTK
         return cmd, args
       end
 
+      def is_base_command?
+        (@active_commands.size % 2 == 1)
+      end
 
       def get_command_parameters(cmd,args)
         hash_params,tasks = {}, []
@@ -298,7 +306,7 @@ module DTK
           hash_params
         else
           (0..(@active_commands.size-1)).step(2) do |i|
-            tasks << @active_commands[i]
+            tasks << @active_commands[i].gsub(/\-/,'_').to_sym
             hash_params.store("#{@active_commands[i]}_id".gsub(/\-/,'_').to_sym, @active_commands[i+1]) if @active_commands[i+1]
           end
 
@@ -355,7 +363,7 @@ module DTK
         array_of_commands.each_with_index do |a,i|
           filtered_commands << a if (a != array_of_commands[i+1])
         end
-
+             
         # make sure we only save up to 'COMMAND_HISTORY_LIMIT' commands
         if filtered_commands.size > COMMAND_HISTORY_LIMIT
           filtered_commands = filtered_commands[-COMMAND_HISTORY_LIMIT,COMMAND_HISTORY_LIMIT+1]

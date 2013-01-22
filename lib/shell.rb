@@ -59,6 +59,8 @@ def validate_correct_context(args)
   (0..(entries.size-1)).step(2) do |i|
     command       = entries[i]
     value         = entries[i+1]
+    
+
     clazz = DTK::Shell::Context.get_command_class(command)
 
     error_message = validate_command(clazz,current_context_clazz,command)
@@ -90,7 +92,7 @@ def validate_command(clazz, current_context_clazz, command)
   error_message = nil
 
   if clazz.nil?
-    error_message = "'#{command}' context is not valid.";
+    error_message = "Context for '#{command}' could not be loaded.";
   end
     
   # check if previous context support this one as a child
@@ -162,6 +164,9 @@ def change_context_execute(args, push_context=false)
 
   rescue DTK::Shell::Error => e
     puts e.message
+  rescue Exception => e
+    puts e.message
+    puts e.backtrace
   ensure
     return @context.shell_prompt
   end

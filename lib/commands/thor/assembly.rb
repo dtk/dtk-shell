@@ -35,6 +35,12 @@ module DTK::Client
       return [:node, :component, :attribute]
     end
 
+    def self.validation_list(hashed_args)
+      response = post rest_url("assembly/list"), {:subtype  => 'instance'}
+
+      return response
+    end
+
     desc "ASSEMBLY-NAME/ID promote-to-library", "Update or create library assembly using workspace assembly"
     def promote_to_library(hashed_args)
       assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
@@ -51,14 +57,26 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
     def start(hashed_args)
-      assembly_id, node_pattern = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1],hashed_args)
+      if CommandBaseThor.is_there_id?(:node_id, hashed_args)
+        mapping = [:assembly_id,:node_id]
+      else
+        mapping = [:assembly_id,:option_1]
+      end
+
+      assembly_id, node_pattern = CommandBaseThor.retrieve_arguments(mapping,hashed_args)
 
       assembly_start(assembly_id, node_pattern)
     end
 
     desc "ASSEMBLY-NAME/ID stop [NODE-ID-PATTERN]", "Stops all assembly's nodes, specific nodes can be selected via node id regex."
     def stop(hashed_args)
-      assembly_id, node_pattern = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1],hashed_args)
+      if CommandBaseThor.is_there_id?(:node_id, hashed_args)
+        mapping = [:assembly_id,:node_id]
+      else
+        mapping = [:assembly_id,:option_1]
+      end
+
+      assembly_id, node_pattern = CommandBaseThor.retrieve_arguments(mapping,hashed_args)
 
       assembly_stop(assembly_id, node_pattern)
     end
@@ -163,13 +181,17 @@ module DTK::Client
     def list(hashed_args)
       assembly_id, about, filter = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2],hashed_args)
 
+      if CommandBaseThor.is_there_task?(:node,hashed_args)
+        about ||= 'nodes'
+      end
+
       if assembly_id.nil?
         data_type = :assembly
         response = post rest_url("assembly/list"), {:subtype  => 'instance'}
 
         # set render view to be used
         response.render_table(data_type) unless options.list?
-
+        
         return response
       else
         about ||= "none"
@@ -205,7 +227,7 @@ module DTK::Client
         unless options.list?
           response.render_table(data_type)
         end
-       
+               
         return response
       end
     end
@@ -222,8 +244,9 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID info", "Return info about assembly instance identified by name/id"
     def info(hashed_args)
-      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+      assembly_id, node_id = CommandBaseThor.retrieve_arguments([:assembly_id,:node_id],hashed_args)
 
+      # TODO: Add node id filter on server side      
       post_body = {
         :assembly_id => assembly_id,
         :subtype => :instance
@@ -284,18 +307,38 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node"
     def add_component(hashed_args)
-      assembly_id,node_id,component_template_id = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2],hashed_args)
+    
+      # If method is invoked from 'assembly/node' level retrieve node_id argument 
+      # directly from active context
+      if CommandBaseThor.is_there_id?(:node_id,hashed_args)
+        mapping = [:assembly_id,:node_id,:option_1]
+      else
+        # otherwise retrieve node_id from command options
+        mapping = [:assembly_id,:option_1,:option_2]
+      end
+
+      assembly_id,node_id,component_template_id = CommandBaseThor.retrieve_arguments(mapping,hashed_args)
+      
       post_body = {
         :assembly_id => assembly_id,
-        :node_id => node_id,
+        :node_id => "#{assembly_id}::#{node_id}",
         :component_template_id => component_template_id
       }
+
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require 'ap'
+      ap "Demo example => "
+      ap post_body
+         
+
       post rest_url("assembly/add_component"), post_body
     end
 
     desc "ASSEMBLY-NAME/ID delete-component COMPONENT-ID","Delete component from assembly"
     def delete_component(hashed_args)
-      assembly_id, component_id = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1],hashed_args)
+      assembly_id,node_id,component_id = CommandBaseThor.retrieve_arguments([:assembly_id,:node_id,:option_1],hashed_args)
+
+      # TODO: Add method with constraint Node ID on server side
       post_body = {
         :assembly_id => assembly_id,
         :component_id => component_id
@@ -306,8 +349,9 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID get-netstats", "Get netstats"
     def get_netstats(hashed_args)
-      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+      assembly_id,node_id = CommandBaseThor.retrieve_arguments([:assembly_id,:node_id],hashed_args)
 
+      # TODO: Add support for node ID on this methods on server side
       post_body = {
         :assembly_id => assembly_id
       }
@@ -353,7 +397,13 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
     method_option :more, :type => :boolean, :default => false
     def tail(hashed_args)
-      assembly_id,node_identifier,log_path,grep_option = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2,:option_3],hashed_args)
+      if CommandBaseThor.is_there_id?(:node_id, hashed_args)
+        mapping = [:assembly_id,:node_id,:option_1,:option_2]
+      else
+        mapping = [:assembly_id,:option_1,:option_2,:option_3]
+      end
+      
+      assembly_id,node_identifier,log_path,grep_option = CommandBaseThor.retrieve_arguments(mapping,hashed_args)
      
       last_line = nil
       begin
@@ -458,8 +508,14 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first_match]","Grep log from multiple nodes"
     method_option :first_match, :type => :boolean, :default => false
     def grep(hashed_args)
-      # need to use rotate_args because last two parameters can't be nil
-    assembly_id,log_path,node_pattern,grep_pattern = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2,:option_3],hashed_args)
+      
+    if CommandBaseThor.is_there_id?(:node_id,hashed_args)
+      mapping = [:assembly_id,:option_1,:node_id,:option_2]
+    else
+      mapping = [:assembly_id,:option_1,:option_2,:option_3]
+    end
+
+    assembly_id,log_path,node_pattern,grep_pattern = CommandBaseThor.retrieve_arguments(mapping, hashed_args)
        
     begin
       post_body = {

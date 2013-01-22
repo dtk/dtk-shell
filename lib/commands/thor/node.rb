@@ -11,8 +11,28 @@ module DTK::Client
       PPColumns.get(:node)
     end
 
+    def self.valid_child?(name_of_sub_context)
+      return [:component].include?(name_of_sub_context.to_sym)
+    end
+
+
     def self.whoami()
       return :node, "node/list", nil
+    end
+
+    def self.validation_list(hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :subtype     => 'instance',
+        :about       => 'nodes',
+        :filter      => nil
+      }
+
+      response = post rest_url("assembly/info_about"), post_body
+
+      return response
     end
     
     desc "NODE-NAME/ID info","Info about node"
@@ -34,7 +54,7 @@ module DTK::Client
         response = post rest_url("node/list")
 
         response.render_table(:node) unless options.list?
-        response
+        return response
       else
 
         post_body = {
@@ -53,7 +73,7 @@ module DTK::Client
         end
 
         response = post rest_url("node/info_about"), post_body
-        response.render_table(data_type)
+        return response.render_table(data_type)
       end
     end
 
