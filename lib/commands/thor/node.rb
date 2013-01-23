@@ -15,11 +15,6 @@ module DTK::Client
       return [:component].include?(name_of_sub_context.to_sym)
     end
 
-
-    def self.whoami()
-      return :node, "node/list", nil
-    end
-
     def self.validation_list(hashed_args)
       assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
 
@@ -30,7 +25,7 @@ module DTK::Client
         :filter      => nil
       }
 
-      response = post rest_url("assembly/info_about"), post_body
+      response = get_cached_response(:node, "assembly/info_about", post_body)
 
       return response
     end

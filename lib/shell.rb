@@ -100,8 +100,10 @@ def validate_command(clazz, current_context_clazz, command)
     # valid child method is necessery to define parent-child relet.
     if current_context_clazz.respond_to?(:valid_child?)
       unless current_context_clazz.valid_child?(command)
-        error_message = "'#{command}' context is not valid."; 
+        error_message = "'#{command}' context is not valid."
       end
+    else
+      error_message = "'#{command}' context is not valid."
     end
   end
 
@@ -169,31 +171,6 @@ def change_context_execute(args, push_context=false)
     puts e.backtrace
   ensure
     return @context.shell_prompt
-  end
-end
-
-def change_advanced_context(pairs)
-  raise "DO NOT DO THIS"
-  begin
-    pair = pairs.pop
-    
-    if pair.kind_of?(Array)
-      change_advanced_context(pairs)
-      
-      @context.advanced_command_valid(pair)
-      load_advanced_context(pair)
-    end
-  rescue DTK::Shell::Error => e
-    puts e.message
-  ensure
-    return @context.shell_prompt
-  end
-end
-
-def load_advanced_context(pair)
-  pair.each do |element|
-    @context.insert_active_command(element)
-    @context.load_context(element)
   end
 end
 
@@ -352,15 +329,6 @@ def execute_shell_command_backup(line, prompt)
       # in case there is no params we just reload command
       args << "/" if args.empty?
 
-      #if (args.to_s.match(/.\/./) && !args.to_s.start_with?('/'))
-      #  @context.valid_pairs(args)
-      #  pairs = @context.get_pairs(args)
-      #  prompt = change_advanced_context(pairs)
-      #else
-      #  #changes context based on passed args
-      #  prompt = change_context(args)
-      #end
-      
       prompt = change_context(args)
     elsif ('popc' == cmd)
         args = []

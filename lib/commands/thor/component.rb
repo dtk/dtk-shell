@@ -2,8 +2,8 @@
 module DTK::Client
   class Component < CommandBaseThor
 
-    def self.whoami()
-      return :component, "component/list", nil
+    def self.valid_child?(name_of_sub_context)
+      return [:attribute].include?(name_of_sub_context.to_sym)
     end
 
     def self.validation_list(hashed_args)
@@ -17,7 +17,7 @@ module DTK::Client
         :filter      => nil
       }
 
-      response = post rest_url("assembly/info_about"), post_body
+      response = get_cached_response(:component, "assembly/info_about", post_body)
 
       if assembly_id
         regexp = Regexp.new("^#{node_id}\/(.+)")

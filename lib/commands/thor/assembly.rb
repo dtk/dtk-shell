@@ -25,18 +25,12 @@ module DTK::Client
       return [:node].include?(name_of_sub_context.to_sym)
     end
 
-    # return information specifc for this class
-    def self.whoami()
-      # identifier, list endpoint, subtype
-      return :assembly, "assembly/list", nil
-    end
-
     def self.get_supported_enteties
       return [:node, :component, :attribute]
     end
 
     def self.validation_list(hashed_args)
-      response = post rest_url("assembly/list"), {:subtype  => 'instance'}
+      response = get_cached_response(:assembly, "assembly/list", {:subtype  => 'instance'})
 
       return response
     end
@@ -324,12 +318,6 @@ module DTK::Client
         :node_id => "#{assembly_id}::#{node_id}",
         :component_template_id => component_template_id
       }
-
-      # DEBUG SNIPPET >>> REMOVE <<<
-      require 'ap'
-      ap "Demo example => "
-      ap post_body
-         
 
       post rest_url("assembly/add_component"), post_body
     end

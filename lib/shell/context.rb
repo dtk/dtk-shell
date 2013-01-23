@@ -15,14 +15,13 @@ module DTK
       DTK_ROOT_PROMPT       = "dtk:/>"
       COMMAND_HISTORY_LIMIT = 200
       HISTORY_LOCATION      = DTK::Client::OsUtil.dtk_user_app_folder + "shell_history"
+      ROOT_TASKS            = DTK::Client::Dtk.task_names
+      ALL_COMMANDS          = ROOT_TASKS + ['component','attribute']
 
       # current holds context (list of commands) for active context e.g. dtk:\library>
       attr_accessor :current
       attr_accessor :active_commands
       attr_accessor :dirs
-
-      # all known commands
-      ROOT_TASKS = DTK::Client::Dtk.task_names
 
 
       def initialize
@@ -39,10 +38,7 @@ module DTK
 
         @cached_tasks.store('dtk', ROOT_TASKS.sort)
 
-        # TODO: Do dynamic loading but it is ok solution for now
-        additional_tasks = ['component','attribute']
-
-        (ROOT_TASKS + additional_tasks).each do |task_name|
+        ALL_COMMANDS.each do |task_name|
           # we exclude help since there is no command class for it
           next if task_name.eql? "help"
 
@@ -73,7 +69,7 @@ module DTK
 
         inputs = match[1].split('/')
 
-        if ROOT_TASKS.include?(inputs.last)
+        if ALL_COMMANDS.include?(inputs.last)
           return inputs.last
         end
         
@@ -90,12 +86,7 @@ module DTK
           # one before last
           command = calculate_proper_command(readline_input)         
 
-          unless command.nil?
-            n_level_commands = get_command_identifiers(command)
-          else
-            n_level_commands =  @cached_tasks['dtk']
-          end
-
+          # get inputs from matched data
           if readline_input.match /.*\/$/
             # if last character is '/'
             inputs = readline_input.split(/\//)
@@ -104,6 +95,12 @@ module DTK
             # if we have string after last '/'
             inputs = readline_input.split(/\//)
             user_input = inputs.pop
+          end
+
+          unless command.nil?
+            n_level_commands = get_command_identifiers(command, (@active_commands + inputs))
+          else
+            n_level_commands =  @cached_tasks['dtk']
           end
 
         end
@@ -251,7 +248,7 @@ module DTK
       # calls 'valid_id?' method in Thor class to validate ID/NAME
       def valid_id?(thor_command_name,value)
         command_clazz = Context.get_command_class(thor_command_name)
-        if command_clazz.respond_to?(:validation_list) && command_clazz.respond_to?(:valid_id?)
+        if command_clazz.list_method_supported?
           # take just hashed arguemnts from multi return method
           hashed_args = get_command_parameters(thor_command_name,[])[2]
           return command_clazz.valid_id?(value,@conn, hashed_args)
@@ -264,11 +261,11 @@ module DTK
       end
 
       # get class identifiers for given thor command, returns array of identifiers
-      def get_command_identifiers(thor_command_name)
+      def get_command_identifiers(thor_command_name, autocomplete_input = [])
         command_clazz = Context.get_command_class(thor_command_name)
-        if command_clazz.respond_to?(:validation_list) && command_clazz.respond_to?(:get_identifiers)
+        if command_clazz.list_method_supported?             
           # take just hashed arguemnts from multi return method
-          hashed_args = get_command_parameters(thor_command_name,[])[2]             
+          hashed_args = get_command_parameters(thor_command_name,[],autocomplete_input)[2]
           return command_clazz.get_identifiers(@conn, hashed_args)
         end
 
@@ -295,7 +292,11 @@ module DTK
         (@active_commands.size % 2 == 1)
       end
 
-      def get_command_parameters(cmd,args)
+      #
+      # We use enrich data to help when using dynamic_context loading, Readline.completition_proc
+      # See bellow for more details
+      #
+      def get_command_parameters(cmd,args,enrich_data=[])
         hash_params,tasks = {}, []
         entity_name, method_name = nil, nil
 
@@ -307,7 +308,7 @@ module DTK
         else
           (0..(@active_commands.size-1)).step(2) do |i|
             tasks << @active_commands[i].gsub(/\-/,'_').to_sym
-            hash_params.store("#{@active_commands[i]}_id".gsub(/\-/,'_').to_sym, @active_commands[i+1]) if @active_commands[i+1]
+            hash_params.store(command_to_id_sym(@active_commands[i]), @active_commands[i+1]) if @active_commands[i+1]
           end
 
           hash_params.store(:tasks, tasks)
@@ -328,14 +329,32 @@ module DTK
             thor_options << args[i+1]
           end
         end
-        args = args - thor_options
 
+        # remove thor_options
+        args = args - thor_options
         hash_params.store(:options, args)
+
+        # special part of the code used by autocomplete when active_context is not available
+        # meaning ENTER has not been clicked and we are using Readline.completion_proc
+        unless enrich_data.empty?
+          (0..(enrich_data.size-1)).step(2) do |i|
+            command = enrich_data[i]
+            value   = enrich_data[i+1]
+
+            if (hash_params[command_to_id_sym(command)].nil? && value)
+              hash_params[command_to_id_sym(command)] = value
+            end
+          end
+        end
 
         return entity_name, method_name, hash_params, (options_args + thor_options)
       end
 
       private
+
+      def command_to_id_sym(command_name)
+        "#{command_name}_id".gsub(/\-/,'_').to_sym
+      end
 
       def get_latest_tasks(command_name)
         file_name = command_name.gsub('-','_')

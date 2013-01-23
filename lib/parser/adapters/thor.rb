@@ -103,22 +103,6 @@ module DTK
         return @@cached_response[clazz][:response]
       end
 
-      def self.get_cached_response_advanced(clazz, urls, nested, subtype=nil)
-        main_url = urls.first
-        response = post rest_url(main_url), subtype
-        # we do not want to catch is if it is not valid
-        if response.nil? || response.empty?
-          DtkLogger.instance.debug("Response was nil or empty for that reason we did not cache it.")
-          return response
-        else
-
-        end
-
-        @@cached_response.store(clazz, {:response => response, :ts => current_ts})
-        
-        return @@cached_response[clazz][:response]
-      end
-
       def self.create_hashed_arguments(params, options = [], tasks = [])
         hashed_argv = {}
         params.each do |k,v|
@@ -127,6 +111,10 @@ module DTK
         hashed_argv.store(:options, options)
         hashed_argv.store(:tasks, tasks)
         return hashed_argv
+      end
+
+      def self.list_method_supported?
+        return (respond_to?(:validation_list) || respond_to?(:whoami)) 
       end
 
       # Retrives desired arguments (via mapping) from hashed map containing
@@ -215,11 +203,16 @@ module DTK
       # we allow change only for valid ID/NAME
       def self.valid_id?(value, conn, hashed_args)
         @conn    = conn if @conn.nil?
-        #clazz, endpoint, subtype = whoami()
 
         3.downto(1) do
-          #response = get_cached_response(clazz, endpoint, subtype)
-          response = validation_list(hashed_args)
+          # get list data from one of the methods
+          if respond_to?(:validation_list)
+            response = validation_list(hashed_args)
+          else
+            clazz, endpoint, opts = whoami()
+            response = get_cached_response(clazz, endpoint, opts)
+          end
+
           unless (response.nil? || response.empty? || response['data'].nil?)
             response['data'].each do |element|
               return true if (element['id'].to_s==value || element['display_name'].to_s==value)
@@ -237,15 +230,19 @@ module DTK
 
       def self.get_identifiers(conn, hashed_args)
         @conn    = conn if @conn.nil?
-        #clazz, endpoint, subtype = whoami()
-
+  
         # we force raw output
         # options = Thor::CoreExt::HashWithIndifferentAccess.new({'list' => true})
 
-
         3.downto(1) do
-          #response = get_cached_response(clazz, endpoint, subtype)
-          response = validation_list(hashed_args)
+          # get list data from one of the methods
+          if respond_to?(:validation_list)
+            response = validation_list(hashed_args)
+          else
+            clazz, endpoint, opts = whoami()
+            response = get_cached_response(clazz, endpoint, opts)
+          end
+
           unless (response.nil? || response.empty?)
             unless response['data'].nil?
               identifiers = []

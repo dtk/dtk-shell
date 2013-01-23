@@ -1,7 +1,6 @@
 module DTK::Client
 
   class Library < CommandBaseThor
-    @@cached_response = {}
 
     def self.pretty_print_cols()
       PPColumns.get(:library)
