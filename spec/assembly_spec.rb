@@ -11,11 +11,18 @@ describe DTK::Client::Assembly do
   #test_task_interface(DTK::Client::Assembly)
 
   # list all assemblies and take one assembly_id
+
+  # entity_name   = "assembly"
+  # method_name   = "list"
+  # hashed_argv   = {:tasks=>[:assembly], :options=>[]}
+  # options_args  = []
+  # shell_execute = true
+
   context "#list" do
     output = `dtk assembly list`
 
     it "should have assembly listing" do
-      output.should match(/(assembly|id|empty|error|WARNING)/)
+      output.should match(/(ASSEMBLY|ID|empty|error|WARNING)/)
     end
 
     unless output.nil?
@@ -31,7 +38,7 @@ describe DTK::Client::Assembly do
         output = `#{command}`
 
         it "should list all #{list_element} for assembly with id #{$assembly_id}" do
-          output.should match(/(id|name|empty|error|WARNING)/)
+          output.should match(/(ID|NAME|empty|error|WARNING)/)
         end
       end
     end

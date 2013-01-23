@@ -8,6 +8,16 @@ module SpecThor
 
   include DTK::Client::Aux
 
+  def spec_top_level_execute(entity_name, method_name, hashed_argv=nil,options_args=nil,shell_execute=false)
+    entity_name = entity_name.gsub("-","_")
+    load_command(entity_name)
+    conn = DTK::Client::Session.get_connection()
+
+    entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
+
+    return entity_class.execute_from_cli(conn,method_name,hashed_argv,options_args,shell_execute).to_s
+  end
+
   ##
   # Capturing stream and returning string
   def capture(stream)

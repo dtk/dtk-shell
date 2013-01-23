@@ -14,7 +14,7 @@ describe DTK::Client::NodeTemplate do
 		output  = `#{command}`
 
 		it "should list all nodes" do
-			output.should match(/(name|id|empty|error|WARNING)/)
+			output.should match(/(NAME|ID|empty|error|WARNING)/)
 		end
 
 		unless output.nil?

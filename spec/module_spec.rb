@@ -12,7 +12,7 @@ describe DTK::Client::Module do
     output = `dtk module list`
 
     it "should have module listing" do
-      output.should match(/(error|id|empty|WARNING)/)
+      output.should match(/(error|ID|NAME|empty|WARNING)/)
     end
 
     unless output.nil?
@@ -27,7 +27,7 @@ describe DTK::Client::Module do
       output  = `#{command}`
 
       it "should list all components for module with id #{$module_id}" do
-        output.should match(/(error|id|name|empty|WARNING)/)
+        output.should match(/(error|ID|NAME|empty|WARNING)/)
       end
     end
   end

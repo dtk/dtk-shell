@@ -12,7 +12,7 @@ describe DTK::Client::Task do
   	output  = `#{command}`
 
   	it "should list all tasks" do
-  		output.should match(/(task|id|empty|error|WARNING)/)
+  		output.should match(/(TASK|ID|empty|error|WARNING)/)
   	end
   end
 

@@ -15,7 +15,7 @@ describe DTK::Client::Library do
     output = `dtk library list`
 
     it "should list libraries" do
-      output.should match(/(library|id|empty|error|WARNING)/)
+      output.should match(/(LIBRARY|ID|empty|error|WARNING)/)
     end
 
     unless output.nil?
@@ -31,7 +31,7 @@ describe DTK::Client::Library do
         output = `#{command}`
 
         it "should list all #{list_element} for library with id #{$library_id}" do
-          output.should match(/(name|id|empty|error|WARNING)/)
+          output.should match(/(NAME|ID|empty|error|WARNING)/)
         end
       end
 	  end
