@@ -15,7 +15,7 @@ describe DTK::Client::Target do
     output = `dtk target list`
 
     it "should list all targets" do
-      output.should match(/(target|id|empty|error|WARNING)/)
+      output.should match(/(TARGET|ID|empty|error|WARNING)/)
     end
 
     unless output.nil?
@@ -31,7 +31,7 @@ describe DTK::Client::Target do
         output  = `#{command}`
 
         it "should list all nodes | assemblies" do
-          output.should match(/(name|id|empty|error|WARNING)/)
+          output.should match(/(NAME|ID|NODE|ASSEMBLY|empty|error|WARNING)/)
         end
   		end
   	end

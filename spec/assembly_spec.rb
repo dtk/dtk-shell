@@ -5,85 +5,70 @@ include SpecThor
 
 describe DTK::Client::Assembly do
   list = ['nodes', 'components', 'tasks']
-  $assembly_id  = ''
-
-  entity_name   = "assembly"
-  method_name   = "list"
-  hashed_argv   = {:tasks=>[:assembly], :options=>[]}
-  options_args  = []
-  shell_execute = true
-
-
-  context "#list" do
-    a = spec_top_level_execute(entity_name, method_name, hashed_argv, options_args, shell_execute)
-    
-    it "should have assembly listing" do
-      a.should match(/(assembly|id|empty|error|WARNING)/)
-    end
-
-    unless a.nil?
-      $assembly_id = a.match(/id([0-9]+)\D/)
-      puts a.inspect
-      puts ">>>>>>>>>>>>"
-      puts $assembly_id
-    end
-  end
+  $assembly_id = ''
   
   # generic test for all task of Thor class
   #test_task_interface(DTK::Client::Assembly)
 
   # list all assemblies and take one assembly_id
-  # context "#list" do
-  #   output = `dtk assembly list`
 
-  #   it "should have assembly listing" do
-  #     output.should match(/(assembly|id|empty|error|WARNING)/)
-  #   end
+  # entity_name   = "assembly"
+  # method_name   = "list"
+  # hashed_argv   = {:tasks=>[:assembly], :options=>[]}
+  # options_args  = []
+  # shell_execute = true
 
-  #   unless output.nil?
-  #     $assembly_id = output.match(/\D([0-9]+)\D/)
-  #   end
-  # end
+  context "#list" do
+    output = `dtk assembly list`
 
-  # # for previously taken assembly_id, do list nodes|components|tasks
-  # context "#list/command" do
-  #   unless $assembly_id.nil?
-  #     list.each do |list_element|
-  #       command = "dtk assembly #{$assembly_id} list #{list_element}"
-  #       output = `#{command}`
+    it "should have assembly listing" do
+      output.should match(/(ASSEMBLY|ID|empty|error|WARNING)/)
+    end
 
-  #       it "should list all #{list_element} for assembly with id #{$assembly_id}" do
-  #         output.should match(/(id|name|empty|error|WARNING)/)
-  #       end
-  #     end
-  #   end
-  # end
+    unless output.nil?
+      $assembly_id = output.match(/\D([0-9]+)\D/)
+    end
+  end
 
-  # # check help context menu
-  # context "#help" do
-  #   # notice backticks are being used here this runs commands
-  #   output = `dtk assembly help`
+  # for previously taken assembly_id, do list nodes|components|tasks
+  context "#list/command" do
+    unless $assembly_id.nil?
+      list.each do |list_element|
+        command = "dtk assembly #{$assembly_id} list #{list_element}"
+        output = `#{command}`
 
-  #   # Process::Status for above command
-  #   process_status = $?
+        it "should list all #{list_element} for assembly with id #{$assembly_id}" do
+          output.should match(/(ID|NAME|empty|error|WARNING)/)
+        end
+      end
+    end
+  end
 
-  #   it "should have assembly converge listing" do
-  #     output.should match(/(converge|empty|error)/)
-  #   end
+  # check help context menu
+  context "#help" do
+    # notice backticks are being used here this runs commands
+    output = `dtk assembly help`
 
-  #   it "should have assembly info listing" do
-  #     output.should match(/(info|empty|error)/)
-  #   end
+    # Process::Status for above command
+    process_status = $?
 
-  #   # remove-component command is not in the list
-  #   # it "should have assembly remove-component listing" do
-  #   #   output.should match(/(remove-component|empty|error)/)
-  #   # end
+    it "should have assembly converge listing" do
+      output.should match(/(converge|empty|error)/)
+    end
 
-  #   it "should have assembly list listing" do
-  #     output.should match(/(list|empty|error)/)
-  #   end
+    it "should have assembly info listing" do
+      output.should match(/(info|empty|error)/)
+    end
 
-  # end
+    # remove-component command is not in the list
+    # it "should have assembly remove-component listing" do
+    #   output.should match(/(remove-component|empty|error)/)
+    # end
+
+    it "should have assembly list listing" do
+      output.should match(/(list|empty|error)/)
+    end
+
+  end
 
 end
