@@ -69,7 +69,7 @@ def validate_correct_context(args)
 
     current_context_clazz = clazz
 
-    error_message = validate_value(command, value)
+    error_message = validate_value(command, value, valid_commands)
     break if error_message
     valid_commands << value
   end
@@ -110,10 +110,10 @@ def validate_command(clazz, current_context_clazz, command)
   return error_message
 end
 
-def validate_value(command, value)
+def validate_value(command, value, valid_commands)
    # check value
   if value
-    unless @context.valid_id?(command,value)
+    unless @context.valid_id?(command,value,valid_commands)
       error_message = "Identifier '#{value}' for context '#{command}' is not valid";
     end
   end

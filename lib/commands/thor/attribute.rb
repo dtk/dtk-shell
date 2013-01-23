@@ -13,7 +13,9 @@ module DTK::Client
         :filter      => nil
       }
 
-      response = get_cached_response(:attribute, "assembly/info_about", post_body)
+      # TODO: Use cahced response here issue with duplication when we changing response
+      #response = get_cached_response(:attribute, "assembly/info_about", post_body)
+      response = post rest_url("assembly/info_about"), post_body
 
      if assembly_id
         regexp = Regexp.new("node\[#{node_id}\].?cmp\[#{component_id}\].+")
