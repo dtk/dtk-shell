@@ -2,8 +2,12 @@
 module DTK::Client
   class Component < CommandBaseThor
 
+    def self.valid_children()
+      [:attribute]
+    end
+
     def self.valid_child?(name_of_sub_context)
-      return [:attribute].include?(name_of_sub_context.to_sym)
+      return Component.valid_children().include?(name_of_sub_context.to_sym)
     end
 
     def self.validation_list(hashed_args)

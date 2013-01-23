@@ -125,13 +125,13 @@ module DTK::Client
     end
 
 
-    desc "delete ASSEMBLY-TEMPLATE-NAME/ID", "Delete assembly template"
+    desc "delete ASSEMBLY-TEMPLATE-ID", "Delete assembly template"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(hashed_args)
-      assembly_template_id = CommandBaseThor.retrieve_arguments([:assembly_template_id],hashed_args)
+      assembly_template_id = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
       unless options.force?
         # Ask user if really want to delete assembly-template, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete assembly-template '#{assembly_id}'?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete assembly-template '#{assembly_template_id}'?")
       end
 
       post_body = {

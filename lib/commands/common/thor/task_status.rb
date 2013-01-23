@@ -26,10 +26,10 @@ module DTK::Client
                 #break unless response.data.first["status"].eql? "executing"
                 # TODO: There is bug where we do not see executing status on start so we have to wait until at 
                 # least one 'successed' has been found
-                is_executing = response.data.find{|r|r["status"].eql? "executing"}
-                is_succedded = response.data.find{|r|r["status"].eql? "succeeded"}
-
-                break if (!is_executing && is_succedded) 
+                is_pending   = (response.data.select {|r|r["status"].nil? }).size > 0
+                is_executing = (response.data.select {|r|r["status"].eql? "executing"}).size > 0
+ 
+                break unless (is_executing || is_pending)
               end
             
               Console.wait_animation("Watching '#{type}' task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)

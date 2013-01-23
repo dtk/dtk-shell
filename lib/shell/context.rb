@@ -101,7 +101,7 @@ module DTK
             user_input = inputs.pop
           end
 
-          unless command.nil?
+          if command
             n_level_commands = get_command_identifiers(command, (@active_commands + inputs))
           else
             n_level_commands =  @cached_tasks['dtk']

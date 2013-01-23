@@ -86,8 +86,7 @@ module DTK
         current_ts = Time.now.to_i
         # if @@cache_response is empty return true if not than return time difference between
         # current_ts and ts stored in cache
-        time_difference = @@cached_response[entity_name].nil? ? true : ((current_ts - @@cached_response[entity_name][:ts]) > TIME_DIFF)
-        
+        time_difference = @@cached_response[entity_name].nil? ? true : ((current_ts - @@cached_response[entity_name][:ts]) > TIME_DIFF)         
 
         if (time_difference || @@invalidate_map.include?(entity_name))
           response = post rest_url(url), subtype
@@ -98,28 +97,10 @@ module DTK
             return response
           end
 
-          @@invalidate_map.delete(entity_name) if (@@invalidate_map.include?(entity_name) && response.ok?)
-          # DEBUG SNIPPET >>> REMOVE <<<
-          require 'ap'
-          if !response.ok? 
-            ap response
-            ap entity_name
-            ap url
-            ap subtype
-          end
-                                       
+          @@invalidate_map.delete(entity_name) if (@@invalidate_map.include?(entity_name) && response.ok?)                 
           @@cached_response.store(entity_name, {:response => response, :ts => current_ts}) if response.ok?
         end
-
-        if entity_name == :component
-          # DEBUG SNIPPET >>> REMOVE <<<
-          require 'ap'
-          ap @@cached_response[entity_name]
-          ap "====================================="
-          ap post rest_url(url), subtype
-        end
-             
-
+           
         return @@cached_response[entity_name][:response]
       end
 
