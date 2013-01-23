@@ -83,7 +83,7 @@ module DTK::Client
         :commit_sha => commit_sha,
         :scaffold_if_no_dsl => true
       }
-      response = post(rest_url("component_module/update_repo_and_add_dsl"),post_body)
+      response = post(rest_url("component_module/update_from_initial_create"),post_body)
       return response unless response.ok?
 
       if dsl_created = response.data(:dsl_created)
