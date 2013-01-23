@@ -4,19 +4,20 @@
 $shell_mode = false
 require File.expand_path('../lib/client', File.dirname(__FILE__))
 require File.expand_path('../lib/parser/adapters/thor',    File.dirname(__FILE__))
+require File.expand_path('../lib/shell/context', File.dirname(__FILE__))
 Dir[File.expand_path('../lib/shell/parse_monkey_patch.rb', File.dirname(__FILE__))].each {|file| require file }
 
 
-
-# take command to be executed, rest of arguments are going to be used 
-# as provided arguments. Under DTK task there is summarization of all
-# task that are available.
-command = ARGV.shift if ARGV.size > 0
-
-require File.expand_path('../lib/client', File.dirname(__FILE__))
-
 $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
 
+entity_name = ARGV.shift if ARGV.size > 0
 
-# TODO: FIX THIS TO CONVER THIS
-top_level_execute(command, ARGV)
+# special case for when no params are provided use help method
+if (entity_name == 'help' || entity_name.nil?)
+  entity_name = 'dtk'
+  ARGV = ['help']
+end
+
+entity_name, method_name, hash_args, options_args = DTK::Shell::Context.get_dtk_command_parameters(entity_name, ARGV)
+  
+top_level_execute(entity_name, method_name, hash_args, options_args, false)

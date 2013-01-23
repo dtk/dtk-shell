@@ -42,9 +42,7 @@ module DTK
           # we exclude help since there is no command class for it
           next if task_name.eql? "help"
 
-          # normalize to file_names
-          file_name = task_name.gsub('-','_')
-          require File.expand_path("../commands/thor/#{file_name}", File.dirname(__FILE__))
+          Context.require_command_class(task_name)
 
           get_latest_tasks(task_name)
         end
@@ -56,6 +54,12 @@ module DTK
         rescue Exception => e
           return nil
         end
+      end
+
+      def self.require_command_class(command_name)
+        # normalize to file_names
+        file_name = command_name.gsub('-','_')
+        require File.expand_path("../commands/thor/#{file_name}", File.dirname(__FILE__))
       end
       
 
@@ -246,11 +250,11 @@ module DTK
       end
 
       # calls 'valid_id?' method in Thor class to validate ID/NAME
-      def valid_id?(thor_command_name,value)
+      def valid_id?(thor_command_name,value, autocomplete_input = [])
         command_clazz = Context.get_command_class(thor_command_name)
         if command_clazz.list_method_supported?
           # take just hashed arguemnts from multi return method
-          hashed_args = get_command_parameters(thor_command_name,[])[2]
+          hashed_args = get_command_parameters(thor_command_name,[], autocomplete_input)[2]
           return command_clazz.valid_id?(value,@conn, hashed_args)
         end
 
@@ -292,6 +296,38 @@ module DTK
         (@active_commands.size % 2 == 1)
       end
 
+
+      def self.get_dtk_command_parameters(entity_name, args)
+        method_name, entity_name_id = nil, nil
+        hash_params = {}
+
+        if (ROOT_TASKS + ['dtk']).include?(entity_name)
+          Context.require_command_class(entity_name)
+          available_tasks = Context.get_command_class(entity_name).task_names
+          if available_tasks.include?(args.first)
+            method_name = args.shift
+          else
+            entity_name_id = args.shift
+            method_name = args.shift
+          end
+        end
+
+        # if no method specified use help
+        method_name ||= 'help'
+
+        if entity_name_id
+          hash_params.store(Context.command_to_id_sym(entity_name), entity_name_id)
+        end
+
+        hash_params.store(:tasks, [entity_name.to_sym])
+
+        # extract thor options
+        args, thor_options = Context.parse_thor_options(args)
+        hash_params.store(:options, args)
+
+        return entity_name, method_name, hash_params, thor_options
+      end
+
       #
       # We use enrich data to help when using dynamic_context loading, Readline.completition_proc
       # See bellow for more details
@@ -308,30 +344,19 @@ module DTK
         else
           (0..(@active_commands.size-1)).step(2) do |i|
             tasks << @active_commands[i].gsub(/\-/,'_').to_sym
-            hash_params.store(command_to_id_sym(@active_commands[i]), @active_commands[i+1]) if @active_commands[i+1]
+            hash_params.store(Context.command_to_id_sym(@active_commands[i]), @active_commands[i+1]) if @active_commands[i+1]
           end
-
-          hash_params.store(:tasks, tasks)
 
           entity_name = @active_commands.first
           method_name = cmd
         end
 
-        # options for the command e.g. --list
-        options_args = args.select { |a| a.match(/^\-\-/)}
-        args = args - options_args
+        # add task options
+        hash_params.store(:tasks, tasks)
 
-        # options to handle thor options -m MESSAGE
-        thor_options = []
-        args.each_with_index do |e,i|
-          if e.match(/^\-[a-zA-Z]?/)
-            thor_options << e
-            thor_options << args[i+1]
-          end
-        end
+        # extract thor options
+        args, thor_options = Context.parse_thor_options(args)
 
-        # remove thor_options
-        args = args - thor_options
         hash_params.store(:options, args)
 
         # special part of the code used by autocomplete when active_context is not available
@@ -341,18 +366,42 @@ module DTK
             command = enrich_data[i]
             value   = enrich_data[i+1]
 
-            if (hash_params[command_to_id_sym(command)].nil? && value)
-              hash_params[command_to_id_sym(command)] = value
+            if (hash_params[Context.command_to_id_sym(command)].nil? && value)
+              hash_params[Context.command_to_id_sym(command)] = value
             end
           end
         end
 
-        return entity_name, method_name, hash_params, (options_args + thor_options)
+        return entity_name, method_name, hash_params, thor_options
       end
 
       private
 
-      def command_to_id_sym(command_name)
+      #
+      # method takes paramters that can hold specific thor options
+      #
+      def self.parse_thor_options(args)
+        # options for the command e.g. --list 
+        # and remove options_args from args
+        options_args = args.select { |a| a.match(/^\-\-/)}
+        args = args - options_args
+
+        # options to handle thor options -m MESSAGE
+        options_param_args = []
+        args.each_with_index do |e,i|
+          if e.match(/^\-[a-zA-Z]?/)
+            options_param_args << e
+            options_param_args << args[i+1]
+          end
+        end
+
+        # remove thor_options
+        args = args - options_param_args
+
+        return args, (options_args + options_param_args)
+      end
+
+      def self.command_to_id_sym(command_name)
         "#{command_name}_id".gsub(/\-/,'_').to_sym
       end
 
