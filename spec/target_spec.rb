@@ -3,38 +3,33 @@ dtk_nested_require("../lib/commands/thor","target")
 include SpecThor
 
 describe DTK::Client::Target do
+  $about     = ['nodes', 'assemblies']
+  $target_id = nil
 
-  # generic test for all task of Thor class
-  #test_task_interface(DTK::Client::Target)
+  #list all assemblies and take one assembly_id
+  context '#list' do
+    $target_list = run_from_dtk_shell('target list')
 
-  list       = ['nodes', 'assemblies']
-  $target_id = ''
-
-  # list all targets and take one target_id
-  context "#list" do
-    output = `dtk target list`
-
-    it "should list all targets" do
-      output.should match(/(TARGET|ID|empty|error|WARNING)/)
+    it "should have target listing" do
+      $target_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    unless output.nil?
-      $target_id = output.match(/\D([0-9]+)\D/)
+    unless $target_list.nil?
+      $target_id = $target_list['data'].first['id'] unless $target_list['data'].nil?
     end
   end
 
-  # for previously taken target_id, do list nodes|assemblies
-  context "#list command" do
-  	unless $target_id.nil?
-  		list.each do |list_element|
-        command = "dtk target #{$target_id} list #{list_element}"
-        output  = `#{command}`
 
-        it "should list all nodes | assemblies" do
-          output.should match(/(NAME|ID|NODE|ASSEMBLY|empty|error|WARNING)/)
+  context "#list/command" do
+    unless $target_id.nil?
+      $about.each do |type|
+        output = run_from_dtk_shell("target #{$target_id} list #{type}")
+
+        it "should list all #{type} for target with id #{$target_id}" do
+          output.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
         end
-  		end
-  	end
+      end
+    end
   end
 
 end

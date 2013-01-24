@@ -3,17 +3,19 @@ dtk_nested_require("../lib/commands/thor","task")
 include SpecThor
 
 describe DTK::Client::Task do
+  $task_id = nil
 
-  # generic test for all task of Thor class
-  #test_task_interface(DTK::Client::Task)
+  #list all assemblies and take one assembly_id
+  context '#list' do
+    $task_list = run_from_dtk_shell('task list')
 
-  context "#list" do
-  	command = "dtk task list"
-  	output  = `#{command}`
+    it "should have assembly listing" do
+      $task_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
+    end
 
-  	it "should list all tasks" do
-  		output.should match(/(TASK|ID|empty|error|WARNING)/)
-  	end
+    unless $task_list.nil?
+    	$task_id = $task_list['data'].first['id'] unless $task_list['data'].nil?
+    end
   end
 
 end

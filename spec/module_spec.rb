@@ -1,33 +1,30 @@
-require 'lib/spec_thor'
-
 dtk_nested_require("../lib/commands/thor","module")
+require 'lib/spec_thor'
 
 include SpecThor
 
 describe DTK::Client::Module do
-  $module_id = ''
+  $module_id = nil
 
-  # list all modules and take one module_id
-  context "#list" do
-    output = `dtk module list`
+  #list all assemblies and take one assembly_id
+  context '#list' do
+    $module_list = run_from_dtk_shell('module list')
 
     it "should have module listing" do
-      output.should match(/(error|ID|NAME|empty|WARNING)/)
+      $module_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    unless output.nil?
-      $module_id = output.match(/\D([0-9]+)\D/)
+    unless $module_list.nil?
+      $module_id = $module_list['data'].first['id'] unless $module_list['data'].nil?
     end
   end
 
-  # for previously taken module_id, do list-components
   context "#list/command" do
     unless $module_id.nil?
-      command = "dtk module #{$module_id} list-components"
-      output  = `#{command}`
+      output = run_from_dtk_shell("module #{$module_id} list-components")
 
       it "should list all components for module with id #{$module_id}" do
-        output.should match(/(error|ID|NAME|empty|WARNING)/)
+        $module_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
       end
     end
   end

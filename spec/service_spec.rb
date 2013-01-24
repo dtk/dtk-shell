@@ -3,39 +3,34 @@ dtk_nested_require("../lib/commands/thor","service")
 include SpecThor
 
 describe DTK::Client::Service do
+  $about       = ['assemblies']
+  $service_id = nil
 
-  # generic test for all task of Thor class
-  #test_task_interface(DTK::Client::ServiceModule)
-  list        = ['none', 'assemblies']
-  $service_id = ''
 
-  # list all services and take one service_id
-  context "#list" do
-  	command = "dtk service list"
-  	output  = `#{command}`
+  #list all assemblies and take one assembly_id
+  context '#list' do
+    $service_list = run_from_dtk_shell('service list')
+    
+    it "should have service listing" do
+      $service_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
+    end
 
-  	it "should list all modules" do
-  		output.should match(/(ID|NAME|empty|error|WARNING)/)
-  	end
-
-  	unless output.nil?
-  		$service_id = output.match(/\D([0-9]+)\D/)
-  	end
+    unless $service_list.nil?
+      $service_id = $service_list['data'].first['id'] unless $service_list['data'].nil?
+    end
   end
 
-  # for previously taken service_id, do list none|assemblies
-  context "#list command" do
-  	unless $service_id.nil?
-  		list.each do |list_element|
 
-        command = "dtk service #{$service_id} list #{list_element}"
-        output  = `#{command}`
+  context "#list/command" do
+    unless $service_id.nil?
+      $about.each do |type|
+        output = run_from_dtk_shell("service #{$service_id} list #{type}")
 
-        it "should list all modules or assemblies for service with id #{$service_id}" do
-          output.should match(/(ID|NAME|empty|error|WARNING)/)
+        it "should list all #{type} for service with id #{$service_id}" do
+          output.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
         end
-  		end
-  	end
+      end
+    end
   end
 
 end

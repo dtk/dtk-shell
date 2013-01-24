@@ -1,74 +1,47 @@
-require 'lib/spec_thor'
 dtk_nested_require("../lib/commands/thor","assembly")
+require 'lib/spec_thor'
+
 include SpecThor
 
-
 describe DTK::Client::Assembly do
-  list = ['nodes', 'components', 'tasks']
-  $assembly_id = ''
-  
-  # generic test for all task of Thor class
-  #test_task_interface(DTK::Client::Assembly)
+  $about       = ['nodes', 'components', 'attributes','tasks']
+  $assembly_id = nil
 
-  # list all assemblies and take one assembly_id
-
-  # entity_name   = "assembly"
-  # method_name   = "list"
-  # hashed_argv   = {:tasks=>[:assembly], :options=>[]}
-  # options_args  = []
-  # shell_execute = true
-
-  context "#list" do
-    output = `dtk assembly list`
+  #list all assemblies and take one assembly_id
+  context '#list' do
+    $assembly_list = run_from_dtk_shell('assembly list')
 
     it "should have assembly listing" do
-      output.should match(/(ASSEMBLY|ID|empty|error|WARNING)/)
+      $assembly_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    unless output.nil?
-      $assembly_id = output.match(/\D([0-9]+)\D/)
+    unless $assembly_list.nil?
+      $assembly_id = $assembly_list['data'].first['id'] unless $assembly_list['data'].nil?
     end
   end
 
   # for previously taken assembly_id, do list nodes|components|tasks
   context "#list/command" do
     unless $assembly_id.nil?
-      list.each do |list_element|
-        command = "dtk assembly #{$assembly_id} list #{list_element}"
-        output = `#{command}`
+      $about.each do |type|
+        output = run_from_dtk_shell("assembly #{$assembly_id} list #{type}")
 
-        it "should list all #{list_element} for assembly with id #{$assembly_id}" do
-          output.should match(/(ID|NAME|empty|error|WARNING)/)
+        it "should list all #{type} for assembly with id #{$assembly_id}" do
+          output.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
         end
       end
     end
   end
 
-  # check help context menu
-  context "#help" do
-    # notice backticks are being used here this runs commands
-    output = `dtk assembly help`
+  # for previously taken assembly_id, do info
+  context "#info" do
+    unless $assembly_id.nil?
+      output = run_from_dtk_shell("assembly #{$assembly_id} info")
 
-    # Process::Status for above command
-    process_status = $?
-
-    it "should have assembly converge listing" do
-      output.should match(/(converge|empty|error)/)
+      it "should show information about assembly with id #{$assembly_id}" do
+        output.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
+      end
     end
-
-    it "should have assembly info listing" do
-      output.should match(/(info|empty|error)/)
-    end
-
-    # remove-component command is not in the list
-    # it "should have assembly remove-component listing" do
-    #   output.should match(/(remove-component|empty|error)/)
-    # end
-
-    it "should have assembly list listing" do
-      output.should match(/(list|empty|error)/)
-    end
-
   end
 
 end
