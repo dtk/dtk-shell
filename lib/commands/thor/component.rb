@@ -37,5 +37,17 @@ module DTK::Client
       return response
     end
 
+    desc "ASSEMBLY-NAME/ID set ATTRIBUTE-PATTERN VALUE", "Set target component attributes"
+    def set(hashed_args)
+      assembly_id, node_id, component_id, pattern, value = CommandBaseThor.retrieve_arguments([:assembly_id, :node_id, :component_id, :option_1,:option_2],hashed_args)
+      post_body = {
+        :assembly_id => assembly_id,
+        :pattern => pattern,
+        :value => value
+      }
+      #TODO: have this return format like assembly show attributes with subset of rows that gt changed
+      post rest_url("assembly/set_attributes"), post_body
+    end
+
   end
 end
