@@ -216,9 +216,11 @@ module DTK
 
           unless (response.nil? || response.empty? || response['data'].nil?)
             response['data'].each do |element|
-              return true if (element['id'].to_s==value || element['display_name'].to_s==value)
+              if (element['id'].to_s==value || element['display_name'].to_s==value)
+                return {:name => element['display_name'], :identifier => element['id'] }
+              end
             end
-            return false
+            return nil
           end
 
           break if response["status"].eql?('ok')
@@ -226,7 +228,8 @@ module DTK
         end
 
         DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")
-        return true
+        # We cannot allow this to go further without proper context, meaning name and identifier
+        return nil
       end
 
       def self.get_identifiers(conn, hashed_args)

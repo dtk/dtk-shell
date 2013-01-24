@@ -1,14 +1,13 @@
 require File.expand_path('../commands/thor/dtk', File.dirname(__FILE__))
 require File.expand_path('../auxiliary',         File.dirname(__FILE__))
-require File.expand_path('../advanced_context',         File.dirname(__FILE__))
 require 'active_support/core_ext/string/inflections'
 require 'json'
 
 module DTK
   module Shell
+
     class Context
       extend DTK::Client::Aux
-      include DTK::Client::Advanced_Context
       
       # client commands
       CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs']
@@ -20,13 +19,14 @@ module DTK
 
       # current holds context (list of commands) for active context e.g. dtk:\library>
       attr_accessor :current
-      attr_accessor :active_commands
+      attr_accessor :active_context
       attr_accessor :dirs
 
 
       def initialize
 
-        @cached_tasks, @active_commands, @dirs = {}, [], []
+        @cached_tasks, @dirs = {}, []
+        @active_context = ActiveContext.new
 
         # member used to hold current commands loaded for current command
         @context_commands = []
@@ -102,7 +102,7 @@ module DTK
           end
 
           if command
-            n_level_commands = get_command_identifiers(command, (@active_commands + inputs))
+            n_level_commands = get_command_identifiers(command, (@active_context.name_list + inputs))
           else
             n_level_commands =  @cached_tasks['dtk']
           end
@@ -126,54 +126,34 @@ module DTK
         # when switching to tier 2 we need to use command name from tier one
         # e.g. cc library/public, we are caching context under library_1, library_2
         # so getting context for 'public' will not work and we use than library
-        command_name = tier_1_command if (tier_2? && !command_name.nil?)
+        command_name = root? ? 'dtk' : @active_context.last_command_name
 
         # if there is no new context (current) we use old one
         @current = sub_tasks_names(command_name) || @current
         
-
         # we add client commands
         @current.concat(CLIENT_COMMANDS).sort!
 
         # holder for commands to be used since we do not want to remember all of them
         @context_commands = @current
+
         # we load thor command class identifiers for autocomplete context list   
-        @context_commands.concat(get_command_identifiers(command_name)) if is_base_command?
+        @context_commands.concat(get_command_identifiers(command_name)) if current_command?
 
         # logic behind context loading
         #Readline.completer_word_break_characters=" "
         Readline.completion_proc = proc { |input| dynamic_autocomplete_context(input) }
       end
 
-      def valid_pairs(args)
-        multiple_commands = args.to_s.split('/')
-        is_valid, command = valid_command_id_pairs(multiple_commands)
-        raise DTK::Shell::Error, "Command '#{command}' is not valid." unless is_valid
-      end
-
-      def get_pairs(args)
-        multiple_commands = args.to_s.split('/')
-        is_valid, pairs = get_commands_ids(multiple_commands)
-        raise DTK::Shell::Error, "Command => id pairs are not valid." unless is_valid
-        return pairs
-      end
-
-      def advanced_command_valid(pair)
-        command, id = pair[0], pair[1]
-        
-        unless valid_id?(command, id)
-          raise DTK::Shell::Error, "#{command.capitalize} identifier '#{id}' is not valid."
-        end
-      end
-
       def push_context()
-        @current_path = "/#{@active_commands.join('/')}"
+        raise "DEV WE need to RE-IMPLEMENT this."
+        @current_path = @active_context.full_path()
         @dirs.unshift(@current_path) unless @current_path.nil?
       end
 
       # resets context
       def reset
-        active_commands.clear
+        @active_context.clear
         load_context()
       end
 
@@ -190,7 +170,7 @@ module DTK
 
       # gets current path for shell
       def shell_prompt
-        return root? ? DTK_ROOT_PROMPT : "dtk:/#{@active_commands.join('/')}>"
+        return root? ? DTK_ROOT_PROMPT : "dtk:#{@active_context.full_path}>"
       end
 
       def root_tasks
@@ -199,40 +179,21 @@ module DTK
 
       # returns true if context is on root at the moment
       def root?
-        return @active_commands.empty?
+        return @active_context.empty?
       end
       
-      # Tier 1 = dtk:/library> 
-      def tier_1?
-        # return @active_commands.size == 1
-        return @active_commands.size%2 != 0
+      def current_command?
+        return @active_context.current_command?
       end
 
-      # Tier 2 = dtk:/library/public> 
-      def tier_2?
-        # return @active_commands.size == 2
-        return ((@active_commands.size%2 == 0) && (@active_commands.size != 0))
-      end
-
-      # returns tier 1 command
-      def tier_1_command
-        size = @active_commands.size
-        if size > 2
-          return @active_commands.size%2==0 ? @active_commands[size-2] : @active_commands[size-1]
-        else
-          return @active_commands.first
-        end
-      end
-
-      # returns tier 2 command
-      def last_command
-        @active_commands.last
+      def current_identifier?
+        return @active_context.current_identifier?
       end
 
       # returns list of tasks for given command name
       def sub_tasks_names(command_name=nil)
         # cache works in a way that there are tier 1 and tier 2 list of ta
-        sufix = root? ? "" : tier_1? ? "_1" : "_2"
+        sufix = root? ? "" : current_command? ? "_1" : "_2"
         return @cached_tasks[command_name.to_s+sufix] unless command_name.nil?
 
         # returns root tasks
@@ -240,13 +201,13 @@ module DTK
       end
 
       # adds command to current list of active commands
-      def insert_active_command(command)
-        @active_commands << command
+      def push_to_active_context(context_name, entity_name, context_value = nil)
+        @active_context.push_new_context(context_name, entity_name, context_value)
       end
 
       # remove last active command, and returns it
-      def remove_last_command
-        @active_commands.pop
+      def pop_from_active_context
+        return @active_context.pop_context
       end
 
       # calls 'valid_id?' method in Thor class to validate ID/NAME
@@ -261,11 +222,11 @@ module DTK
         # if not implemented we are going to let it in the context
         # TODO: Removed this 'put' after this has been implemented where needed
         puts "[DEV] Implement 'valid_id?' method for thor command class: #{thor_command_name} "
-        return false
+        return nil
       end
 
       # get class identifiers for given thor command, returns array of identifiers
-      def get_command_identifiers(thor_command_name, autocomplete_input = [])
+      def get_command_identifiers(thor_command_name, autocomplete_input = [])           
         command_clazz = Context.get_command_class(thor_command_name)
         if command_clazz.list_method_supported?             
           # take just hashed arguemnts from multi return method
@@ -291,11 +252,6 @@ module DTK
 
         return cmd, args
       end
-
-      def is_base_command?
-        (@active_commands.size % 2 == 1)
-      end
-
 
       def self.get_dtk_command_parameters(entity_name, args)
         method_name, entity_name_id = nil, nil
@@ -340,14 +296,14 @@ module DTK
           # this means that somebody is calling command with assembly/.. method_name
           entity_name = cmd
           method_name = args.shift
-          hash_params
         else
-          (0..(@active_commands.size-1)).step(2) do |i|
-            tasks << @active_commands[i].gsub(/\-/,'_').to_sym
-            hash_params.store(Context.command_to_id_sym(@active_commands[i]), @active_commands[i+1]) if @active_commands[i+1]
+          name_list = @active_context.name_list
+          (0..(name_list.size-1)).step(2) do |i|
+            tasks << name_list[i].gsub(/\-/,'_').to_sym
+            hash_params.store(Context.command_to_id_sym(name_list[i]), name_list[i+1]) if name_list[i+1]
           end
 
-          entity_name = @active_commands.first
+          entity_name = name_list.first
           method_name = cmd
         end
 

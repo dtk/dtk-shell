@@ -18,7 +18,7 @@ class Thor
       list.sort!{ |a,b| a[0] <=> b[0] }
       # monkey patching here => START
       unless @@shell_context.root?
-        command=@@shell_context.tier_1_command.upcase
+        command=@@shell_context.active_context.last_command_name.upcase
         filtered_list = []
 
         list.each do |help_item|
@@ -30,9 +30,9 @@ class Thor
 
           if matched_data.nil?
             # not found and tier 1 we add it to help list
-            filtered_list << help_item if @@shell_context.tier_1?
+            filtered_list << help_item if @@shell_context.current_command?
           else
-            if @@shell_context.tier_1?
+            if @@shell_context.current_command?
               # remove optional data if tier 1 (DTK-211) TODO: Refactor this
               # help_item.first.gsub!(list_optional_data[0],'') unless list_optional_data.nil?
 

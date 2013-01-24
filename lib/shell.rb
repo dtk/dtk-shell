@@ -23,69 +23,67 @@ ALIAS_COMMANDS = {
 
 # METHODS
 
+# Validates and changes context
 def change_context(args, push_context = false)
-  args = validate_correct_context(args)
-  # this means validation has failed
-  return @context.shell_prompt if args.empty?
-  change_context_execute(args,push_context)
-end
+  begin
+      # jump to root
+    @context.reset if args.to_s.match(/^\//)
+    # split original cc command
+    entries = args.first.split(/\//)
 
-def validate_correct_context(args)
-  # jump to root
-  @context.reset if args.to_s.match(/^\//)
-  # split original cc command
-  entries = args.first.split(/\//)
+    # if only '/' or just cc skip validation
+    return args if entries.empty?
 
-  # if only '/' or just cc skip validation
-  return args if entries.empty?
+    current_context_clazz, error_message, current_index = nil, nil, 0
+    double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
 
-  current_context_clazz, error_message, current_index = nil, nil, 0
-  double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
+    # we remove '..' from our entries 
+    entries = entries.select { |e| !(e.empty? || DTK::Shell::ContextAux.is_double_dot?(e)) }
 
-  # we add current context to the mix
-  current_active_commands = @context.active_commands.dup
+    # we go back in context based on '..'
+    @context.active_context.pop_context(double_dots_count)
 
-  # we go back in context based on '..'
-  current_active_commands.pop(double_dots_count)
+    # we add active commands array to begining, using dup to avoid change by ref.
+    context_name_list = @context.active_context.name_list
+    entries = context_name_list + entries
 
-  # we add active commands array to begining, using dup to avoid change by ref.
-  entries = current_active_commands.dup.concat(entries)
+    # we check the size of active commands
+    ac_size = context_name_list.size
 
-  # we remove '..' from our entries 
-  entries = entries.select { |e| !(e.empty? || DTK::Shell::ContextAux.is_double_dot?(e)) }
-  valid_commands = []
+    # check each par for command / value
+    (0..(entries.size-1)).step(2) do |i|
+      command       = entries[i]
+      value         = entries[i+1]
+      
+      clazz = DTK::Shell::Context.get_command_class(command)
 
-  # check each par for command / value
-  (0..(entries.size-1)).step(2) do |i|
-    command       = entries[i]
-    value         = entries[i+1]
-    
+      error_message = validate_command(clazz,current_context_clazz,command)
+      break if error_message
+      # if we are dealing with new entries add them to active_context
+      @context.push_to_active_context(command, command) if (i >= ac_size)
 
-    clazz = DTK::Shell::Context.get_command_class(command)
+      current_context_clazz = clazz
 
-    error_message = validate_command(clazz,current_context_clazz,command)
-    break if error_message
-    valid_commands << command
+      if value
+        # context_hash_data is hash with :name, :identifier values
+        context_hash_data, error_message = validate_value(command, value, context_name_list)
+        break if error_message
+        @context.push_to_active_context(context_hash_data[:name], command, context_hash_data[:identifier]) if ((i+1) >= ac_size)
+      end
+    end
 
-    current_context_clazz = clazz
+    puts error_message if error_message
 
-    error_message = validate_value(command, value, valid_commands)
-    break if error_message
-    valid_commands << value
+    @context.load_context(@context.active_context.last_context_name)
+
+  rescue DTK::Shell::Error => e
+    puts e.message
+  rescue Exception => e
+    puts e.message
+    puts e.backtrace
+  ensure
+    return @context.shell_prompt
   end
-
-  puts error_message if error_message
-
-  # we remove active commands since we only needed them for validation,
-  # at this point we return input which passed validation.
-  # e.g. assembly/2123/nod2e/foo
-  # we return assembly/2123 since that part is valid and discard rest.
-  valid_commands.shift(current_active_commands.size)
-
-  # we add '..' we ommited if present
-  valid_commands.unshift(['..']*double_dots_count) unless double_dots_count == 0
-
-  return valid_commands.join('/')
 end
 
 def validate_command(clazz, current_context_clazz, command)
@@ -111,69 +109,17 @@ def validate_command(clazz, current_context_clazz, command)
 end
 
 def validate_value(command, value, valid_commands)
+  context_hash_data = nil
    # check value
   if value
-    unless @context.valid_id?(command,value,valid_commands)
+    context_hash_data = @context.valid_id?(command,value,valid_commands)
+    unless context_hash_data
       error_message = "Identifier '#{value}' for context '#{command}' is not valid";
     end
   end
+
+  return context_hash_data, error_message
 end
-
-
-def change_context_execute(args, push_context=false)
-  return DTK::Shell::Context::DTK_ROOT_PROMPT if args.empty?
-
-  begin
-    # if separated by spaces join them with '/' so we support spaces and slashes
-    if args.instance_of?(Array) && args.size > 1
-      args = args.join('/')
-    end
-    # first command is the one we take context from
-    command = args.first
-    # check for root of context
-    if ('/'.eql?(command[0,1]))
-      @context.reset()
-      next_command = command[1,command.size]
-      return change_context_execute(next_command,push_context)
-    end
-
-    # for multi context e.g. `cc library/public`
-    if command.include?('/')
-      multiple_commands = command.split('/')
-      # last command will continue to run in this flow
-      command = multiple_commands.pop
-
-      # use recursion to load all other commands first, second, ...
-      # flow will continue with last command left to load (see above)
-      multiple_commands.each { |m_command| change_context_execute(m_command) }
-      # ...
-    end
-      
-    if DTK::Shell::ContextAux.is_double_dot?(command)
-      # backtracing context
-      @context.remove_last_command
-      # since we support two level max this will be tier 1 command or root
-      # TODO: FIX THIS
-      command = @context.last_command
-    else
-      # set command to context         
-      @context.insert_active_command(command)
-    end
-
-    # loads context for given command
-    @context.push_context() if push_context
-    @context.load_context(command)
-
-  rescue DTK::Shell::Error => e
-    puts e.message
-  rescue Exception => e
-    puts e.message
-    puts e.backtrace
-  ensure
-    return @context.shell_prompt
-  end
-end
-
 
 # support for alias commands (ls for list etc.)
 def preprocess_commands(original_command)
@@ -254,17 +200,7 @@ def execute_shell_command(line, prompt)
     
     if ('cc' == cmd)
       # in case there is no params we just reload command
-      args << "/" if args.empty?
-
-      #if (args.to_s.match(/.\/./) && !args.to_s.start_with?('/'))
-      #  @context.valid_pairs(args)
-      #  pairs = @context.get_pairs(args)
-      #  prompt = change_advanced_context(pairs)
-      #else
-      #  #changes context based on passed args
-      #  prompt = change_context(args)
-      #end
-      
+      args << "/" if args.empty?      
       prompt = change_context(args)
     elsif ('popc' == cmd)
         args = []
@@ -300,100 +236,11 @@ def execute_shell_command(line, prompt)
     end
 
   rescue DTK::Shell::Error => e
-    puts ">>>>>>>>>>>>>>>>>>>"
     puts e.message
   end
     
   return prompt
 end
-
-def execute_shell_command_backup(line, prompt)
-   begin
-    # some special cases
-    raise DTK::Shell::ExitSignal if line == 'exit'
-    return prompt if line.empty?
-    if line == 'clear'
-      system('clear')
-      return prompt
-    end
-    # when using help on root this is needed
-    line = 'dtk' if (line == 'help' && @context.root?)
-
-    args = Shellwords.split(line)
-    cmd = args.shift
-
-    # support command alias (ls for list etc.)
-    cmd = preprocess_commands(cmd)
-    
-    if ('cc' == cmd)
-      # in case there is no params we just reload command
-      args << "/" if args.empty?
-
-      prompt = change_context(args)
-    elsif ('popc' == cmd)
-        args = []
-        @context.dirs.shift()
-        args << (@context.dirs.first.nil? ? '/' : @context.dirs.first)
-        prompt = change_context(args)
-    elsif ('pushc' == cmd)
-        args << (@context.dirs[1] if args.empty?)
-        prompt = change_context(args,true)
-    elsif ('dirs' == cmd)
-      puts @context.dirs.inspect
-    else
-
-      # if e.g "list libraries" is sent instead of "library list" we reverse commands
-      # and still search for 'library list', this happens only on root
-      if !args.empty? && @context.active_commands.empty?
-        cmd, args = @context.reverse_commands(cmd, args)
-      end
-
-      # we only pre-process commands on Tier 1, Tier 2 on root there is no need
-      unless @context.root?
-        # command goes as first argument
-        args.unshift(cmd)
-        # main command is first one from 
-        cmd  = @context.tier_1_command()
-        # in case there is second cc it means it is ID and goes as first arg
-        args.unshift(@context.last_command()) if @context.tier_2?
-      end
-
-      temp_dev_flag = true
-      puts "dtk-input > #{cmd} #{args.join(' ')}" if temp_dev_flag
-
-      # special case when we are doing help for context we need to remove
-      # context paramter
-      if @context.tier_2?
-        if args.last == 'help'
-          # we remove ID/NAME in order for help command to work
-          # e.g. library public help => library help
-          args.shift
-        end
-      end
-
-      # send monkey patch class information about context
-      Thor.set_context(@context)
-
-      # execute command via Thor
-      top_level_execute(cmd,args,true)
-
-      # when 'delete' or 'delete-and-destroy' command is executed reload cached tasks with latest commands
-      unless (args.nil? || args.empty?)
-        @context.reload_cached_tasks(cmd) if (args.first.include?('delete') || args.first.include?('import'))
-      end
-
-      # check execution status, prints status to sttout
-      DTK::Shell::StatusMonitor.check_status()
-    end
-
-  rescue DTK::Shell::Error => e
-    puts ">>>>>>>>>>>>>>>>>>>"
-    puts e.message
-  end
-    
-  return prompt
-end
-
 
 
 
