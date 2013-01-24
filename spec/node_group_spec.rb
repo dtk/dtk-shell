@@ -16,7 +16,9 @@ describe DTK::Client::NodeGroup do
       $node_group_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    $node_group_id = $node_group_list['data'].first['id'] unless ($node_group_list.nil? || $node_group_list['data'].empty?)
+    unless $node_group_list.nil?
+      $node_group_id = $node_group_list['data'].first['id'] unless $node_group_list['data'].nil?
+    end
   end
 
   context "#list/command" do

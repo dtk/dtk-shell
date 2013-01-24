@@ -14,7 +14,9 @@ describe DTK::Client::Library do
       $library_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    $library_id = $library_list['data'].first['id'] unless ($library_list.nil? || $library_list['data'].empty?)
+    unless $library_list.nil?
+      $library_id = $library_list['data'].first['id'] unless $library_list['data'].nil?
+    end
   end
 
   context "#list/command" do

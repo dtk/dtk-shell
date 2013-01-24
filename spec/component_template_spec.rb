@@ -13,7 +13,9 @@ describe DTK::Client::ComponentTemplate do
       $component_template_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    $component_template_id = $component_template_list['data'].first['id'] unless ($component_template_list.nil? || $component_template_list['data'].empty?)
+    unless $component_template_list.nil?
+      $component_template_id = $component_template_list['data'].first['id'] unless $component_template_list['data'].nil?
+    end
   end
 
   context "#list/command" do

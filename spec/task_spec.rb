@@ -13,7 +13,9 @@ describe DTK::Client::Task do
       $task_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    $task_id = $task_list['data'].first['id'] unless ($task_list.nil? || $task_list['data'].empty?)
+    unless $task_list.nil?
+    	$task_id = $task_list['data'].first['id'] unless $task_list['data'].nil?
+    end
   end
 
 end

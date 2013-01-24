@@ -14,7 +14,9 @@ describe DTK::Client::Module do
       $module_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    $module_id = $module_list['data'].first['id'] unless ($module_list.nil? || $module_list['data'].empty?)
+    unless $module_list.nil?
+      $module_id = $module_list['data'].first['id'] unless $module_list['data'].nil?
+    end
   end
 
   context "#list/command" do

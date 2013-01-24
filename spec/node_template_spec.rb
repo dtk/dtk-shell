@@ -13,7 +13,9 @@ describe DTK::Client::NodeTemplate do
       $node_template_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    $node_template_id = $node_template_list['data'].first['id'] unless ($node_template_list.nil? || $node_template_list['data'].empty?)
+    unless $node_template_list.nil?
+      $node_template_id = $node_template_list['data'].first['id'] unless $node_template_list['data'].nil?
+    end
   end
 	
 end

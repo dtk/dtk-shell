@@ -14,7 +14,9 @@ describe DTK::Client::AssemblyTemplate do
       $assembly_template_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id|Missing)/)
     end
 
-    $assembly_template_id = $assembly_template_list['data'].first['id'] unless ($assembly_template_list.nil? || $assembly_template_list['data'].empty?)
+    unless $assembly_template_list.nil?
+      $assembly_template_id = $assembly_template_list['data'].first['id'] unless $assembly_template_list['data'].nil?
+    end
   end
 
   context "#list/command" do

@@ -14,7 +14,9 @@ describe DTK::Client::Target do
       $target_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    $target_id = $target_list['data'].first['id'] unless ($target_list.nil? || $target_list['data'].empty?)
+    unless $target_list.nil?
+      $target_id = $target_list['data'].first['id'] unless $target_list['data'].nil?
+    end
   end
 
 

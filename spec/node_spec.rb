@@ -15,7 +15,9 @@ describe DTK::Client::Node do
       $node_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    $node_id = $node_list['data'].first['id'] unless ($node_list.nil? || $node_list['data'].empty?)
+    unless $node_list.nil?
+      $node_id = $node_list['data'].first['id'] unless $node_list['data'].nil?
+    end
   end
 
   #current dtk-client code for this test is not implemented

@@ -15,7 +15,9 @@ describe DTK::Client::Service do
       $service_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    $service_id = $service_list['data'].first['id'] unless ($service_list.nil? || $service_list['data'].empty?)
+    unless $service_list.nil?
+      $service_id = $service_list['data'].first['id'] unless $service_list['data'].nil?
+    end
   end
 
 

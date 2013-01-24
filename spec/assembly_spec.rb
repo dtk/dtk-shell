@@ -15,7 +15,9 @@ describe DTK::Client::Assembly do
       $assembly_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    $assembly_id = $assembly_list['data'].first['id'] unless ($assembly_list.nil? || $assembly_list['data'].empty?)
+    unless $assembly_list.nil?
+      $assembly_id = $assembly_list['data'].first['id'] unless $assembly_list['data'].nil?
+    end
   end
 
   # for previously taken assembly_id, do list nodes|components|tasks
