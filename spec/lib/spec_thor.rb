@@ -1,22 +1,31 @@
 require File.expand_path('../../lib/client', File.dirname(__FILE__))
 dtk_nested_require("../../lib/parser/adapters","thor")
-require 'active_support/core_ext/string/inflections'
+dtk_nested_require("../../lib/shell","context")
 
+require 'active_support/core_ext/string/inflections'
+require 'shellwords'
 require 'rspec'
 
 module SpecThor
 
   include DTK::Client::Aux
 
-  # def spec_top_level_execute(entity_name, method_name, hashed_argv=nil,options_args=nil,shell_execute=false)
-  #   entity_name = entity_name.gsub("-","_")
-  #   load_command(entity_name)
-  #   conn = DTK::Client::Session.get_connection()
+  def run_from_dtk_shell(line)
+    args = Shellwords.split(line)
+    cmd  = args.shift
+    conn = DTK::Client::Session.get_connection()
 
-  #   entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
+    # special case for when no params are provided use help method
+    if (cmd == 'help' || cmd.nil?)
+        cmd  = 'dtk'
+        args = ['help']
+    end
 
-  #   return entity_class.execute_from_cli(conn,method_name,hashed_argv,options_args,shell_execute).to_s
-  # end
+    entity_name, method_name, hashed_argv, options_args = DTK::Shell::Context.get_dtk_command_parameters(cmd, args)
+    entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
+
+    return entity_class.execute_from_cli(conn,method_name,hashed_argv,options_args,true)
+  end
 
   ##
   # Capturing stream and returning string

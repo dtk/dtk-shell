@@ -3,38 +3,30 @@ dtk_nested_require("../lib/commands/thor","library")
 include SpecThor
 
 describe DTK::Client::Library do
+  $about      = ['nodes', 'components', 'assemblies']
+  $library_id = nil
 
-  # generic test for all task of Thor class
-  #test_task_interface(DTK::Client::Library)
+  #list all assemblies and take one assembly_id
+  context '#list' do
+    $library_list = run_from_dtk_shell('library list')
 
-  list        = ['nodes', 'components', 'assemblies']
-  $library_id = ''
-
-  # list all libraries and take one library_id
-  context "Dtk CLI list command" do
-    output = `dtk library list`
-
-    it "should list libraries" do
-      output.should match(/(LIBRARY|ID|empty|error|WARNING)/)
+    it "should have library listing" do
+      $library_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
     end
 
-    unless output.nil?
-      $library_id = output.match(/\D([0-9]+)\D/)
-    end
+    $library_id = $library_list['data'].first['id'] unless ($library_list.nil? || $library_list['data'].empty?)
   end
 
-  # for previously taken library_id, do list nodes|compoenents|assemblies
-  context "Dtk CLI list specific library" do
-  	unless $library_id.nil?
-  	  list.each do |list_element|
-        command = "dtk library #{$library_id} list #{list_element}"
-        output = `#{command}`
+  context "#list/command" do
+    unless $library_id.nil?
+      $about.each do |type|
+        output = run_from_dtk_shell("library #{$library_id} list #{type}")
 
-        it "should list all #{list_element} for library with id #{$library_id}" do
-          output.should match(/(NAME|ID|empty|error|WARNING)/)
+        it "should list all #{type} for library with id #{$library_id}" do
+          output.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
         end
       end
-	  end
+    end
   end
-
+  
 end
