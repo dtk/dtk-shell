@@ -33,12 +33,13 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-    desc "[SERVICE-NAME/ID] list [assemblies] [--remote]","List local or remote service modules or assemblies associated to it."
+    desc "[SERVICE-NAME/ID] list --remote","List local or remote service modules or assemblies associated to it."
     method_option :list, :type => :boolean, :default => false
     method_option :remote, :type => :boolean, :default => false
     def list(hashed_args)
-      service_module_id, about = CommandBaseThor.retrieve_arguments([:service_id, :option_1],hashed_args)
-      about ||= 'none'
+      service_module_id = CommandBaseThor.retrieve_arguments([:service_id],hashed_args)
+
+      about = (service_module_id ? 'none' : 'assemblies')
 
       post_body = {
        :service_module_id => service_module_id,

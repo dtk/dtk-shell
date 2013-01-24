@@ -66,10 +66,10 @@ module DTK::Client
     desc "delete NODE-GROUP-ID", "Delete node group"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(hashed_args)
-      node_group_id = CommandBaseThor.retrieve_arguments([:node_group_id],hashed_args)
+      node_group_id = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
       unless options.force?
         # Ask user if really want to delete node group, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete node group '#{id}'?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete node group '#{node_group_id}'?")
       end
 
       post_body = {:node_group_id => node_group_id}

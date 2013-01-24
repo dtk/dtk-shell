@@ -5,9 +5,11 @@ module DTK::Client
       return :task, "task/list", nil
     end
 
+    # TODO: Current bug: Disable list method invocation from /task/111111> level
     desc "list [--list]","List tasks"
     method_option :list, :type => :boolean, :default => false
     def list(hashed_args)
+
       #TODO: just hard coded params now
       search_hash = SearchHash.new()
       search_hash.cols = [:commit_message,:status,:id,:created_at,:started_at,:ended_at]

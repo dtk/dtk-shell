@@ -11,21 +11,32 @@ module DTK::Client
       PPColumns.get(:node)
     end
 
+    def self.valid_children()
+      [:component]
+    end
+
     def self.valid_child?(name_of_sub_context)
-      return [:component].include?(name_of_sub_context.to_sym)
+      return Node.valid_children().include?(name_of_sub_context.to_sym)
     end
 
     def self.validation_list(hashed_args)
       assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
 
-      post_body = {
-        :assembly_id => assembly_id,
-        :subtype     => 'instance',
-        :about       => 'nodes',
-        :filter      => nil
-      }
+      
+      if assembly_id
+        # if assebmly_id is present we're loading nodes filtered by assembly_id
+        post_body = {
+          :assembly_id => assembly_id,
+          :subtype     => 'instance',
+          :about       => 'nodes',
+          :filter      => nil
+        }
 
-      response = get_cached_response(:node, "assembly/info_about", post_body)
+        response = get_cached_response(:assembly_node, "assembly/info_about", post_body)
+      else
+        # otherwise, load all nodes
+        response = get_cached_response(:node, "node/list", nil)
+      end
 
       return response
     end
@@ -141,13 +152,13 @@ module DTK::Client
     desc "destroy NODE-ID", "Delete and destroy (terminate) node"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def destroy(hashed_args)
-      node_id = CommandBaseThor.retrieve_arguments([:node_id],hashed_args)
+      node_id = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
       post_body = {
         :node_id => node_id
       }
       unless options.force?
         # Ask user if really want to delete and destroy, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to destroy and delete node (#{node_id})?")
+        return unless Console.confirmation_prompt("Are you sure you want to destroy and delete node '#{node_id}'?")
       end
 
       response = post rest_url("node/destroy_and_delete"), post_body

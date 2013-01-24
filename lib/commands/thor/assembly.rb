@@ -21,12 +21,12 @@ module DTK::Client
       PPColumns.get(:assembly)
     end
 
-    def self.valid_child?(name_of_sub_context)
-      return [:node].include?(name_of_sub_context.to_sym)
+    def self.valid_children()
+      [:node]
     end
 
-    def self.get_supported_enteties
-      return [:node, :component, :attribute]
+    def self.valid_child?(name_of_sub_context)
+      return Assembly.valid_children().include?(name_of_sub_context.to_sym)
     end
 
     def self.validation_list(hashed_args)
@@ -251,7 +251,7 @@ module DTK::Client
     desc "delete-and-destroy ASSEMBLY-ID [-y]", "Delete assembly instance, termining any nodes taht have been spun up"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(hashed_args)
-      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+      assembly_id = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
 
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
@@ -312,10 +312,11 @@ module DTK::Client
       end
 
       assembly_id,node_id,component_template_id = CommandBaseThor.retrieve_arguments(mapping,hashed_args)
-      
+
+
       post_body = {
         :assembly_id => assembly_id,
-        :node_id => "#{assembly_id}::#{node_id}",
+        :node_id => node_id,
         :component_template_id => component_template_id
       }
 
