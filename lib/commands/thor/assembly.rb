@@ -255,7 +255,18 @@ module DTK::Client
 
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy assembly '#{assembly_id}' and its nodes?")
+        #used form "+'?' because ?" confused emacs ruby rendering
+        what = (assembly_ids.split(',').size == 1 ? "assembly" : "assemblies")
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_ids}' and its nodes"+'?')
+      end
+      response = nil
+      assembly_ids.split(',').each do |assembly_id|
+        post_body = {
+          :assembly_id => assembly_id,
+          :subtype => :instance
+        }
+        response = post rest_url("assembly/delete"), post_body
+        return response unless response.ok?()
       end
 
       post_body = {
@@ -266,7 +277,6 @@ module DTK::Client
       response = post rest_url("assembly/delete"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
-
       return response
     end
 

@@ -10,18 +10,18 @@ module DTK::Client
       }
       post_body.merge!(:version => version) if version 
       
-      response =  post(rest_url("#{module_type}/workspace_branch_info"),post_body) 
+      response =  post(rest_url("#{module_type}/get_workspace_branch_info"),post_body) 
       return response unless response.ok?
       
-      dtk_require_from_base('command_helpers/git_repo')
-      response = GitRepo.push_changes(module_type,response.data(:module_name))
+      ret = response = Helper(:git_repo).push_changes(module_type,response.data(:module_name),version)
       return response unless response.ok?
-      if response.data(:diffs).empty?
-        raise DTK::Client::DtkError, "No changes to push"
-      end
-      post_body.merge!(:json_diffs => JSON.generate(response.data(:diffs)))
+      json_diffs = (response.data(:diffs).empty? ? {} : JSON.generate(response.data(:diffs)))
+      commit_sha = response.data(:commit_sha)
+      post_body.merge!(:json_diffs => JSON.generate(response.data(:diffs)), :commit_sha => commit_sha)
 
-      post rest_url("#{module_type}/update_model_from_clone"), post_body
+      response = post(rest_url("#{module_type}/update_model_from_clone"),post_body)
+      return response unless response.ok?
+      ret
     end
   end
 end

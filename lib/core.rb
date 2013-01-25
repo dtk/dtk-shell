@@ -51,6 +51,9 @@ def top_level_execute(entity_name, method_name, context_params=nil,options_args=
     # this are expected application errors
     puts e.message.colorize(:red)
     DtkLogger.instance.error(e.message)
+    if e.backtrace
+      puts e.backtrace
+    end
   rescue Exception => e
     # All errors for task will be handled here
     DtkLogger.instance.fatal("[INTERNAL ERROR] DTK has encountered an error #{e.class}: #{e.message}",true)
@@ -84,18 +87,19 @@ module DTK
           unless response_ruby_obj["errors"].nil?
 
             error_msg       = ""
-            error_internal  = false
+            error_internal  = nil
             error_backtrace = nil
             error_code      = nil
             error_timeout   = nil
-
+            error_on_server = nil
+            #TODO: below just 'captures' first error
             response_ruby_obj['errors'].each do |err|
-              error_msg      +=  err["message"] unless err["message"].nil?
-              error_msg      +=  err["error"]   unless err["error"].nil?
-              error_internal ||= err["internal"]
-              unless err["errors"].nil?
-                error_code   =  err["errors"].first["code"]
-              end
+              error_msg       +=  err["message"] unless err["message"].nil?
+              error_msg       +=  err["error"]   unless err["error"].nil?
+              error_on_server = true unless err["on_client"]
+              error_code      = err["code"]||(err["errors"] && err["errors"].first["code"])
+              error_internal  ||= (err["internal"] or error_code == "not_found") #"not_found" code is at Ramaze level; so error_internal not set
+              error_backtrace ||= err["backtrace"]
             end
             
             # normalize it for display
@@ -107,7 +111,9 @@ module DTK
             elsif error_code == "timeout"
               raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
             elsif error_internal
-              raise DTK::Client::DtkError, "[SERVER INTERNAL ERROR] #{error_msg}"
+              where = (error_on_server ? "SERVER" : "CLIENT")
+              opts = (error_backtrace ? {:backtrace => error_backtrace} : {})
+              raise DTK::Client::DtkError.new("[#{where} INTERNAL ERROR] #{error_msg}",opts)
             else
               # if usage error occurred, display message to console and display that same message to log
               raise DTK::Client::DtkError, "Following error occurred: #{error_msg}." 

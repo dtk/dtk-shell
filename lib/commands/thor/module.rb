@@ -1,6 +1,8 @@
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_dtk_common('grit_adapter')
 dtk_require_common_commands('thor/clone')
+dtk_require_common_commands('thor/push_to_remote')
+dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
 
 module DTK::Client
@@ -8,6 +10,8 @@ module DTK::Client
 
     no_tasks do
       include CloneMixin
+      include PushToRemoteMixin
+      include PullFromRemoteMixin
       include PushCloneChangesMixin
     end
 
@@ -36,12 +40,12 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete MODULE-ID/NAME", "Delete component module and all items contained in it"
+    desc "delete MODULE-NAME/ID", "Delete component module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
       unless options.force?
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
       end
 
       component_module_id = context_params.retrieve_arguments([:module_id])
@@ -52,54 +56,49 @@ module DTK::Client
       response = post(rest_url("component_module/delete"), post_body)
       return response unless response.ok?
       module_name = response.data(:module_name)
-      dtk_require_from_base('command_helpers/git_repo')
-      GitRepo.unlink_local_clone?(:component_module,module_name)
+      Helper(:git_repo).unlink_local_clone?(:component_module,module_name)
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :module_component
     end
 
-    desc "create MODULE-NAME [LIBRARY-NAME/ID]", "Create new module from local clone"
+    desc "create MODULE-NAME", "Create new module from local clone"
     def create(context_params)
-      dtk_require_from_base('command_helpers/git_repo')
-
-      module_name, library_id = context_params.retrieve_arguments([:module_id, :option_1])
+      module_name = context_params.retrieve_arguments([:module_id])
       
-      #first check that there is a directory there and it is not already a git repo
-      response = GitRepo.check_local_dir_exists(:component_module,module_name)
+      #first check that there is a directory there and it is not already a git repo, and it ha appropriate content
+      response = Helper(:git_repo).check_local_dir_exists_with_content(:component_module,module_name)
       return response unless response.ok?
       module_directory = response.data(:module_directory)
 
       #first make call to server to create an empty repo
       post_body = {
-       :component_module_name => module_name
+        :module_name => module_name
       }
-      post_body.merge!(:library_id => library_id) if library_id
-      response = post rest_url("component_module/create_empty_repo"), post_body
+      response = post rest_url("component_module/create"), post_body
       return response unless response.ok?
+      @@invalidate_map << :module_component
 
-      repo_url,repo_id,library_id = response.data(:repo_url,:repo_id,:library_id)
-      branch_info = {
-        :workspace => response.data(:workspace_branch),
-        :library => response.data(:library_branch)
-      }
-      response = GitRepo.initialize_repo_and_push(:component_module,module_name,branch_info,repo_url)
+      repo_url,repo_id,module_id,branch = response.data(:repo_url,:repo_id,:module_id,:workspace_branch)
+      response = Helper(:git_repo).initialize_client_clone_and_push(:component_module,module_name,branch,repo_url)
       return response unless response.ok?
-      repo_branch =  response.data(:repo_branch)
+      repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
 
       post_body = {
         :repo_id => repo_id,
-        :library_id => library_id,
-        :module_name => module_name,
+        :component_module_id => module_id,
+        :commit_sha => commit_sha,
         :scaffold_if_no_dsl => true
       }
-      response = post(rest_url("component_module/update_repo_and_add_dsl"),post_body)
+      response = post(rest_url("component_module/update_from_initial_create"),post_body)
       return response unless response.ok?
 
-      if dsl_created = response.data(:dsl_created)
-        msg = "First cut of dsl file (#{dsl_created["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
-        response = GitRepo.add_file(repo_branch,dsl_created["path"],dsl_created["content"],msg)
+      dsl_created_info = response.data(:dsl_created_info)
+      if dsl_created_info and !dsl_created_info.empty?
+        msg = "First cut of dsl file (#{dsl_created_info["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
+        response = Helper(:git_repo).add_file(repo_obj,dsl_created_info["path"],dsl_created_info["content"],msg)
+      else
+        response = Response::Ok.new("module_created" => module_name)
       end
-      @@invalidate_map << :module_component
       response
     end
 
@@ -127,7 +126,7 @@ module DTK::Client
       response.render_table(:component)
     end
 
-    desc "MODULE-ID/NAME list-components", "List all components for given component module."
+    desc "MODULE-NAME/ID list-components", "List all components for given component module."
     #TODO: support info on remote
     def list_components(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id])
@@ -149,31 +148,53 @@ module DTK::Client
     #### end: list and info commands ###
 
     #### commands to interact with remote repo ###
-    desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
+    
+    #TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     #TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     #if multiple items and failire; stops on first failure
+    desc "import REMOTE-MODULE-NAME","Import remote component module into local environment"
     def import(context_params)
-      remote_modules, library_id = context_params.retrieve_arguments([:option_1, :option_2])
+      remote_modules = context_params.retrieve_arguments([:option_1])
+      local_module_name = remote_module_name
+      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name)
+        raise DtkError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
+      end
       post_body = {
-       :remote_module_names => remote_modules.split(",")
+        :remote_module_name => remote_module_name,
+        :local_module_name => local_module_name
       }
-      post_body.merge!(:library_id => library_id) if library_id
+      response = post rest_url("component_module/import"), post_body
+      @@invalidate_map << :module_component
 
-      post rest_url("component_module/import"), post_body
+      return response unless response.ok?
+      module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
+      Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
     end
 
+    desc "MODULE-NAME/ID import-version VERSION", "Import a specfic version from a linked component module"
+    def import_version(context_params)
+      component_module_id,version = context_params.retrieve_arguments([:module_id,:option_1])
+      post_body = {
+        :component_module_id => component_module_id,
+        :version => version
+      }
+      response = post rest_url("component_module/import_version"), post_body
+      @@invalidate_map << :module_component
+
+      return response unless response.ok?
+      module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
+      #TODO: need to check if local clone directory exists
+      Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+    end
+    
     desc "delete-remote REMOTE-MODULE", "Delete remote component module"
     def delete_remote(context_params)
       remote_modules = context_params.retrieve_arguments([:option_1])
       post_body = {
        :remote_module_name => remote_module_name
       }
-      response = post rest_url("component_module/delete_remote"), post_body
-      @@invalidate_map << :module_component
-
-      return response
+      post rest_url("component_module/delete_remote"), post_body
     end
-
 
     desc "MODULE-ID/NAME export", "Export component module to remote repository."
     def export(context_params)
@@ -195,53 +216,34 @@ module DTK::Client
       post rest_url("component_module/push_to_remote"), post_body
     end
 
-    desc "MODULE-ID/NAME pull-from-remote", "Update local component module from remote repository."
+    desc "MODULE-NAME/ID push-to-remote [-v VERSION]", "Push local copy of component module to remote repository."
+    version_method_option
     def pull_from_remote(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id])
-      post_body = {
-        :component_module_id => component_module_id
-      }
+      push_to_remote_aux(:component_module,component_module_id,options["version"])
+    end
 
-      post rest_url("component_module/pull_from_remote"), post_body
+    desc "MODULE-NAME/ID pull-from-remote [-v VERSION]", "Update local component module from remote repository."
+    version_method_option
+    def pull_from_remote(context_params)
+      component_module_id = context_params.retrieve_arguments([:module_id])
+      pull_from_remote_aux(:component_module,component_module_id,options["version"])
     end
 
     #### end: commands to interact with remote repo ###
 
-    #### commands to manage workspace and promote changes from workspace to library ###
-    desc "MODULE-ID/NAME promote-to-library [VERSION]", "Update library module with changes from workspace"
-    def promote_to_library(context_params)
-      #component_module_id is in last position, which coudl be arg1 or arg2
-      component_module_id, version = context_params.retrieve_arguments([:module_id, :option_1])
-      
-      post_body = {
-        :component_module_id => component_module_id
-      }
-      post_body.merge!(:version => version) if version
-
-      response = post rest_url("component_module/promote_to_library"), post_body
-      @@invalidate_map << :library
-
-      return response
-    end
-
-    #TODO: may also provide an optional library argument to create in new library
-    desc "MODULE-ID/NAME promote-new-version [EXISTING-VERSION] NEW-VERSION", "Promote workspace module as new version of module in library from workspace"
-    def promote_new_version(context_params)
-      #component_module_id is in last position
-      component_module_id, new_version, existing_version = context_params.retrieve_arguments([:module_id, :option_1, :option_2])
-      
+    #### commands to manage workspace and versioning ###
+    desc "MODULE-NAME/ID create-new-version NEW-VERSION", "Snapshot current state of module as a new version"
+    def create_new_version(context_params)
+      component_module_id,version = context_params.retrieve_arguments([:module_id,:option_1])
       post_body = {
         :component_module_id => component_module_id,
-        :new_version => new_version
+        :version => version
       }
-      if existing_version
-        post_body.merge!(:existing_version => existing_version)
-      end
 
-      response = post rest_url("component_module/promote_as_new_version"), post_body
+      response = post rest_url("component_module/create_new_version"), post_body
       @@invalidate_map << :library
-
-      return response
+      response
     end
 
     ##
@@ -249,16 +251,16 @@ module DTK::Client
     # internal_trigger: this flag means that other method (internal) has trigger this.
     #                   This will change behaviour of method
     #
-    desc "MODULE-ID/NAME clone [VERSION]", "Clone into client the component module files"
+    desc "MODULE-NAME/ID clone [-v VERSION]", "Clone into client the component module files"
+    version_method_option
     def clone(context_params, internal_trigger=false)
-      component_module_id, version = context_params.retrieve_arguments([:module_id, :option_1])
+      component_module_id = context_params.retrieve_arguments([:module_id])
 
-      clone_aux(:component_module,component_module_id,version,internal_trigger)
+      clone_aux(:component_module,component_module_id,options["version"],internal_trigger)
     end
 
     desc "MODULE-ID/NAME edit","Switch to unix editing for given module."
     def edit(context_params)
-
       module_name = context_params.retrieve_arguments([:module_id])
 
       # if this is not name it will not work, we need module name
@@ -286,8 +288,8 @@ module DTK::Client
       module_location = "#{modules_path}/#{module_name}"
       # check if there is repository cloned 
       unless File.directory?(module_location)
-        if Console.confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now?")
-          response = clone(context_params, true)
+        if Console.confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now"+'?')
+          response = clone(module_name,true)
           # if error return
           unless response.ok?
             return response
@@ -334,11 +336,11 @@ module DTK::Client
 
     end
 
-    desc "MODULE-ID/NAME push-clone-changes [VERSION]", "Push changes from local copy of module to server"
+    desc "MODULE-NAME/ID push-clone-changes [-v VERSION]", "Push changes from local copy of module to server"
+    version_method_option
     def push_clone_changes(context_params)
-      component_module_id, version = context_params.retrieve_arguments([:module_id, :option_1])
-
-      push_clone_changes_aux(:component_module,component_module_id,version)
+      component_module_id = context_params.retrieve_arguments([:module_id])
+      push_clone_changes_aux(:component_module,component_module_id,options["version"])
     end
 
     #### end: commands related to cloning to and pushing from local clone

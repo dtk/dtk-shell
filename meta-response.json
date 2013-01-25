@@ -167,7 +167,7 @@
       "components"
     ],
     "mapping": {
-      "components": "nodes.first['components'].join(', ')",
+      "components": "nodes.map{|r|r['components']}.flatten.size",
       "nodes": "nodes.size",
       "assembly_name": "display_name",
       "id": "dtk_id"

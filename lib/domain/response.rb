@@ -24,16 +24,17 @@ module DTK
         @render_data_type = nil
       end
 
-      def self.wrap_helper_actions(&block)
+      def self.wrap_helper_actions(data={},&block)
         begin
-          results = yield
+          results = (block ? yield : data)
           Ok.new(results)
          rescue ErrorUsage => e
           Error::Usage.new("message"=> e.to_s)
          rescue => e
           error_hash =  {
-            "message"=> e.to_s,
-            "backtrace" => e.backtrace
+            "message"=> e.inspect,
+            "backtrace" => e.backtrace,
+            "on_client" => true
             }
           Error::Internal.new(error_hash)
         end
@@ -46,7 +47,7 @@ module DTK
             @print_error_table ||= print_error_table
 
             # if response is empty, response status is ok but no data is passed back
-            if data.empty?
+            if data.nil? or data.empty?
               @render_view = RenderView::SIMPLE_LIST
               if data.kind_of?(Array)
                 set_data('Message' => "List is empty.")

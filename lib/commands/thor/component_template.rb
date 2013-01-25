@@ -71,8 +71,7 @@ module DTK::Client
       @@invalidate_map << :component_template
 
       response.render_table(data_type) unless options.list?
-      return response
+      response
     end
-    
   end
 end
