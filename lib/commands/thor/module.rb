@@ -17,14 +17,14 @@ module DTK::Client
 
 #TODO: in for testing; may remove
     desc "MODULE-ID/NAME test-generate-dsl", "Test generating DSL from implementation"
-    def test_generate_dsl(hashed_args)
-      component_module_id = CommandBaseThor.retrieve_arguments([:module_id],hashed_args)
+    def test_generate_dsl(context_params)
+      component_module_id = context_params.retrieve_arguments([:module_id])
       post rest_url("component_module/test_generate_dsl"),{:component_module_id => component_module_id}
     end
 
     desc "MODULE-ID/NAME dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
-    def dsl_upgrade(hashed_args)
-      component_module_id, dsl_version = CommandBaseThor.retrieve_arguments([:module_id, :option_1],hashed_args)
+    def dsl_upgrade(context_params)
+      component_module_id, dsl_version = context_params.retrieve_arguments([:module_id, :option_1])
       dsl_version ||= MostRecentDSLVersion
       post_body = {
         :component_module_id => component_module_id,
@@ -38,13 +38,13 @@ module DTK::Client
     #### create and delete commands ###
     desc "delete MODULE-ID/NAME", "Delete component module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete(hashed_args)
+    def delete(context_params)
       unless options.force?
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it?")
       end
 
-      component_module_id = CommandBaseThor.retrieve_arguments([:module_id],hashed_args)
+      component_module_id = context_params.retrieve_arguments([:module_id])
       
       post_body = {
        :component_module_id => component_module_id
@@ -59,10 +59,10 @@ module DTK::Client
     end
 
     desc "create MODULE-NAME [LIBRARY-NAME/ID]", "Create new module from local clone"
-    def create(hashed_args)
+    def create(context_params)
       dtk_require_from_base('command_helpers/git_repo')
 
-      module_name, library_id = CommandBaseThor.retrieve_arguments([:module_id, :option_1],hashed_args)
+      module_name, library_id = context_params.retrieve_arguments([:module_id, :option_1])
       
       #first check that there is a directory there and it is not already a git repo
       response = GitRepo.check_local_dir_exists(:component_module,module_name)
@@ -107,9 +107,9 @@ module DTK::Client
 
     #### list and info commands ###
     desc "MODULE-ID/NAME info", "Get information about given component module."
-    def info(hashed_args)
+    def info(context_params)
       
-      component_module_id = CommandBaseThor.retrieve_arguments([:module_id],hashed_args)
+      component_module_id = context_params.retrieve_arguments([:module_id])
       
       post_body = {
         :component_module_id => component_module_id
@@ -120,7 +120,7 @@ module DTK::Client
 
     desc "list [--remote]", "List library or component remote component modules."
     method_option :remote, :type => :boolean, :default => false
-    def list(hashed_args)
+    def list(context_params)
       action = (options.remote? ? "list_remote" : "list")
       response = post rest_url("component_module/#{action}")
       data_type = :component
@@ -129,8 +129,8 @@ module DTK::Client
 
     desc "MODULE-ID/NAME list-components", "List all components for given component module."
     #TODO: support info on remote
-    def list_components(hashed_args)
-      component_module_id = CommandBaseThor.retrieve_arguments([:module_id],hashed_args)
+    def list_components(context_params)
+      component_module_id = context_params.retrieve_arguments([:module_id])
       post_body = {
         :component_module_id => component_module_id,
         :about => 'components'
@@ -152,8 +152,8 @@ module DTK::Client
     desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     #TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     #if multiple items and failire; stops on first failure
-    def import(hashed_args)
-      remote_modules, library_id = CommandBaseThor.retrieve_arguments([:option_1, :option_2],hashed_args)
+    def import(context_params)
+      remote_modules, library_id = context_params.retrieve_arguments([:option_1, :option_2])
       post_body = {
        :remote_module_names => remote_modules.split(",")
       }
@@ -163,8 +163,8 @@ module DTK::Client
     end
 
     desc "delete-remote REMOTE-MODULE", "Delete remote component module"
-    def delete_remote(hashed_args)
-      remote_modules = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
+    def delete_remote(context_params)
+      remote_modules = context_params.retrieve_arguments([:option_1])
       post_body = {
        :remote_module_name => remote_module_name
       }
@@ -176,8 +176,8 @@ module DTK::Client
 
 
     desc "MODULE-ID/NAME export", "Export component module to remote repository."
-    def export(hashed_args)
-      component_module_id = CommandBaseThor.retrieve_arguments([:module_id],hashed_args)
+    def export(context_params)
+      component_module_id = context_params.retrieve_arguments([:module_id])
       post_body = {
         :component_module_id => component_module_id
       }
@@ -186,8 +186,8 @@ module DTK::Client
     end
 
     desc "MODULE-ID/NAME push-to-remote", "Push local copy of component module to remote repository."
-    def push_to_remote(hashed_args)
-      component_module_id = CommandBaseThor.retrieve_arguments([:module_id],hashed_args)
+    def push_to_remote(context_params)
+      component_module_id = context_params.retrieve_arguments([:module_id])
       post_body = {
         :component_module_id => component_module_id
       }
@@ -196,8 +196,8 @@ module DTK::Client
     end
 
     desc "MODULE-ID/NAME pull-from-remote", "Update local component module from remote repository."
-    def pull_from_remote(hashed_args)
-      component_module_id = CommandBaseThor.retrieve_arguments([:module_id],hashed_args)
+    def pull_from_remote(context_params)
+      component_module_id = context_params.retrieve_arguments([:module_id])
       post_body = {
         :component_module_id => component_module_id
       }
@@ -209,9 +209,9 @@ module DTK::Client
 
     #### commands to manage workspace and promote changes from workspace to library ###
     desc "MODULE-ID/NAME promote-to-library [VERSION]", "Update library module with changes from workspace"
-    def promote_to_library(hashed_args)
+    def promote_to_library(context_params)
       #component_module_id is in last position, which coudl be arg1 or arg2
-      component_module_id, version = CommandBaseThor.retrieve_arguments([:module_id, :option_1],hashed_args)
+      component_module_id, version = context_params.retrieve_arguments([:module_id, :option_1])
       
       post_body = {
         :component_module_id => component_module_id
@@ -226,9 +226,9 @@ module DTK::Client
 
     #TODO: may also provide an optional library argument to create in new library
     desc "MODULE-ID/NAME promote-new-version [EXISTING-VERSION] NEW-VERSION", "Promote workspace module as new version of module in library from workspace"
-    def promote_new_version(hashed_args)
+    def promote_new_version(context_params)
       #component_module_id is in last position
-      component_module_id, new_version, existing_version = CommandBaseThor.retrieve_arguments([:module_id, :option_1, :option_2],hashed_args)
+      component_module_id, new_version, existing_version = context_params.retrieve_arguments([:module_id, :option_1, :option_2])
       
       post_body = {
         :component_module_id => component_module_id,
@@ -250,16 +250,16 @@ module DTK::Client
     #                   This will change behaviour of method
     #
     desc "MODULE-ID/NAME clone [VERSION]", "Clone into client the component module files"
-    def clone(hashed_args, internal_trigger=false)
-      component_module_id, version = CommandBaseThor.retrieve_arguments([:module_id, :option_1],hashed_args)
+    def clone(context_params, internal_trigger=false)
+      component_module_id, version = context_params.retrieve_arguments([:module_id, :option_1])
 
       clone_aux(:component_module,component_module_id,version,internal_trigger)
     end
 
     desc "MODULE-ID/NAME edit","Switch to unix editing for given module."
-    def edit(hashed_args)
+    def edit(context_params)
 
-      module_name = CommandBaseThor.retrieve_arguments([:module_id],hashed_args)
+      module_name = context_params.retrieve_arguments([:module_id])
 
       # if this is not name it will not work, we need module name
       if module_name =~ /^[0-9]+$/
@@ -287,7 +287,7 @@ module DTK::Client
       # check if there is repository cloned 
       unless File.directory?(module_location)
         if Console.confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now?")
-          response = clone(hashed_args, true)
+          response = clone(context_params, true)
           # if error return
           unless response.ok?
             return response
@@ -335,8 +335,8 @@ module DTK::Client
     end
 
     desc "MODULE-ID/NAME push-clone-changes [VERSION]", "Push changes from local copy of module to server"
-    def push_clone_changes(hashed_args)
-      component_module_id, version = CommandBaseThor.retrieve_arguments([:module_id, :option_1],hashed_args)
+    def push_clone_changes(context_params)
+      component_module_id, version = context_params.retrieve_arguments([:module_id, :option_1])
 
       push_clone_changes_aux(:component_module,component_module_id,version)
     end
@@ -347,8 +347,8 @@ module DTK::Client
     #TODO: add-direct-access and remove-direct-access should be removed as commands and instead add-direct-access 
     #Change from having module-command/add_direct_access to being a command to being done when client is installed if user wants this option
     desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
-    def add_direct_access(hashed_args)
-      path_to_key = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
+    def add_direct_access(context_params)
+      path_to_key = context_params.retrieve_arguments([:option_1])
 
       path_to_key ||= SshProcessing.default_rsa_pub_key_path()
       unless File.file?(path_to_key)
@@ -366,8 +366,8 @@ module DTK::Client
     end
 
     desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
-    def remove_direct_access(hashed_args)
-      path_to_key = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
+    def remove_direct_access(context_params)
+      path_to_key = context_params.retrieve_arguments([:option_1])
 
       path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
       unless File.file?(path_to_key)

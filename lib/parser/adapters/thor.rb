@@ -27,20 +27,20 @@ module DTK
         super
       end
 
-      def self.execute_from_cli(conn,method_name,hashed_argv,options_args,shell_execution=false)
+      def self.execute_from_cli(conn,method_name,context_params,thor_options,shell_execution=false)
         @@shell_execution = shell_execution
         
         # I am sorry!
         if method_name == 'help'
-          ret = start([method_name] + hashed_argv[:options],:conn => conn)      
+          ret = start([method_name] + context_params.method_arguments,:conn => conn)      
         else
-          ret = start([method_name, hashed_argv] + options_args,:conn => conn)
+          ret = start([method_name, context_params] + thor_options,:conn => conn)
         end
 
         # special case where we have validation reply
         if ret.kind_of?(Response)
           if ret.validation_response?
-            ret = action_on_revalidation_response(ret, conn, method_name, hashed_argv, options_args, shell_execution)
+            ret = action_on_revalidation_response(ret, conn, method_name, context_params, thor_options, shell_execution)
           end
         end
 
@@ -48,7 +48,7 @@ module DTK
       end
 
       # TODO: Make sure that server responds with new format of ARGVS
-      def self.action_on_revalidation_response(validation_response, conn, method_name, hashed_argv, options_args, shell_execution)
+      def self.action_on_revalidation_response(validation_response, conn, method_name, context_params, thor_options, shell_execution)
         puts "[NOTICE] #{validation_response.validation_message}"
         actions = validation_response.validation_actions
 
@@ -57,8 +57,8 @@ module DTK
             # we have hash map with values { :assembly_id => 2123123123, :option_1 => true }
             # we translate to array of values, with action as first element
 
-            # def self.execute_from_cli(conn,method_name,hashed_argv,options_args,shell_execution=false)
-            response = self.execute_from_cli(conn, action['action'],  create_hashed_arguments(action['params']),[],shell_execution)
+            # def self.execute_from_cli(conn,method_name,context_params,options_args,shell_execution=false)
+            response = self.execute_from_cli(conn, action['action'],  create_context_arguments(action['params']),[],shell_execution)
             # we abort if error happens
             ResponseErrorHandler.check(response)
 
@@ -75,7 +75,7 @@ module DTK
 
         puts "Executing original action: '#{method_name}' ..."
         # if all executed correctly we run original action
-        return self.execute_from_cli(conn,method_name,hashed_argv,options_args,shell_execution)
+        return self.execute_from_cli(conn,method_name, context_params,thor_options,shell_execution)
       end
 
 
@@ -100,68 +100,24 @@ module DTK
           @@invalidate_map.delete(entity_name) if (@@invalidate_map.include?(entity_name) && response.ok?)                 
           @@cached_response.store(entity_name, {:response => response, :ts => current_ts}) if response.ok?
         end
-           
-        return @@cached_response[entity_name][:response]
+        
+        if @@cached_response[entity_name]
+          return @@cached_response[entity_name][:response]
+        else
+          return nil
+        end
       end
 
-      def self.create_hashed_arguments(params, options = [], tasks = [])
-        hashed_argv = {}
+      def self.create_context_arguments(params)
+        context_params = DTK::Shell::ContextParams.new
         params.each do |k,v|
-          hashed_argv.store(k.to_sym, v)
+          context_params.add_context_to_params(k,k,v)
         end
-        hashed_argv.store(:options, options)
-        hashed_argv.store(:tasks, tasks)
-        return hashed_argv
+        return context_params
       end
 
       def self.list_method_supported?
         return (respond_to?(:validation_list) || respond_to?(:whoami)) 
-      end
-
-      # Retrives desired arguments (via mapping) from hashed map containing
-      # information about current context, passed paramters and options
-      #
-      # ==== Returns
-      #
-      # params<Array/Object>:: Returns array of found params or if one returns single element
-      #
-      # ==== Paramters
-      #
-      # mapping<Array>:: Mapping of desired keys
-      # hashed_argv<Hash>:: Hash map of current context, parameters and options
-      #
-      def self.retrieve_arguments(mapping, hashed_argv)
-        # if we just want to pass simple variable, between methods
-        return hashed_argv unless (hashed_argv.class == Hash)
-
-        results = []
-
-        mapping.each do |key|
-          element = nil
-          matched = key.to_s.match(/option_([0-9]+)/)
-
-          if matched
-            id = matched[1].to_i - 1
-            element = (hashed_argv[:options])[id]
-          else
-            element = hashed_argv[key]
-          end
-
-          results << element 
-        end
-
-        # if one element is we avoid using array
-        return ((results.size == 1) ? results.first : results)
-      end
-
-      # matches task_name under tasks, which describe context level at given point
-      def self.is_there_task?(task_name,hashed_argv)
-        hashed_argv[:tasks].include?(task_name.to_sym)
-      end
-
-      # matches task_id under tasks, which describe context level at given point
-      def self.is_there_id?(task_id,hashed_argv)
-        !hashed_argv[task_id.to_sym].nil?
       end
 
       # returns all task names for given thor class with use friendly names (with '-' instead '_')
@@ -202,37 +158,14 @@ module DTK
 
       # we make valid methods to make sure that when context changing
       # we allow change only for valid ID/NAME
-      def self.valid_id?(value, conn, hashed_args)
-        @conn    = conn if @conn.nil?
+      def self.valid_id?(value, conn, context_params)
+        context_list = self.get_identifiers(conn, context_params)
+        results = context_list.select { |e| e[:name].eql?(value) || e[:identifier].eql?(value)}
 
-        3.downto(1) do
-          # get list data from one of the methods
-          if respond_to?(:validation_list)
-            response = validation_list(hashed_args)
-          else
-            clazz, endpoint, opts = whoami()
-            response = get_cached_response(clazz, endpoint, opts)
-          end
-
-          unless (response.nil? || response.empty? || response['data'].nil?)
-            response['data'].each do |element|
-              if (element['id'].to_s==value || element['display_name'].to_s==value)
-                return {:name => element['display_name'], :identifier => element['id'] }
-              end
-            end
-            return nil
-          end
-
-          break if response["status"].eql?('ok')
-          sleep(1)
-        end
-
-        DtkLogger.instance.warn("[WARNING] We were not able to check cached context, possible errors may occur.")
-        # We cannot allow this to go further without proper context, meaning name and identifier
-        return nil
+        return results.empty? ? nil : results.first
       end
 
-      def self.get_identifiers(conn, hashed_args)
+      def self.get_identifiers(conn, context_params)
         @conn    = conn if @conn.nil?
   
         # we force raw output
@@ -241,7 +174,7 @@ module DTK
         3.downto(1) do
           # get list data from one of the methods
           if respond_to?(:validation_list)
-            response = validation_list(hashed_args)
+            response = validation_list(context_params)
           else
             clazz, endpoint, opts = whoami()
             response = get_cached_response(clazz, endpoint, opts)
@@ -249,9 +182,9 @@ module DTK
 
           unless (response.nil? || response.empty?)
             unless response['data'].nil?
-              identifiers = []
+              identifiers = []           
               response['data'].each do |element|
-                 identifiers << element['display_name']
+                identifiers << { :name => element['display_name'], :identifier => element['id'] }
               end
               return identifiers
             end          

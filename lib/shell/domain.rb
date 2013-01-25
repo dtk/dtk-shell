@@ -3,10 +3,52 @@ module DTK
 
     class ContextParams
 
+      attr_accessor :current_context
+      attr_accessor :method_arguments
+
       def initialize
-        @hashed_args = {}
+        @current_context  = ActiveContext.new
+        @method_arguments = []
       end
 
+      def add_context_to_params(context_name, entity_name, context_value = nil)
+        @current_context.push_new_context(context_name, entity_name, context_value)
+      end
+
+      def retrieve_arguments(mapping)
+        results = []
+
+        mapping.each do |key|
+          element = nil
+          matched = key.to_s.match(/option_([0-9]+)/)
+          if matched
+            id = matched[1].to_i - 1
+            element = @method_arguments[id]
+          else
+            split_info = key.to_s.split('_')
+            entity_name = split_info[0]
+            id_type     = split_info[1]
+            context_identifier = @current_context.find_identifier(entity_name)
+            if context_identifier
+              element = context_identifier.get_identifier(id_type)
+            else
+              element = nil
+            end
+          end
+
+          results << element 
+        end
+
+        return ((results.size == 1) ? results.first : results)
+      end
+
+      def is_there_identifier?(entity_name)
+        return @current_context.find_identifier(entity_name) != nil
+      end
+
+      def is_there_command?(entity_name)
+        return @current_context.find_command(entity_name) != nil
+      end
     end
 
     class ContextEntity
@@ -30,6 +72,10 @@ module DTK
         return @identifier.nil?
       end
 
+      def get_identifier(type)
+        return (type == 'id' ? self.identifier : self.name)
+      end
+
       private
 
       def self.create_command(name, entity_name)
@@ -49,8 +95,18 @@ module DTK
 
     class ActiveContext
 
+      # special case when we are not able to provide valid identifier but we are 
+      # using it as such
+      NO_IDENTIFIER_PROVIDED = -1
+
       # TODO: Remove accessor for debug purpose only
       attr_accessor :context_list
+
+      def clone_me()
+        inst = ActiveContext.new
+        inst.context_list = @context_list.dup
+        return inst
+      end
 
       def initialize
         @context_list = []
@@ -62,6 +118,16 @@ module DTK
 
       def pop_context(n)
         return @context_list.pop(n)
+      end
+
+      def find_identifier(entity_name)
+        results = @context_list.select { |e| (e.is_identifier? && (e.entity == entity_name.to_sym))}
+        return results.first
+      end
+
+      def find_command(entity_name)
+        results = @context_list.select { |e| (e.is_command? && (e.entity == entity_name.to_sym))}
+        return results.first
       end
 
       def name_list()

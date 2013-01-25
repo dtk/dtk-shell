@@ -11,8 +11,8 @@ module DTK::Client
 
     desc "COMPONENT-NAME/ID info", "Get information about given component template."
     method_option :list, :type => :boolean, :default => false
-    def info(hashed_args)
-      component_id = CommandBaseThor.retrieve_arguments([:component_id],hashed_args)
+    def info(context_params)
+      component_id = context_params.retrieve_arguments([:component_id])
       data_type = :component
 
       post_body = {
@@ -28,8 +28,8 @@ module DTK::Client
 
     desc "COMPONENT-NAME/ID list nodes", "List all nodes for given component template."
     method_option :list, :type => :boolean, :default => false
-    def list(hashed_args)
-      component_id,about = CommandBaseThor.retrieve_arguments([:component_id,:option_1],hashed_args)
+    def list(context_params)
+      component_id,about = context_params.retrieve_arguments([:component_id,:option_1])
       about ||= 'none'
       data_type = :component
 
@@ -55,8 +55,8 @@ module DTK::Client
 
     desc "COMPONENT-NAME/ID stage NODE-NAME/ID", "Stage indentified node for given component template."
     method_option :list, :type => :boolean, :default => false
-    def stage(hashed_args)
-      component_id, node_id = CommandBaseThor.retrieve_arguments([:component_id,:option_1],hashed_args)
+    def stage(context_params)
+      component_id, node_id = context_params.retrieve_arguments([:component_id,:option_1])
       data_type = :component
 
       post_body = {
@@ -76,6 +76,3 @@ module DTK::Client
     
   end
 end
-
-# (def .*\()(.+)(\))
-# $1hashed_args$3

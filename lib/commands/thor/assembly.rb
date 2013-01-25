@@ -29,15 +29,15 @@ module DTK::Client
       return Assembly.valid_children().include?(name_of_sub_context.to_sym)
     end
 
-    def self.validation_list(hashed_args)
+    def self.validation_list(context_params)
       response = get_cached_response(:assembly, "assembly/list", {:subtype  => 'instance'})
 
       return response
     end
 
     desc "ASSEMBLY-NAME/ID promote-to-library", "Update or create library assembly using workspace assembly"
-    def promote_to_library(hashed_args)
-      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+    def promote_to_library(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id])
       post_body = {
         :assembly_id => assembly_id
       }
@@ -50,35 +50,35 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
-    def start(hashed_args)
-      if CommandBaseThor.is_there_id?(:node_id, hashed_args)
+    def start(context_params)
+      if context_params.is_there_identifier?(:node)
         mapping = [:assembly_id,:node_id]
       else
         mapping = [:assembly_id,:option_1]
       end
 
-      assembly_id, node_pattern = CommandBaseThor.retrieve_arguments(mapping,hashed_args)
+      assembly_id, node_pattern = context_params.retrieve_arguments(mapping)
 
       assembly_start(assembly_id, node_pattern)
     end
 
     desc "ASSEMBLY-NAME/ID stop [NODE-ID-PATTERN]", "Stops all assembly's nodes, specific nodes can be selected via node id regex."
-    def stop(hashed_args)
-      if CommandBaseThor.is_there_id?(:node_id, hashed_args)
+    def stop(context_params)
+      if context_params.is_there_identifier?(:node)
         mapping = [:assembly_id,:node_id]
       else
         mapping = [:assembly_id,:option_1]
       end
 
-      assembly_id, node_pattern = CommandBaseThor.retrieve_arguments(mapping,hashed_args)
+      assembly_id, node_pattern = context_params.retrieve_arguments(mapping)
 
       assembly_stop(assembly_id, node_pattern)
     end
 
 
     desc "ASSEMBLY-NAME/ID create-new-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Create a new assembly template from workspace assembly" 
-    def create_new_template(hashed_args)
-      assembly_id, service_module_name, assembly_template_name = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2],hashed_args)
+    def create_new_template(context_params)
+      assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:assembly_id,:option_1,:option_2])
       post_body = {
         :assembly_id => assembly_id,
         :service_module_name => service_module_name,
@@ -96,8 +96,8 @@ module DTK::Client
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    def converge(hashed_args)
-      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+    def converge(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id])
 
       # create task
       post_body = {
@@ -119,8 +119,8 @@ module DTK::Client
       :type => :string, #integer 
       :banner => "COUNT",
       :desc => "Number of sub-assemblies to add"
-    def add(hashed_args)
-      assembly_id,service_add_on_name = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1],hashed_args)
+    def add(context_params)
+      assembly_id,service_add_on_name = context_params.retrieve_arguments([:assembly_id,:option_1])
 
       # create task
       post_body = {
@@ -138,8 +138,8 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to the assembly" 
-    def possible_extensions(hashed_args)
-      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+    def possible_extensions(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id])
 
       post_body = {
         :assembly_id => assembly_id
@@ -150,14 +150,14 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
-    def task_status(hashed_args)
-      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+    def task_status(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id])
       task_status_aux(assembly_id,:assembly,options.wait?)
     end
 
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
-    def run_smoketests(hashed_args)
-      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+    def run_smoketests(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id])
       post_body = {
         :assembly_id => assembly_id
       }
@@ -172,10 +172,10 @@ module DTK::Client
     #TODO: put in flag to control detail level
     desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
     method_option :list, :type => :boolean, :default => false
-    def list(hashed_args)
-      assembly_id, about, filter = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2],hashed_args)
+    def list(context_params)
+      assembly_id, about, filter = context_params.retrieve_arguments([:assembly_id,:option_1,:option_2])
 
-      if CommandBaseThor.is_there_task?(:node,hashed_args)
+      if context_params.is_there_command?(:node)
         about ||= 'nodes'
       end
 
@@ -227,8 +227,8 @@ module DTK::Client
     end
 
     desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
-    def list_smoketests(hashed_args)
-      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+    def list_smoketests(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id])
 
       post_body = {
         :assembly_id => assembly_id
@@ -237,8 +237,8 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID info", "Return info about assembly instance identified by name/id"
-    def info(hashed_args)
-      assembly_id, node_id = CommandBaseThor.retrieve_arguments([:assembly_id,:node_id],hashed_args)
+    def info(context_params)
+      assembly_id, node_id = context_params.retrieve_arguments([:assembly_id,:node_id])
 
       # TODO: Add node id filter on server side      
       post_body = {
@@ -250,8 +250,8 @@ module DTK::Client
 
     desc "delete-and-destroy ASSEMBLY-ID [-y]", "Delete assembly instance, termining any nodes taht have been spun up"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete_and_destroy(hashed_args)
-      assembly_id = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
+    def delete_and_destroy(context_params)
+      assembly_id = context_params.retrieve_arguments([:option_1])
 
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
@@ -271,8 +271,8 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID set ATTRIBUTE-PATTERN VALUE", "Set target assembly attributes"
-    def set(hashed_args)
-      assembly_id, pattern, value = CommandBaseThor.retrieve_arguments([:assembly_id,:option_1,:option_2],hashed_args)
+    def set(context_params)
+      assembly_id, pattern, value = context_params.retrieve_arguments([:assembly_id,:option_1,:option_2])
       post_body = {
         :assembly_id => assembly_id,
         :pattern => pattern,
@@ -283,8 +283,8 @@ module DTK::Client
     end
 
     desc "create-jenkins-project ASSEMBLY-TEMPLATE-NAME/ID", "Create Jenkins project for assembly template"
-    def create_jenkins_project(hashed_args)
-      assembly_id  = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+    def create_jenkins_project(context_params)
+      assembly_id  = context_params.retrieve_arguments([:assembly_id])
       #require put here so dont necessarily have to install jenkins client gems
       dtk_require_from_base('command_helpers/jenkins_client')
       post_body = {
@@ -300,18 +300,18 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node"
-    def add_component(hashed_args)
+    def add_component(context_params)
     
       # If method is invoked from 'assembly/node' level retrieve node_id argument 
       # directly from active context
-      if CommandBaseThor.is_there_id?(:node_id,hashed_args)
+      if context_params.is_there_identifier?(:node)
         mapping = [:assembly_id,:node_id,:option_1]
       else
         # otherwise retrieve node_id from command options
         mapping = [:assembly_id,:option_1,:option_2]
       end
 
-      assembly_id,node_id,component_template_id = CommandBaseThor.retrieve_arguments(mapping,hashed_args)
+      assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping)
 
 
       post_body = {
@@ -324,8 +324,8 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID delete-component COMPONENT-ID","Delete component from assembly"
-    def delete_component(hashed_args)
-      assembly_id,node_id,component_id = CommandBaseThor.retrieve_arguments([:assembly_id,:node_id,:option_1],hashed_args)
+    def delete_component(context_params)
+      assembly_id,node_id,component_id = context_params.retrieve_arguments([:assembly_id,:node_id,:option_1])
 
       # TODO: Add method with constraint Node ID on server side
       post_body = {
@@ -337,8 +337,8 @@ module DTK::Client
 
 
     desc "ASSEMBLY-NAME/ID get-netstats", "Get netstats"
-    def get_netstats(hashed_args)
-      assembly_id,node_id = CommandBaseThor.retrieve_arguments([:assembly_id,:node_id],hashed_args)
+    def get_netstats(context_params)
+      assembly_id,node_id = context_params.retrieve_arguments([:assembly_id,:node_id])
 
       # TODO: Add support for node ID on this methods on server side
       post_body = {
@@ -378,21 +378,21 @@ module DTK::Client
     GetNetStatsSleep = 0.5
 
     desc "ASSEMBLY-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
-    def set_required_params(hashed_args)
-      assembly_id = CommandBaseThor.retrieve_arguments([:assembly_id],hashed_args)
+    def set_required_params(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id])
       set_required_params_aux(assembly_id,:assembly,:instance)
     end
 
     desc "ASSEMBLY-NAME/ID tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
     method_option :more, :type => :boolean, :default => false
-    def tail(hashed_args)
-      if CommandBaseThor.is_there_id?(:node_id, hashed_args)
+    def tail(context_params)
+      if context_params.is_there_identifier?(:node)
         mapping = [:assembly_id,:node_id,:option_1,:option_2]
       else
         mapping = [:assembly_id,:option_1,:option_2,:option_3]
       end
       
-      assembly_id,node_identifier,log_path,grep_option = CommandBaseThor.retrieve_arguments(mapping,hashed_args)
+      assembly_id,node_identifier,log_path,grep_option = context_params.retrieve_arguments(mapping)
      
       last_line = nil
       begin
@@ -496,15 +496,15 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first_match]","Grep log from multiple nodes"
     method_option :first_match, :type => :boolean, :default => false
-    def grep(hashed_args)
+    def grep(context_params)
       
-    if CommandBaseThor.is_there_id?(:node_id,hashed_args)
+    if context_params.is_there_identifier?(:node)
       mapping = [:assembly_id,:option_1,:node_id,:option_2]
     else
       mapping = [:assembly_id,:option_1,:option_2,:option_3]
     end
 
-    assembly_id,log_path,node_pattern,grep_pattern = CommandBaseThor.retrieve_arguments(mapping, hashed_args)
+    assembly_id,log_path,node_pattern,grep_pattern = context_params.retrieve_arguments(mapping)
        
     begin
       post_body = {

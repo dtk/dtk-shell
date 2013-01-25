@@ -13,7 +13,7 @@ require 'pp'
 dtk_require_from_base('domain/response')
 dtk_require_from_base('util/os_util')
 
-def top_level_execute(entity_name, method_name, hashed_argv=nil,options_args=nil,shell_execute=false)
+def top_level_execute(entity_name, method_name, context_params=nil,options_args=nil,shell_execute=false)
   extend DTK::Client::OsUtil
   begin
     include DTK::Client::Aux
@@ -27,7 +27,7 @@ def top_level_execute(entity_name, method_name, hashed_argv=nil,options_args=nil
 
     # call proper thor class and task
     entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
-    response_ruby_obj = entity_class.execute_from_cli(conn,method_name,hashed_argv,options_args,shell_execute)
+    response_ruby_obj = entity_class.execute_from_cli(conn,method_name,context_params,options_args,shell_execute)
     
     # this will raise error if found
     DTK::Client::ResponseErrorHandler.check(response_ruby_obj)

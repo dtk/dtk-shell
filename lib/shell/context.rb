@@ -23,28 +23,29 @@ module DTK
       attr_accessor :dirs
 
 
-      def initialize
+      def initialize(skip_caching=false)
 
         @cached_tasks, @dirs = {}, []
         @active_context = ActiveContext.new
 
         # member used to hold current commands loaded for current command
         @context_commands = []
-
         @conn = DTK::Client::Session.get_connection()
 
         # if connection parameters are not set up properly, print warning and exit dtk_shell
         exit if validate_connection(@conn)
 
-        @cached_tasks.store('dtk', ROOT_TASKS.sort)
+        unless skip_caching
+          @cached_tasks.store('dtk', ROOT_TASKS.sort)
 
-        ALL_COMMANDS.each do |task_name|
-          # we exclude help since there is no command class for it
-          next if task_name.eql? "help"
+          ALL_COMMANDS.each do |task_name|
+            # we exclude help since there is no command class for it
+            next if task_name.eql? "help"
 
-          Context.require_command_class(task_name)
+            Context.require_command_class(task_name)
 
-          get_latest_tasks(task_name)
+            get_latest_tasks(task_name)
+          end
         end
       end
 
@@ -102,7 +103,9 @@ module DTK
           end
 
           if command
-            n_level_commands = get_command_identifiers(command, (@active_context.name_list + inputs))
+            command_context   = get_command_identifiers(command, inputs)
+            command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
+            n_level_commands  = command_name_list
           else
             n_level_commands =  @cached_tasks['dtk']
           end
@@ -137,8 +140,10 @@ module DTK
         # holder for commands to be used since we do not want to remember all of them
         @context_commands = @current
 
-        # we load thor command class identifiers for autocomplete context list   
-        @context_commands.concat(get_command_identifiers(command_name)) if current_command?
+        # we load thor command class identifiers for autocomplete context list
+        command_context = get_command_identifiers(command_name)
+        command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
+        @context_commands.concat(command_name_list) if current_command?
 
         # logic behind context loading
         #Readline.completer_word_break_characters=" "
@@ -211,12 +216,17 @@ module DTK
       end
 
       # calls 'valid_id?' method in Thor class to validate ID/NAME
-      def valid_id?(thor_command_name,value, autocomplete_input = [])
+      def valid_id?(thor_command_name,value, override_context_params = nil)
         command_clazz = Context.get_command_class(thor_command_name)
         if command_clazz.list_method_supported?
-          # take just hashed arguemnts from multi return method
-          hashed_args = get_command_parameters(thor_command_name,[], autocomplete_input)[2]
-          return command_clazz.valid_id?(value,@conn, hashed_args)
+          
+          if override_context_params
+            context_params = override_context_params
+          else
+            context_params = get_command_parameters(thor_command_name,[])[2]
+          end
+          tmp = command_clazz.valid_id?(value, @conn, context_params)
+          return tmp
         end
 
         # if not implemented we are going to let it in the context
@@ -253,9 +263,9 @@ module DTK
         return cmd, args
       end
 
-      def self.get_dtk_command_parameters(entity_name, args)
+      def get_dtk_command_parameters(entity_name, args)
         method_name, entity_name_id = nil, nil
-        hash_params = {}
+        context_params = ContextParams.new
 
         if (ROOT_TASKS + ['dtk']).include?(entity_name)
           Context.require_command_class(entity_name)
@@ -271,17 +281,20 @@ module DTK
         # if no method specified use help
         method_name ||= 'help'
 
+        context_params.add_context_to_params(entity_name, entity_name) 
+        
         if entity_name_id
-          hash_params.store(Context.command_to_id_sym(entity_name), entity_name_id)
+          identifier_response = valid_id?(entity_name, entity_name_id, context_params)
+          if identifier_response
+            context_params.add_context_to_params(identifier_response[:name], entity_name, identifier_response[:identifier])
+          end
         end
-
-        hash_params.store(:tasks, [entity_name.to_sym])
 
         # extract thor options
         args, thor_options = Context.parse_thor_options(args)
-        hash_params.store(:options, args)
+        context_params.method_arguments = args
 
-        return entity_name, method_name, hash_params, thor_options
+        return entity_name, method_name, context_params, thor_options
       end
 
       #
@@ -289,46 +302,63 @@ module DTK
       # See bellow for more details
       #
       def get_command_parameters(cmd,args,enrich_data=[])
-        hash_params,tasks = {}, []
         entity_name, method_name = nil, nil
+
+        context_params = ContextParams.new
 
         if root? && !args.empty?
           # this means that somebody is calling command with assembly/.. method_name
           entity_name = cmd
           method_name = args.shift
         else
-          name_list = @active_context.name_list
-          (0..(name_list.size-1)).step(2) do |i|
-            tasks << name_list[i].gsub(/\-/,'_').to_sym
-            hash_params.store(Context.command_to_id_sym(name_list[i]), name_list[i+1]) if name_list[i+1]
-          end
-
-          entity_name = name_list.first
+          context_params.current_context = @active_context.clone_me
+          entity_name = @active_context.name_list.first
           method_name = cmd
         end
-
-        # add task options
-        hash_params.store(:tasks, tasks)
 
         # extract thor options
         args, thor_options = Context.parse_thor_options(args)
 
-        hash_params.store(:options, args)
+        # set rest of arguments as method options
+        context_params.method_arguments = args
 
         # special part of the code used by autocomplete when active_context is not available
         # meaning ENTER has not been clicked and we are using Readline.completion_proc
         unless enrich_data.empty?
+          skip_command = false
+             
+          if (!root? && @active_context.current_command?)
+            skip_command = true
+            last_command = @active_context.last_command_name
+            enrich_data.unshift(last_command) if last_command
+          end
+
           (0..(enrich_data.size-1)).step(2) do |i|
             command = enrich_data[i]
             value   = enrich_data[i+1]
+            
+            # we use skip command to make sure that we have proper command / identifier pairs
+            # skip commands make sure that we do not duplicate context_params.current_context
+            if skip_command
+              skip_command = false
+            else
+              context_params.add_context_to_params(command, command) if command
+            end
 
-            if (hash_params[Context.command_to_id_sym(command)].nil? && value)
-              hash_params[Context.command_to_id_sym(command)] = value
+            # if there is a value and there no more commands
+            if value 
+              # TODO: Current fix, if we need real ID we need to fix this
+                 
+              identifier_response = valid_id?(command, value, context_params)
+
+              if identifier_response
+                context_params.add_context_to_params(identifier_response[:name], command, identifier_response[:identifier])
+              end
             end
           end
         end
 
-        return entity_name, method_name, hash_params, thor_options
+        return entity_name, method_name, context_params, thor_options
       end
 
       private

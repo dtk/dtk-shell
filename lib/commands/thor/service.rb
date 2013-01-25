@@ -25,8 +25,8 @@ module DTK::Client
     end
     
     desc "SERVICE-NAME/ID info", "Provides information about specified service module"
-    def info(hashed_args)
-      service_module_id = CommandBaseThor.retrieve_arguments([:service_id],hashed_args)
+    def info(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_id])
       post_body = {
        :service_module_id => service_module_id
       }
@@ -36,8 +36,8 @@ module DTK::Client
     desc "[SERVICE-NAME/ID] list --remote","List local or remote service modules or assemblies associated to it."
     method_option :list, :type => :boolean, :default => false
     method_option :remote, :type => :boolean, :default => false
-    def list(hashed_args)
-      service_module_id = CommandBaseThor.retrieve_arguments([:service_id],hashed_args)
+    def list(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_id])
 
       about = (service_module_id ? 'none' : 'assemblies')
 
@@ -68,9 +68,9 @@ module DTK::Client
 
     # TODO: Duplicate of library import ... should we delete this one?
     desc "import REMOTE-SERVICE-NAME [LIBRARY-ID]", "Import remote service module into library"
-    def import(hashed_args)
+    def import(context_params)
 
-      service_module_name, library_id = CommandBaseThor.retrieve_arguments([:service_id, :option_1],hashed_args)
+      service_module_name, library_id = context_params.retrieve_arguments([:service_id, :option_1])
 
       post_body = {
        :remote_module_name => service_module_name
@@ -83,8 +83,8 @@ module DTK::Client
     end
 
     desc "SERVICE-NAME/ID export", "Export service module to remote repo"
-    def export(hashed_args)
-      service_module_id = CommandBaseThor.retrieve_arguments([:service_id],hashed_args)
+    def export(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_id])
 
       post_body = {
        :service_module_id => service_module_id
@@ -93,8 +93,8 @@ module DTK::Client
     end
 
     desc "SERVICE-NAME/ID push-to-remote", "Push local copy of service module to remote repository."
-    def push_to_remote(hashed_args)
-      service_module_id = CommandBaseThor.retrieve_arguments([:service_id],hashed_args)
+    def push_to_remote(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_id])
 
       post_body = {
        :service_module_id => service_module_id
@@ -103,8 +103,8 @@ module DTK::Client
     end
 
     desc "SERVICE-NAME/ID pull-from-remote", "Update local service module from remote repository."
-    def pull_from_remote(hashed_args)
-      service_module_id = CommandBaseThor.retrieve_arguments([:service_id],hashed_args)
+    def pull_from_remote(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_id])
 
       post_body = {
        :service_module_id => service_module_id
@@ -118,23 +118,23 @@ module DTK::Client
     #                   This will change behaviour of method
     #
     desc "SERVICE-NAME/ID clone [VERSION]", "Clone into client the service module files"
-    def clone(hashed_args,internal_trigger=false)
-      service_module_id, version = CommandBaseThor.retrieve_arguments([:service_id, :option_1],hashed_args)
+    def clone(context_params, internal_trigger=false)
+      service_module_id, version = context_params.retrieve_arguments([:service_id, :option_1])
 
       clone_aux(:service_module,service_module_id,version,internal_trigger)
     end
 
     desc "SERVICE-NAME/ID push-clone-changes [VERSION]", "Push changes from local copy of service module to server"
-    def push_clone_changes(hashed_args)
-      service_module_id, version = CommandBaseThor.retrieve_arguments([:service_id, :option_1],hashed_args)
+    def push_clone_changes(context_params)
+      service_module_id, version = context_params.retrieve_arguments([:service_id, :option_1])
       push_clone_changes_aux(:service_module,service_module_id,version)
     end
 
 
     # TODO: Check to see if we are deleting this
     desc "create SERVICE-NAME [library_id]", "Create an empty service module in library"
-    def create(hashed_args)
-      module_name, library_id = CommandBaseThor.retrieve_arguments([:option_1, :option_2],hashed_args)
+    def create(context_params)
+      module_name, library_id = context_params.retrieve_arguments([:option_1, :option_2])
 
       post_body = {
        :module_name => module_name
@@ -149,13 +149,13 @@ module DTK::Client
 
     desc "delete SERVICE-ID", "Delete service module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete(hashed_args)
+    def delete(context_params)
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete service-module '#{service_module_id}' and all items contained in it?")
       end
 
-      service_module_id = CommandBaseThor.retrieve_arguments([:service_id],hashed_args)
+      service_module_id = context_params.retrieve_arguments([:service_id])
 
       post_body = {
        :service_module_id => service_module_id
@@ -168,8 +168,8 @@ module DTK::Client
     end
 
     desc "delete-remote REMOTE-MODULE", "Delete remote service module"
-    def delete_remote(hashed_args)
-      remote_module_name = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
+    def delete_remote(context_params)
+      remote_module_name = context_params.retrieve_arguments([:option_1])
       post_body = {
        :remote_module_name => remote_module_name
       }
@@ -180,8 +180,8 @@ module DTK::Client
     end
 
     desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
-    def add_direct_access(hashed_args)
-      path_to_key = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
+    def add_direct_access(context_params)
+      path_to_key = context_params.retrieve_arguments([:option_1])
       path_to_key ||= SshProcessing.default_rsa_pub_key_path()
       unless File.file?(path_to_key)
         raise DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
@@ -198,8 +198,8 @@ module DTK::Client
     end
 
     desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
-    def remove_direct_access(hashed_args)
-      path_to_key = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
+    def remove_direct_access(context_params)
+      path_to_key = context_params.retrieve_arguments([:option_1])
       path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
       unless File.file?(path_to_key)
         raise  DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
@@ -212,8 +212,8 @@ module DTK::Client
     end
 
     desc "create-jenkins-project SERVICE-ID", "Create Jenkins project for service module"
-    def create_jenkins_project(hashed_args)
-      service_module_id = CommandBaseThor.retrieve_arguments([:service_id],hashed_args)
+    def create_jenkins_project(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_id])
       #require put here so dont necessarily have to install jenkins client gems
 
       dtk_require_from_base('command_helpers/jenkins_client')

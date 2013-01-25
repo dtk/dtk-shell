@@ -66,7 +66,7 @@ def change_context(args, push_context = false)
 
       if value
         # context_hash_data is hash with :name, :identifier values
-        context_hash_data, error_message = validate_value(command, value, context_name_list)
+        context_hash_data, error_message = validate_value(command, value)
         break if error_message
         @context.push_to_active_context(context_hash_data[:name], command, context_hash_data[:identifier]) if ((i+1) >= ac_size)
       end
@@ -108,11 +108,11 @@ def validate_command(clazz, current_context_clazz, command)
   return error_message
 end
 
-def validate_value(command, value, valid_commands)
+def validate_value(command, value)
   context_hash_data = nil
    # check value
   if value
-    context_hash_data = @context.valid_id?(command,value,valid_commands)
+    context_hash_data = @context.valid_id?(command, value)
     unless context_hash_data
       error_message = "Identifier '#{value}' for context '#{command}' is not valid";
     end
@@ -221,10 +221,10 @@ def execute_shell_command(line, prompt)
       Thor.set_context(@context)
 
       # we get command and hash params
-      entity_name, method_name, hash_args, options_args = @context.get_command_parameters(cmd,args)
+      entity_name, method_name, context_params, thor_options = @context.get_command_parameters(cmd,args)
 
       # execute command via Thor
-      top_level_execute(entity_name, method_name, hash_args, options_args, true)
+      top_level_execute(entity_name, method_name, context_params, thor_options, true)
 
       # when 'delete' or 'delete-and-destroy' command is executed reload cached tasks with latest commands
       unless (args.nil? || args.empty?)

@@ -13,8 +13,8 @@ module DTK::Client
 
     desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."
     method_option :list, :type => :boolean, :default => false
-    def info(hashed_args)
-      assembly_template_id = CommandBaseThor.retrieve_arguments([:assembly_template_id],hashed_args)
+    def info(context_params)
+      assembly_template_id = context_params.retrieve_arguments([:assembly_template_id])
       data_type = :assembly_template
       
       post_body = {
@@ -28,8 +28,8 @@ module DTK::Client
     #TODO: temporaily taking out target option
     desc "[ASSEMBLY-TEMPLATE-NAME/ID] list [nodes|components]", "List all nodes/components for given assembly template."
     method_option :list, :type => :boolean, :default => false
-    def list(hashed_args)
-      assembly_template_id, about = CommandBaseThor.retrieve_arguments([:assembly_template_id, :option_1],hashed_args)
+    def list(context_params)
+      assembly_template_id, about = context_params.retrieve_arguments([:assembly_template_id, :option_1])
       if assembly_template_id.nil?
         response = post rest_url("assembly/list"), {:subtype => 'template'}
         data_type = :assembly_template
@@ -64,8 +64,8 @@ module DTK::Client
       :type => :numeric, 
       :banner => "TARGET-ID",
       :desc => "Target (id) to create assembly in" 
-    def stage(hashed_args)
-      assembly_template_id, name = CommandBaseThor.retrieve_arguments([:assembly_template_id, :option_1],hashed_args)
+    def stage(context_params)
+      assembly_template_id, name = context_params.retrieve_arguments([:assembly_template_id, :option_1])
 
       post_body = {
         :assembly_id => assembly_template_id
@@ -88,10 +88,10 @@ module DTK::Client
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    def deploy(hashed_args)
-      # assembly_template_id,name = CommandBaseThor.retrieve_arguments([:assembly_template_id, :option_1],hashed_args)
+    def deploy(context_params)
+      # assembly_template_id,name = context_params.retrieve_arguments([:assembly_template_id, :option_1])
 
-      response = stage(hashed_args)
+      response = stage(context_params)
 
       return response unless response.ok?
 
@@ -127,8 +127,8 @@ module DTK::Client
 
     desc "delete ASSEMBLY-TEMPLATE-ID", "Delete assembly template"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete(hashed_args)
-      assembly_template_id = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
+    def delete(context_params)
+      assembly_template_id = context_params.retrieve_arguments([:option_1])
       unless options.force?
         # Ask user if really want to delete assembly-template, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete assembly-template '#{assembly_template_id}'?")

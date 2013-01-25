@@ -2,9 +2,9 @@
 module DTK::Client
   class Attribute < CommandBaseThor
 
-    def self.validation_list(hashed_args)
+    def self.validation_list(context_params)
 
-      assembly_id, node_id, component_id = CommandBaseThor.retrieve_arguments([:assembly_id, :node_id, :component_id],hashed_args)
+      assembly_id, node_name, component_name = context_params.retrieve_arguments([:assembly_id, :node_name, :component_name])
 
       post_body = {
         :assembly_id => assembly_id,
@@ -18,9 +18,9 @@ module DTK::Client
       response = post rest_url("assembly/info_about"), post_body
 
      if assembly_id
-        regexp = Regexp.new("node\[#{node_id}\].?cmp\[#{component_id}\].+")
+        regexp = Regexp.new("node\[#{node_name}\].?cmp\[#{component_name}\].+")
 
-        response['data'] = response['data'].select {|element| (element['display_name'].include?(component_id) && element['display_name'].include?(node_id)) }
+        response['data'] = response['data'].select {|element| (element['display_name'].include?(component_name) && element['display_name'].include?(node_name)) }
         response['data'].each do |e|
           e['display_name'] = e['display_name'].split('/').last
         end

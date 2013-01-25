@@ -8,7 +8,7 @@ module DTK::Client
     # TODO: Current bug: Disable list method invocation from /task/111111> level
     desc "list [--list]","List tasks"
     method_option :list, :type => :boolean, :default => false
-    def list(hashed_args)
+    def list(context_params)
 
       #TODO: just hard coded params now
       search_hash = SearchHash.new()
@@ -23,8 +23,8 @@ module DTK::Client
 
     desc "[TASK-NAME/ID] status", "Return task status; if no TASK-ID then information about most recent task"
     method_option "detail-level",:default => "summary", :aliases => "-d", :desc => "detail level to report task status"
-    def status(hashed_args)
-      task_id = CommandBaseThor.retrieve_arguments([:task_id],hashed_args)
+    def status(context_params)
+      task_id = context_params.retrieve_arguments([:task_id])
       detail_level = options["detail-level"]
       post_hash_body = Hash.new
       post_hash_body[:detail_level] = detail_level if detail_level
@@ -33,23 +33,23 @@ module DTK::Client
     end
 
     desc "commit-changes", "Commit changes"
-    def commit_changes(hashed_args)
-      scope = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
+    def commit_changes(context_params)
+      scope = context_params.retrieve_arguments([:option_1])
       post_hash_body = Hash.new
       post_hash_body.merge!(:scope => scope) if scope
       post rest_url("task/create_task_from_pending_changes"),post_hash_body
     end
 
     desc "TASK-NAME/ID execute", "Execute task"
-    def execute(hashed_args)
-      task_id = CommandBaseThor.retrieve_arguments([:task_id],hashed_args)
+    def execute(context_params)
+      task_id = context_params.retrieve_arguments([:task_id])
       post rest_url("task/execute"), :task_id => task_id
     end
 
     desc "commit-changes-and-execute", "Commit changes and execute task"
-    def commit_changes_and_execute(hashed_args)
-      scope = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
-      response = commit_changes(hashed_args)
+    def commit_changes_and_execute(context_params)
+      scope = context_params.retrieve_arguments([:option_1])
+      response = commit_changes(context_params)
       if response.ok?
         execute(response.data(:task_id))
       else
@@ -58,13 +58,13 @@ module DTK::Client
     end
     #alias for commit-changes-and-execute
     desc "simple-run", "Commit changes and execute task"
-    def simple_run(hashed_args)
-      commit_changes_and_execute(hashed_args)
+    def simple_run(context_params)
+      commit_changes_and_execute(context_params)
     end
 
     desc "converge-node NODE-ID", "(Re)Converge node"
-    def converge_node(hashed_args)
-      node_id = CommandBaseThor.retrieve_arguments([:option_1],hashed_args)
+    def converge_node(context_params)
+      node_id = context_params.retrieve_arguments([:option_1])
 
       scope = node_id && {:node_id => node_id} 
       response = post(rest_url("task/create_converge_state_changes"),scope)

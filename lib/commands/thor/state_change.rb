@@ -1,7 +1,7 @@
 module DTK::Client
   class StateChange < CommandBaseThor
     desc "list","List pending state changes"
-    def list(hashed_args)
+    def list(context_params)
       get rest_url("state_change/list_pending_changes")
     end
   end

@@ -4,7 +4,7 @@ module DTK::Client
       PPColumns.get(:repo)
     end
     desc "list","List repos"
-    def list(hashed_args)
+    def list(context_params)
       search_hash = SearchHash.new()
       search_hash.cols = pretty_print_cols()
       post rest_url("repo/list"), search_hash.post_body_hash()
@@ -12,8 +12,8 @@ module DTK::Client
 
     desc "delete REPO-ID", "Delete repo"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete(hashed_args)
-      repo_id = CommandBaseThor.retrieve_arguments([:repo_id],hashed_args)
+    def delete(context_params)
+      repo_id = context_params.retrieve_arguments([:repo_id])
       unless options.force?
         # Ask user if really want to delete repo, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete repo '#{repo_id}'?")
@@ -24,8 +24,8 @@ module DTK::Client
     end
 
     desc "sync REPO-ID", "Synchronize target repo from actual files"
-    def sync(hashed_args)
-      repo_id = CommandBaseThor.retrieve_arguments([:repo_id],hashed_args)
+    def sync(context_params)
+      repo_id = context_params.retrieve_arguments([:repo_id])
       post_body_hash = {:repo_id => repo_id}
       post rest_url("repo/synchronize_target_repo"),post_body_hash
     end

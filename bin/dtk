@@ -5,6 +5,7 @@ $shell_mode = false
 require File.expand_path('../lib/client', File.dirname(__FILE__))
 require File.expand_path('../lib/parser/adapters/thor',    File.dirname(__FILE__))
 require File.expand_path('../lib/shell/context', File.dirname(__FILE__))
+require File.expand_path('../lib/shell/domain', File.dirname(__FILE__))
 Dir[File.expand_path('../lib/shell/parse_monkey_patch.rb', File.dirname(__FILE__))].each {|file| require file }
 
 
@@ -15,9 +16,13 @@ entity_name = ARGV.shift if ARGV.size > 0
 # special case for when no params are provided use help method
 if (entity_name == 'help' || entity_name.nil?)
   entity_name = 'dtk'
-  ARGV = ['help']
+  args = ['help']
+else
+  args = ARGV
 end
 
-entity_name, method_name, hash_args, options_args = DTK::Shell::Context.get_dtk_command_parameters(entity_name, ARGV)
+context = DTK::Shell::Context.new(true)
+
+entity_name, method_name, context_params, thor_options = context.get_dtk_command_parameters(entity_name, args)
   
-top_level_execute(entity_name, method_name, hash_args, options_args, false)
+top_level_execute(entity_name, method_name, context_params, thor_options, false)

@@ -6,8 +6,8 @@ module DTK::Client
     MATCH_FILE_NAME = /[a-zA-Z0-9]+\.[a-zA-Z]+$/
 
     desc "upload_agent PATH-TO-AGENT[.rb,.dll] NODE-ID-PATTERN", "Uploads agent and ddl file to requested nodes, pattern is regexp for filtering node ids." 
-    def upload_agent(hashed_args)
-      agent, node_pattern = CommandBaseThor.retrieve_arguments([:option_1, :option_2],hashed_args)
+    def upload_agent(context_params)
+      agent, node_pattern = context_params.retrieve_arguments([:option_1, :option_2])
       # if it doesn't contain extension upload both *.rb and *.ddl
       files = (agent.match(MATCH_FILE_NAME) ? [agent] : ["#{agent}.rb","#{agent}.ddl"])
     

@@ -10,9 +10,8 @@ module DTK::Client
       return Component.valid_children().include?(name_of_sub_context.to_sym)
     end
 
-    def self.validation_list(hashed_args)
-
-      assembly_id, node_id = CommandBaseThor.retrieve_arguments([:assembly_id, :node_id],hashed_args)
+    def self.validation_list(context_params)
+      assembly_id, node_name = context_params.retrieve_arguments([:assembly_id, :node_name])
 
       post_body = {
         :assembly_id => assembly_id,
@@ -26,7 +25,7 @@ module DTK::Client
       response = post rest_url("assembly/info_about"), post_body
 
       if assembly_id
-        regexp = Regexp.new("^#{node_id}\/(.+)")
+        regexp = Regexp.new("^#{node_name}\/(.+)")
         response['data'] = response['data'].select {|element| element['display_name'].match(regexp) }
         response['data'].each do |e|
           match_data = e['display_name'].match(regexp)
@@ -38,8 +37,8 @@ module DTK::Client
     end
 
     desc "ASSEMBLY-NAME/ID set ATTRIBUTE-PATTERN VALUE", "Set target component attributes"
-    def set(hashed_args)
-      assembly_id, node_id, component_id, pattern, value = CommandBaseThor.retrieve_arguments([:assembly_id, :node_id, :component_id, :option_1,:option_2],hashed_args)
+    def set(context_params)
+      assembly_id, node_id, component_id, pattern, value = context_params.retrieve_arguments([:assembly_id, :node_id, :component_id, :option_1,:option_2])
       post_body = {
         :assembly_id => assembly_id,
         :pattern => pattern,
