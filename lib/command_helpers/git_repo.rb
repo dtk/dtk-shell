@@ -52,17 +52,17 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    #TODO: not treating versions yet
     #opts can have the following keys
     #
     #:remote_repo
     #:remote_branch
     #:remote_repo_url
     #:local_branch
-    #
+    #:version
+    #:commit_sha
     def pull_changes(type,module_name,opts={})
       Response.wrap_helper_actions() do
-        repo_dir = local_repo_dir(type,module_name)
+        repo_dir = local_repo_dir(type,module_name,opts[:version])
         repo = create(repo_dir,opts[:local_branch])
         diffs = pull_repo_changes_aux(repo,opts)
         {"diffs" => diffs}
@@ -74,6 +74,11 @@ module DTK; module Client; class CommandHelper
       else
         Response.wrap_helper_actions() 
       end
+    end
+
+    def synchronize_clone(type,module_name,commit_sha,opts={})
+      pull_changes?(type,module_name,{:commit_sha => commit_sha}.merge(opts))
+      Response::Ok.new()
     end
 
     #if local clone exists remove its .git directory
@@ -186,6 +191,11 @@ module DTK; module Client; class CommandHelper
 
     def pull_repo_changes_aux(repo,opts={})
       diffs = DiffSummary.new()
+      if commit_sha = opts[:commit_sha]
+        #no op if at commit_sha
+        return diffs if commit_sha == repo.head_commit_sha()
+      end
+
       if opts[:remote_repo] and opts[:remote_repo_url]
         repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
       end
@@ -208,6 +218,10 @@ module DTK; module Client; class CommandHelper
         return diffs unless diffs.any_diffs?()
 
         repo.merge(remote_branch_ref)
+
+        if commit_sha and commit_sha != repo.head_commit_sha()
+          raise Error.new("Git synchronization problem: expected local head to have sha (#{commit_sha})")
+        end
 
         diffs
       else

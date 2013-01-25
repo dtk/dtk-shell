@@ -144,7 +144,9 @@ module DTK::Client
       post_body.merge!(:version => options["version"]) if options["version"]
       response = post rest_url("service_module/set_component_module_version"), post_body
       @@invalidate_map << :service_module
-      response
+      return response unless response.ok?()
+      module_name,commit_sha,workspace_branch = response.data(:module_name,:commit_sha,:workspace_branch)
+      Helper(:git_repo).synchronize_clone(:service_module,module_name,commit_sha,:local_branch=>workspace_branch)
     end
 
     # TODO: Check to see if we are deleting this
@@ -166,7 +168,7 @@ module DTK::Client
     def delete(service_module_id)
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete service-module '#{service_module_id}' and all items contained in it?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete service-module '#{service_module_id}' and all items contained in it"+'?')
       end
 
       post_body = {
