@@ -20,13 +20,13 @@ module DTK::Client
     end
 
 #TODO: in for testing; may remove
-    desc "MODULE-ID/NAME test-generate-dsl", "Test generating DSL from implementation"
+    desc "MODULE/NAME-ID test-generate-dsl", "Test generating DSL from implementation"
     def test_generate_dsl(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id])
       post rest_url("component_module/test_generate_dsl"),{:component_module_id => component_module_id}
     end
 
-    desc "MODULE-ID/NAME dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
+    desc "MODULE/NAME-ID dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
     def dsl_upgrade(context_params)
       component_module_id, dsl_version = context_params.retrieve_arguments([:module_id, :option_1])
       dsl_version ||= MostRecentDSLVersion
@@ -43,13 +43,12 @@ module DTK::Client
     desc "delete MODULE-NAME/ID", "Delete component module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
-      unless options.force?
+      component_module_id = context_params.retrieve_arguments([:option_1])
+     unless options.force?
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
       end
 
-      component_module_id = context_params.retrieve_arguments([:module_id])
-      
       post_body = {
        :component_module_id => component_module_id
       }
@@ -63,7 +62,7 @@ module DTK::Client
 
     desc "create MODULE-NAME", "Create new module from local clone"
     def create(context_params)
-      module_name = context_params.retrieve_arguments([:module_id])
+      module_name = context_params.retrieve_arguments([:option_1])
       
       #first check that there is a directory there and it is not already a git repo, and it ha appropriate content
       response = Helper(:git_repo).check_local_dir_exists_with_content(:component_module,module_name)
@@ -105,7 +104,7 @@ module DTK::Client
     #### end: create and delete commands ###
 
     #### list and info commands ###
-    desc "MODULE-ID/NAME info", "Get information about given component module."
+    desc "MODULE/NAME-ID info", "Get information about given component module."
     def info(context_params)
       
       component_module_id = context_params.retrieve_arguments([:module_id])
@@ -154,7 +153,7 @@ module DTK::Client
     #if multiple items and failire; stops on first failure
     desc "import REMOTE-MODULE-NAME","Import remote component module into local environment"
     def import(context_params)
-      remote_modules = context_params.retrieve_arguments([:option_1])
+      remote_module_name = context_params.retrieve_arguments([:option_1])
       local_module_name = remote_module_name
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name)
         raise DtkError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
@@ -196,7 +195,7 @@ module DTK::Client
       post rest_url("component_module/delete_remote"), post_body
     end
 
-    desc "MODULE-ID/NAME export", "Export component module to remote repository."
+    desc "MODULE/NAME-ID export", "Export component module to remote repository."
     def export(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id])
       post_body = {
@@ -206,7 +205,7 @@ module DTK::Client
       post rest_url("component_module/export"), post_body
     end
 
-    desc "MODULE-ID/NAME push-to-remote", "Push local copy of component module to remote repository."
+    desc "MODULE/NAME-ID push-to-remote", "Push local copy of component module to remote repository."
     def push_to_remote(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id])
       post_body = {
@@ -259,7 +258,7 @@ module DTK::Client
       clone_aux(:component_module,component_module_id,options["version"],internal_trigger)
     end
 
-    desc "MODULE-ID/NAME edit","Switch to unix editing for given module."
+    desc "MODULE/NAME-ID edit","Switch to unix editing for given module."
     def edit(context_params)
       module_name = context_params.retrieve_arguments([:module_id])
 

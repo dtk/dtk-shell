@@ -77,7 +77,7 @@ module DTK::Client
     version_method_option
     def import(context_params)
 
-      service_module_name = context_params.retrieve_arguments([:service_id])
+      service_module_name = context_params.retrieve_arguments([:option_1])
 
       local_module_name = remote_module_name
       version = options["version"]
@@ -173,7 +173,7 @@ module DTK::Client
     desc "delete SERVICE-NAME/ID", "Delete service module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id])
+      service_module_id = context_params.retrieve_arguments([:option_1])
 
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
