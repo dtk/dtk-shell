@@ -78,7 +78,7 @@ module DTK::Client
     version_method_option
     def import(context_params)
 
-      service_module_name = context_params.retrieve_arguments([:option_1])
+      remote_module_name = context_params.retrieve_arguments([:option_1])
 
       local_module_name = remote_module_name
       version = options["version"]
