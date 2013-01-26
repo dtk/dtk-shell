@@ -38,14 +38,15 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-##MERGE-QUESTION:     desc "[SERVICE-NAME/ID] list [assembly-templates|components] [--remote]","List service modules or assembly/component templates associated with service module."
-    desc "[SERVICE-NAME/ID] list [--remote]","List local or remote service modules or assemblies associated to it."
+##MERGE-QUESTION:    
+#was not sure how to overload the list command so that sometimes it take
+# desc "[SERVICE-NAME/ID] list [assembly-templates|components] [--remote]","List service modules or assembly/component templates associated with service module."
+    desc "list [--remote]","List local or remote service modules."
     method_option :list, :type => :boolean, :default => false
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
       service_module_id = context_params.retrieve_arguments([:service_id])
-
-      about = (service_module_id ? 'none' : 'assemblies')
+      about = service_module_id  && 'assembly-templates'
       post_body = {
        :service_module_id => service_module_id,
       }
