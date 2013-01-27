@@ -14,7 +14,7 @@ module DTK::Client
     desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."
     method_option :list, :type => :boolean, :default => false
     def info(context_params)
-      assembly_template_id = context_params.retrieve_arguments([:assembly_template_id])
+      assembly_template_id = context_params.retrieve_arguments(["assembly-template_id".to_sym])
       data_type = :assembly_template
       
       post_body = {
@@ -29,7 +29,7 @@ module DTK::Client
     desc "[ASSEMBLY-TEMPLATE-NAME/ID] list [nodes|components]", "List all nodes/components for given assembly template."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
-      assembly_template_id, about = context_params.retrieve_arguments([:assembly_template_id, :option_1])
+      assembly_template_id, about = context_params.retrieve_arguments(["assembly-template_id".to_sym, :option_1])
       if assembly_template_id.nil?
         response = post rest_url("assembly/list"), {:subtype => 'template'}
         data_type = :assembly_template
@@ -65,8 +65,7 @@ module DTK::Client
       :banner => "TARGET-ID",
       :desc => "Target (id) to create assembly in" 
     def stage(context_params)
-      assembly_template_id, name = context_params.retrieve_arguments([:assembly_template_id, :option_1])
-
+      assembly_template_id, name = context_params.retrieve_arguments(["assembly-template_id".to_sym, :option_1])
       post_body = {
         :assembly_id => assembly_template_id
       }
@@ -89,7 +88,7 @@ module DTK::Client
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def deploy(context_params)
-      # assembly_template_id,name = context_params.retrieve_arguments([:assembly_template_id, :option_1])
+      # assembly_template_id,name = context_params.retrieve_arguments(["assembly-template_id".to_sym, :option_1])
 
       response = stage(context_params)
 
