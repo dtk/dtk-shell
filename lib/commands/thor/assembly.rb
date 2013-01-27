@@ -248,7 +248,7 @@ module DTK::Client
       post rest_url("assembly/info"), post_body
     end
 
-    desc "delete-and-destroy ASSEMBLY-ID [-y]", "Delete assembly instance, termining any nodes taht have been spun up"
+    desc "delete-and-destroy ASSEMBLY-NODE/ID [-y]", "Delete assembly instance, termining any nodes taht have been spun up"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
       assembly_id = context_params.retrieve_arguments([:option_1])
@@ -256,17 +256,8 @@ module DTK::Client
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
         #used form "+'?' because ?" confused emacs ruby rendering
-        what = (assembly_ids.split(',').size == 1 ? "assembly" : "assemblies")
-        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_ids}' and its nodes"+'?')
-      end
-      response = nil
-      assembly_ids.split(',').each do |assembly_id|
-        post_body = {
-          :assembly_id => assembly_id,
-          :subtype => :instance
-        }
-        response = post rest_url("assembly/delete"), post_body
-        return response unless response.ok?()
+        what = "assembly"
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_id}' and its nodes"+'?')
       end
 
       post_body = {
