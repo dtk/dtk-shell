@@ -216,7 +216,7 @@ module DTK
       attr_reader :connection_error
 
       # DEBUG SNIPPET >>> REMOVE <<<
-      require 'ap'
+      #require 'ap'
                
 
       def rest_url(route=nil)
