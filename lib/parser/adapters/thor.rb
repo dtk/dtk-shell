@@ -209,6 +209,17 @@ module DTK
           raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
         end
 
+        # returns method name and usage
+        def current_method_info
+          return @_initializer[2][:current_task].name, @_initializer[2][:current_task].usage
+        end
+
+        # returns names of the arguments, after the method name
+        def method_argument_names
+          name, usage = current_method_info
+          return usage.split(name.gsub(/_/,'-')).last.split(' ')
+        end 
+
         def is_numeric_id?(possible_id)             
           return !possible_id.match(/^[0-9]+$/).nil?
         end
