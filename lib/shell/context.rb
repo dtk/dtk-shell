@@ -68,8 +68,9 @@ module DTK
       # /assembly/223232333/nodes/1231232332/attributes
       def calculate_proper_command(delimited_inputs)
         # select last word that is enclosed with //
-        # TODO: Fix this later on with proper Regexp           
-        match = "/#{delimited_inputs}".match(/\/(.+)\//)
+        # TODO: Fix this later on with proper Regexp
+        input_for_check = delimited_inputs.start_with?('/') ? delimited_inputs : "/#{delimited_inputs}"
+        match = input_for_check.match(/\/(.+)\//)
         return nil if match.nil?
 
         inputs = match[1].split('/')
@@ -101,6 +102,10 @@ module DTK
             inputs = readline_input.split(/\//)
             user_input = inputs.pop
           end
+
+          # remove empty imputs (due to starting slash)
+          inputs = inputs.select { |e| !e.empty? }
+             
 
           if command
             command_context   = get_command_identifiers(command, inputs.dup)
@@ -314,6 +319,7 @@ module DTK
         else
           context_params.current_context = @active_context.clone_me
           entity_name = @active_context.name_list.first
+          entity_name ||= "dtk"
           method_name = cmd
         end
 
@@ -348,7 +354,7 @@ module DTK
 
             # if there is a value and there no more commands
             if value 
-              # TODO: Current fix, if we need real ID we need to fix this
+              # TODO: FIX - currently we have 2 server requests; re-use invoc ...
                  
               identifier_response = valid_id?(command, value, context_params)
 

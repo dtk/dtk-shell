@@ -68,7 +68,7 @@ class Thor
 
 
       if list.empty?
-        shell.say "No tasks for current context '#{@@shell_context.active_commands.join('/')}'." 
+        shell.say "No tasks for current context '#{@@shell_context.active_context.full_path}'." 
       else  
         shell.say "Tasks:"
       end

@@ -109,7 +109,7 @@ def validate_command(clazz, current_context_clazz, command)
 end
 
 def validate_value(command, value)
-context_hash_data = nil
+  context_hash_data = nil
    # check value
   if value
     context_hash_data = @context.valid_id?(command, value)
@@ -219,7 +219,7 @@ def execute_shell_command(line, prompt)
 
       # send monkey patch class information about context
       Thor.set_context(@context)
-
+      
       # we get command and hash params
       entity_name, method_name, context_params, thor_options = @context.get_command_parameters(cmd,args)
 

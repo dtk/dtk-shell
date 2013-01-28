@@ -164,7 +164,8 @@ module DTK
       # we allow change only for valid ID/NAME
       def self.valid_id?(value, conn, context_params)
         context_list = self.get_identifiers(conn, context_params)
-        results = context_list.select { |e| e[:name].eql?(value) || e[:identifier].eql?(value)}
+
+        results = context_list.select { |e| e[:name].eql?(value) || e[:identifier].eql?(value.to_i)}
 
         return results.empty? ? nil : results.first
       end

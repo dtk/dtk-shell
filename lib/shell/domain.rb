@@ -25,8 +25,10 @@ module DTK
             id = matched[1].to_i - 1
             element = @method_arguments[id]
           else
-            split_info = key.to_s.split('_')
-            entity_name = split_info[0]
+            # More complex split regex for extracting entitiy name from mapping due to complex context names
+            # i.e. assembly-template will have assembly_template_id mapping
+            split_info = key.to_s.split(/_([a-z]+$)/)
+            entity_name = split_info[0].gsub(/_/,'-')
             id_type     = split_info[1]
             context_identifier = @current_context.find_identifier(entity_name)
             if context_identifier
