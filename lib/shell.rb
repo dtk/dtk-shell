@@ -109,7 +109,7 @@ def validate_command(clazz, current_context_clazz, command)
 end
 
 def validate_value(command, value)
-  context_hash_data = nil
+context_hash_data = nil
    # check value
   if value
     context_hash_data = @context.valid_id?(command, value)

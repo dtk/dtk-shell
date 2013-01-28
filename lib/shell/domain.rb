@@ -104,7 +104,7 @@ module DTK
 
       def clone_me()
         inst = ActiveContext.new
-        inst.context_list = @context_list.dup
+        inst.context_list = @context_list.clone
         return inst
       end
 
