@@ -217,7 +217,7 @@ module DTK::Client
 
     desc "MODULE-NAME/ID push-to-remote [-v VERSION]", "Push local copy of component module to remote repository."
     version_method_option
-    def pull_from_remote(context_params)
+    def push_to_remote(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       push_to_remote_aux(:component_module,component_module_id,options["version"])
     end
