@@ -1,6 +1,10 @@
 require File.expand_path('../../lib/client', File.dirname(__FILE__))
-dtk_nested_require("../../lib/parser/adapters","thor")
-dtk_nested_require("../../lib/shell","context")
+require File.expand_path('../../lib/parser/adapters/thor',    File.dirname(__FILE__))
+require File.expand_path('../../lib/shell/context', File.dirname(__FILE__))
+require File.expand_path('../../lib/shell/domain', File.dirname(__FILE__))
+Dir[File.expand_path('../../lib/shell/parse_monkey_patch.rb', File.dirname(__FILE__))].each {|file| require file }
+# dtk_nested_require("../../lib/parser/adapters","thor")
+# dtk_nested_require("../../lib/shell","context")
 
 require 'active_support/core_ext/string/inflections'
 require 'shellwords'
@@ -21,7 +25,8 @@ module SpecThor
         args = ['help']
     end
 
-    entity_name, method_name, hashed_argv, options_args = DTK::Shell::Context.get_dtk_command_parameters(cmd, args)
+    context = DTK::Shell::Context.new(true)
+    entity_name, method_name, hashed_argv, options_args = context.get_dtk_command_parameters(cmd, args)
     entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
 
     return entity_class.execute_from_cli(conn,method_name,hashed_argv,options_args,true)

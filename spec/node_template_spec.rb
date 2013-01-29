@@ -14,7 +14,7 @@ describe DTK::Client::NodeTemplate do
     end
 
     unless $node_template_list.nil?
-      $node_template_id = $node_template_list['data'].first['id'] unless $node_template_list['data'].nil?
+      $node_template_id = $node_template_list['data'].first['id'] unless ($node_template_list['data'].empty? || $node_template_list['data'].nil?)
     end
   end
 	
