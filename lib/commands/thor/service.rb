@@ -234,6 +234,22 @@ module DTK::Client
       }
       post rest_url("service_module/remove_user_direct_access"), post_body
     end
+
+    desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
+    def assembly_template(context_params)
+
+      service_id, method_name = context_params.retrieve_arguments([:service_name!, :option_1!],method_argument_names)
+
+      options_args = ["-s", service_id]
+      
+      entity_name = "assembly_template"
+      load_command(entity_name)
+      entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
+      
+      response = entity_class.execute_from_cli(@conn, method_name, DTK::Shell::ContextParams.new, options_args, false)
+
+    end
+
 =begin
 TODO: needs to be rewritten
     desc "create-jenkins-project SERVICE-ID", "Create Jenkins project for service module"

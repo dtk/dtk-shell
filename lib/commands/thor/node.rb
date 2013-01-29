@@ -179,7 +179,7 @@ module DTK::Client
     desc "NODE-NAME/ID start", "Start node instance."
     def start(context_params)
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
-      assembly_id,node_id = get_assembly_and_node_id(node_id)
+      assembly_id,node_id = get_assembly_and_node_id(context_params)
       assembly_start(assembly_id, node_id)
     end
 
