@@ -21,7 +21,8 @@ module SpecThor
         args = ['help']
     end
 
-    entity_name, method_name, hashed_argv, options_args = DTK::Shell::Context.get_dtk_command_parameters(cmd, args)
+    context = DTK::Shell::Context.new(true)
+    entity_name, method_name, hashed_argv, options_args = context.get_dtk_command_parameters(cmd, args)
     entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
 
     return entity_class.execute_from_cli(conn,method_name,hashed_argv,options_args,true)
