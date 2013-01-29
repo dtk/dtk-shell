@@ -13,7 +13,7 @@ module DTK::Client
     desc "delete REPO-ID", "Delete repo"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
-      repo_id = context_params.retrieve_arguments([:repo_id])
+      repo_id = context_params.retrieve_arguments([:repo_id!],method_argument_names)
       unless options.force?
         # Ask user if really want to delete repo, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete repo '#{repo_id}'?")
@@ -25,7 +25,7 @@ module DTK::Client
 
     desc "sync REPO-ID", "Synchronize target repo from actual files"
     def sync(context_params)
-      repo_id = context_params.retrieve_arguments([:repo_id])
+      repo_id = context_params.retrieve_arguments([:repo_id!],method_argument_names)
       post_body_hash = {:repo_id => repo_id}
       post rest_url("repo/synchronize_target_repo"),post_body_hash
     end

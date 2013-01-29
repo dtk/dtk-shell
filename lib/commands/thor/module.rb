@@ -22,13 +22,13 @@ module DTK::Client
 #TODO: in for testing; may remove
     desc "MODULE/NAME-ID test-generate-dsl", "Test generating DSL from implementation"
     def test_generate_dsl(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id])
+      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       post rest_url("component_module/test_generate_dsl"),{:component_module_id => component_module_id}
     end
 
     desc "MODULE/NAME-ID dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
     def dsl_upgrade(context_params)
-      component_module_id, dsl_version = context_params.retrieve_arguments([:module_id, :option_1])
+      component_module_id, dsl_version = context_params.retrieve_arguments([:module_id, :option_1],method_argument_names)
       dsl_version ||= MostRecentDSLVersion
       post_body = {
         :component_module_id => component_module_id,
@@ -43,7 +43,7 @@ module DTK::Client
     desc "delete MODULE-NAME/ID", "Delete component module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
-      component_module_id = context_params.retrieve_arguments([:option_1])
+      component_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
      unless options.force?
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
@@ -62,7 +62,7 @@ module DTK::Client
 
     desc "create MODULE-NAME", "Create new module from local clone"
     def create(context_params)
-      module_name = context_params.retrieve_arguments([:option_1])
+      module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       
       #first check that there is a directory there and it is not already a git repo, and it ha appropriate content
       response = Helper(:git_repo).check_local_dir_exists_with_content(:component_module,module_name)
@@ -107,7 +107,7 @@ module DTK::Client
     desc "MODULE/NAME-ID info", "Get information about given component module."
     def info(context_params)
       
-      component_module_id = context_params.retrieve_arguments([:module_id])
+      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       
       post_body = {
         :component_module_id => component_module_id
@@ -128,7 +128,7 @@ module DTK::Client
     desc "MODULE-NAME/ID list-components", "List all components for given component module."
     #TODO: support info on remote
     def list_components(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id])
+      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       post_body = {
         :component_module_id => component_module_id,
         :about => 'components'
@@ -153,7 +153,7 @@ module DTK::Client
     #if multiple items and failire; stops on first failure
     desc "import REMOTE-MODULE-NAME","Import remote component module into local environment"
     def import(context_params)
-      remote_module_name = context_params.retrieve_arguments([:option_1])
+      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       local_module_name = remote_module_name
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name)
         raise DtkError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
@@ -172,7 +172,7 @@ module DTK::Client
 
     desc "MODULE-NAME/ID import-version VERSION", "Import a specfic version from a linked component module"
     def import_version(context_params)
-      component_module_id,version = context_params.retrieve_arguments([:module_id,:option_1])
+      component_module_id,version = context_params.retrieve_arguments([:module_id!,:option_1!],method_argument_names)
       post_body = {
         :component_module_id => component_module_id,
         :version => version
@@ -188,7 +188,7 @@ module DTK::Client
     
     desc "delete-remote REMOTE-MODULE", "Delete remote component module"
     def delete_remote(context_params)
-      remote_modules = context_params.retrieve_arguments([:option_1])
+      remote_modules = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post_body = {
        :remote_module_name => remote_module_name
       }
@@ -197,7 +197,7 @@ module DTK::Client
 
     desc "MODULE/NAME-ID export", "Export component module to remote repository."
     def export(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id])
+      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       post_body = {
         :component_module_id => component_module_id
       }
@@ -207,7 +207,7 @@ module DTK::Client
 
     desc "MODULE/NAME-ID push-to-remote", "Push local copy of component module to remote repository."
     def push_to_remote(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id])
+      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       post_body = {
         :component_module_id => component_module_id
       }
@@ -218,14 +218,14 @@ module DTK::Client
     desc "MODULE-NAME/ID push-to-remote [-v VERSION]", "Push local copy of component module to remote repository."
     version_method_option
     def pull_from_remote(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id])
+      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       push_to_remote_aux(:component_module,component_module_id,options["version"])
     end
 
     desc "MODULE-NAME/ID pull-from-remote [-v VERSION]", "Update local component module from remote repository."
     version_method_option
     def pull_from_remote(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id])
+      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       pull_from_remote_aux(:component_module,component_module_id,options["version"])
     end
 
@@ -234,7 +234,7 @@ module DTK::Client
     #### commands to manage workspace and versioning ###
     desc "MODULE-NAME/ID create-new-version NEW-VERSION", "Snapshot current state of module as a new version"
     def create_new_version(context_params)
-      component_module_id,version = context_params.retrieve_arguments([:module_id,:option_1])
+      component_module_id,version = context_params.retrieve_arguments([:module_id!,:option_1!],method_argument_names)
       post_body = {
         :component_module_id => component_module_id,
         :version => version
@@ -253,14 +253,14 @@ module DTK::Client
     desc "MODULE-NAME/ID clone [-v VERSION]", "Clone into client the component module files"
     version_method_option
     def clone(context_params, internal_trigger=false)
-      component_module_id = context_params.retrieve_arguments([:module_id])
+      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
 
       clone_aux(:component_module,component_module_id,options["version"],internal_trigger)
     end
 
     desc "MODULE/NAME-ID edit","Switch to unix editing for given module."
     def edit(context_params)
-      module_name = context_params.retrieve_arguments([:module_id])
+      module_name = context_params.retrieve_arguments([:module_id],method_argument_names)
 
       # if this is not name it will not work, we need module name
       if module_name =~ /^[0-9]+$/
@@ -338,7 +338,7 @@ module DTK::Client
     desc "MODULE-NAME/ID push-clone-changes [-v VERSION]", "Push changes from local copy of module to server"
     version_method_option
     def push_clone_changes(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id])
+      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       push_clone_changes_aux(:component_module,component_module_id,options["version"])
     end
 
@@ -349,7 +349,7 @@ module DTK::Client
     #Change from having module-command/add_direct_access to being a command to being done when client is installed if user wants this option
     desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def add_direct_access(context_params)
-      path_to_key = context_params.retrieve_arguments([:option_1])
+      path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
 
       path_to_key ||= SshProcessing.default_rsa_pub_key_path()
       unless File.file?(path_to_key)
@@ -368,7 +368,7 @@ module DTK::Client
 
     desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def remove_direct_access(context_params)
-      path_to_key = context_params.retrieve_arguments([:option_1])
+      path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
 
       path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
       unless File.file?(path_to_key)

@@ -11,7 +11,7 @@ module DTK::Client
 
     desc "create TARGET-NAME [DESCRIPTION]","Create new target"
     def create(context_params)
-      target_name, description = context_params.retrieve_arguments([:option_1,:option_2])
+      target_name, description = context_params.retrieve_arguments([:option_1!,:option_2],method_argument_names)
 
       post_body = {
         :target_name => target_name,
@@ -26,7 +26,7 @@ module DTK::Client
 
     desc "[TARGET-NAME/ID] list [nodes|assemblies]","List nodes or assembly instances in given targets."
     def list(context_params)
-      target_id, about = context_params.retrieve_arguments([:target_id, :option_1])
+      target_id, about = context_params.retrieve_arguments([:target_id, :option_1],method_argument_names)
       if target_id.nil?
         response  = post rest_url("target/list")
         response.render_table(:target)
@@ -53,7 +53,7 @@ module DTK::Client
     
     desc "create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create assembly template from nodes in target" 
     def create_assembly(context_params)
-      service_module_name, assembly_name = context_params.retrieve_arguments([:option_1, :option_2])
+      service_module_name, assembly_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
       post_body = {
         :service_module_name => service_module_name,
         :assembly_name => assembly_name
