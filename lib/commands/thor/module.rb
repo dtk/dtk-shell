@@ -20,13 +20,13 @@ module DTK::Client
     end
 
 #TODO: in for testing; may remove
-    desc "MODULE/NAME-ID test-generate-dsl", "Test generating DSL from implementation"
+    desc "MODULE-NAME/ID test-generate-dsl", "Test generating DSL from implementation"
     def test_generate_dsl(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       post rest_url("component_module/test_generate_dsl"),{:component_module_id => component_module_id}
     end
 
-    desc "MODULE/NAME-ID dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
+    desc "MODULE-NAME/ID dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
     def dsl_upgrade(context_params)
       component_module_id, dsl_version = context_params.retrieve_arguments([:module_id, :option_1],method_argument_names)
       dsl_version ||= MostRecentDSLVersion
@@ -104,7 +104,7 @@ module DTK::Client
     #### end: create and delete commands ###
 
     #### list and info commands ###
-    desc "MODULE/NAME-ID info", "Get information about given component module."
+    desc "MODULE-NAME/ID info", "Get information about given component module."
     def info(context_params)
       
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
@@ -195,7 +195,7 @@ module DTK::Client
       post rest_url("component_module/delete_remote"), post_body
     end
 
-    desc "MODULE/NAME-ID export", "Export component module to remote repository."
+    desc "MODULE-NAME/ID export", "Export component module to remote repository."
     def export(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       post_body = {
@@ -205,7 +205,7 @@ module DTK::Client
       post rest_url("component_module/export"), post_body
     end
 
-    desc "MODULE/NAME-ID push-to-remote", "Push local copy of component module to remote repository."
+    desc "MODULE-NAME/ID push-to-remote", "Push local copy of component module to remote repository."
     def push_to_remote(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       post_body = {
@@ -258,7 +258,7 @@ module DTK::Client
       clone_aux(:component_module,component_module_id,options["version"],internal_trigger)
     end
 
-    desc "MODULE/NAME-ID edit","Switch to unix editing for given module."
+    desc "MODULE-NAME/ID edit","Switch to unix editing for given module."
     def edit(context_params)
       module_name = context_params.retrieve_arguments([:module_id],method_argument_names)
 
