@@ -16,7 +16,7 @@ describe DTK::Client::Node do
     end
 
     unless $node_list.nil?
-      $node_id = $node_list['data'].first['id'] unless $node_list['data'].nil?
+      $node_id = $node_list['data'].first['id'] unless ($node_list['data'].empty? || $node_list['data'].nil?)
     end
   end
 

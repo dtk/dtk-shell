@@ -14,7 +14,7 @@ describe DTK::Client::ComponentTemplate do
     end
 
     unless $component_template_list.nil?
-      $component_template_id = $component_template_list['data'].first['id'] unless $component_template_list['data'].nil?
+      $component_template_id = $component_template_list['data'].first['id'] unless ($component_template_list['data'].empty? || $component_template_list['data'].nil?)
     end
   end
 
