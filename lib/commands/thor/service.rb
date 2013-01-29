@@ -31,7 +31,7 @@ module DTK::Client
     ##MERGE-QUESTION: need to add options of what info is about
     desc "SERVICE-NAME/ID info", "Provides information about specified service module"
     def info(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id])
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       post_body = {
        :service_module_id => service_module_id
       }
@@ -45,7 +45,7 @@ module DTK::Client
     method_option :list, :type => :boolean, :default => false
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id])
+      service_module_id = context_params.retrieve_arguments([:service_id],method_argument_names)
       about = service_module_id  && 'assembly-templates'
       post_body = {
        :service_module_id => service_module_id,
@@ -78,7 +78,7 @@ module DTK::Client
     version_method_option
     def import(context_params)
 
-      remote_module_name = context_params.retrieve_arguments([:option_1])
+      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       local_module_name = remote_module_name
       version = options["version"]
@@ -100,7 +100,7 @@ module DTK::Client
 
     desc "SERVICE-NAME/ID export", "Export service module to remote repo"
     def export(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id])
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
 
       post_body = {
        :service_module_id => service_module_id
@@ -110,13 +110,13 @@ module DTK::Client
 
     desc "SERVICE-NAME/ID push-to-remote", "Push local copy of service module to remote repository."
     def push_to_remote(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id])
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       push_to_remote_aux(:service_module,service_module_id)
     end
 
     desc "SERVICE-NAME/ID pull-from-remote", "Update local service module from remote repository."
     def pull_from_remote(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id])
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       pull_from_remote_aux(:service_module,service_module_id)
     end
 
@@ -128,7 +128,7 @@ module DTK::Client
     desc "SERVICE-NAME/ID clone", "Clone into client the service module files"
     version_method_option
     def clone(context_params, internal_trigger=false)
-      service_module_id = context_params.retrieve_arguments([:service_id])
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       version = options["version"]
       clone_aux(:service_module,service_module_id,version,internal_trigger)
     end
@@ -136,14 +136,14 @@ module DTK::Client
     desc "SERVICE-NAME/ID push-clone-changes", "Push changes from local copy of service module to server"
     version_method_option
     def push_clone_changes(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id])
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       version = options["version"]
       push_clone_changes_aux(:service_module,service_module_id,version)
     end
 
     desc "SERVICE-NAME/ID set-module-version COMPONENT-MODULE-NAME VERSION", "Set the version of the component module to use in the service's assemblies"
     def set_module_version(context_params)
-      service_module_id,component_module_id,version = context_params.retrieve_arguments([:service_id,:option_1,:option_2])
+      service_module_id,component_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
       post_body = {
         :service_module_id => service_module_id,
         :component_module_id => component_module_id,
@@ -159,7 +159,7 @@ module DTK::Client
     # TODO: put in two versions, one that creates empty and anotehr taht creates from local dir; use --empty flag
     desc "create SERVICE-NAME", "Create an empty service module"
     def create(context_params)
-      module_name = context_params.retrieve_arguments([:option_1])
+      module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       post_body = {
        :module_name => module_name
@@ -174,7 +174,7 @@ module DTK::Client
     desc "delete SERVICE-NAME/ID", "Delete service module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
-      service_module_id = context_params.retrieve_arguments([:option_1])
+      service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
@@ -193,7 +193,7 @@ module DTK::Client
 
     desc "delete-remote REMOTE-MODULE", "Delete remote service module"
     def delete_remote(context_params)
-      remote_module_name = context_params.retrieve_arguments([:option_1])
+      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post_body = {
        :remote_module_name => remote_module_name
       }
@@ -205,7 +205,7 @@ module DTK::Client
 
     desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def add_direct_access(context_params)
-      path_to_key = context_params.retrieve_arguments([:option_1])
+      path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
       path_to_key ||= SshProcessing.default_rsa_pub_key_path()
       unless File.file?(path_to_key)
         raise DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
@@ -223,7 +223,7 @@ module DTK::Client
 
     desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def remove_direct_access(context_params)
-      path_to_key = context_params.retrieve_arguments([:option_1])
+      path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
       path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
       unless File.file?(path_to_key)
         raise  DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
@@ -238,7 +238,7 @@ module DTK::Client
 TODO: needs to be rewritten
     desc "create-jenkins-project SERVICE-ID", "Create Jenkins project for service module"
     def create_jenkins_project(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id])
+      service_module_id = context_params.retrieve_arguments([:service_id],method_argument_names)
       #require put here so dont necessarily have to install jenkins client gems
 
       dtk_require_from_base('command_helpers/jenkins_client')

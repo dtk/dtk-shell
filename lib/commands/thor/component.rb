@@ -38,7 +38,7 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID set ATTRIBUTE-PATTERN VALUE", "Set target component attributes"
     def set(context_params)
-      assembly_id, node_id, component_id, pattern, value = context_params.retrieve_arguments([:assembly_id, :node_id, :component_id, :option_1,:option_2])
+      assembly_id, node_id, component_id, pattern, value = context_params.retrieve_arguments([:assembly_id, :node_id, :component_id, :option_1,:option_2],method_argument_names)
       post_body = {
         :assembly_id => assembly_id,
         :pattern => pattern,

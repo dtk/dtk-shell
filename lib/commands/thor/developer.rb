@@ -7,7 +7,7 @@ module DTK::Client
 
     desc "upload_agent PATH-TO-AGENT[.rb,.dll] NODE-ID-PATTERN", "Uploads agent and ddl file to requested nodes, pattern is regexp for filtering node ids." 
     def upload_agent(context_params)
-      agent, node_pattern = context_params.retrieve_arguments([:option_1, :option_2])
+      agent, node_pattern = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
       # if it doesn't contain extension upload both *.rb and *.ddl
       files = (agent.match(MATCH_FILE_NAME) ? [agent] : ["#{agent}.rb","#{agent}.ddl"])
     

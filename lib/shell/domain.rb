@@ -49,7 +49,7 @@ module DTK
             end
 
             unless element
-              errors << "#{entity_name.upcase} #{id_type.upcase}" if required
+              errors << "#{entity_name.upcase} ID/NAME" if required
             end
           end
 
@@ -57,7 +57,7 @@ module DTK
         end
 
         unless errors.empty?
-          raise DTK::Client::DtkError, "Missing required argument(s): #{errors.join(', ')}"
+          raise DTK::Client::DtkValidationError, "Missing required argument(s): #{errors.join(', ')}"
         end
 
         return ((results.size == 1) ? results.first : results)

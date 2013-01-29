@@ -40,7 +40,7 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID promote-to-library", "Update or create library assembly using workspace assembly"
     def promote_to_library(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!])
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
       post_body = {
         :assembly_id => assembly_id
       }
@@ -60,7 +60,7 @@ module DTK::Client
         mapping = [:assembly_id!,:option_1]
       end
 
-      assembly_id, node_pattern = context_params.retrieve_arguments(mapping)
+      assembly_id, node_pattern = context_params.retrieve_arguments(mapping,method_argument_names)
 
       assembly_start(assembly_id, node_pattern)
     end
@@ -73,7 +73,7 @@ module DTK::Client
         mapping = [:assembly_id!,:option_1]
       end
 
-      assembly_id, node_pattern = context_params.retrieve_arguments(mapping)
+      assembly_id, node_pattern = context_params.retrieve_arguments(mapping,method_argument_names)
 
       assembly_stop(assembly_id, node_pattern)
     end
@@ -81,7 +81,7 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID create-new-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Create a new assembly template from workspace assembly" 
     def create_new_template(context_params)        
-      assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!])
+      assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!],method_argument_names)
       post_body = {
         :assembly_id => assembly_id,
         :service_module_name => service_module_name,
@@ -100,7 +100,7 @@ module DTK::Client
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def converge(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id])
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
       # create task
       post_body = {
@@ -123,7 +123,7 @@ module DTK::Client
       :banner => "COUNT",
       :desc => "Number of sub-assemblies to add"
     def add(context_params)
-      assembly_id,service_add_on_name = context_params.retrieve_arguments([:assembly_id,:option_1])
+      assembly_id,service_add_on_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
 
       # create task
       post_body = {
@@ -142,7 +142,7 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to the assembly" 
     def possible_extensions(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id])
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
       post_body = {
         :assembly_id => assembly_id
@@ -154,13 +154,13 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id])
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
       task_status_aux(assembly_id,:assembly,options.wait?)
     end
 
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
     def run_smoketests(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id])
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
       post_body = {
         :assembly_id => assembly_id
       }
@@ -176,7 +176,7 @@ module DTK::Client
     desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
-      assembly_id, about, filter = context_params.retrieve_arguments([:assembly_id,:option_1,:option_2])
+      assembly_id, about, filter = context_params.retrieve_arguments([:assembly_id,:option_1,:option_2],method_argument_names)
 
       if context_params.is_there_command?(:node)
         about ||= 'nodes'
@@ -231,7 +231,7 @@ module DTK::Client
 
     desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
     def list_smoketests(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id])
+      assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       post_body = {
         :assembly_id => assembly_id
@@ -241,7 +241,7 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID info", "Return info about assembly instance identified by name/id"
     def info(context_params)
-      assembly_id, node_id = context_params.retrieve_arguments([:assembly_id,:node_id])
+      assembly_id, node_id = context_params.retrieve_arguments([:assembly_id!,:node_id],method_argument_names)
 
       # TODO: Add node id filter on server side      
       post_body = {
@@ -254,7 +254,7 @@ module DTK::Client
     desc "delete-and-destroy ASSEMBLY-NODE/ID [-y]", "Delete assembly instance, termining any nodes taht have been spun up"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
-      assembly_id = context_params.retrieve_arguments([:option_1])
+      assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
@@ -278,12 +278,12 @@ module DTK::Client
     def set(context_params)
 
       if context_params.is_there_identifier?(:attribute)
-        mapping = [:assembly_id,:attribute_name, :option_1]
+        mapping = [:assembly_id!,:attribute_name!, :option_1!]
       else
-        mapping = [:assembly_id,:option_1,:option_2]
+        mapping = [:assembly_id!,:option_1!,:option_2!]
       end
 
-      assembly_id, pattern, value = context_params.retrieve_arguments(mapping)
+      assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
 
       post_body = {
         :assembly_id => assembly_id,
@@ -296,7 +296,7 @@ module DTK::Client
 
     desc "create-jenkins-project ASSEMBLY-TEMPLATE-NAME/ID", "Create Jenkins project for assembly template"
     def create_jenkins_project(context_params)
-      assembly_id  = context_params.retrieve_arguments([:assembly_id])
+      assembly_id  = context_params.retrieve_arguments([:option_1!],method_argument_names)
       #require put here so dont necessarily have to install jenkins client gems
       dtk_require_from_base('command_helpers/jenkins_client')
       post_body = {
@@ -317,13 +317,13 @@ module DTK::Client
       # If method is invoked from 'assembly/node' level retrieve node_id argument 
       # directly from active context
       if context_params.is_there_identifier?(:node)
-        mapping = [:assembly_id,:node_id,:option_1]
+        mapping = [:assembly_id!,:node_id!,:option_1!]
       else
         # otherwise retrieve node_id from command options
-        mapping = [:assembly_id,:option_1,:option_2]
+        mapping = [:assembly_id!,:option_1!,:option_2!]
       end
 
-      assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping)
+      assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
 
 
       post_body = {
@@ -337,7 +337,7 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID delete-component COMPONENT-ID","Delete component from assembly"
     def delete_component(context_params)
-      assembly_id,node_id,component_id = context_params.retrieve_arguments([:assembly_id,:node_id,:option_1])
+      assembly_id,node_id,component_id = context_params.retrieve_arguments([:assembly_id!,:node_id,:option_1!],method_argument_names)
 
       # TODO: Add method with constraint Node ID on server side
       post_body = {
@@ -350,7 +350,7 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID get-netstats", "Get netstats"
     def get_netstats(context_params)
-      assembly_id,node_id = context_params.retrieve_arguments([:assembly_id,:node_id])
+      assembly_id,node_id = context_params.retrieve_arguments([:assembly_id!,:node_id],method_argument_names)
 
       # TODO: Add support for node ID on this methods on server side
       post_body = {
@@ -391,7 +391,7 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
     def set_required_params(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id])
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
       set_required_params_aux(assembly_id,:assembly,:instance)
     end
 
@@ -399,12 +399,12 @@ module DTK::Client
     method_option :more, :type => :boolean, :default => false
     def tail(context_params)
       if context_params.is_there_identifier?(:node)
-        mapping = [:assembly_id,:node_id,:option_1,:option_2]
+        mapping = [:assembly_id!,:node_id!,:option_1!,:option_2]
       else
-        mapping = [:assembly_id,:option_1,:option_2,:option_3]
+        mapping = [:assembly_id!,:option_1!,:option_2!,:option_3]
       end
       
-      assembly_id,node_identifier,log_path,grep_option = context_params.retrieve_arguments(mapping)
+      assembly_id,node_identifier,log_path,grep_option = context_params.retrieve_arguments(mapping,method_argument_names)
      
       last_line = nil
       begin
@@ -511,12 +511,12 @@ module DTK::Client
     def grep(context_params)
       
     if context_params.is_there_identifier?(:node)
-      mapping = [:assembly_id,:option_1,:node_id,:option_2]
+      mapping = [:assembly_id!,:option_1!,:node_id!,:option_2!]
     else
-      mapping = [:assembly_id,:option_1,:option_2,:option_3]
+      mapping = [:assembly_id!,:option_1!,:option_2!,:option_3!]
     end
 
-    assembly_id,log_path,node_pattern,grep_pattern = context_params.retrieve_arguments(mapping)
+    assembly_id,log_path,node_pattern,grep_pattern = context_params.retrieve_arguments(mapping,method_argument_names)
        
     begin
       post_body = {
