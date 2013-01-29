@@ -10,7 +10,7 @@ describe DTK::Client::NodeTemplate do
     $node_template_list = run_from_dtk_shell('node-template list')
 
     it "should have node-template listing" do
-      $node_template_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
+      $node_template_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
     end
 
     unless $node_template_list.nil?

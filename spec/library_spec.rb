@@ -11,7 +11,7 @@ describe DTK::Client::Library do
     $library_list = run_from_dtk_shell('library list')
 
     it "should have library listing" do
-      $library_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
+      $library_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
     end
 
     unless $library_list.nil?
@@ -27,7 +27,7 @@ describe DTK::Client::Library do
         output = run_from_dtk_shell("library #{$library_id} list #{type}")
 
         it "should list all #{type} for library with id #{$library_id}" do
-          output.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
+          output.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
         end
       end
     end

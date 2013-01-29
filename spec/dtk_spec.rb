@@ -13,11 +13,11 @@ describe DTK::Client::Dtk do
     output = f.readlines.join('')
 
     it "should have assembly listing" do
-      output.should match(/(dtk assembly|empty|error|WARNING)/)
+      output.should match(/(dtk assembly|empty|WARNING)/)
     end
 
     it "should have node listing" do
-      output.should match(/(dtk node|empty|error|WARNING)/)
+      output.should match(/(dtk node|empty|WARNING)/)
     end
 
     # it "should have repo listing" do
@@ -25,7 +25,7 @@ describe DTK::Client::Dtk do
     # end
 
     it "should have task listing" do
-      output.should match(/(dtk task|empty|error|WARNING)/)
+      output.should match(/(dtk task|empty|WARNING)/)
     end
   end
     

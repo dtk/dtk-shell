@@ -11,7 +11,7 @@ describe DTK::Client::Target do
     $target_list = run_from_dtk_shell('target list')
 
     it "should have target listing" do
-      $target_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
+      $target_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
     end
 
     unless $target_list.nil?
@@ -28,7 +28,7 @@ describe DTK::Client::Target do
         output = run_from_dtk_shell("target #{$target_id} list #{type}")
 
         it "should list all #{type} for target with id #{$target_id}" do
-          output.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
+          output.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
         end
       end
     end

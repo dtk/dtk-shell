@@ -12,7 +12,7 @@ describe DTK::Client::Service do
     $service_list = run_from_dtk_shell('service list')
     
     it "should have service listing" do
-      $service_list.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
+      $service_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
     end
 
     unless $service_list.nil?
@@ -29,7 +29,7 @@ describe DTK::Client::Service do
         output = run_from_dtk_shell("service #{$service_id} list #{type}")
 
         it "should list all #{type} for service with id #{$service_id}" do
-          output.to_s.should match(/(ok|status|empty|error|WARNING|name|id)/)
+          output.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
         end
       end
     end
