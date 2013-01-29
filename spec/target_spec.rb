@@ -15,7 +15,7 @@ describe DTK::Client::Target do
     end
 
     unless $target_list.nil?
-      $target_id = $target_list['data'].first['id'] unless $target_list['data'].nil?
+      $target_id = $target_list['data'].first['id'] unless ($target_list['data'].empty? || $target_list['data'].nil?)
     end
   end
 

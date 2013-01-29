@@ -16,7 +16,7 @@ describe DTK::Client::Assembly do
     end
 
     unless $assembly_list.nil?
-      $assembly_id = $assembly_list['data'].first['id'] unless $assembly_list['data'].nil?
+      $assembly_id = $assembly_list['data'].first['id'] unless ($assembly_list['data'].empty? || $assembly_list['data'].nil?)
     end
   end
 
