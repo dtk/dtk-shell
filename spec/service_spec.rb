@@ -16,7 +16,9 @@ describe DTK::Client::Service do
     end
 
     unless $service_list.nil?
-      $service_id = $service_list['data'].first['id'] unless ($service_list['data'].empty? || $service_list['data'].nil?)
+      unless $service_list['data'].nil?
+        $service_id = $service_list['data'].first['id'] unless $service_list['data'].empty?
+      end
     end
   end
 

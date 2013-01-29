@@ -1,6 +1,8 @@
 require File.expand_path('../../lib/client', File.dirname(__FILE__))
-dtk_nested_require("../../lib/parser/adapters","thor")
-dtk_nested_require("../../lib/shell","context")
+require File.expand_path('../../lib/parser/adapters/thor',    File.dirname(__FILE__))
+require File.expand_path('../../lib/shell/context', File.dirname(__FILE__))
+require File.expand_path('../../lib/shell/domain', File.dirname(__FILE__))
+Dir[File.expand_path('../../lib/shell/parse_monkey_patch.rb', File.dirname(__FILE__))].each {|file| require file }
 
 require 'active_support/core_ext/string/inflections'
 require 'shellwords'

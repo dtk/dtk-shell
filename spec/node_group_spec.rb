@@ -17,7 +17,9 @@ describe DTK::Client::NodeGroup do
     end
 
     unless $node_group_list.nil?
-      $node_group_id = $node_group_list['data'].first['id'] unless ($node_group_list['data'].empty? || $node_group_list['data'].nil?)
+      unless $node_group_list['data'].nil?
+        $node_group_id = $node_group_list['data'].first['id'] unless $node_group_list['data'].empty?
+      end
     end
   end
 

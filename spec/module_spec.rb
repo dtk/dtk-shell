@@ -15,7 +15,9 @@ describe DTK::Client::Module do
     end
 
     unless $module_list.nil?
-      $module_id = $module_list['data'].first['id'] unless ($module_list['data'].empty? || $module_list['data'].nil?)
+      unless $module_list['data'].nil?
+        $module_id = $module_list['data'].first['id'] unless $module_list['data'].empty?
+      end
     end
   end
 

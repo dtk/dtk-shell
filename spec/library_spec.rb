@@ -15,7 +15,9 @@ describe DTK::Client::Library do
     end
 
     unless $library_list.nil?
-      $library_id = $library_list['data'].first['id'] unless ($library_list['data'].empty? || $library_list['data'].nil?)
+      unless $library_list['data'].nil?
+        $library_id = $library_list['data'].first['id'] unless $library_list['data'].empty?
+      end
     end
   end
 

@@ -15,7 +15,9 @@ describe DTK::Client::AssemblyTemplate do
     end
 
     unless $assembly_template_list.nil?
-      $assembly_template_id = $assembly_template_list['data'].first['id'] unless ($assembly_template_list['data'].empty? || $assembly_template_list['data'].nil?)
+      unless $assembly_template_list['data'].nil?
+        $assembly_template_id = $assembly_template_list['data'].first['id'] unless $assembly_template_list['data'].empty?
+      end
     end
   end
 

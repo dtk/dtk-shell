@@ -14,7 +14,9 @@ describe DTK::Client::Task do
     end
 
     unless $task_list.nil?
-    	$task_id = $task_list['data'].first['id'] unless ($task_list['data'].empty? || $task_list['data'].nil?)
+      unless $task_list['data'].nil?
+    	 $task_id = $task_list['data'].first['id'] unless $task_list['data'].empty?
+      end
     end
   end
 
