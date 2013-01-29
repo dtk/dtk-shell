@@ -219,7 +219,7 @@ def execute_shell_command(line, prompt)
 
       # send monkey patch class information about context
       Thor.set_context(@context)
-
+      
       # we get command and hash params
       entity_name, method_name, context_params, thor_options = @context.get_command_parameters(cmd,args)
 

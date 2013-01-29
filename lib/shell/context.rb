@@ -68,8 +68,9 @@ module DTK
       # /assembly/223232333/nodes/1231232332/attributes
       def calculate_proper_command(delimited_inputs)
         # select last word that is enclosed with //
-        # TODO: Fix this later on with proper Regexp           
-        match = "/#{delimited_inputs}".match(/\/(.+)\//)
+        # TODO: Fix this later on with proper Regexp
+        input_for_check = delimited_inputs.start_with?('/') ? delimited_inputs : "/#{delimited_inputs}"
+        match = input_for_check.match(/\/(.+)\//)
         return nil if match.nil?
 
         inputs = match[1].split('/')
@@ -84,12 +85,12 @@ module DTK
       # this method is used to scan and provide context to be available Readline.complete_proc
       def dynamic_autocomplete_context(readline_input)
         inputs = nil
-           
+
         n_level_commands = nil
 
         if readline_input.match /.*\/.*/
           # one before last
-          command = calculate_proper_command(readline_input)         
+          command = calculate_proper_command(readline_input)
 
           # get inputs from matched data
           if readline_input.match /.*\/$/
@@ -102,12 +103,16 @@ module DTK
             user_input = inputs.pop
           end
 
+          # remove empty imputs (due to starting slash)
+          inputs = inputs.select { |e| !e.empty? }
+             
+
           if command
-            command_context   = get_command_identifiers(command, inputs)
+            command_context   = get_command_identifiers(command, inputs.dup)
             command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
             n_level_commands  = command_name_list
           else
-            n_level_commands =  @cached_tasks['dtk']
+            n_level_commands =  ALL_COMMANDS
           end
 
         end
@@ -217,9 +222,9 @@ module DTK
 
       # calls 'valid_id?' method in Thor class to validate ID/NAME
       def valid_id?(thor_command_name,value, override_context_params = nil)
+         
         command_clazz = Context.get_command_class(thor_command_name)
-        if command_clazz.list_method_supported?
-          
+        if command_clazz.list_method_supported?          
           if override_context_params
             context_params = override_context_params
           else
@@ -236,7 +241,8 @@ module DTK
       end
 
       # get class identifiers for given thor command, returns array of identifiers
-      def get_command_identifiers(thor_command_name, autocomplete_input = [])           
+      def get_command_identifiers(thor_command_name, autocomplete_input = [])
+                      
         command_clazz = Context.get_command_class(thor_command_name)
         if command_clazz.list_method_supported?             
           # take just hashed arguemnts from multi return method
@@ -305,7 +311,7 @@ module DTK
         entity_name, method_name = nil, nil
 
         context_params = ContextParams.new
-
+        
         if root? && !args.empty?
           # this means that somebody is calling command with assembly/.. method_name
           entity_name = cmd
@@ -313,6 +319,7 @@ module DTK
         else
           context_params.current_context = @active_context.clone_me
           entity_name = @active_context.name_list.first
+          entity_name ||= "dtk"
           method_name = cmd
         end
 
@@ -347,7 +354,7 @@ module DTK
 
             # if there is a value and there no more commands
             if value 
-              # TODO: Current fix, if we need real ID we need to fix this
+              # TODO: FIX - currently we have 2 server requests; re-use invoc ...
                  
               identifier_response = valid_id?(command, value, context_params)
 

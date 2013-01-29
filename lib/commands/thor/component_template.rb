@@ -9,10 +9,10 @@ module DTK::Client
       return :component_template, "component/list", {:subtype => 'template'}
     end
 
-    desc "COMPONENT-NAME/ID info", "Get information about given component template."
+    desc "COMPONENT-TEMPLATE-NAME/ID info", "Get information about given component template."
     method_option :list, :type => :boolean, :default => false
     def info(context_params)
-      component_id = context_params.retrieve_arguments([:component_id])
+      component_id = context_params.retrieve_arguments([:component_template_id])
       data_type = :component
 
       post_body = {
@@ -26,12 +26,13 @@ module DTK::Client
       return response
     end
 
-    desc "COMPONENT-NAME/ID list nodes", "List all nodes for given component template."
+    desc "[COMPONENT-TEMPLATE-NAME/ID] list [nodes]", "List all nodes for given component template."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
-      component_id,about = context_params.retrieve_arguments([:component_id,:option_1])
+      component_id,about = context_params.retrieve_arguments([:component_template_id,:option_1])
       about ||= 'none'
       data_type = :component
+
 
       post_body = {
         :component_id => component_id,
@@ -53,10 +54,10 @@ module DTK::Client
       return response
     end
 
-    desc "COMPONENT-NAME/ID stage NODE-NAME/ID", "Stage indentified node for given component template."
+    desc "COMPONENT-TEMPLATE-NAME/ID stage NODE-NAME/ID", "Stage indentified node for given component template."
     method_option :list, :type => :boolean, :default => false
     def stage(context_params)
-      component_id, node_id = context_params.retrieve_arguments([:component_id,:option_1])
+      component_id, node_id = context_params.retrieve_arguments([:component_template_id,:option_1])
       data_type = :component
 
       post_body = {

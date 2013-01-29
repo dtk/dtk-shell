@@ -9,6 +9,9 @@ dtk_require_common_commands('thor/set_required_params')
 LOG_SLEEP_TIME   = Config::Configuration.get(:tail_log_frequency)
 DEBUG_SLEEP_TIME = Config::Configuration.get(:debug_task_frequency)
 
+# regex: (context_params.retrieve_arguments\([a-z\[\]:_,0-9!]+)
+# replace: $1,method_argument_names
+
 module DTK::Client
   class Assembly < CommandBaseThor
 
@@ -37,7 +40,7 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID promote-to-library", "Update or create library assembly using workspace assembly"
     def promote_to_library(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id])
+      assembly_id = context_params.retrieve_arguments([:assembly_id!])
       post_body = {
         :assembly_id => assembly_id
       }
@@ -52,9 +55,9 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
     def start(context_params)
       if context_params.is_there_identifier?(:node)
-        mapping = [:assembly_id,:node_id]
+        mapping = [:assembly_id!,:node_id]
       else
-        mapping = [:assembly_id,:option_1]
+        mapping = [:assembly_id!,:option_1]
       end
 
       assembly_id, node_pattern = context_params.retrieve_arguments(mapping)
@@ -65,9 +68,9 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID stop [NODE-ID-PATTERN]", "Stops all assembly's nodes, specific nodes can be selected via node id regex."
     def stop(context_params)
       if context_params.is_there_identifier?(:node)
-        mapping = [:assembly_id,:node_id]
+        mapping = [:assembly_id!,:node_id]
       else
-        mapping = [:assembly_id,:option_1]
+        mapping = [:assembly_id!,:option_1]
       end
 
       assembly_id, node_pattern = context_params.retrieve_arguments(mapping)
@@ -77,8 +80,8 @@ module DTK::Client
 
 
     desc "ASSEMBLY-NAME/ID create-new-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Create a new assembly template from workspace assembly" 
-    def create_new_template(context_params)
-      assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:assembly_id,:option_1,:option_2])
+    def create_new_template(context_params)        
+      assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!])
       post_body = {
         :assembly_id => assembly_id,
         :service_module_name => service_module_name,
@@ -273,7 +276,15 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID set ATTRIBUTE-PATTERN VALUE", "Set target assembly attributes"
     def set(context_params)
-      assembly_id, pattern, value = context_params.retrieve_arguments([:assembly_id,:option_1,:option_2])
+
+      if context_params.is_there_identifier?(:attribute)
+        mapping = [:assembly_id,:attribute_name, :option_1]
+      else
+        mapping = [:assembly_id,:option_1,:option_2]
+      end
+
+      assembly_id, pattern, value = context_params.retrieve_arguments(mapping)
+
       post_body = {
         :assembly_id => assembly_id,
         :pattern => pattern,
