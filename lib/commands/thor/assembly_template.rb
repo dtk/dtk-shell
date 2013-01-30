@@ -27,7 +27,7 @@ module DTK::Client
 
 #    desc "[ASSEMBLY-TEMPLATE-NAME/ID] show [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
     #TODO: temporaily taking out target option
-    desc "[ASSEMBLY-TEMPLATE-NAME/ID] list [nodes|components] [--service SERVICE-ID/NAME] ", "List all nodes/components for given assembly template."
+    desc "[ASSEMBLY-TEMPLATE-NAME/ID] list [nodes|components] [--service SERVICE-NAME]", "List all nodes/components for given assembly template."
     method_option :list, :type => :boolean, :default => false
     method_option "service",:aliases => "-s" ,
       :type => :string, 
@@ -36,25 +36,40 @@ module DTK::Client
     def list(context_params)
       assembly_template_id, about, service_filter = context_params.retrieve_arguments([:assembly_template_id, :option_1, :option_1],method_argument_names)
 
-      post_body = {
-        :subtype => 'template'
-      }
-
       if assembly_template_id.nil?
 
-        # Special case when user sends --service; until now --OPTION didn't have value attached to it
-        if options.service && options.service.eql?("service")
-          post_body.merge!(:context => "service_module/#{service_filter}") 
-        elsif options.service
-          post_body.merge!(:context => "service_module/#{options.service}") 
+        if options.service
+          # Special case when user sends --service; until now --OPTION didn't have value attached to it
+          if options.service.eql?("service")
+            service_id = service_filter
+          else 
+            service_id = options.service
+          end
+
+          # Initing required params and invoking service.assembly_template method
+          entity_name = "service"
+          load_command(entity_name)
+          entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
+
+          context_params_for_service = DTK::Shell::ContextParams.new
+          context_params_for_service.add_context_to_params(entity_name, entity_name, service_id)
+          context_params_for_service.method_arguments = ['list']
+          
+          response = entity_class.execute_from_cli(@conn, 'assembly_template', context_params_for_service, [], false)
+
+        else
+          response = post rest_url("assembly/list"), {:subtype => 'template'}
+          data_type = :assembly_template
+          response.render_table(data_type)
         end
 
-        response = post rest_url("assembly/list"), post_body
-        data_type = :assembly_template
-        response.render_table(data_type)
       else
         
-        post_body.merge(:assembly_id => assembly_template_id, :about => about)
+        post_body = {
+          :subtype => 'template',
+          :assembly_id => assembly_template_id,
+          :about => about
+        }
 
         case about
         when 'nodes'

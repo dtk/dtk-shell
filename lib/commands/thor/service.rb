@@ -31,7 +31,7 @@ module DTK::Client
     ##MERGE-QUESTION: need to add options of what info is about
     desc "SERVICE-NAME/ID info", "Provides information about specified service module"
     def info(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
+      service_module_id = context_params.retrieve_arguments([:service_name!],method_argument_names)
       post_body = {
        :service_module_id => service_module_id
       }
@@ -234,7 +234,7 @@ module DTK::Client
       }
       post rest_url("service_module/remove_user_direct_access"), post_body
     end
-
+=begin
     desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
     def assembly_template(context_params)
 
@@ -249,7 +249,24 @@ module DTK::Client
       response = entity_class.execute_from_cli(@conn, method_name, DTK::Shell::ContextParams.new, options_args, false)
 
     end
+=end
+ 
+    desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
+    def assembly_template(context_params)
 
+      service_id, method_name = context_params.retrieve_arguments([:service_id!, :option_1!],method_argument_names)
+
+      post_body = {
+        :service_module_id => service_id
+      }
+      response = post rest_url("service_module/list_assemblies"), post_body
+
+      data_type = :assembly_template
+      response.render_table(data_type)
+         
+      return response
+    end
+    
 =begin
 TODO: needs to be rewritten
     desc "create-jenkins-project SERVICE-ID", "Create Jenkins project for service module"
