@@ -134,6 +134,7 @@ module DTK
     end
 
     module ParseFile
+
       def parse_key_value_file(file)
         #adapted from mcollective config
         ret = Hash.new
@@ -155,7 +156,15 @@ module DTK
     class Config < Hash
       include Singleton
       include ParseFile
+
+      CONFIG_FILE = File.join(OsUtil.dtk_home_dir, ".dtkclient")
+      REQUIRED_KEYS = [:server_host]
       
+
+      # REMOVE THIS >>>> DEBUG <<<<
+      require 'ap'
+      ap CONFIG_FILE
+
       def self.[](k)
         Config.instance[k]
       end
@@ -170,11 +179,11 @@ module DTK
         self[:component_modules_dir] = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
         self[:service_modules_dir] = OsUtil.service_clone_location(::Config::Configuration.get(:service_location))
       end
-      CONFIG_FILE = File.expand_path("~/.dtkclient")
+
       def load_config_file()
         parse_key_value_file(CONFIG_FILE).each{|k,v|self[k]=v}
       end
-      REQUIRED_KEYS = [:server_host]
+      
       def validate
         #TODO: need to check for legal values
         missing_keys = REQUIRED_KEYS - keys
@@ -279,7 +288,7 @@ module DTK
       end
 
       def get_credentials()
-        cred_file = File.expand_path("~/.dtkclient")
+        cred_file = Config::CONFIG_FILE
         raise DTK::Client::DtkError,"Authorization configuration file (#{cred_file}) does not exist" unless File.exists?(cred_file)
         ret = parse_key_value_file(cred_file)
         [:username,:password].each{|k|raise DTK::Client::DtkError,"cannot find #{k}" unless ret[k]}

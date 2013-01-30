@@ -17,20 +17,20 @@ module DTK
         end
 
         def get_temp_location
-          is_windows? ? ENV['TEMP'] : '/tmp'
+          is_windows? ? genv(:temp) : '/tmp'
         end
 
         def get_log_location
           if is_windows?
-  	  			"#{ENV['APPDATA']}\\DTK"
+  	  			"#{genv(:appdata)}/DTK"
   				else
   	  			# returns log_path for current user e.g /var/log/user1
   	  			"/var/log/dtk/#{Common::Aux.running_process_user()}"
-  				end
+  			  end
         end
 
         def dtk_home_dir
-          return "#{home_dir}dtk"
+          return "#{home_dir}/dtk"
         end
 
         def dtk_user_app_folder
@@ -38,11 +38,15 @@ module DTK
         end
 
         def dtk_app_folder
-          return (is_windows? ? "#{ENV['HOMEDRIVE']}#{ENV['HOMEPATH']}\\dtk\\" : "/etc/dtk/")
+          return (is_windows? ? "#{genv(:homedrive)}#{genv(:homepath)}/dtk/" : "/etc/dtk/")
         end
 
         def home_dir
-          return (is_windows? ? "#{ENV['HOMEDRIVE']}#{ENV['HOMEPATH']}\\" : "#{ENV['HOME']}/")
+          return (is_windows? ? "#{genv(:homedrive)}#{genv(:homepath)}" : "#{genv(:home)}")
+        end
+
+        def genv(name)
+          return ENV[name.to_s.upcase].gsub(/\\/,'/')
         end
 
         def module_clone_location(module_location)
