@@ -219,6 +219,8 @@ module DTK
             
             my_lambda = lambda{|_x| _x.map{|r|r["#{matched_data[1]}"]||[]}}
             value = my_lambda.call(value)
+
+            raise DTK::Client::DtkError,"There is a mistake in table metadata: #{command.inspect}" if value.nil?
           when command.include?('(')
             # matches command and params e.g. split('.') => [1] split, [2] '.'
             matched_data = command.match(/(.+)\((.+)\)/)
@@ -236,11 +238,15 @@ module DTK
             
             my_lambda = lambda{|_x| _x.map{|r|r["#{matched_data[1]}"]||[]}}
             value = my_lambda.call(value)
+
+            raise DTK::Client::DtkError,"There is a mistake in table metadata: #{command.inspect}" if value.nil?
           when command.start_with?("count_")
             matched_data = command.match(/count_(.+)/)
             
             my_lambda = lambda{|_x| _x.map{|r|r["#{matched_data[1]}"]||[]}.flatten.size}
             value = my_lambda.call(value)
+
+            raise DTK::Client::DtkError,"There is a mistake in table metadata: #{command.inspect}" if value.nil?
           else 
             value = value.send(command)
         end
