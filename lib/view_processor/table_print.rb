@@ -213,7 +213,12 @@ module DTK
 
 
       def evaluate_command(value, command)
-        case 
+        case
+          when command.include?('map{')
+            matched_data = command.match(/\['(.+)'\]/)
+            
+            my_lambda = lambda{|_x| _x.map{|r|r["#{matched_data[1]}"]||[]}}
+            value = my_lambda.call(value)
           when command.include?('(')
             # matches command and params e.g. split('.') => [1] split, [2] '.'
             matched_data = command.match(/(.+)\((.+)\)/)
@@ -223,6 +228,7 @@ module DTK
             # matches command such as first['foo']
             matched_data    = command.match(/(.+)\[(.+)\]/)
             command, params =  matched_data[1],matched_data[2]
+
             value = evaluate_command(value,command)
             value = value.send('[]',params)
           else 

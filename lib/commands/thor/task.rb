@@ -24,7 +24,7 @@ module DTK::Client
     desc "[TASK-NAME/ID] status", "Return task status; if no TASK-ID then information about most recent task"
     method_option "detail-level",:default => "summary", :aliases => "-d", :desc => "detail level to report task status"
     def status(context_params)
-      task_id = context_params.retrieve_arguments([:task_id])
+      task_id = context_params.retrieve_arguments([:task_id],method_argument_names)
       detail_level = options["detail-level"]
       post_hash_body = Hash.new
       post_hash_body[:detail_level] = detail_level if detail_level
@@ -34,7 +34,7 @@ module DTK::Client
 
     desc "commit-changes", "Commit changes"
     def commit_changes(context_params)
-      scope = context_params.retrieve_arguments([:option_1])
+      scope = context_params.retrieve_arguments([:option_1],method_argument_names)
       post_hash_body = Hash.new
       post_hash_body.merge!(:scope => scope) if scope
       post rest_url("task/create_task_from_pending_changes"),post_hash_body
@@ -42,13 +42,12 @@ module DTK::Client
 
     desc "TASK-NAME/ID execute", "Execute task"
     def execute(context_params)
-      task_id = context_params.retrieve_arguments([:task_id])
+      task_id = context_params.retrieve_arguments([:task_id!],method_argument_names)
       post rest_url("task/execute"), :task_id => task_id
     end
 
     desc "commit-changes-and-execute", "Commit changes and execute task"
     def commit_changes_and_execute(context_params)
-      scope = context_params.retrieve_arguments([:option_1])
       response = commit_changes(context_params)
       if response.ok?
         execute(response.data(:task_id))
@@ -64,7 +63,7 @@ module DTK::Client
 
     desc "converge-node NODE-ID", "(Re)Converge node"
     def converge_node(context_params)
-      node_id = context_params.retrieve_arguments([:option_1])
+      node_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       scope = node_id && {:node_id => node_id} 
       response = post(rest_url("task/create_converge_state_changes"),scope)

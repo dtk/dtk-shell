@@ -26,7 +26,7 @@ module DTK::Client
 
     desc "NODE-GROUP-NAME/ID set ATTRIBUTE-ID VALUE", "Set node group attribute value"
     def set(context_params)
-      node_group_id, attr_id, value = context_params.retrieve_arguments([:node_group_id, :option_1,:option_2])
+      node_group_id, attr_id, value = context_params.retrieve_arguments([:node_group_id!, :option_1!, :option_2!],method_argument_names)
 
       post_body = {
         :node_group_id => node_group_id,
@@ -38,7 +38,7 @@ module DTK::Client
 
     desc "NODE-GROUP-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
     def set_required_params(context_params)
-      node_group_id = context_params.retrieve_arguments([:node_group_id])
+      node_group_id = context_params.retrieve_arguments([:node_group_id!],method_argument_names)
       set_required_params_aux(node_group_id,:node_group)
     end
 
@@ -49,7 +49,7 @@ module DTK::Client
       :desc => "Target (id) to create node group in"
     method_option "spans-target", :type => :boolean, :default => false
     def create(context_params)
-      name = context_params.retrieve_arguments([:option_1])
+      name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       target_id = options["in-target"]
       post_body = {
         :display_name => name
@@ -66,7 +66,7 @@ module DTK::Client
     desc "delete NODE-GROUP-ID", "Delete node group"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
-      node_group_id = context_params.retrieve_arguments([:option_1])
+      node_group_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       unless options.force?
         # Ask user if really want to delete node group, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete node group '#{node_group_id}'?")
@@ -82,7 +82,7 @@ module DTK::Client
 
     desc "[NODE-GROUP-NAME/ID] list [components|attributes]","List components or attributes that are on the node group."
     def list(context_params)
-      node_group_id, about = context_params.retrieve_arguments([:node_group_id, :option_1])
+      node_group_id, about = context_params.retrieve_arguments([:node_group_id, :option_1],method_argument_names)
 
       if node_group_id.nil? 
         search_hash = SearchHash.new()
@@ -113,7 +113,7 @@ module DTK::Client
 
     desc "NODE-GROUP-NAME/ID members", "List node group members"
     def members(context_params)
-      node_group_id = context_params.retrieve_arguments([:node_group_id])
+      node_group_id = context_params.retrieve_arguments([:node_group_id!],method_argument_names)
 
       post_body = {
         :node_group_id => node_group_id
@@ -124,7 +124,7 @@ module DTK::Client
 
     desc "NODE-GROUP-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node group"
     def add_component(context_params)
-      node_group_id,component_template_id = context_params.retrieve_arguments([:node_group_id, :option_1])
+      node_group_id,component_template_id = context_params.retrieve_arguments([:node_group_id!, :option_1!],method_argument_names)
 
       post_body = {
         :node_group_id => node_group_id,
@@ -139,7 +139,7 @@ module DTK::Client
 
     desc "NODE-GROUP-NAME/ID delete-component COMPONENT-ID", "Delete component from node group"
     def delete_component(context_params)
-      node_group_id,component_id = context_params.retrieve_arguments([:node_group_id, :option_1])
+      node_group_id,component_id = context_params.retrieve_arguments([:node_group_id!, :option_1!],method_argument_names)
       post_body = {
         :node_group_id => node_group_id,
         :component_id => component_id
@@ -157,7 +157,7 @@ module DTK::Client
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def converge(context_params)
-      node_group_id = context_params.retrieve_arguments([:node_group_id])
+      node_group_id = context_params.retrieve_arguments([:node_group_id!],method_argument_names)
       # create task
       post_body = {
         :node_group_id => node_group_id
@@ -175,7 +175,7 @@ module DTK::Client
     desc "NODE-GROUP-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
-      node_group_id = context_params.retrieve_arguments([:node_group_id])
+      node_group_id = context_params.retrieve_arguments([:node_group_id!],method_argument_names)
       task_status_aux(node_group_id,:node_group,options.wait?)
     end
 

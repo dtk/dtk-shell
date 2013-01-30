@@ -42,7 +42,8 @@ module DTK::Client
     
     desc "NODE-NAME/ID info","Info about node"
     def info(context_params)
-      node_id = context_params.retrieve_arguments([:node_id])
+
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
       post_body = {
         :node_id => node_id,
         :subtype => 'instance',
@@ -53,7 +54,7 @@ module DTK::Client
     desc "[NODE-NAME/ID] list [components|attributes]","List components that are on the node instance."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
-      node_id, about = context_params.retrieve_arguments([:node_id,:option_1])
+      node_id, about = context_params.retrieve_arguments([:node_id,:option_1],method_argument_names)
       
       if node_id.nil?
         response = post rest_url("node/list")
@@ -84,7 +85,7 @@ module DTK::Client
 
     desc "NODE-NAME/ID set ATTRIBUTE-ID VALUE", "Set node group attribute value"
     def set(context_params)
-      node_id, attr_id, value = context_params.retrieve_arguments([:node_id, :option_1, :option_2])
+      node_id, attr_id, value = context_params.retrieve_arguments([:node_id!, :option_1!, :option_2!],method_argument_names)
       post_body = {
         :node_id => node_id,
         :pattern => attr_id,
@@ -95,23 +96,26 @@ module DTK::Client
 
     desc "NODE-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
     def set_required_params(context_params)
-      node_id = context_params.retrieve_arguments([:node_id])
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
       set_required_params_aux(node_id,:node)
     end
 
-    desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node"
+    desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID [-v VERSION]", "Add component template to node"
+    version_method_option
     def add_component(context_params)
-      node_id,component_template_id = context_params.retrieve_arguments([:node_id, :option_1])
+      node_id,component_template_id = context_params.retrieve_arguments([:node_id!, :option_1!],method_argument_names)
       post_body = {
         :node_id => node_id,
-        :component_template_id => component_template_id
+        :component_template_name => component_template_name
       }
+      post_body.merge!(:version => options[:version]) if options[:version]
+
       post rest_url("node/add_component"), post_body
     end
 
     desc "NODE-NAME/ID delete-component COMPONENT-ID", "Delete component from node"
     def delete_component(context_params)
-      node_id,component_id = context_params.retrieve_arguments([:node_id, :option_1])
+      node_id,component_id = context_params.retrieve_arguments([:node_id!, :option_1!],method_argument_names)
       post_body = {
         :node_id => node_id,
         :component_id => component_id
@@ -125,7 +129,7 @@ module DTK::Client
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def converge(context_params)
-      node_id = context_params.retrieve_arguments([:node_id])
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
       # create task
       post_body = {
         :node_id => node_id
@@ -143,7 +147,7 @@ module DTK::Client
     desc "NODE-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
-      node_id = context_params.retrieve_arguments([:node_id])
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
       task_status_aux(node_id,:node,options.wait?)
     end
 
@@ -151,7 +155,7 @@ module DTK::Client
     desc "destroy NODE-ID", "Delete and destroy (terminate) node"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def destroy(context_params)
-      node_id = context_params.retrieve_arguments([:option_1])
+      node_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post_body = {
         :node_id => node_id
       }
@@ -168,28 +172,29 @@ module DTK::Client
 
     desc "NODE-NAME/ID op-status", "Get node operational status"
     def op_status(context_params)
-      node_id = context_params.retrieve_arguments([:node_id])
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
       post rest_url("node/get_op_status"), :node_id => node_id
     end
 
     desc "NODE-NAME/ID start", "Start node instance."
     def start(context_params)
-      node_id = context_params.retrieve_arguments([:node_id])
-      assembly_id,node_id = get_assembly_and_node_id(node_id)
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
+      assembly_id,node_id = get_assembly_and_node_id(context_params)
       assembly_start(assembly_id, node_id)
     end
 
     desc "NODE-NAME/ID stop", "Stop node instance."
     def stop(context_params)
-      node_id = context_params.retrieve_arguments([:node_id])
-      assembly_id, node_id = get_assembly_and_node_id(node_id)
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
+      # Retrieving assembly_id to stop a node.. TODO create server side method that takes only node id
+      assembly_id, node_id = get_assembly_and_node_id(context_params)
       assembly_stop(assembly_id, node_id)
     end
 
     no_tasks do
       # get numeric ID, from possible name id
-      def get_assembly_and_node_id(node_name_or_id)
-        response = info(node_name_or_id)
+      def get_assembly_and_node_id(context_params)
+        response = info(context_params)
         unless response.ok?
           raise DTK::Client::DtkError, "Unable to retrive node information, please try again."
         end      

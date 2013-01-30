@@ -3,6 +3,11 @@ require File.expand_path('../../lib/parser/adapters/thor',    File.dirname(__FIL
 require File.expand_path('../../lib/shell/context', File.dirname(__FILE__))
 require File.expand_path('../../lib/shell/domain', File.dirname(__FILE__))
 Dir[File.expand_path('../../lib/shell/parse_monkey_patch.rb', File.dirname(__FILE__))].each {|file| require file }
+<<<<<<< HEAD
+=======
+# dtk_nested_require("../../lib/parser/adapters","thor")
+# dtk_nested_require("../../lib/shell","context")
+>>>>>>> merge-branch
 
 require 'active_support/core_ext/string/inflections'
 require 'shellwords'
@@ -23,7 +28,11 @@ module SpecThor
         args = ['help']
     end
 
+<<<<<<< HEAD
     context = DTK::Shell::Context.new(true)
+=======
+    context = DTK::Shell::Context.new(false)
+>>>>>>> merge-branch
     entity_name, method_name, hashed_argv, options_args = context.get_dtk_command_parameters(cmd, args)
     entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
 

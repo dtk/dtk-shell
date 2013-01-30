@@ -15,28 +15,49 @@ module DTK
         @current_context.push_new_context(context_name, entity_name, context_value)
       end
 
-      def retrieve_arguments(mapping)
+      def retrieve_arguments(mapping, method_info = nil)
         results = []
+        errors  = []
 
         mapping.each do |key|
+
+          required = key.to_s.match(/.+!$/)
+
           element = nil
           matched = key.to_s.match(/option_([0-9]+)/)
           if matched
             id = matched[1].to_i - 1
             element = @method_arguments[id]
+
+            if method_info
+              unless element
+                errors << method_info[id] if required
+              end
+            end
+
           else
-            split_info = key.to_s.split('_')
-            entity_name = split_info[0]
-            id_type     = split_info[1]
+            # More complex split regex for extracting entitiy name from mapping due to complex context names
+            # i.e. assembly-template will have assembly_template_id mapping
+            split_info = key.to_s.split(/_([a-z]+!?$)/)
+            entity_name = split_info[0].gsub(/_/,'-')  # makes sure we are using entity names with '_'
+            id_type     = split_info[1].gsub(/!/,'')   # for required elements we remove '!' required marker
             context_identifier = @current_context.find_identifier(entity_name)
             if context_identifier
               element = context_identifier.get_identifier(id_type)
             else
               element = nil
             end
+
+            unless element
+              errors << "#{entity_name.upcase} ID/NAME" if required
+            end
           end
 
-          results << element 
+          results << element
+        end
+
+        unless errors.empty?
+          raise DTK::Client::DtkValidationError, "Missing required argument(s): #{errors.join(', ')}"
         end
 
         return ((results.size == 1) ? results.first : results)
@@ -104,7 +125,7 @@ module DTK
 
       def clone_me()
         inst = ActiveContext.new
-        inst.context_list = @context_list.dup
+        inst.context_list = @context_list.clone
         return inst
       end
 

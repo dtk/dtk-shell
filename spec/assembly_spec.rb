@@ -8,13 +8,13 @@ describe DTK::Client::Assembly do
   $assembly_id = nil
 
   #list all assemblies and take one assembly_id
-  context '#list' do
+  context "#list" do
     $assembly_list = run_from_dtk_shell('assembly list')
 
     it "should have assembly listing" do
       $assembly_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
     end
-
+    
     unless $assembly_list.nil?
       unless $assembly_list['data'].nil?
         $assembly_id = $assembly_list['data'].first['id'] unless $assembly_list['data'].empty?

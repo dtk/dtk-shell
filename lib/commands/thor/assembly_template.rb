@@ -14,7 +14,8 @@ module DTK::Client
     desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."
     method_option :list, :type => :boolean, :default => false
     def info(context_params)
-      assembly_template_id = context_params.retrieve_arguments([:assembly_template_id])
+      assembly_template_id = context_params.retrieve_arguments([:assembly_template_id!],method_argument_names)
+
       data_type = :assembly_template
       
       post_body = {
@@ -26,19 +27,48 @@ module DTK::Client
 
 #    desc "[ASSEMBLY-TEMPLATE-NAME/ID] show [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
     #TODO: temporaily taking out target option
-    desc "[ASSEMBLY-TEMPLATE-NAME/ID] list [nodes|components]", "List all nodes/components for given assembly template."
+    desc "[ASSEMBLY-TEMPLATE-NAME/ID] list [nodes|components] [--service SERVICE-NAME]", "List all nodes/components for given assembly template."
     method_option :list, :type => :boolean, :default => false
+    method_option "service",:aliases => "-s" ,
+      :type => :string, 
+      :banner => "SERVICE-LIST-FILTER",
+      :desc => "Service list filter"
     def list(context_params)
-      assembly_template_id, about = context_params.retrieve_arguments([:assembly_template_id, :option_1])
+      assembly_template_id, about, service_filter = context_params.retrieve_arguments([:assembly_template_id, :option_1, :option_1],method_argument_names)
+
       if assembly_template_id.nil?
-        response = post rest_url("assembly/list"), {:subtype => 'template'}
-        data_type = :assembly_template
-        response.render_table(data_type)
+
+        if options.service
+          # Special case when user sends --service; until now --OPTION didn't have value attached to it
+          if options.service.eql?("service")
+            service_id = service_filter
+          else 
+            service_id = options.service
+          end
+
+          # Initing required params and invoking service.assembly_template method
+          entity_name = "service"
+          method_name = "assembly_template"
+          load_command(entity_name)
+          entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
+
+          context_params_for_service = DTK::Shell::ContextParams.new
+          context_params_for_service.add_context_to_params(entity_name, entity_name, service_id)
+          context_params_for_service.method_arguments = ['list']
+          
+          response = entity_class.execute_from_cli(@conn, method_name, context_params_for_service, [], false)
+
+        else
+          response = post rest_url("assembly/list"), {:subtype => 'template'}
+          data_type = :assembly_template
+          response.render_table(data_type)
+        end
+
       else
         
         post_body = {
-          :assembly_id => assembly_template_id,
           :subtype => 'template',
+          :assembly_id => assembly_template_id,
           :about => about
         }
 
@@ -65,8 +95,7 @@ module DTK::Client
       :banner => "TARGET-ID",
       :desc => "Target (id) to create assembly in" 
     def stage(context_params)
-      assembly_template_id, name = context_params.retrieve_arguments([:assembly_template_id, :option_1])
-
+      assembly_template_id, name = context_params.retrieve_arguments([:assembly_template_id!, :option_1],method_argument_names)
       post_body = {
         :assembly_id => assembly_template_id
       }
@@ -89,7 +118,7 @@ module DTK::Client
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def deploy(context_params)
-      # assembly_template_id,name = context_params.retrieve_arguments([:assembly_template_id, :option_1])
+      # assembly_template_id,name = context_params.retrieve_arguments([:assembly_template_id, :option_1],method_argument_names)
 
       response = stage(context_params)
 
@@ -128,10 +157,10 @@ module DTK::Client
     desc "delete ASSEMBLY-TEMPLATE-ID", "Delete assembly template"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
-      assembly_template_id = context_params.retrieve_arguments([:option_1])
+      assembly_template_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       unless options.force?
         # Ask user if really want to delete assembly-template, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete assembly-template '#{assembly_template_id}'?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete assembly-template '#{assembly_template_id}'"+"?")
       end
 
       post_body = {
@@ -139,10 +168,12 @@ module DTK::Client
         :subtype => :template
       }
       response = post rest_url("assembly/delete"), post_body
+      
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly_template
-
-      return response
+      return response unless response.ok?
+      module_name,branch = response.data(:module_name,:workspace_branch)
+      Helper(:git_repo).pull_changes?(:service_module,module_name,:local_branch => branch)
     end
   end
 end

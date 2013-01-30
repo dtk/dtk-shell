@@ -8,8 +8,16 @@ module DTK
     class Error < NameError
     end
 
+    class DtkValidationError < Error
+    end
+
     # we use this to log application errors
     class DtkError < Error
+      def initialize(msg,opts={})
+        super(msg)
+        @backtrace = opts[:backtrace]
+      end
+      attr_reader :backtrace
     end
   end
 end

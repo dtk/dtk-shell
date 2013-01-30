@@ -44,13 +44,15 @@ def top_level_execute(entity_name, method_name, context_params=nil,options_args=
         end
       end
     end
-  rescue ArgumentError => e
-    # thor throws this error, this should be resuced as it is now
-    puts e.message
+  rescue DTK::Client::DtkValidationError => e
+    puts e.message.colorize(:yellow)
   rescue DTK::Client::DtkError => e
     # this are expected application errors
     puts e.message.colorize(:red)
     DtkLogger.instance.error(e.message)
+    if e.backtrace
+      puts e.backtrace
+    end
   rescue Exception => e
     # All errors for task will be handled here
     DtkLogger.instance.fatal("[INTERNAL ERROR] DTK has encountered an error #{e.class}: #{e.message}",true)
@@ -84,18 +86,19 @@ module DTK
           unless response_ruby_obj["errors"].nil?
 
             error_msg       = ""
-            error_internal  = false
+            error_internal  = nil
             error_backtrace = nil
             error_code      = nil
             error_timeout   = nil
-
+            error_on_server = nil
+            #TODO: below just 'captures' first error
             response_ruby_obj['errors'].each do |err|
-              error_msg      +=  err["message"] unless err["message"].nil?
-              error_msg      +=  err["error"]   unless err["error"].nil?
-              error_internal ||= err["internal"]
-              unless err["errors"].nil?
-                error_code   =  err["errors"].first["code"]
-              end
+              error_msg       +=  err["message"] unless err["message"].nil?
+              error_msg       +=  err["error"]   unless err["error"].nil?
+              error_on_server = true unless err["on_client"]
+              error_code      = err["code"]||(err["errors"] && err["errors"].first["code"])
+              error_internal  ||= (err["internal"] or error_code == "not_found") #"not_found" code is at Ramaze level; so error_internal not set
+              error_backtrace ||= err["backtrace"]
             end
             
             # normalize it for display
@@ -107,7 +110,9 @@ module DTK
             elsif error_code == "timeout"
               raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
             elsif error_internal
-              raise DTK::Client::DtkError, "[SERVER INTERNAL ERROR] #{error_msg}"
+              where = (error_on_server ? "SERVER" : "CLIENT")
+              opts = (error_backtrace ? {:backtrace => error_backtrace} : {})
+              raise DTK::Client::DtkError.new("[#{where} INTERNAL ERROR] #{error_msg}",opts)
             else
               # if usage error occurred, display message to console and display that same message to log
               raise DTK::Client::DtkError, "Following error occurred: #{error_msg}." 
@@ -129,6 +134,7 @@ module DTK
     end
 
     module ParseFile
+
       def parse_key_value_file(file)
         #adapted from mcollective config
         ret = Hash.new
@@ -150,7 +156,10 @@ module DTK
     class Config < Hash
       include Singleton
       include ParseFile
-      
+
+      CONFIG_FILE = File.join(OsUtil.dtk_home_dir, ".dtkclient")
+      REQUIRED_KEYS = [:server_host]
+
       def self.[](k)
         Config.instance[k]
       end
@@ -165,11 +174,11 @@ module DTK
         self[:component_modules_dir] = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
         self[:service_modules_dir] = OsUtil.service_clone_location(::Config::Configuration.get(:service_location))
       end
-      CONFIG_FILE = File.expand_path("~/.dtkclient")
+
       def load_config_file()
         parse_key_value_file(CONFIG_FILE).each{|k,v|self[k]=v}
       end
-      REQUIRED_KEYS = [:server_host]
+      
       def validate
         #TODO: need to check for legal values
         missing_keys = REQUIRED_KEYS - keys
@@ -210,7 +219,7 @@ module DTK
       attr_reader :connection_error
 
       # DEBUG SNIPPET >>> REMOVE <<<
-      require 'ap'
+      #require 'ap'
                
 
       def rest_url(route=nil)
@@ -274,7 +283,7 @@ module DTK
       end
 
       def get_credentials()
-        cred_file = File.expand_path("~/.dtkclient")
+        cred_file = Config::CONFIG_FILE
         raise DTK::Client::DtkError,"Authorization configuration file (#{cred_file}) does not exist" unless File.exists?(cred_file)
         ret = parse_key_value_file(cred_file)
         [:username,:password].each{|k|raise DTK::Client::DtkError,"cannot find #{k}" unless ret[k]}

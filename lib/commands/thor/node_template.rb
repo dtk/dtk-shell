@@ -12,7 +12,7 @@ module DTK::Client
     desc "NODE-TEMPLATE-NAME/ID info", "Get information about given node template."
     method_option :list, :type => :boolean, :default => false
     def info(context_params)
-      node_template_id = context_params.retrieve_arguments([:node_template_id])
+      node_template_id = context_params.retrieve_arguments([:node_template_id!],method_argument_names)
       data_type = :node
 
       post_body = {
@@ -38,7 +38,7 @@ module DTK::Client
     #TODO: this may be moved to just be a utility fn
     desc "image-upgrade OLD-IMAGE-ID NEW-IMAGE-ID", "Upgrade use of OLD-IMAGE-ID to NEW-IMAGE-ID"
     def image_upgrade(context_params)
-      old_image_id, new_image_id = context_params.retrieve_arguments([:option_1, :option_2])
+      old_image_id, new_image_id = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
       post_body = {
         :old_image_id => old_image_id,
         :new_image_id => new_image_id
@@ -54,7 +54,7 @@ module DTK::Client
       :banner => "TARGET-ID",
       :desc => "Target (id) to create node insatnce in" 
     def stage(context_params)
-      node_template_id, name = context_params.retrieve_arguments([:node_template_id, :option_1])
+      node_template_id, name = context_params.retrieve_arguments([:node_template_id!, :option_1],method_argument_names)
       post_body = {
         :node_template_id => node_template_id
       }
