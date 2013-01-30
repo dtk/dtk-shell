@@ -125,7 +125,7 @@ module DTK::Client
     # internal_trigger: this flag means that other method (internal) has trigger this.
     #                   This will change behaviour of method
     #
-    desc "SERVICE-NAME/ID clone", "Clone into client the service module files"
+    desc "SERVICE-NAME/ID clone [-v VERSION]", "Clone into client the service module files"
     version_method_option
     def clone(context_params, internal_trigger=false)
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
@@ -133,7 +133,7 @@ module DTK::Client
       clone_aux(:service_module,service_module_id,version,internal_trigger)
     end
 
-    desc "SERVICE-NAME/ID push-clone-changes", "Push changes from local copy of service module to server"
+    desc "SERVICE-NAME/ID push-clone-changes [-v VERSION]", "Push changes from local copy of service module to server"
     version_method_option
     def push_clone_changes(context_params)
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
