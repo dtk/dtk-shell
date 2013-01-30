@@ -12,7 +12,7 @@ describe DTK::Client::Node do
     $node_list = run_from_dtk_shell('node list')
 
     it "should list all nodes" do
-      $node_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+      $node_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
     end
 
     unless $node_list.nil?

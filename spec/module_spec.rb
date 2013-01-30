@@ -11,7 +11,7 @@ describe DTK::Client::Module do
     $module_list = run_from_dtk_shell('module list')
 
     it "should have module listing" do
-      $module_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+      $module_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
     end
 
     unless $module_list.nil?
@@ -26,7 +26,7 @@ describe DTK::Client::Module do
       output = run_from_dtk_shell("module #{$module_id} list-components")
 
       it "should list all components for module with id #{$module_id}" do
-        $module_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+        $module_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
       end
     end
   end

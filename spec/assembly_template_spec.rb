@@ -11,7 +11,7 @@ describe DTK::Client::AssemblyTemplate do
     $assembly_template_list = run_from_dtk_shell('assembly-template list')
 
     it "should have assembly-template listing" do
-      $assembly_template_list.to_s.should match(/(ok|status|empty|WARNING|name|id|Missing)/)
+      $assembly_template_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id|Missing)/)
     end
 
     unless $assembly_template_list.nil?
@@ -27,7 +27,7 @@ describe DTK::Client::AssemblyTemplate do
         output = run_from_dtk_shell("assembly-template #{$assembly_template_id} list #{type}")
 
         it "should list all #{type} for assembly-template with id #{$assembly_template_id}" do
-          output.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+          output.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
         end
       end
     end
@@ -38,7 +38,7 @@ describe DTK::Client::AssemblyTemplate do
       output = run_from_dtk_shell("assembly-template #{$assembly_template_id} info")
 
       it "should show information about assembly-template with id #{$assembly_template_id}" do
-        output.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+        output.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
       end
     end
   end

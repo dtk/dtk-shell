@@ -10,7 +10,7 @@ describe DTK::Client::Task do
     $task_list = run_from_dtk_shell('task list')
 
     it "should have assembly listing" do
-      $task_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+      $task_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
     end
 
     unless $task_list.nil?

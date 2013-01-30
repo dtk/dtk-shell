@@ -10,7 +10,7 @@ describe DTK::Client::ComponentTemplate do
     $component_template_list = run_from_dtk_shell('component-template list')
 
     it "should have assembly listing" do
-      $component_template_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+      $component_template_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
     end
 
     unless $component_template_list.nil?
@@ -26,7 +26,7 @@ describe DTK::Client::ComponentTemplate do
         output = run_from_dtk_shell("component-template #{$component_template_id} list #{type}")
 
         it "should list all #{type} for component-template with id #{$component_template_id}" do
-          output.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+          output.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
         end
       end
     end

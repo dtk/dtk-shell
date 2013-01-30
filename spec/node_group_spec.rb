@@ -13,7 +13,7 @@ describe DTK::Client::NodeGroup do
     $node_group_list = run_from_dtk_shell('node-group list')
 
     it "should have node-group listing" do
-      $node_group_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+      $node_group_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
     end
 
     unless $node_group_list.nil?
@@ -29,7 +29,7 @@ describe DTK::Client::NodeGroup do
         output = run_from_dtk_shell("node-group #{$node_group_id} list #{type}")
 
         it "should list all #{type} for node-group with id #{$node_group_id}" do
-          output.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+          output.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
         end
       end
     end

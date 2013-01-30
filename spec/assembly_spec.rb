@@ -12,7 +12,7 @@ describe DTK::Client::Assembly do
     $assembly_list = run_from_dtk_shell('assembly list')
 
     it "should have assembly listing" do
-      $assembly_list.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+      $assembly_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
     end
     
     unless $assembly_list.nil?
@@ -29,7 +29,7 @@ describe DTK::Client::Assembly do
         output = run_from_dtk_shell("assembly #{$assembly_id} list #{type}")
 
         it "should list all #{type} for assembly with id #{$assembly_id}" do
-          output.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+          output.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
         end
       end
     end
@@ -41,7 +41,7 @@ describe DTK::Client::Assembly do
       output = run_from_dtk_shell("assembly #{$assembly_id} info")
 
       it "should show information about assembly with id #{$assembly_id}" do
-        output.to_s.should match(/(ok|status|empty|WARNING|name|id)/)
+        output.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
       end
     end
   end
