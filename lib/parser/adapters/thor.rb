@@ -8,6 +8,7 @@ dtk_require("../../util/os_util")
 dtk_require("../../util/console")
 dtk_require_common_commands('thor/task_status')
 dtk_require_from_base("command_helper")
+dtk_require("../../context_router")
 
 module DTK
   module Client
