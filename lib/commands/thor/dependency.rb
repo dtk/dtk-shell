@@ -2,7 +2,7 @@ module DTK::Client
   class Dependency < CommandBaseThor
     desc "add-component COMPONENT-ID OTHER-COMPONENT-ID","Add before/require constraint"
     def add_component(context_params)
-      component_id, other_component_id = context_params.retrieve_arguments([:option_1!,,method_argument_names,method_argument_names) :option_2])
+      component_id, other_component_id = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
       post_body = {
         :component_id => component_id,
         :other_component_id => other_component_id,
