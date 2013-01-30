@@ -141,6 +141,17 @@ module DTK::Client
       push_clone_changes_aux(:service_module,service_module_id,version)
     end
 
+    desc "SERVICE-NAME/ID create-new-version NEW-VERSION", "Snapshot current state of module as a new version"
+    def create_new_version(context_params)
+      service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
+      post_body = {
+        :service_module_id => service_module_id,
+        :version => version
+      }
+
+      post rest_url("service_module/create_new_version"), post_body
+    end
+
     desc "SERVICE-NAME/ID set-module-version COMPONENT-MODULE-NAME VERSION", "Set the version of the component module to use in the service's assemblies"
     def set_module_version(context_params)
       service_module_id,component_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
