@@ -206,16 +206,6 @@ module DTK::Client
       post rest_url("component_module/export"), post_body
     end
 
-    desc "MODULE-NAME/ID push-to-remote", "Push local copy of component module to remote repository."
-    def push_to_remote(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      post_body = {
-        :component_module_id => component_module_id
-      }
-
-      post rest_url("component_module/push_to_remote"), post_body
-    end
-
     desc "MODULE-NAME/ID push-to-remote [-v VERSION]", "Push local copy of component module to remote repository."
     version_method_option
     def push_to_remote(context_params)

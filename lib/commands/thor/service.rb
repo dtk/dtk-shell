@@ -108,16 +108,18 @@ module DTK::Client
       post rest_url("service_module/export"), post_body
     end
 
-    desc "SERVICE-NAME/ID push-to-remote", "Push local copy of service module to remote repository."
+    desc "SERVICE-NAME/ID push-to-remote [-v VERSION]", "Push local copy of service module to remote repository."
+    version_method_option
     def push_to_remote(context_params)
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      push_to_remote_aux(:service_module,service_module_id)
+      push_to_remote_aux(:service_module,service_module_id,options["version"])
     end
 
-    desc "SERVICE-NAME/ID pull-from-remote", "Update local service module from remote repository."
+    desc "SERVICE-NAME/ID pull-from-remote [-v VERSION]", "Update local service module from remote repository."
+    version_method_option
     def pull_from_remote(context_params)
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      pull_from_remote_aux(:service_module,service_module_id)
+      pull_from_remote_aux(:service_module,service_module_id,options["version"])
     end
 
     ##
