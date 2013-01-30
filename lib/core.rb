@@ -159,11 +159,6 @@ module DTK
 
       CONFIG_FILE = File.join(OsUtil.dtk_home_dir, ".dtkclient")
       REQUIRED_KEYS = [:server_host]
-      
-
-      # REMOVE THIS >>>> DEBUG <<<<
-      require 'ap'
-      ap CONFIG_FILE
 
       def self.[](k)
         Config.instance[k]

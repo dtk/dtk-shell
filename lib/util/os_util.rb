@@ -30,7 +30,7 @@ module DTK
         end
 
         def dtk_home_dir
-          return "#{home_dir}/dtk"
+          return "#{home_dir}"
         end
 
         def dtk_user_app_folder
