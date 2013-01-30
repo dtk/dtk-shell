@@ -116,6 +116,7 @@ module DTK
                 #eval "evaluated_element.#{k}=structured_element.#{v}"
               end
             rescue NoMethodError => e
+              puts ">>>>>> #{e}"
               unless e.message.include? "nil:NilClass"
                 # when chaining comands there are situations where more complex strcture
                 # e.g. external_ref.region will not be there. So we are handling that case
@@ -213,7 +214,12 @@ module DTK
 
 
       def evaluate_command(value, command)
-        case 
+        case
+          when command.include?('map{')
+            matched_data = command.match(/\['(.+)'\]/)
+            
+            my_lambda = lambda{|_x| _x.map{|r|r["#{matched_data[1]}"]||[]}}
+            value = my_lambda.call(value)
           when command.include?('(')
             # matches command and params e.g. split('.') => [1] split, [2] '.'
             matched_data = command.match(/(.+)\((.+)\)/)
@@ -223,6 +229,7 @@ module DTK
             # matches command such as first['foo']
             matched_data    = command.match(/(.+)\[(.+)\]/)
             command, params =  matched_data[1],matched_data[2]
+
             value = evaluate_command(value,command)
             value = value.send('[]',params)
           else 
