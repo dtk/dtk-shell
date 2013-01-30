@@ -23,6 +23,12 @@ end
 
 context = DTK::Shell::Context.new(true)
 
-entity_name, method_name, context_params, thor_options = context.get_dtk_command_parameters(entity_name, args)
+begin
+  entity_name, method_name, context_params, thor_options = context.get_dtk_command_parameters(entity_name, args)
 
-top_level_execute(entity_name, method_name, context_params, thor_options, false)
+  top_level_execute(entity_name, method_name, context_params, thor_options, false)
+rescue DTK::Client::DtkError => e
+  puts e.message
+rescue Exception => e
+  puts e.message
+end

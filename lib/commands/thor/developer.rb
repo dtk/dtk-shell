@@ -25,5 +25,20 @@ module DTK::Client
       return response
     end
 
+    desc "remove-from-system ASSEMBLY-NAME", "Removes objects associated with assembly, but does not destroy target isnatnces"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def remove_from_system(context_params)
+      assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      unless options.force?
+        # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
+        what = "assembly"
+        return unless Console.confirmation_prompt("Are you sure you want to remove #{what} '#{assembly_id}' and its nodes from the system"+'?')
+      end
+
+      response = post rest_url("assembly/remove_from_system"), {:assembly_id => assembly_id}
+      # when changing context send request for getting latest assemblies instead of getting from cache
+      @@invalidate_map << :assembly
+      return response
+    end
   end
- end
+end

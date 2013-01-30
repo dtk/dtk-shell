@@ -282,6 +282,8 @@ module DTK
             entity_name_id = args.shift
             method_name = args.shift
           end
+        else
+          raise DTK::Client::DtkError, "Could not find context \"#{entity_name}\"."
         end
 
         # if no method specified use help
@@ -293,12 +295,19 @@ module DTK
           identifier_response = valid_id?(entity_name, entity_name_id, context_params)
           if identifier_response
             context_params.add_context_to_params(identifier_response[:name], entity_name, identifier_response[:identifier])
+          else
+            raise DTK::Client::DtkError, "Could not validate identifier \"#{entity_name_id}\"."
           end
         end
 
         # extract thor options
         args, thor_options = Context.parse_thor_options(args)
         context_params.method_arguments = args
+
+
+        unless available_tasks.include?(method_name)
+          raise DTK::Client::DtkError, "Could not find task \"#{method_name}\"."
+        end
 
         return entity_name, method_name, context_params, thor_options
       end
@@ -374,6 +383,7 @@ module DTK
       # method takes paramters that can hold specific thor options
       #
       def self.parse_thor_options(args)
+
         # options for the command e.g. --list 
         # and remove options_args from args
         options_args = args.select { |a| a.match(/^\-\-/)}

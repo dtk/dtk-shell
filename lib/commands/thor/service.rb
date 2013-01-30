@@ -141,6 +141,17 @@ module DTK::Client
       push_clone_changes_aux(:service_module,service_module_id,version)
     end
 
+    desc "SERVICE-NAME/ID create-new-version NEW-VERSION", "Snapshot current state of module as a new version"
+    def create_new_version(context_params)
+      service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
+      post_body = {
+        :service_module_id => service_module_id,
+        :version => version
+      }
+
+      post rest_url("service_module/create_new_version"), post_body
+    end
+
     desc "SERVICE-NAME/ID set-module-version COMPONENT-MODULE-NAME VERSION", "Set the version of the component module to use in the service's assemblies"
     def set_module_version(context_params)
       service_module_id,component_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
@@ -234,6 +245,22 @@ module DTK::Client
       }
       post rest_url("service_module/remove_user_direct_access"), post_body
     end
+
+    desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
+    def assembly_template(context_params)
+
+      service_id, method_name = context_params.retrieve_arguments([:service_name!, :option_1!],method_argument_names)
+
+      options_args = ["-s", service_id]
+      
+      entity_name = "assembly_template"
+      load_command(entity_name)
+      entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
+      
+      response = entity_class.execute_from_cli(@conn, method_name, DTK::Shell::ContextParams.new, options_args, false)
+
+    end
+
 =begin
 TODO: needs to be rewritten
     desc "create-jenkins-project SERVICE-ID", "Create Jenkins project for service module"

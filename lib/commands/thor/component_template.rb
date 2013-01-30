@@ -26,7 +26,7 @@ module DTK::Client
       return response
     end
 
-    desc "[COMPONENT-TEMPLATE-NAME/ID] list [nodes]", "List all nodes for given component template."
+    desc "[COMPONENT-TEMPLATE-NAME/ID] list [nodes] []", "List all nodes for given component template."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
       component_id,about = context_params.retrieve_arguments([:component_template_id,:option_1],method_argument_names)
