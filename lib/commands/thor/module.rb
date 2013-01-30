@@ -240,9 +240,7 @@ module DTK::Client
         :version => version
       }
 
-      response = post rest_url("component_module/create_new_version"), post_body
-      @@invalidate_map << :library
-      response
+      post rest_url("component_module/create_new_version"), post_body
     end
 
     ##
