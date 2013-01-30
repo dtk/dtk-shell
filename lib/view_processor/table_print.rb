@@ -116,7 +116,6 @@ module DTK
                 #eval "evaluated_element.#{k}=structured_element.#{v}"
               end
             rescue NoMethodError => e
-              puts ">>>>>> #{e}"
               unless e.message.include? "nil:NilClass"
                 # when chaining comands there are situations where more complex strcture
                 # e.g. external_ref.region will not be there. So we are handling that case
