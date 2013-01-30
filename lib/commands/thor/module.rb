@@ -125,6 +125,7 @@ module DTK::Client
       response.render_table(:component)
     end
 
+    # Optionally TODO if needed: change method to be consistent with service/id>assembly-template list
     desc "MODULE-NAME/ID list-components", "List all components for given component module."
     #TODO: support info on remote
     def list_components(context_params)
