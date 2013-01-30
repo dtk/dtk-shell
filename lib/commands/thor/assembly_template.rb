@@ -46,17 +46,11 @@ module DTK::Client
             service_id = options.service
           end
 
-          # Initing required params and invoking service.assembly_template method
-          entity_name = "service"
-          method_name = "assembly_template"
-          load_command(entity_name)
-          entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
-
           context_params_for_service = DTK::Shell::ContextParams.new
-          context_params_for_service.add_context_to_params(entity_name, entity_name, service_id)
+          context_params_for_service.add_context_to_params("service", "service", service_id)
           context_params_for_service.method_arguments = ['list']
           
-          response = entity_class.execute_from_cli(@conn, method_name, context_params_for_service, [], false)
+          response = DTK::Client::ContextRouter.routeTask("service", "assembly_template", context_params_for_service, @conn)
 
         else
           response = post rest_url("assembly/list"), {:subtype => 'template'}

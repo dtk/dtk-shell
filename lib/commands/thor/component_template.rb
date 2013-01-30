@@ -46,17 +46,10 @@ module DTK::Client
           module_id = options.module
         end
 
-        # Initing required params and invoking module.list_components method
-        entity_name = "module"
-        method_name = "list_components"
-        load_command(entity_name)
-        entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
-
         context_params_for_service = DTK::Shell::ContextParams.new
-        context_params_for_service.add_context_to_params(entity_name, entity_name, module_id)
-        # context_params_for_service.method_arguments = ['list']
+        context_params_for_service.add_context_to_params("module", "module", module_id)
         
-        response = entity_class.execute_from_cli(@conn, method_name, context_params_for_service, [], false)
+        response = DTK::Client::ContextRouter.routeTask("module", "list_components", context_params_for_service, @conn)
       
       else # Case without module filter
 
