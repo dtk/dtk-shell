@@ -98,6 +98,22 @@ module DTK::Client
       Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
     end
 
+    desc "SERVICE-NAME/ID import-version VERSION", "Import a specfic version from a linked service module"
+    def import_version(context_params)
+      service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
+      post_body = {
+        :service_module_id => service_module_id,
+        :version => version
+      }
+      response = post rest_url("service_module/import_version"), post_body
+      @@invalidate_map << :module_service
+
+      return response unless response.ok?
+      module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
+      #TODO: need to check if local clone directory exists
+      Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
+    end
+
     desc "SERVICE-NAME/ID export", "Export service module to remote repo"
     def export(context_params)
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
