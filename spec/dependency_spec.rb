@@ -1,11 +1,5 @@
 require 'lib/spec_thor'
-dtk_nested_require("../lib/commands/thor","dependency")
-include SpecThor
+require File.expand_path('../lib/require_first', File.dirname(__FILE__))
 
-describe DTK::Client::Dependency do
 
-  # generic test for all task of Thor class
-  #test_task_interface(DTK::Client::Dependency)
-
-end
 

@@ -1,5 +1,6 @@
 require 'lib/spec_thor'
-dtk_nested_require("../lib/commands/thor","component_template")
+require File.expand_path('../lib/require_first', File.dirname(__FILE__))
+
 include SpecThor
 
 describe DTK::Client::ComponentTemplate do
