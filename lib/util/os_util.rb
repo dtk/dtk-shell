@@ -25,7 +25,7 @@ module DTK
   	  			"#{genv(:appdata)}/DTK"
   				else
   	  			# returns log_path for current user e.g /var/log/user1
-  	  			"/var/log/dtk/#{Common::Aux.running_process_user()}"
+  	  			"/var/log/dtk/#{::DTK::Common::Aux.running_process_user()}"
   			  end
         end
 
@@ -34,7 +34,7 @@ module DTK
         end
 
         def dtk_user_app_folder
-          return "#{dtk_app_folder}#{Common::Aux.running_process_user()}/"
+          return "#{dtk_app_folder}#{::DTK::Common::Aux.running_process_user()}/"
         end
 
         def dtk_app_folder
