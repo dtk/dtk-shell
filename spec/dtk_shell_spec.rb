@@ -9,7 +9,6 @@ describe DTK::Shell do
   init_shell_context()
 
   line = 'cc /assembly'
-  ap line
   execute_shell_command(line,'')
 
 end

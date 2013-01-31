@@ -1,5 +1,7 @@
 require 'lib/spec_thor'
-dtk_nested_require("../lib/commands/thor","library")
+require File.expand_path('../lib/require_first', File.dirname(__FILE__))
+require File.expand_path('../lib/commands/thor/library', File.dirname(__FILE__))
+
 include SpecThor
 
 describe DTK::Client::Library do
