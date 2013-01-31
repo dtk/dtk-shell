@@ -47,7 +47,7 @@ def dtk_require_dtk_common(common_library)
   if common_folder
     dtk_require("../../" + common_folder + "/lib/#{common_library}")
   elsif is_dtk_common_gem_installed?       
-    require 'dtk-common' unless defined?(DTK::Common)
+    # already loaded so do not do anything
   else
     raise DTK::Client::DtkError,"Common directory/gem not found, please make sure that you have cloned dtk-common folder or installed dtk common gem!"
   end
