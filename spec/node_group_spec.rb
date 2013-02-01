@@ -1,6 +1,6 @@
 require 'lib/spec_thor'
-
-dtk_nested_require("../lib/commands/thor","node_group")
+require File.expand_path('../lib/require_first', File.dirname(__FILE__))
+require File.expand_path('../lib/commands/thor/node_group', File.dirname(__FILE__))
 
 include SpecThor
 

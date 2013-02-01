@@ -1,6 +1,6 @@
 require 'lib/spec_thor'
-dtk_nested_require("../lib/domain","response")
-dtk_nested_require("../lib/view_processor","table_print")
+require File.expand_path('../lib/require_first', File.dirname(__FILE__))
+
 include SpecThor
 
 describe DTK::Client::Response do

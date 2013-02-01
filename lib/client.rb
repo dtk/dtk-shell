@@ -1,6 +1,13 @@
 require 'rubygems'
 require 'bundler/setup'
 require File.expand_path("require_first", File.dirname(__FILE__))
+
+if gem_only_available?
+  # loads it only if there is no common folder, and gem is installed
+  require 'dtk-common'
+end
+
+
 #TODO: should be common gem
 dtk_require_dtk_common("hash_object")
 dtk_require_dtk_common("auxiliary")

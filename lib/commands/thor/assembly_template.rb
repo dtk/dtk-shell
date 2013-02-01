@@ -53,7 +53,7 @@ module DTK::Client
           response = DTK::Client::ContextRouter.routeTask("service", "assembly_template", context_params_for_service, @conn)
 
         else
-          response = post rest_url("assembly/list"), {:subtype => 'template'}
+          response = post rest_url("assembly/list"), {:subtype => 'template', :detail_level => 'nodes'}
           data_type = :assembly_template
           response.render_table(data_type)
         end
@@ -83,19 +83,16 @@ module DTK::Client
       end
     end
 
-    desc "ASSEMBLY-TEMPLATE-NAME/ID stage [-v VERSION] [INSTANCE-NAME]", "Stage assembly template in target."
-    version_method_option
+    desc "ASSEMBLY-TEMPLATE-NAME/ID stage [INSTANCE-NAME]", "Stage assembly template in target."
     method_option "in-target",:aliases => "-t" ,
       :type => :numeric, 
       :banner => "TARGET-ID",
       :desc => "Target (id) to create assembly in" 
     def stage(context_params)
       assembly_template_id, name = context_params.retrieve_arguments([:assembly_template_id!, :option_1],method_argument_names)
-      version = options["version"]
       post_body = {
         :assembly_id => assembly_template_id
       }
-      post_body.merge!(:version => version) if version
       post_body.merge!(:target_id => options["in-target"]) if options["in-target"]
       post_body.merge!(:name => name) if name
       response = post rest_url("assembly/stage"), post_body
