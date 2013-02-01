@@ -40,6 +40,12 @@ def dtk_nested_require(dir,*files_x)
   end
 end
 
+# this returns true if there is no common folder e.g. dtk-common in parent folder,
+# and gem is installed
+def gem_only_available?()
+  return !determine_common_folder() && is_dtk_common_gem_installed?
+end
+
 def dtk_require_dtk_common(common_library)
   # use common folder else common gem
   common_folder = determine_common_folder()

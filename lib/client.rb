@@ -2,8 +2,8 @@ require 'rubygems'
 require 'bundler/setup'
 require File.expand_path("require_first", File.dirname(__FILE__))
 
-if is_dtk_common_gem_installed?
-  # will load only this time
+if gem_only_available?
+  # loads it only if there is no common folder, and gem is installed
   require 'dtk-common'
 end
 
