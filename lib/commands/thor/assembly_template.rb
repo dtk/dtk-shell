@@ -53,7 +53,7 @@ module DTK::Client
           response = DTK::Client::ContextRouter.routeTask("service", "assembly_template", context_params_for_service, @conn)
 
         else
-          response = post rest_url("assembly/list"), {:subtype => 'template'}
+          response = post rest_url("assembly/list"), {:subtype => 'template', :detail_level => 'nodes'}
           data_type = :assembly_template
           response.render_table(data_type)
         end
