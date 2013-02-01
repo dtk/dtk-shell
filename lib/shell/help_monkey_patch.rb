@@ -8,9 +8,11 @@ class Thor
       @@shell_context = context
     end
 
-    def replace_if_matched(help_item, entity_name)
-      matched = help_item.first.match(/\[?#{entity_name.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
+    def match_help_item_changes(help_item, entity_name)
+      help_item.first.match(/\[?#{entity_name.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
+    end
 
+    def replace_if_matched!(help_item, matched)
       # change by reference
       help_item.first.gsub!(matched[0],'') if matched
 
@@ -72,23 +74,32 @@ class Thor
               help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
               filtered_list << help_item
             end
+          end
+        end
 
+        entities_with_identifiers =  @@shell_context.active_context.entities_with_identifiers()
 
-            entities_with_identifiers =  @@shell_context.active_context.entities_with_identifiers()
+        # first one does not count
+        if entities_with_identifiers && entities_with_identifiers.size > 1
+          # additional filter list for n-context
+          n_filter_list = []
+          # we do not need first one, since above code takes care of that one
+          filtered_list = filtered_list.select do |filtered_help_item|
+            #next unless filtered_help_item
+            entities_with_identifiers[1..-1].each_with_index do |entity,i|
+              matched = match_help_item_changes(filtered_help_item, entity)
+              filtered_help_item = replace_if_matched!(filtered_help_item, matched)
 
-            # first one does not count
-            if entities_with_identifiers && entities_with_identifiers.size > 1
-              # we do not need first one, since above code takes care of that one
-              filtered_list.each do |filtered_help_item|
-                next unless filtered_help_item
-                entities_with_identifiers[1..-1].each do |entity|
-                  filtered_help_item = replace_if_matched(filtered_help_item, entity)
-                end
+              # if it is last command, and there were changes                 
+              if (i == (entities_with_identifiers.size - 2) && matched)
+                n_filter_list << filtered_help_item
               end
             end
-
-
           end
+
+          # we have just filtered those methods that have attribute for given entity 
+          # and also are last in the list
+          filtered_list = n_filter_list
         end
 
         # remove double spaces
