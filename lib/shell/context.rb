@@ -82,6 +82,40 @@ module DTK
         return nil
       end
 
+      #
+      # This method validates command hierarchy of active context + user input to disallow illigal autocomplete
+      #
+      def is_full_context_valid?(delimited_inputs)
+        input_for_check = delimited_inputs.start_with?('/') ? delimited_inputs : "/#{delimited_inputs}"
+        match = input_for_check.match(/\/(.+)\//)
+        return true if match.nil?
+
+        full_context = @active_context.name_list() + match[1].split('/')
+        parent_clazz = nil
+        
+        (0..(full_context.size-1)).step(2) do | i | 
+
+          command = full_context[i]
+          
+          # check if previous context support this one as a child
+          if parent_clazz
+            load_command(parent_clazz)
+            target_context_class = Context.get_command_class(parent_clazz)
+            # valid child method is necessery to define parent-child relet.
+            if target_context_class.respond_to?(:valid_child?)
+              unless target_context_class.valid_child?(command)
+                return false
+              end
+            else
+              return false
+            end
+          end
+          parent_clazz = command.gsub('-','_')
+        end
+
+        return true
+      end
+
       # this method is used to scan and provide context to be available Readline.complete_proc
       def dynamic_autocomplete_context(readline_input)
         inputs = nil
@@ -89,6 +123,10 @@ module DTK
         n_level_commands = nil
 
         if readline_input.match /.*\/.*/
+
+          # If full context is not valid, return 0 autocomplete options         
+          return [] unless is_full_context_valid?(readline_input)
+
           # one before last
           command = calculate_proper_command(readline_input)
 
@@ -242,12 +280,15 @@ module DTK
 
       # get class identifiers for given thor command, returns array of identifiers
       def get_command_identifiers(thor_command_name, autocomplete_input = [])
-                      
-        command_clazz = Context.get_command_class(thor_command_name)
-        if command_clazz.list_method_supported?             
-          # take just hashed arguemnts from multi return method
-          hashed_args = get_command_parameters(thor_command_name,[],autocomplete_input)[2]
-          return command_clazz.get_identifiers(@conn, hashed_args)
+        begin
+          command_clazz = Context.get_command_class(thor_command_name)
+          if command_clazz.list_method_supported?             
+            # take just hashed arguemnts from multi return method
+            hashed_args = get_command_parameters(thor_command_name,[],autocomplete_input)[2]
+            return command_clazz.get_identifiers(@conn, hashed_args)
+          end
+        rescue DTK::Client::DtkValidationError => e
+          # TODO Check if handling needed. Error should happen only when autocomplete ID search illigal 
         end
 
         return []
@@ -363,8 +404,7 @@ module DTK
 
             # if there is a value and there no more commands
             if value 
-              # TODO: FIX - currently we have 2 server requests; re-use invoc ...
-                 
+              # TODO: FIX - currently we have 2 server requests; re-use invoc ...                
               identifier_response = valid_id?(command, value, context_params)
 
               if identifier_response
@@ -422,6 +462,7 @@ module DTK
       public
 
       def self.load_session_history()
+                puts HISTORY_LOCATION
         return [] unless is_there_history_file()
         content = File.open(HISTORY_LOCATION,'r').read
         return (content.empty? ? [] : JSON.parse(content))

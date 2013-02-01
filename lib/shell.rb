@@ -4,7 +4,7 @@ require File.expand_path('commands/thor/dtk',       File.dirname(__FILE__))
 require File.expand_path('error',                   File.dirname(__FILE__))
 
 # load all from shell directory since those are required
-Dir[File.expand_path('shell/*.rb', File.dirname(__FILE__))].each {|file| require file }
+Dir[File.expand_path('shell/*.rb', File.dirname(__FILE__))].each { |file| require file }
 
 require 'shellwords'
 require 'readline'

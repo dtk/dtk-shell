@@ -11,7 +11,8 @@ module DTK::Client
     end
 
     def self.validation_list(context_params)
-      assembly_id, node_name = context_params.retrieve_arguments([:assembly_id, :node_name])
+
+      assembly_id, node_name = context_params.retrieve_arguments([:assembly_id!, :node_name!])
 
       post_body = {
         :assembly_id => assembly_id,
