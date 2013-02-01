@@ -155,6 +155,11 @@ module DTK
         @context_list.collect { |e| e.name }
       end
 
+      def entities_with_identifiers()
+        filtered_entities = @context_list.select { |e| e.identifier }
+        return filtered_entities.collect { |e| e.entity.to_s }
+      end
+
       def full_path()
         return "/#{name_list.join('/')}"
       end
@@ -173,6 +178,19 @@ module DTK
 
       def current_identifier?
         return @context_list.empty? ? false : @context_list.last.is_identifier?
+      end
+
+      def first_command_name()
+        @context_list.each do |e|
+          return e.name if e.is_command?
+        end
+
+        return nil
+      end
+
+      def is_there_identifier_for_first_context?
+        @context_list.each { |e| return true if e.is_identifier? }
+        return false
       end
 
       def last_command_name()

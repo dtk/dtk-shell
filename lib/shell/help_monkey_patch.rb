@@ -8,6 +8,15 @@ class Thor
       @@shell_context = context
     end
 
+    def replace_if_matched(help_item, entity_name)
+      matched = help_item.first.match(/\[?#{entity_name.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
+
+      # change by reference
+      help_item.first.gsub!(matched[0],'') if matched
+
+      return help_item
+    end
+
     def help(shell, subcommand = false)
       list = printable_tasks(true, subcommand)
 
@@ -16,9 +25,12 @@ class Thor
       end
 
       list.sort!{ |a,b| a[0] <=> b[0] }
+  
       # monkey patching here => START
       unless @@shell_context.root?
-        command=@@shell_context.active_context.last_command_name.upcase
+        command             = @@shell_context.active_context.first_command_name.upcase
+        is_there_identifier = @@shell_context.active_context.is_there_identifier_for_first_context?
+
         filtered_list = []
 
         list.each do |help_item|
@@ -32,10 +44,10 @@ class Thor
             # not found and tier 1 we add it to help list
             filtered_list << help_item if @@shell_context.current_command?
           else
-            if @@shell_context.current_command?
+            # for help we only care about first context name / identifier
+            if !is_there_identifier
               # remove optional data if tier 1 (DTK-211) TODO: Refactor this
               # help_item.first.gsub!(list_optional_data[0],'') unless list_optional_data.nil?
-
               unless list_optional_data.nil?
                 list_optional_data.each do |item|
                   help_item.first.gsub!(item,'') unless item.include?('--')
@@ -59,13 +71,29 @@ class Thor
               # found and tier 2 we add it to list and remove ID/NAME part of desc
               help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
               filtered_list << help_item
-            end            
+            end
+
+
+            entities_with_identifiers =  @@shell_context.active_context.entities_with_identifiers()
+
+            # first one does not count
+            if entities_with_identifiers && entities_with_identifiers.size > 1
+              # we do not need first one, since above code takes care of that one
+              filtered_list.each do |filtered_help_item|
+                next unless filtered_help_item
+                entities_with_identifiers[1..-1].each do |entity|
+                  filtered_help_item = replace_if_matched(filtered_help_item, entity)
+                end
+              end
+            end
+
+
           end
         end
 
-        list = filtered_list
+        # remove double spaces
+        list = filtered_list.each { |e| e.first.gsub!(/  /,' ') }
       end
-
 
       if list.empty?
         shell.say "No tasks for current context '#{@@shell_context.active_context.full_path}'." 

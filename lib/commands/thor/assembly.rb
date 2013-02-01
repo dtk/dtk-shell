@@ -274,7 +274,7 @@ module DTK::Client
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID set ATTRIBUTE-PATTERN VALUE", "Set target assembly attributes"
+    desc "ASSEMBLY-NAME/ID set ATTRIBUTE-NAME/ID VALUE", "Set target assembly attributes"
     def set(context_params)
 
       if context_params.is_there_identifier?(:attribute)
