@@ -184,7 +184,7 @@ module DTK::Client
 
       if assembly_id.nil?
         data_type = :assembly
-        response = post rest_url("assembly/list"), {:subtype  => 'instance'}
+        response = post rest_url("assembly/list"), {:subtype  => 'instance',:detail_level => 'nodes'}
 
         # set render view to be used
         response.render_table(data_type) unless options.list?
