@@ -462,7 +462,6 @@ module DTK
       public
 
       def self.load_session_history()
-                puts HISTORY_LOCATION
         return [] unless is_there_history_file()
         content = File.open(HISTORY_LOCATION,'r').read
         return (content.empty? ? [] : JSON.parse(content))
