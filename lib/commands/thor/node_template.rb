@@ -55,7 +55,7 @@ module DTK::Client
       :banner => "TARGET-ID",
       :desc => "Target (id) to create node insatnce in" 
     def stage(context_params)
-      node_template_id, name = context_params.retrieve_arguments([:node_template_id!, :option_1],method_argument_names)
+      node_template_id, name = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       post_body = {
         :node_template_id => node_template_id
       }
