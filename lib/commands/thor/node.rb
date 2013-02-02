@@ -106,7 +106,7 @@ module DTK::Client
       node_id,component_template_id = context_params.retrieve_arguments([:node_id!, :option_1!],method_argument_names)
       post_body = {
         :node_id => node_id,
-        :component_template_name => component_template_name
+        :component_template_name => component_template_id
       }
       post_body.merge!(:version => options[:version]) if options[:version]
 
