@@ -38,20 +38,6 @@ module DTK::Client
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID promote-to-library", "Update or create library assembly using workspace assembly"
-    def promote_to_library(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id
-      }
-
-      response = post rest_url("assembly/promote_to_library"), post_body
-      # when changing context send request for getting latest assemblies instead of getting from cache
-      @@invalidate_map << :library
-      
-      return response
-    end
-
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
     def start(context_params)
       if context_params.is_there_identifier?(:node)
@@ -311,6 +297,22 @@ module DTK::Client
       nil
     end
 
+    desc "ASSEMBLY-NAME/ID add-node ASSEMBLY-NODE-NAME [-n NODE-TEMPLATE-ID]", "Add (stage) a new node to the assembly"
+    method_option "node_template_id",:aliases => "-n" ,
+      :type => :string, 
+      :banner => "NODE-TEMPLATE-ID",
+      :desc => "Node Template id"
+    def add_node(context_params)
+      assembly_id,assembly_node_name = context_params.retrieve_arguments([:assembly_id,:option_1!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :assembly_node_name => assembly_node_name
+      }
+      post_body.merge!(:node_template_id => options["node_template_id"]) if options["node_template_id"]
+
+      post rest_url("assembly/add_node"), post_body
+    end
+
     desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node"
     def add_component(context_params)
     
@@ -324,7 +326,6 @@ module DTK::Client
       end
 
       assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
-
 
       post_body = {
         :assembly_id => assembly_id,
