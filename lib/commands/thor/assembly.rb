@@ -228,12 +228,19 @@ module DTK::Client
       post_body = {
         :assembly_id => assembly_id
       }
-      #TODO: make sure that dont have both missing and possible
-      post_body.merge!(:find_missing => true) if options.missing?
-      post_body.merge!(:find_possible => true) if options.possible?
-      post rest_url("assembly/list_connections"), post_body
-    end
+      #TODO: make sure that dont have both missing and possible true at same time
+      data_type = :service_connection 
+      if options.missing?
+        post_body.merge!(:find_missing => true) if options.missing?
+        data_type = :service_ref
+      elsif options.possible?
+        data_type = :service_ref_completion
+        post_body.merge!(:find_possible => true) if options.possible?
+      end
 
+      response = post rest_url("assembly/list_connections"), post_body
+      response.render_table(data_type)
+    end
 
     desc "ASSEMBLY-NAME/ID list-smoketests","List smoketests on asssembly"
     def list_smoketests(context_params)
