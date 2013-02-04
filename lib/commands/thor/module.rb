@@ -40,7 +40,7 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete MODULE-NAME/ID", "Delete component module and all items contained in it"
+    desc "delete MODULE-IDENTIFIER", "Delete component module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
       component_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)

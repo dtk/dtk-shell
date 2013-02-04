@@ -8,7 +8,8 @@ module DTK::Client
     def self.whoami()
       return :node_template, "node/list", {:subtype => 'template'}
     end
-
+=begin
+  #Not implemented yet
     desc "NODE-TEMPLATE-NAME/ID info", "Get information about given node template."
     method_option :list, :type => :boolean, :default => false
     def info(context_params)
@@ -25,7 +26,7 @@ module DTK::Client
 
       return response
     end
-
+=end
     desc "list", "List all node templates."
     def list(context_params)
       post_body = {
@@ -54,7 +55,7 @@ module DTK::Client
       :banner => "TARGET-ID",
       :desc => "Target (id) to create node insatnce in" 
     def stage(context_params)
-      node_template_id, name = context_params.retrieve_arguments([:node_template_id!, :option_1],method_argument_names)
+      node_template_id, name = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       post_body = {
         :node_template_id => node_template_id
       }

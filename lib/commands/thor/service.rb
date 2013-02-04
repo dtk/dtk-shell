@@ -200,7 +200,7 @@ module DTK::Client
       return response
     end
 
-    desc "delete SERVICE-NAME/ID", "Delete service module and all items contained in it"
+    desc "delete SERVICE-IDENTIFIER", "Delete service module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
       service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
