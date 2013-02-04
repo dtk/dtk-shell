@@ -204,6 +204,8 @@ module DTK::Client
           :filter      => filter
         }
 
+        # TODO When on node layer, set default about = nodes; allow only list components|attributes
+
         case about
           when "nodes":
             data_type = :node
@@ -242,11 +244,15 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID info", "Return info about assembly instance identified by name/id"
     def info(context_params)
       assembly_id, node_id = context_params.retrieve_arguments([:assembly_id!,:node_id],method_argument_names)
+ 
+      # TODO same for node 
+      # TODO For component level, display info about jst for the component
+      # TODO: same goes for attribute level
 
-      # TODO: Add node id filter on server side      
       post_body = {
         :assembly_id => assembly_id,
-        :subtype => :instance
+        :node_id     => node_id,
+        :subtype     => :instance
       }
       post rest_url("assembly/info"), post_body
     end
@@ -282,6 +288,11 @@ module DTK::Client
       else
         mapping = [:assembly_id!,:option_1!,:option_2!]
       end
+
+      # TODO 
+      # for node level add node restriction, so attributes are set just for node in active context
+      # add restriction for attribute-pattern at component level (display attributes just for that component)
+      # same restricton is needed for attribute level, but than only value is provided by the user
 
       assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
 
@@ -325,7 +336,6 @@ module DTK::Client
 
       assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
 
-
       post_body = {
         :assembly_id => assembly_id,
         :node_id => node_id,
@@ -337,7 +347,7 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID delete-component COMPONENT-ID","Delete component from assembly"
     def delete_component(context_params)
-      assembly_id,node_id,component_id = context_params.retrieve_arguments([:assembly_id!,:node_id,:option_1!],method_argument_names)
+      assembly_id, node_id, component_id = context_params.retrieve_arguments([:assembly_id!,:node_id,:option_1!],method_argument_names)
 
       # TODO: Add method with constraint Node ID on server side
       post_body = {
@@ -352,10 +362,10 @@ module DTK::Client
     def get_netstats(context_params)
       assembly_id,node_id = context_params.retrieve_arguments([:assembly_id!,:node_id],method_argument_names)
 
-      # TODO: Add support for node ID on this methods on server side
       post_body = {
-        :assembly_id => assembly_id
-      }
+        :assembly_id => assembly_id,
+        :node_id => node_id
+      }  
 
       response = post(rest_url("assembly/initiate_get_netstats"),post_body)
       return response unless response.ok?
