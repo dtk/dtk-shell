@@ -215,9 +215,29 @@ module DTK::Client
       end
     end
 
-    desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
+    desc "ASSEMBLY-NAME/ID list-connections [--missing | --possible]","List connections between services on asssembly"
+    method_option "missing",:aliases => "-m" ,
+      :type => :boolean,
+      :desc => "List missing connections"
+    method_option "possible",:aliases => "-p" ,
+      :type => :boolean,
+      :desc => "List possible connections"
+    def list_connections(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      #TODO: make sure that dont have both missing and possible
+      post_body.merge!(:find_missing => true) if options.missing?
+      post_body.merge!(:find_possible => true) if options.possible?
+      post rest_url("assembly/list_connections"), post_body
+    end
+
+
+    desc "ASSEMBLY-NAME/ID list-smoketests","List smoketests on asssembly"
     def list_smoketests(context_params)
-      assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
       post_body = {
         :assembly_id => assembly_id
