@@ -231,9 +231,48 @@ module DTK::Client
       
     end
 
-    desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
+    desc "ASSEMBLY-NAME/ID add-connection CONN-TYPE SERVICE-REF1/ID SERVICE-REF2/ID", "Add a connection between two services in an assembly"
+    def add_connection(context_params)
+      assembly_id,conn_type,sr1,sr2 = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :connection_type => conn_type,
+        :input_service_ref_id => sr1,
+        :output_service_ref_id => sr2
+      }
+      post rest_url("assembly/add_connection"), post_body
+    end
+
+    desc "ASSEMBLY-NAME/ID list-connections [--missing | --possible]","List connections between services on asssembly"
+    method_option "missing",:aliases => "-m" ,
+      :type => :boolean,
+      :desc => "List missing connections"
+    method_option "possible",:aliases => "-p" ,
+      :type => :boolean,
+      :desc => "List possible connections"
+    def list_connections(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      #TODO: make sure that dont have both missing and possible true at same time
+      data_type = :service_connection 
+      if options.missing?
+        post_body.merge!(:find_missing => true) if options.missing?
+        data_type = :service_ref
+      elsif options.possible?
+        data_type = :possible_service_connection
+        post_body.merge!(:find_possible => true) if options.possible?
+      end
+
+      response = post rest_url("assembly/list_connections"), post_body
+      response.render_table(data_type)
+    end
+
+    desc "ASSEMBLY-NAME/ID list-smoketests","List smoketests on asssembly"
     def list_smoketests(context_params)
-      assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
       post_body = {
         :assembly_id => assembly_id
