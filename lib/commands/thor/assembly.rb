@@ -28,6 +28,11 @@ module DTK::Client
       [:node]
     end
 
+    # this includes children of children
+    def self.all_children()
+      [:node, :component, :attribute]
+    end
+
     def self.valid_child?(name_of_sub_context)
       return Assembly.valid_children().include?(name_of_sub_context.to_sym)
     end
@@ -108,7 +113,7 @@ module DTK::Client
       :type => :string, #integer 
       :banner => "COUNT",
       :desc => "Number of sub-assemblies to add"
-    def add(context_params)
+    def add_node(context_params)
       assembly_id,service_add_on_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
 
       # create task
@@ -162,34 +167,9 @@ module DTK::Client
     desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
-      assembly_id, about, filter = context_params.retrieve_arguments([:assembly_id,:option_1,:option_2],method_argument_names)
+      assembly_id, node_id, component_id, attribute_id, about, filter = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1,:option_2],method_argument_names)
 
-      if context_params.is_there_command?(:node)
-        about ||= 'nodes'
-      end
-
-      if assembly_id.nil?
-        data_type = :assembly
-        response = post rest_url("assembly/list"), {:subtype  => 'instance',:detail_level => 'nodes'}
-
-        # set render view to be used
-        response.render_table(data_type) unless options.list?
-        
-        return response
-      else
-        about ||= "none"
-        #TODO: need to detect if two args given by list [nodes|components|tasks FILTER
-        #can make sure that first arg is not one of [nodes|components|tasks] but these could be names of assembly (although unlikely); so would then need to
-        #look at form of FILTER
-        response = ""
-
-        post_body = {
-          :assembly_id => assembly_id,
-          :subtype     => 'instance',
-          :about       => about,
-          :filter      => filter
-        }
-
+      if about
         case about
           when "nodes":
             data_type = :node
@@ -201,23 +181,103 @@ module DTK::Client
             data_type = :task
           else
             raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
-        end
-
-        response = post rest_url("assembly/info_about"), post_body
-
-           
-        # set render view to be used
-        unless options.list?
-          response.render_table(data_type)
-        end
-               
-        return response
+        end 
       end
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :node_id => node_id,
+        :component_id => component_id,
+        :subtype     => 'instance',
+        :filter      => filter
+      }
+      rest_endpoint = "assembly/info_about"
+
+      if context_params.is_last_command_eql_to?(:attribute)
+        
+        raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
+        about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
+
+      elsif context_params.is_last_command_eql_to?(:component)
+        
+        if component_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
+        else
+          about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
+        end
+
+      elsif context_params.is_last_command_eql_to?(:node)
+
+        if node_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
+        else
+          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
+        end
+
+      else
+
+        if assembly_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
+        else
+          data_type = :assembly
+          post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
+          rest_endpoint = "assembly/list"
+        end
+          
+      end
+
+      post_body[:about] = about
+      response = post rest_url(rest_endpoint), post_body
+      
+      # set render view to be used
+      response.render_table(data_type) unless options.list?
+
+      return response
+      
     end
 
-    desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
+    desc "ASSEMBLY-NAME/ID add-connection CONN-TYPE SERVICE-REF1/ID SERVICE-REF2/ID", "Add a connection between two services in an assembly"
+    def add_connection(context_params)
+      assembly_id,conn_type,sr1,sr2 = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :connection_type => conn_type,
+        :input_service_ref_id => sr1,
+        :output_service_ref_id => sr2
+      }
+      post rest_url("assembly/add_connection"), post_body
+    end
+
+    desc "ASSEMBLY-NAME/ID list-connections [--missing | --possible]","List connections between services on asssembly"
+    method_option "missing",:aliases => "-m" ,
+      :type => :boolean,
+      :desc => "List missing connections"
+    method_option "possible",:aliases => "-p" ,
+      :type => :boolean,
+      :desc => "List possible connections"
+    def list_connections(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      #TODO: make sure that dont have both missing and possible true at same time
+      data_type = :service_connection 
+      if options.missing?
+        post_body.merge!(:find_missing => true) if options.missing?
+        data_type = :service_ref
+      elsif options.possible?
+        data_type = :possible_service_connection
+        post_body.merge!(:find_possible => true) if options.possible?
+      end
+
+      response = post rest_url("assembly/list_connections"), post_body
+      response.render_table(data_type)
+    end
+
+    desc "ASSEMBLY-NAME/ID list-smoketests","List smoketests on asssembly"
     def list_smoketests(context_params)
-      assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
       post_body = {
         :assembly_id => assembly_id
@@ -228,11 +288,15 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID info", "Return info about assembly instance identified by name/id"
     def info(context_params)
       assembly_id, node_id = context_params.retrieve_arguments([:assembly_id!,:node_id],method_argument_names)
+ 
+      # TODO same for node 
+      # TODO For component level, display info about jst for the component
+      # TODO: same goes for attribute level
 
-      # TODO: Add node id filter on server side      
       post_body = {
         :assembly_id => assembly_id,
-        :subtype => :instance
+        :node_id     => node_id,
+        :subtype     => :instance
       }
       post rest_url("assembly/info"), post_body
     end
@@ -268,6 +332,11 @@ module DTK::Client
       else
         mapping = [:assembly_id!,:option_1!,:option_2!]
       end
+
+      # TODO 
+      # for node level add node restriction, so attributes are set just for node in active context
+      # add restriction for attribute-pattern at component level (display attributes just for that component)
+      # same restricton is needed for attribute level, but than only value is provided by the user
 
       assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
 
@@ -338,11 +407,11 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID delete-component COMPONENT-ID","Delete component from assembly"
     def delete_component(context_params)
-      assembly_id,node_id,component_id = context_params.retrieve_arguments([:assembly_id!,:node_id,:option_1!],method_argument_names)
+      assembly_id, node_id, component_id = context_params.retrieve_arguments([:assembly_id!,:node_id,:option_1!],method_argument_names)
 
-      # TODO: Add method with constraint Node ID on server side
       post_body = {
         :assembly_id => assembly_id,
+        :node_id => node_id,
         :component_id => component_id
       }
       response = post(rest_url("assembly/delete_component"),post_body)
@@ -353,10 +422,10 @@ module DTK::Client
     def get_netstats(context_params)
       assembly_id,node_id = context_params.retrieve_arguments([:assembly_id!,:node_id],method_argument_names)
 
-      # TODO: Add support for node ID on this methods on server side
       post_body = {
-        :assembly_id => assembly_id
-      }
+        :assembly_id => assembly_id,
+        :node_id => node_id
+      }  
 
       response = post(rest_url("assembly/initiate_get_netstats"),post_body)
       return response unless response.ok?
@@ -583,6 +652,14 @@ module DTK::Client
       end
     end
     
+    private
+
+    def get_type_and_raise_error_if_invalid(about, default_about, type_options)
+      about ||= default_about
+      raise DTK::Client::DtkError, "Not supported type '#{about}' for list for current context level." unless type_options.include?(about)
+      return about, about[0..-2].to_sym
+    end
+
   end
 end
 
