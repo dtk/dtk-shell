@@ -108,6 +108,8 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
+=begin
+TODO: will put in dot release and will rename to 'extend'
     desc "ASSEMBLY-NAME/ID add EXTENSION-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly"
     method_option "count",:aliases => "-n" ,
       :type => :string, #integer 
@@ -148,6 +150,7 @@ module DTK::Client
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
       task_status_aux(assembly_id,:assembly,options.wait?)
     end
+=end
 
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
     def run_smoketests(context_params)
@@ -364,6 +367,21 @@ module DTK::Client
       #TODO: modify JenkinsClient to use response wrapper
       JenkinsClient.create_assembly_project?(assembly_name,assembly_id)
       nil
+    end
+
+    desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID [--auto-complete]", "Add (stage) an assembly template to become part of this assembly instance"
+    method_option "auto-complete",:aliases => "-a" ,
+      :type => :boolean, 
+      :default=> false,
+      :desc => "Automatically add in connections"
+    def add_assembly(context_params)
+      assembly_id,assembly_template_id = context_params.retrieve_arguments([:assembly_id,:option_1!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :assembly_template_id => assembly_template_id
+      }
+      post_body.merge!(:auto_add_connections => true) if options.auto_complete?
+      post rest_url("assembly/add_assembly_template"), post_body
     end
 
     desc "ASSEMBLY-NAME/ID add-node ASSEMBLY-NODE-NAME [-n NODE-TEMPLATE-ID]", "Add (stage) a new node to the assembly"
