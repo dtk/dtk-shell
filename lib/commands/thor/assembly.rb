@@ -126,7 +126,7 @@ TODO: will put in dot release and will rename to 'extend'
 
       post_body.merge!(:count => options.count) if options.count
 
-      response = post rest_url("assembly/add_sub_assembly"), post_body
+      response = post rest_url("assembly/add__service_add_on"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
 
@@ -369,7 +369,9 @@ TODO: will put in dot release and will rename to 'extend'
       nil
     end
 
-    desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID [--auto-complete]", "Add (stage) an assembly template to become part of this assembly instance"
+#TODO: in adot release addd auto-compleet capability
+#    desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID [--auto-complete]", "Add (stage) an assembly template to become part of this assembly instance"
+    desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID", "Add (stage) an assembly template to become part of this assembly instance"
     method_option "auto-complete",:aliases => "-a" ,
       :type => :boolean, 
       :default=> false,
