@@ -215,6 +215,18 @@ module DTK::Client
       end
     end
 
+    desc "ASSEMBLY-NAME/ID add-connection CONN-TYPE SERVICE-REF1/ID SERVICE-REF2/ID", "Add a connection between two services in an assembly"
+    def add_connection(context_params)
+      assembly_id,conn_type,sr1,sr2 = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :connection_type => conn_type,
+        :input_service_ref_id => sr1,
+        :output_service_ref_id => sr2
+      }
+      post rest_url("assembly/add_connection"), post_body
+    end
+
     desc "ASSEMBLY-NAME/ID list-connections [--missing | --possible]","List connections between services on asssembly"
     method_option "missing",:aliases => "-m" ,
       :type => :boolean,
@@ -234,7 +246,7 @@ module DTK::Client
         post_body.merge!(:find_missing => true) if options.missing?
         data_type = :service_ref
       elsif options.possible?
-        data_type = :service_ref_completion
+        data_type = :possible_service_connection
         post_body.merge!(:find_possible => true) if options.possible?
       end
 
