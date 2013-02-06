@@ -108,7 +108,7 @@ module DTK::Client
       :type => :string, #integer 
       :banner => "COUNT",
       :desc => "Number of sub-assemblies to add"
-    def add(context_params)
+    def add_node(context_params)
       assembly_id,service_add_on_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
 
       # create task
@@ -162,36 +162,9 @@ module DTK::Client
     desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
-      assembly_id, about, filter = context_params.retrieve_arguments([:assembly_id,:option_1,:option_2],method_argument_names)
+      assembly_id, node_id, component_id, attribute_id, about, filter = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1,:option_2],method_argument_names)
 
-      if context_params.is_there_command?(:node)
-        about ||= 'nodes'
-      end
-
-      if assembly_id.nil?
-        data_type = :assembly
-        response = post rest_url("assembly/list"), {:subtype  => 'instance',:detail_level => 'nodes'}
-
-        # set render view to be used
-        response.render_table(data_type) unless options.list?
-        
-        return response
-      else
-        about ||= "none"
-        #TODO: need to detect if two args given by list [nodes|components|tasks FILTER
-        #can make sure that first arg is not one of [nodes|components|tasks] but these could be names of assembly (although unlikely); so would then need to
-        #look at form of FILTER
-        response = ""
-
-        post_body = {
-          :assembly_id => assembly_id,
-          :subtype     => 'instance',
-          :about       => about,
-          :filter      => filter
-        }
-
-        # TODO When on node layer, set default about = nodes; allow only list components|attributes
-
+      if about
         case about
           when "nodes":
             data_type = :node
@@ -203,18 +176,59 @@ module DTK::Client
             data_type = :task
           else
             raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
-        end
-
-        response = post rest_url("assembly/info_about"), post_body
-
-           
-        # set render view to be used
-        unless options.list?
-          response.render_table(data_type)
-        end
-               
-        return response
+        end 
       end
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :node_id => node_id,
+        :component_id => component_id,
+        :subtype     => 'instance',
+        :filter      => filter
+      }
+      rest_endpoint = "assembly/info_about"
+
+      if context_params.is_last_command_eql_to?(:attribute)
+        
+        raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
+        about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
+
+      elsif context_params.is_last_command_eql_to?(:component)
+        
+        if component_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
+        else
+          about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
+        end
+
+      elsif context_params.is_last_command_eql_to?(:node)
+
+        if node_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
+        else
+          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
+        end
+
+      else
+
+        if assembly_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
+        else
+          data_type = :assembly
+          post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
+          rest_endpoint = "assembly/list"
+        end
+          
+      end
+
+      post_body[:about] = about
+      response = post rest_url(rest_endpoint), post_body
+      
+      # set render view to be used
+      response.render_table(data_type) unless options.list?
+
+      return response
+      
     end
 
     desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
@@ -351,9 +365,9 @@ module DTK::Client
     def delete_component(context_params)
       assembly_id, node_id, component_id = context_params.retrieve_arguments([:assembly_id!,:node_id,:option_1!],method_argument_names)
 
-      # TODO: Add method with constraint Node ID on server side
       post_body = {
         :assembly_id => assembly_id,
+        :node_id => node_id,
         :component_id => component_id
       }
       response = post(rest_url("assembly/delete_component"),post_body)
@@ -594,6 +608,14 @@ module DTK::Client
       end
     end
     
+    private
+
+    def get_type_and_raise_error_if_invalid(about, default_about, type_options)
+      about ||= default_about
+      raise DTK::Client::DtkError, "Not supported type '#{about}' for list for current context level." unless type_options.include?(about)
+      return about, about[0..-2].to_sym
+    end
+
   end
 end
 

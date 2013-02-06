@@ -63,6 +63,10 @@ module DTK
         return ((results.size == 1) ? results.first : results)
       end
 
+      def is_last_command_eql_to?(command_name)
+        return @current_context.last_command_name() == command_name.to_s
+      end
+
       def is_there_identifier?(entity_name)
         return @current_context.find_identifier(entity_name) != nil
       end
