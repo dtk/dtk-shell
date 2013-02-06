@@ -175,7 +175,7 @@ module DTK
         command_name = root? ? 'dtk' : @active_context.last_command_name
 
         # if there is no new context (current) we use old one
-        @current = sub_tasks_names(command_name) || @current
+        @current = current_context_task_names() || @current
         
         # we add client commands
         @current.concat(CLIENT_COMMANDS).sort!
@@ -208,8 +208,7 @@ module DTK
       # when e.g assembly is deleted we want it to be removed from list without
       # exiting dtk-shell
       def reload_cached_tasks(command_name)
-        @cached_tasks["#{command_name}_1"].clear
-        @cached_tasks["#{command_name}_2"].clear
+        @cached_tasks.clear
        
         get_latest_tasks(command_name)
 
@@ -239,14 +238,16 @@ module DTK
       end
 
       # returns list of tasks for given command name
-      def sub_tasks_names(command_name=nil)
-        # cache works in a way that there are tier 1 and tier 2 list of ta
-        sufix = root? ? "" : current_command? ? "_1" : "_2"
-        return @cached_tasks[command_name.to_s+sufix] unless command_name.nil?
-
-        # returns root tasks
-        @cached_tasks['dtk']
+      def current_context_task_names()
+        @cached_tasks.fetch(@active_context.get_task_cache_id(),[]) 
       end
+
+      # checks if method name is valid in current context
+      def method_valid?(method_name)
+        # validate method, see if we support given method in current tasks
+        (current_context_task_names() + ['help']).include?(method_name)
+      end
+
 
       # adds command to current list of active commands
       def push_to_active_context(context_name, entity_name, context_value = nil)
@@ -450,11 +451,10 @@ module DTK
 
       def get_latest_tasks(command_name)
         file_name = command_name.gsub('-','_')
-        tier_1_tasks, tier_2_tasks = Context.get_command_class(file_name).tiered_task_names
+        cached_for_command = Context.get_command_class(file_name).tiered_task_names
 
         # gets thor command class and then all the task names for that command
-        @cached_tasks.store("#{command_name}_1",tier_1_tasks)
-        @cached_tasks.store("#{command_name}_2",tier_2_tasks)
+        @cached_tasks.merge!(cached_for_command)
       end
 
 

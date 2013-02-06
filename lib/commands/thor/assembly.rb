@@ -28,6 +28,11 @@ module DTK::Client
       [:node]
     end
 
+    # this includes children of children
+    def self.all_children()
+      [:node, :component, :attribute]
+    end
+
     def self.valid_child?(name_of_sub_context)
       return Assembly.valid_children().include?(name_of_sub_context.to_sym)
     end
