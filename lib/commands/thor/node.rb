@@ -194,6 +194,51 @@ module DTK::Client
     end
 
     no_tasks do
+      def node_start(node_id)             
+        post_body = {
+          :node_id  => node_id
+        }
+
+        # we expect action result ID
+        response = post rest_url("node/start"), post_body
+        return response  if response.data(:errors)
+
+        action_result_id = response.data(:action_results_id)
+
+        # bigger number here due to possibilty of multiple nodes
+        # taking too much time to be ready
+        18.times do
+          action_body = {
+            :action_results_id  => action_result_id,
+            :using_simple_queue => true
+          }
+          response = post(rest_url("assembly/get_action_results"),action_body)
+
+          if response['errors']
+            return response
+          end
+
+          break unless response.data(:result).nil?
+
+          puts "Waiting for nodes to be ready ..."
+          sleep(10)
+        end
+
+        if response.data(:result).nil?
+          raise DTK::Client::DtkError, "Server seems to be taking too long to start node(s)."
+        end
+
+        task_id = response.data(:result)['task_id']
+        post(rest_url("task/execute"), "task_id" => task_id)
+      end
+
+      def node_stop(node_id)
+        post_body = {
+          :node_id => node_id
+        }
+
+        post rest_url("node/stop"), post_body
+      end
       # get numeric ID, from possible name id
       def get_assembly_and_node_id(context_params)
         response = info(context_params)
