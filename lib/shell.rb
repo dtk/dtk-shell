@@ -227,7 +227,7 @@ def execute_shell_command(line, prompt)
 
       # validate method
       unless @context.method_valid?(method_name)
-        raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
+        #raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
       end
 
       # execute command via Thor

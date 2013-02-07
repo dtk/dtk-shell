@@ -39,8 +39,24 @@ module DTK::Client
 
     def self.validation_list(context_params)
       response = get_cached_response(:assembly, "assembly/list", {:subtype  => 'instance'})
-
       return response
+    end
+
+    # TODO: Hack which is necessery for the specific problem, something to reconsider down the line
+    # at this point not sure what would be clenear solution
+    def self.override_method_list()
+      {
+        :node      => [
+          ['list','','']
+        ],
+        :component => [
+          ['list','','']
+        ],
+        :attribute => [
+          ['list','','']
+        ]
+
+      }
     end
 
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
@@ -108,6 +124,8 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
+=begin
+TODO: will put in dot release and will rename to 'extend'
     desc "ASSEMBLY-NAME/ID add EXTENSION-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly"
     method_option "count",:aliases => "-n" ,
       :type => :string, #integer 
@@ -124,7 +142,7 @@ module DTK::Client
 
       post_body.merge!(:count => options.count) if options.count
 
-      response = post rest_url("assembly/add_sub_assembly"), post_body
+      response = post rest_url("assembly/add__service_add_on"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
 
@@ -141,6 +159,7 @@ module DTK::Client
       response = post(rest_url("assembly/list_possible_add_ons"),post_body)
       response.render_table(:service_add_on)
     end
+=end
 
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
@@ -287,15 +306,13 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID info", "Return info about assembly instance identified by name/id"
     def info(context_params)
-      assembly_id, node_id = context_params.retrieve_arguments([:assembly_id!,:node_id],method_argument_names)
+      assembly_id, node_id, component_id, attribute_id = context_params.retrieve_arguments([:assembly_id!, :node_id, :component_id, :attribute_id],method_argument_names)
  
-      # TODO same for node 
-      # TODO For component level, display info about jst for the component
-      # TODO: same goes for attribute level
-
       post_body = {
         :assembly_id => assembly_id,
         :node_id     => node_id,
+        :component_id => component_id,
+        :attribute_id => attribute_id,
         :subtype     => :instance
       }
       post rest_url("assembly/info"), post_body
@@ -328,7 +345,7 @@ module DTK::Client
     def set(context_params)
 
       if context_params.is_there_identifier?(:attribute)
-        mapping = [:assembly_id!,:attribute_name!, :option_1!]
+        mapping = [:assembly_id!,:attribute_id!, :option_1!]
       else
         mapping = [:assembly_id!,:option_1!,:option_2!]
       end
@@ -364,6 +381,23 @@ module DTK::Client
       #TODO: modify JenkinsClient to use response wrapper
       JenkinsClient.create_assembly_project?(assembly_name,assembly_id)
       nil
+    end
+
+#TODO: in adot release addd auto-compleet capability
+#    desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID [--auto-complete]", "Add (stage) an assembly template to become part of this assembly instance"
+    desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID", "Add (stage) an assembly template to become part of this assembly instance"
+    method_option "auto-complete",:aliases => "-a" ,
+      :type => :boolean, 
+      :default=> false,
+      :desc => "Automatically add in connections"
+    def add_assembly(context_params)
+      assembly_id,assembly_template_id = context_params.retrieve_arguments([:assembly_id,:option_1!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :assembly_template_id => assembly_template_id
+      }
+      post_body.merge!(:auto_add_connections => true) if options.auto_complete?
+      post rest_url("assembly/add_assembly_template"), post_body
     end
 
     desc "ASSEMBLY-NAME/ID add-node ASSEMBLY-NODE-NAME [-n NODE-TEMPLATE-ID]", "Add (stage) a new node to the assembly"
@@ -703,7 +737,7 @@ module DTK::Client
 
     def get_type_and_raise_error_if_invalid(about, default_about, type_options)
       about ||= default_about
-      raise DTK::Client::DtkError, "Not supported type '#{about}' for list for current context level." unless type_options.include?(about)
+      raise DTK::Client::DtkError, "Not supported type '#{about}' for list for current context level. Possible type options: #{type_options.join(', ')}" unless type_options.include?(about)
       return about, about[0..-2].to_sym
     end
 
