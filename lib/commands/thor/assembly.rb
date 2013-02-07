@@ -653,6 +653,53 @@ module DTK::Client
     end
     
     private
+    def assembly_start(assembly_id, node_pattern_filter)             
+      post_body = {
+        :assembly_id  => assembly_id,
+        :node_pattern => node_pattern_filter
+      }
+
+      # we expect action result ID
+      response = post rest_url("assembly/start"), post_body
+      return response  if response.data(:errors)
+
+      action_result_id = response.data(:action_results_id)
+
+      # bigger number here due to possibilty of multiple nodes
+      # taking too much time to be ready
+      18.times do
+        action_body = {
+          :action_results_id => action_result_id,
+          :using_simple_queue      => true
+        }
+        response = post(rest_url("assembly/get_action_results"),action_body)
+
+        if response['errors']
+          return response
+        end
+
+        break unless response.data(:result).nil?
+
+        puts "Waiting for nodes to be ready ..."
+        sleep(10)
+      end
+
+      if response.data(:result).nil?
+        raise DTK::Client::DtkError, "Server seems to be taking too long to start node(s)."
+      end
+
+      task_id = response.data(:result)['task_id']
+      post(rest_url("task/execute"), "task_id" => task_id)
+    end
+
+    def assembly_stop(assembly_id, node_pattern_filter)
+      post_body = {
+        :assembly_id => assembly_id,
+        :node_pattern => node_pattern_filter
+      }
+
+      post rest_url("assembly/stop"), post_body
+    end
 
     def get_type_and_raise_error_if_invalid(about, default_about, type_options)
       about ||= default_about
