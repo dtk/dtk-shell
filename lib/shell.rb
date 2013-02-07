@@ -8,6 +8,7 @@ Dir[File.expand_path('shell/*.rb', File.dirname(__FILE__))].each { |file| requir
 
 require 'shellwords'
 require 'readline'
+require 'colorize'
 require 'thor'
 
 # ideas from http://bogojoker.com/readline/#trap_sigint_and_restore_the_state_of_the_terminal
@@ -72,10 +73,11 @@ def change_context(args, push_context = false)
       end
     end
 
-    puts error_message if error_message
-
     @context.load_context(@context.active_context.last_context_name)
 
+    raise DTK::Client::DtkValidationError, error_message if error_message
+  rescue DTK::Client::DtkValidationError => e
+    puts e.message.colorize(:yellow)
   rescue DTK::Shell::Error => e
     puts e.message
   rescue Exception => e
@@ -220,8 +222,13 @@ def execute_shell_command(line, prompt)
       # send monkey patch class information about context
       Thor.set_context(@context)
       
-      # we get command and hash params
+      # we get command and hash params, will return Validation error if command is not valid
       entity_name, method_name, context_params, thor_options = @context.get_command_parameters(cmd,args)
+
+      # validate method
+      unless @context.method_valid?(method_name)
+        #raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
+      end
 
       # execute command via Thor
       top_level_execute(entity_name, method_name, context_params, thor_options, true)
@@ -234,7 +241,8 @@ def execute_shell_command(line, prompt)
       # check execution status, prints status to sttout
       DTK::Shell::StatusMonitor.check_status()
     end
-
+  rescue DTK::Client::DtkValidationError => e
+    puts e.message.colorize(:yellow)
   rescue DTK::Shell::Error => e
     puts e.message
   end

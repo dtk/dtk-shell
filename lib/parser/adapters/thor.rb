@@ -132,10 +132,21 @@ module DTK
 
       # returns 2 arrays, with tier 1 tasks and tier 2 tasks
       def self.tiered_task_names
-        # containers for tier 1/2 command list of tasks (or contexts)
-        tier_1,tier_2 = [], []
+        # cached data
+        cached_tasks = {}
+
         # get command name from namespace (which is derived by thor from file name)
         command = namespace.split(':').last.gsub('_','-').upcase
+
+        # first elvel identifier
+        command_sym = command.downcase.to_sym
+        command_id_sym = (command.downcase + '_wid').to_sym
+
+        cached_tasks.store(command_sym, [])
+        cached_tasks.store(command_id_sym, [])
+
+        # n-context children
+        all_children = self.respond_to?(:all_children) ? self.all_children() : nil
 
         # we seperate tier 1 and tier 2 tasks
         all_tasks().each do |task|
@@ -145,20 +156,36 @@ module DTK
           # e.g. ASSEMBLY-NAME/ID list ...   => MATCH
           # e.g. [ASSEMBLY-NAME/ID] list ... => MATCH
           matched_data = task[1].usage.match(/\[?#{command}.?(NAME\/ID|ID\/NAME)\]?/)
+
           if matched_data.nil?
             # no match it means it is tier 1 task, tier 1 => dtk:\assembly>
-            tier_1 << task_name
+            cached_tasks[command_sym] << task_name
           else
             # match means it is tier 2 taks, tier 2 => dtk:\assembly\231312345>
-            tier_2 << task_name
+            cached_tasks[command_id_sym] << task_name
             # if there are '[' it means it is optinal identifiers so it is tier 1 and tier 2 task
-            tier_1 << task_name if matched_data[0].include?('[')
+            cached_tasks[command_sym] << task_name if matched_data[0].include?('[')
+          end
+
+          # n-level matching 
+          if all_children
+            current_children = []
+            all_children.each do |child|
+              current_children << child.to_s
+              # chreate entry e.g. assembly_node_id
+              child_id_sym = (command.downcase + '_' + current_children.join('_') + '_wid').to_sym
+
+              matched_data = task[1].usage.match(/\[?#{child.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
+              if matched_data
+                cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << task_name 
+              end
+            end
           end
         end
-        # there is always help, and in all cases this is exception to the rule
-        tier_2 << 'help'
 
-        return tier_1.sort, tier_2.sort
+        # there is always help, and in all cases this is exception to the rule
+        cached_tasks[command_id_sym] << 'help'
+        return cached_tasks
       end
 
       # we make valid methods to make sure that when context changing
@@ -288,6 +315,52 @@ module DTK
           }
 
           post rest_url("assembly/stop"), post_body
+        end
+
+        def node_start(node_id)             
+          post_body = {
+            :node_id  => node_id
+          }
+
+          # we expect action result ID
+          response = post rest_url("node/start"), post_body
+          return response  if response.data(:errors)
+
+          action_result_id = response.data(:action_results_id)
+
+          # bigger number here due to possibilty of multiple nodes
+          # taking too much time to be ready
+          18.times do
+            action_body = {
+              :action_results_id  => action_result_id,
+              :using_simple_queue => true
+            }
+            response = post(rest_url("assembly/get_action_results"),action_body)
+
+            if response['errors']
+              return response
+            end
+
+            break unless response.data(:result).nil?
+
+            puts "Waiting for nodes to be ready ..."
+            sleep(10)
+          end
+
+          if response.data(:result).nil?
+            raise DTK::Client::DtkError, "Server seems to be taking too long to start node(s)."
+          end
+
+          task_id = response.data(:result)['task_id']
+          post(rest_url("task/execute"), "task_id" => task_id)
+        end
+
+        def node_stop(node_id)
+          post_body = {
+            :node_id => node_id
+          }
+
+          post rest_url("node/stop"), post_body
         end
 
         ##

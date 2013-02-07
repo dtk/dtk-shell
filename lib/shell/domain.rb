@@ -159,9 +159,23 @@ module DTK
         @context_list.collect { |e| e.name }
       end
 
-      def entities_with_identifiers()
-        filtered_entities = @context_list.select { |e| e.identifier }
+      # returns list of entities that have identifier
+      def commands_with_identifiers()
+        filtered_entities = @context_list.select { |e| e.is_identifier? }
         return filtered_entities.collect { |e| e.entity.to_s }
+      end
+
+      def command_list()
+        filtered_entities = @context_list.select { |e| e.is_command? }
+        return filtered_entities.collect { |e| e.entity.to_s }
+      end
+
+      # returns id to be used to retrive task list form the cache based on 
+      # current active context
+      def get_task_cache_id()
+        identifier = command_list().join('_')
+        return 'dtk' if identifier.empty?
+        return current_identifier? ? "#{identifier}_wid".to_sym : identifier.to_sym
       end
 
       def full_path()
@@ -174,6 +188,10 @@ module DTK
 
       def empty?()
         return @context_list.empty?
+      end
+
+      def is_n_context?
+        @context_list.size > 2
       end
 
       def current_command?
