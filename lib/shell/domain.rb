@@ -223,6 +223,10 @@ module DTK
         return nil
       end
 
+      def last_context_entity_name()
+        return @context_list.empty? ? nil : @context_list.last.entity
+      end
+
       def last_context_name()
         return @context_list.empty? ? nil : @context_list.last.name
       end
