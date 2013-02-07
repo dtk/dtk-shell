@@ -124,6 +124,8 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
+=begin
+TODO: will put in dot release and will rename to 'extend'
     desc "ASSEMBLY-NAME/ID add EXTENSION-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly"
     method_option "count",:aliases => "-n" ,
       :type => :string, #integer 
@@ -140,7 +142,7 @@ module DTK::Client
 
       post_body.merge!(:count => options.count) if options.count
 
-      response = post rest_url("assembly/add_sub_assembly"), post_body
+      response = post rest_url("assembly/add__service_add_on"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
 
@@ -157,6 +159,7 @@ module DTK::Client
       response = post(rest_url("assembly/list_possible_add_ons"),post_body)
       response.render_table(:service_add_on)
     end
+=end
 
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
@@ -380,6 +383,23 @@ module DTK::Client
       #TODO: modify JenkinsClient to use response wrapper
       JenkinsClient.create_assembly_project?(assembly_name,assembly_id)
       nil
+    end
+
+#TODO: in adot release addd auto-compleet capability
+#    desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID [--auto-complete]", "Add (stage) an assembly template to become part of this assembly instance"
+    desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID", "Add (stage) an assembly template to become part of this assembly instance"
+    method_option "auto-complete",:aliases => "-a" ,
+      :type => :boolean, 
+      :default=> false,
+      :desc => "Automatically add in connections"
+    def add_assembly(context_params)
+      assembly_id,assembly_template_id = context_params.retrieve_arguments([:assembly_id,:option_1!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :assembly_template_id => assembly_template_id
+      }
+      post_body.merge!(:auto_add_connections => true) if options.auto_complete?
+      post rest_url("assembly/add_assembly_template"), post_body
     end
 
     desc "ASSEMBLY-NAME/ID add-node ASSEMBLY-NODE-NAME [-n NODE-TEMPLATE-ID]", "Add (stage) a new node to the assembly"
