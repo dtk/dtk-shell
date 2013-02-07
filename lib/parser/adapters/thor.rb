@@ -130,7 +130,8 @@ module DTK
         task_names = all_tasks().map(&:first).collect { |item| item.gsub('_','-')}
       end
 
-      # returns 2 arrays, with tier 1 tasks and tier 2 tasks
+      # caches all the taks names for each possible tier and each thor class
+      # returnes it, executes only once and only on dtk-shell start
       def self.tiered_task_names
         # cached data
         cached_tasks = {}
@@ -147,6 +148,9 @@ module DTK
 
         # n-context children
         all_children = self.respond_to?(:all_children) ? self.all_children() : nil
+
+        # n-context-override task, special case which
+        override_tasks = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
 
         # we seperate tier 1 and tier 2 tasks
         all_tasks().each do |task|
@@ -172,13 +176,26 @@ module DTK
             current_children = []
             all_children.each do |child|
               current_children << child.to_s
+
               # chreate entry e.g. assembly_node_id
               child_id_sym = (command.downcase + '_' + current_children.join('_') + '_wid').to_sym
 
+              # n-context matching
               matched_data = task[1].usage.match(/\[?#{child.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
               if matched_data
                 cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << task_name 
               end
+
+              # override method list, we add these methods only once
+              if override_tasks && o_task = override_tasks[child]
+                child_sym    = (command.downcase + '_' + current_children.join('_')).to_sym
+                # o_task is array with ['task_name','task_usage','task_description']
+                cached_tasks[child_sym]    = o_task[0]
+                cached_tasks[child_id_sym] = o_task[0]
+                # we do this only once, so we remove it
+                override_tasks[child] = nil
+              end
+
             end
           end
         end

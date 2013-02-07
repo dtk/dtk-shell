@@ -42,22 +42,24 @@ module DTK::Client
       return response
     end
 
-    # TODO: Hack which is necessery for the specific problem, something to reconsider down the line
+    # TODO: Hack which is necessery for the specific problem (DTK-541), something to reconsider down the line
     # at this point not sure what would be clenear solution
-    def self.override_method_list()
+    def self.override_allowed_methods()
       {
         :node      => [
-          ['list','','']
+          ['list',"list [components|attributes|tasks] [FILTER] [--list] ","List  nodes or components, attributes associated with assembly's node."]
         ],
         :component => [
-          ['list','','']
+          ['list',"list [components|attributes] [FILTER] [--list] ","List components or attributes associated with given component."]
         ],
         :attribute => [
-          ['list','','']
+          ['list',"list [attributes] [FILTER] [--list] ","List attributess."]
         ]
 
       }
     end
+
+    desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
 
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
     def start(context_params)
