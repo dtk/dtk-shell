@@ -117,7 +117,6 @@ module DTK
       end
     end
 
-
     class ActiveContext
 
       # special case when we are not able to provide valid identifier but we are 
@@ -231,6 +230,9 @@ module DTK
         return @context_list.empty? ? nil : @context_list.last.name
       end
 
+    end
+
+    class CachedTasks < Hash
     end
     
   end

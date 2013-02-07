@@ -20,12 +20,13 @@ module DTK
       # current holds context (list of commands) for active context e.g. dtk:\library>
       attr_accessor :current
       attr_accessor :active_context
+      attr_accessor :cached_tasks
       attr_accessor :dirs
 
 
       def initialize(skip_caching=false)
 
-        @cached_tasks, @dirs = {}, []
+        @cached_tasks, @dirs = DTK::Shell::CachedTasks.new, []
         @active_context = ActiveContext.new
 
         # member used to hold current commands loaded for current command
@@ -146,7 +147,7 @@ module DTK
              
 
           if command
-            command_context   = get_command_identifiers(command, inputs.dup)
+            command_context   = get_command_identifiers(command, inputs.dup)               
             command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
             n_level_commands  = command_name_list
           else
@@ -156,7 +157,6 @@ module DTK
         end
 
         user_input ||= readline_input
-
         results = (n_level_commands||@context_commands).grep( /^#{Regexp.escape(user_input)}/ )
 
         unless inputs.nil?
@@ -175,8 +175,7 @@ module DTK
         command_name = root? ? 'dtk' : @active_context.last_command_name
 
         # if there is no new context (current) we use old one
-        @current = current_context_task_names() || @current
-        
+        @current = current_context_task_names().dup || @current
         # we add client commands
         @current.concat(CLIENT_COMMANDS).sort!
 
@@ -185,6 +184,7 @@ module DTK
 
         # we load thor command class identifiers for autocomplete context list
         command_context = get_command_identifiers(command_name)
+
         command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
         @context_commands.concat(command_name_list) if current_command?
 
@@ -208,9 +208,8 @@ module DTK
       # when e.g assembly is deleted we want it to be removed from list without
       # exiting dtk-shell
       def reload_cached_tasks(command_name)
-        @cached_tasks.clear
-       
-        get_latest_tasks(command_name)
+        # we clear @current since this will be reloaded
+        @current = nil
 
         load_context(command_name)
       end

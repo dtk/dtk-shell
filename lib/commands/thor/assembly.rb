@@ -338,6 +338,7 @@ TODO: will put in dot release and will rename to 'extend'
       }
 
       response = post rest_url("assembly/delete"), post_body
+         
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
       return response
