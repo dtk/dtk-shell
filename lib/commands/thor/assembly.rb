@@ -137,7 +137,11 @@ module DTK::Client
 
       response = post rest_url("assembly/find_violations"), post_body
       return response unless response.ok?
-      #TODO: use table to print out out any errors; so check if data is non null
+      if response.data and response.data.size > 0
+        #TODO: may not directly print here; isntead use a lower level fn
+        puts "The following violations were found; they must be corrected before the assembly can be converged".colorize(:red)
+        return response.render_table(:violation)
+      end
 
       post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
 
