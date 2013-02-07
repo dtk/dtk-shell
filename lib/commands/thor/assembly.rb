@@ -39,8 +39,24 @@ module DTK::Client
 
     def self.validation_list(context_params)
       response = get_cached_response(:assembly, "assembly/list", {:subtype  => 'instance'})
-
       return response
+    end
+
+    # TODO: Hack which is necessery for the specific problem, something to reconsider down the line
+    # at this point not sure what would be clenear solution
+    def self.override_method_list()
+      {
+        :node      => [
+          ['list','','']
+        ],
+        :component => [
+          ['list','','']
+        ],
+        :attribute => [
+          ['list','','']
+        ]
+
+      }
     end
 
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
