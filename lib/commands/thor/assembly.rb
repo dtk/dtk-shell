@@ -143,6 +143,7 @@ TODO: will put in dot release and will rename to 'extend'
       response = post(rest_url("assembly/list_possible_add_ons"),post_body)
       response.render_table(:service_add_on)
     end
+=end
 
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
@@ -150,7 +151,6 @@ TODO: will put in dot release and will rename to 'extend'
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
       task_status_aux(assembly_id,:assembly,options.wait?)
     end
-=end
 
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
     def run_smoketests(context_params)
