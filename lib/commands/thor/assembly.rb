@@ -282,15 +282,13 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID info", "Return info about assembly instance identified by name/id"
     def info(context_params)
-      assembly_id, node_id = context_params.retrieve_arguments([:assembly_id!,:node_id],method_argument_names)
+      assembly_id, node_id, component_id, attribute_id = context_params.retrieve_arguments([:assembly_id!, :node_id, :component_id, :attribute_id],method_argument_names)
  
-      # TODO same for node 
-      # TODO For component level, display info about jst for the component
-      # TODO: same goes for attribute level
-
       post_body = {
         :assembly_id => assembly_id,
         :node_id     => node_id,
+        :component_id => component_id,
+        :attribute_id => attribute_id,
         :subtype     => :instance
       }
       post rest_url("assembly/info"), post_body
@@ -323,7 +321,7 @@ module DTK::Client
     def set(context_params)
 
       if context_params.is_there_identifier?(:attribute)
-        mapping = [:assembly_id!,:attribute_name!, :option_1!]
+        mapping = [:assembly_id!,:attribute_id!, :option_1!]
       else
         mapping = [:assembly_id!,:option_1!,:option_2!]
       end
@@ -651,7 +649,7 @@ module DTK::Client
 
     def get_type_and_raise_error_if_invalid(about, default_about, type_options)
       about ||= default_about
-      raise DTK::Client::DtkError, "Not supported type '#{about}' for list for current context level." unless type_options.include?(about)
+      raise DTK::Client::DtkError, "Not supported type '#{about}' for list for current context level. Possible type options: #{type_options.join(', ')}" unless type_options.include?(about)
       return about, about[0..-2].to_sym
     end
 
