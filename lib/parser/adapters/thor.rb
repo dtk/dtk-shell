@@ -150,7 +150,7 @@ module DTK
         all_children = self.respond_to?(:all_children) ? self.all_children() : nil
 
         # n-context-override task, special case which
-        override_tasks = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
+        override_task_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
 
         # we seperate tier 1 and tier 2 tasks
         all_tasks().each do |task|
@@ -187,13 +187,19 @@ module DTK
               end
 
               # override method list, we add these methods only once
-              if override_tasks && o_task = override_tasks[child]
+              if override_task_obj && !override_task_obj.is_completed?(child)
+                command_o_tasks, identifier_o_tasks = override_task_obj.get_all_tasks(child)
                 child_sym    = (command.downcase + '_' + current_children.join('_')).to_sym
-                # o_task is array with ['task_name','task_usage','task_description']
-                cached_tasks[child_sym]    = o_task[0]
-                cached_tasks[child_id_sym] = o_task[0]
-                # we do this only once, so we remove it
-                override_tasks[child] = nil
+
+                command_o_tasks.each do |o_task|
+                  cached_tasks[child_sym] = cached_tasks.fetch(child_sym,[]) << o_task[0]
+                end
+
+                identifier_o_tasks.each do |o_task|
+                  cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << o_task[0]
+                end
+
+                override_task_obj.add_to_completed(child)
               end
 
             end

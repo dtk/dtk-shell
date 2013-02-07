@@ -234,6 +234,33 @@ module DTK
 
     class CachedTasks < Hash
     end
+
+    class OverrideTasks < Hash
+
+      attr_accessor :completed_tasks
+
+      def initialize(hash=nil)
+        super
+        @completed_tasks = []
+        self.merge!(hash)
+      end
+
+      # returns 2 arrays one for commands and next one for identifiers
+      def get_all_tasks(child_name)
+        command_o_tasks, identifier_o_tasks = [], []           
+        command_o_tasks    = (self[:all][child_name]||[]) + (self[:command_only][child_name]||[])
+        identifier_o_tasks = (self[:all][child_name]||[]) + (self[:identifier_only][child_name]||[])
+        return command_o_tasks, identifier_o_tasks
+      end
+
+      def is_completed?(child_name)
+        @completed_tasks.include?(child_name)
+      end
+
+      def add_to_completed(child_name)
+        @completed_tasks << child_name
+      end
+    end
     
   end
 end

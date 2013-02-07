@@ -105,13 +105,22 @@ class Thor
           end
 
           # override goes here
-          override_tasks = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
+          override_tasks_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
 
           # this mean we are working with n-context and there are overrides
-          if override_tasks && is_n_level_context
+          if override_tasks_obj && is_n_level_context
             last_entity_name = @@shell_context.active_context.last_context_entity_name.to_sym
-            if override_help_task = override_tasks[last_entity_name]
-              n_filter_list << [override_help_task.first[1],override_help_task.first[2]]
+
+            command_o_tasks, identifier_o_tasks = override_tasks_obj.get_all_tasks(last_entity_name)
+
+            if @@shell_context.active_context.current_identifier?
+              identifier_o_tasks.each do |o_task|
+                n_filter_list << [o_task[1],o_task[2]]
+              end
+            else
+              command_o_tasks.each do |o_task|
+                n_filter_list << [o_task[1],o_task[2]]
+              end
             end
           end
 

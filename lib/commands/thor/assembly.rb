@@ -44,19 +44,38 @@ module DTK::Client
 
     # TODO: Hack which is necessery for the specific problem (DTK-541), something to reconsider down the line
     # at this point not sure what would be clenear solution
-    def self.override_allowed_methods()
-      {
-        :node      => [
-          ['list',"list [components|attributes|tasks] [FILTER] [--list] ","List  nodes or components, attributes associated with assembly's node."]
-        ],
-        :component => [
-          ['list',"list [components|attributes] [FILTER] [--list] ","List components or attributes associated with given component."]
-        ],
-        :attribute => [
-          ['list',"list [attributes] [FILTER] [--list] ","List attributess."]
-        ]
 
-      }
+    # :all             => include both for commands with command and identifier
+    # :command_only    => only on command level
+    # :identifier_only => only on identifier level for given entity (command)
+    #
+    def self.override_allowed_methods()
+      return DTK::Shell::OverrideTasks.new({
+        :all => {
+          :node      => [
+            ['list',"list [components|attributes|tasks] [FILTER] [--list] ","List  nodes or components, attributes associated with assembly's node."]
+          ],
+          :component => [
+            ['list',"list [components|attributes] [FILTER] [--list] ","List components or attributes associated with given component."]
+          ]
+        },
+        :command_only => {
+          :attribute => [
+            ['list',"list [attributes] [FILTER] [--list] ","List attributess."]
+          ]
+        },
+        :identifier_only => {
+          :node      => [
+            ['info',"info","Return info about node instance belonging to given assembly."]
+          ],
+          :component => [
+            ['info',"info","Return info about component instance belonging to given node."]
+          ],
+          :attribute => [
+            ['info',"info","Return info about attribute instance belonging to given component."]
+          ]
+        }
+      })
     end
 
     desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
