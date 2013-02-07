@@ -135,6 +135,10 @@ module DTK::Client
         :assembly_id => assembly_id
       }
 
+      response = post rest_url("assembly/find_violations"), post_body
+      return response unless response.ok?
+      #TODO: use table to print out out any errors; so check if data is non null
+
       post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
 
       response = post rest_url("assembly/create_task"), post_body
