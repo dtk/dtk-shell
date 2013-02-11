@@ -122,6 +122,13 @@ module DTK::Client
       return response
     end
     
+    desc "ASSEMBLY-NAME/ID find-violations", "Finds violations in assembly that will prevent a converge operation"
+    def find_violations(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+      response = post rest_url("assembly/find_violations"),:assembly_id => assembly_id
+      response.render_table(:violation)
+    end
+    
     desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string, 
@@ -130,7 +137,6 @@ module DTK::Client
     def converge(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
-      # create task
       post_body = {
         :assembly_id => assembly_id
       }
