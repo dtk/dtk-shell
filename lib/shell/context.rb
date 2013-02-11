@@ -63,107 +63,165 @@ module DTK
         require File.expand_path("../commands/thor/#{file_name}", File.dirname(__FILE__))
       end
       
+      # Validates and changes context
+      def change_context(args)
+        begin
+            # jump to root
+          reset if args.to_s.match(/^\//)
 
-      # get the correct command
-      # /assembly/223232333/nodes/1231232332/attributes
-      def calculate_proper_command(delimited_inputs)
-        # select last word that is enclosed with //
-        # TODO: Fix this later on with proper Regexp
-        input_for_check = delimited_inputs.start_with?('/') ? delimited_inputs : "/#{delimited_inputs}"
-        match = input_for_check.match(/\/(.+)\//)
-        return nil if match.nil?
+          # Validate and change context
+          @active_context, error_message = prepare_context_change(args, @active_context)
 
-        inputs = match[1].split('/')
+          load_context(active_context.last_context_name)
 
-        if ALL_COMMANDS.include?(inputs.last)
-          return inputs.last
+          raise DTK::Client::DtkValidationError, error_message if error_message
+        rescue DTK::Client::DtkValidationError => e
+          puts e.message.colorize(:yellow)
+        rescue DTK::Shell::Error => e
+          puts e.message
+        rescue Exception => e
+          puts e.message
+          puts e.backtrace
+        ensure
+          return shell_prompt
         end
-        
-        return nil
-      end
-
-      #
-      # This method validates command hierarchy of active context + user input to disallow illigal autocomplete
-      #
-      def is_full_context_valid?(delimited_inputs)
-        input_for_check = delimited_inputs.start_with?('/') ? delimited_inputs : "/#{delimited_inputs}"
-        match = input_for_check.match(/\/(.+)\//)
-        return true if match.nil?
-
-        full_context = @active_context.name_list() + match[1].split('/')
-        parent_clazz = nil
-        
-        (0..(full_context.size-1)).step(2) do | i | 
-
-          command = full_context[i]
-          
-          # check if previous context support this one as a child
-          if parent_clazz
-            load_command(parent_clazz)
-            target_context_class = Context.get_command_class(parent_clazz)
-            # valid child method is necessery to define parent-child relet.
-            if target_context_class.respond_to?(:valid_child?)
-              unless target_context_class.valid_child?(command)
-                return false
-              end
-            else
-              return false
-            end
-          end
-          parent_clazz = command.gsub('-','_')
-        end
-
-        return true
       end
 
       # this method is used to scan and provide context to be available Readline.complete_proc
       def dynamic_autocomplete_context(readline_input)
-        inputs = nil
 
-        n_level_commands = nil
+        # special case indicator when user starts cc with '/' (go from root)
+        goes_from_root = readline_input.start_with?('/')
+        # Cloning existing active context, as all changes shouldn't be permanent, but temporary for autocomplete
+        active_context_copy = @active_context.clone_me
+        # Emptying context copy if it goes from root '/'
+        active_context_copy.clear if goes_from_root
+        # Invalid context is user leftover to be matched; i.e. 'cc /assembly/te' - 'te' is leftover
+        invalid_context = ""
 
-        if readline_input.match /.*\/.*/
-
-          # If full context is not valid, return 0 autocomplete options         
-          return [] unless is_full_context_valid?(readline_input)
-
-          # one before last
-          command = calculate_proper_command(readline_input)
-
-          # get inputs from matched data
-          if readline_input.match /.*\/$/
-            # if last character is '/'
-            inputs = readline_input.split(/\//)
-            user_input = ''
-          else
-            # if we have string after last '/'
-            inputs = readline_input.split(/\//)
-            user_input = inputs.pop
+        # Validate and change context; skip step if user's input is empty
+        active_context_copy, error_message, invalid_context = prepare_context_change([readline_input], active_context_copy) unless readline_input.empty?
+        
+        # If last context is command, load all identifiers, otherwise, load next possible context command
+        if last_context = active_context_copy.last_context()
+          if last_context.is_command?
+            command_identifiers   = get_command_identifiers(last_context.name, active_context_copy)
+            n_level_ac_candidates = command_identifiers ? command_identifiers.collect { |e| e[:name] } : []
           end
-
-          # remove empty imputs (due to starting slash)
-          inputs = inputs.select { |e| !e.empty? }
-             
-
-          if command
-            command_context   = get_command_identifiers(command, inputs.dup)
-            command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
-            n_level_commands  = command_name_list
-          else
-            n_level_commands =  ALL_COMMANDS
-          end
-
+        else
+          n_level_ac_candidates =  ALL_COMMANDS
         end
 
-        user_input ||= readline_input
+        # create results object
+        results = (n_level_ac_candidates||@context_commands).grep( /^#{Regexp.escape(invalid_context)}/ )
 
-        results = (n_level_commands||@context_commands).grep( /^#{Regexp.escape(user_input)}/ )
+        # default value of input user string
+        input_context_path = readline_input
 
-        unless inputs.nil?
-          results = results.map { |element| (inputs.join('/') + '/' + element)}
+        # cut of last context if it is leftover (invalid_context)
+        unless invalid_context.empty?
+          start_index = goes_from_root ? 1 : 0 # if it starts with / don't take first element after split
+          input_context_path = readline_input.split("/")[start_index.. -2].join("/")
+          input_context_path = input_context_path + "/" unless input_context_path.empty?
+          input_context_path = "/" + input_context_path if goes_from_root
         end
+
+        # Augment input string with candidates to satisfy thor
+        results = results.map { |element| (input_context_path + element) }
 
         return results
+
+      end
+
+      def prepare_context_change(args, active_context_copy)
+
+        # split original cc command
+        entries = args.first.split(/\//)
+
+        # if only '/' or just cc skip validation
+        return active_context_copy if entries.empty?
+
+        current_context_clazz, error_message, current_index = nil, nil, 0
+        double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
+
+        # we remove '..' from our entries 
+        entries = entries.select { |e| !(e.empty? || DTK::Shell::ContextAux.is_double_dot?(e)) }
+
+        # we go back in context based on '..'
+        active_context_copy.pop_context(double_dots_count)
+
+        # we add active commands array to begining, using dup to avoid change by ref.
+        context_name_list = active_context_copy.name_list
+        entries = context_name_list + entries
+
+        # we check the size of active commands
+        ac_size = context_name_list.size
+        
+        invalid_context = ""
+
+        # check each par for command / value
+        (0..(entries.size-1)).step(2) do |i|
+          command       = entries[i]
+          value         = entries[i+1]
+          
+          clazz = DTK::Shell::Context.get_command_class(command)
+          error_message, invalid_context = validate_command(clazz,current_context_clazz,command)
+          break if error_message
+          # if we are dealing with new entries add them to active_context
+          active_context_copy.push_new_context(command, command) if (i >= ac_size)
+
+          current_context_clazz = clazz
+
+          if value
+            # context_hash_data is hash with :name, :identifier values
+            context_hash_data, error_message, invalid_context = validate_value(command, value)
+            break if error_message
+            active_context_copy.push_new_context(context_hash_data[:name], command, context_hash_data[:identifier]) if ((i+1) >= ac_size)
+          end
+        end
+
+        return active_context_copy, error_message, invalid_context
+      end
+
+      def validate_command(clazz, current_context_clazz, command)
+        error_message = nil
+        invalid_context = ""
+
+        if clazz.nil?
+          error_message = "Context for '#{command}' could not be loaded.";
+          invalid_context = command
+        end
+          
+        # check if previous context support this one as a child
+        unless current_context_clazz.nil?
+          # valid child method is necessery to define parent-child relet.
+          if current_context_clazz.respond_to?(:valid_child?)
+            unless current_context_clazz.valid_child?(command)
+              error_message = "'#{command}' context is not valid."
+              invalid_context = command
+            end
+          else
+            error_message = "'#{command}' context is not valid."
+              invalid_context = command
+          end
+        end
+
+        return error_message, invalid_context
+      end
+
+      def validate_value(command, value)
+        context_hash_data = nil
+        invalid_context = ""
+         # check value
+        if value
+          context_hash_data = valid_id?(command, value)
+          unless context_hash_data
+            error_message = "Identifier '#{value}' for context '#{command}' is not valid";
+            invalid_context = value
+          end
+        end
+
+        return context_hash_data, error_message, invalid_context
       end
 
       # load context will load list of commands available for given command (passed)
@@ -260,7 +318,7 @@ module DTK
       end
 
       # calls 'valid_id?' method in Thor class to validate ID/NAME
-      def valid_id?(thor_command_name,value, override_context_params = nil)
+      def valid_id?(thor_command_name,value, override_context_params=nil)
          
         command_clazz = Context.get_command_class(thor_command_name)
         if command_clazz.list_method_supported?          
@@ -280,12 +338,12 @@ module DTK
       end
 
       # get class identifiers for given thor command, returns array of identifiers
-      def get_command_identifiers(thor_command_name, autocomplete_input = [])
+      def get_command_identifiers(thor_command_name, active_context_copy=nil)
         begin
           command_clazz = Context.get_command_class(thor_command_name)
           if command_clazz.list_method_supported?             
             # take just hashed arguemnts from multi return method
-            hashed_args = get_command_parameters(thor_command_name,[],autocomplete_input)[2]
+            hashed_args = get_command_parameters(thor_command_name, [], active_context_copy)[2]
             return command_clazz.get_identifiers(@conn, hashed_args)
           end
         rescue DTK::Client::DtkValidationError => e
@@ -358,7 +416,10 @@ module DTK
       # We use enrich data to help when using dynamic_context loading, Readline.completition_proc
       # See bellow for more details
       #
-      def get_command_parameters(cmd,args,enrich_data=[])
+      def get_command_parameters(cmd,args, active_context_copy=nil)
+        # To support autocomplete feature, temp active context may be forwarded into method
+        active_context_copy = @active_context unless active_context_copy
+
         entity_name, method_name = nil, nil
 
         context_params = ContextParams.new
@@ -368,8 +429,8 @@ module DTK
           entity_name = cmd
           method_name = args.shift
         else
-          context_params.current_context = @active_context.clone_me
-          entity_name = @active_context.name_list.first
+          context_params.current_context = active_context_copy.clone_me
+          entity_name = active_context_copy.name_list.first
           entity_name ||= "dtk"
           method_name = cmd
         end
@@ -379,41 +440,6 @@ module DTK
 
         # set rest of arguments as method options
         context_params.method_arguments = args
-
-        # special part of the code used by autocomplete when active_context is not available
-        # meaning ENTER has not been clicked and we are using Readline.completion_proc
-        unless enrich_data.empty?
-          skip_command = false
-             
-          if (!root? && @active_context.current_command?)
-            skip_command = true
-            last_command = @active_context.last_command_name
-            enrich_data.unshift(last_command) if last_command
-          end
-
-          (0..(enrich_data.size-1)).step(2) do |i|
-            command = enrich_data[i]
-            value   = enrich_data[i+1]
-            
-            # we use skip command to make sure that we have proper command / identifier pairs
-            # skip commands make sure that we do not duplicate context_params.current_context
-            if skip_command
-              skip_command = false
-            else
-              context_params.add_context_to_params(command, command) if command
-            end
-
-            # if there is a value and there no more commands
-            if value 
-              # TODO: FIX - currently we have 2 server requests; re-use invoc ...                
-              identifier_response = valid_id?(command, value, context_params)
-
-              if identifier_response
-                context_params.add_context_to_params(identifier_response[:name], command, identifier_response[:identifier])
-              end
-            end
-          end
-        end
 
         return entity_name, method_name, context_params, thor_options
       end

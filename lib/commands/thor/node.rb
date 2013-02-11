@@ -21,7 +21,7 @@ module DTK::Client
 
     def self.validation_list(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id])
-
+      
       if assembly_id
         # if assebmly_id is present we're loading nodes filtered by assembly_id
         post_body = {

@@ -24,105 +24,6 @@ ALIAS_COMMANDS = {
 
 # METHODS
 
-# Validates and changes context
-def change_context(args, push_context = false)
-  begin
-      # jump to root
-    @context.reset if args.to_s.match(/^\//)
-    # split original cc command
-    entries = args.first.split(/\//)
-
-    # if only '/' or just cc skip validation
-    return args if entries.empty?
-
-    current_context_clazz, error_message, current_index = nil, nil, 0
-    double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
-
-    # we remove '..' from our entries 
-    entries = entries.select { |e| !(e.empty? || DTK::Shell::ContextAux.is_double_dot?(e)) }
-
-    # we go back in context based on '..'
-    @context.active_context.pop_context(double_dots_count)
-
-    # we add active commands array to begining, using dup to avoid change by ref.
-    context_name_list = @context.active_context.name_list
-    entries = context_name_list + entries
-
-    # we check the size of active commands
-    ac_size = context_name_list.size
-
-    # check each par for command / value
-    (0..(entries.size-1)).step(2) do |i|
-      command       = entries[i]
-      value         = entries[i+1]
-      
-      clazz = DTK::Shell::Context.get_command_class(command)
-
-      error_message = validate_command(clazz,current_context_clazz,command)
-      break if error_message
-      # if we are dealing with new entries add them to active_context
-      @context.push_to_active_context(command, command) if (i >= ac_size)
-
-      current_context_clazz = clazz
-
-      if value
-        # context_hash_data is hash with :name, :identifier values
-        context_hash_data, error_message = validate_value(command, value)
-        break if error_message
-        @context.push_to_active_context(context_hash_data[:name], command, context_hash_data[:identifier]) if ((i+1) >= ac_size)
-      end
-    end
-
-    @context.load_context(@context.active_context.last_context_name)
-
-    raise DTK::Client::DtkValidationError, error_message if error_message
-  rescue DTK::Client::DtkValidationError => e
-    puts e.message.colorize(:yellow)
-  rescue DTK::Shell::Error => e
-    puts e.message
-  rescue Exception => e
-    puts e.message
-    puts e.backtrace
-  ensure
-    return @context.shell_prompt
-  end
-end
-
-def validate_command(clazz, current_context_clazz, command)
-  error_message = nil
-
-  if clazz.nil?
-    error_message = "Context for '#{command}' could not be loaded.";
-  end
-    
-  # check if previous context support this one as a child
-  unless current_context_clazz.nil?
-    # valid child method is necessery to define parent-child relet.
-    if current_context_clazz.respond_to?(:valid_child?)
-      unless current_context_clazz.valid_child?(command)
-        error_message = "'#{command}' context is not valid."
-      end
-    else
-      error_message = "'#{command}' context is not valid."
-    end
-  end
-
-  return error_message
-end
-
-def validate_value(command, value)
-  context_hash_data = nil
-   # check value
-  if value
-    context_hash_data = @context.valid_id?(command, value)
-    unless context_hash_data
-      error_message = "Identifier '#{value}' for context '#{command}' is not valid";
-    end
-  end
-
-  return context_hash_data, error_message
-end
-
 # support for alias commands (ls for list etc.)
 def preprocess_commands(original_command)
   command = ALIAS_COMMANDS[original_command]
@@ -203,7 +104,7 @@ def execute_shell_command(line, prompt)
     if ('cc' == cmd)
       # in case there is no params we just reload command
       args << "/" if args.empty?      
-      prompt = change_context(args)
+      prompt = @context.change_context(args)
     elsif ('popc' == cmd)
         args = []
         @context.dirs.shift()
