@@ -322,19 +322,26 @@ module DTK
         if !readline_input.empty? && !readline_input.match(/\/$/) && invalid_context.empty? && !active_context_copy.empty?
           context_list = active_context_copy.context_list
           context_name = context_list.size == 1 ? nil : context_list[context_list.size-2] # if case when on 1st level, return root candidates
-          n_level_ac_candidates = get_ac_candidates_for_context(context_name, active_context_copy)
+          context_candidates = get_ac_candidates_for_context(context_name, active_context_copy)
           cutoff_forcely = true
           #results_filter = ""
         else
           # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
-          n_level_ac_candidates = get_ac_candidates_for_context(active_context_copy.last_context(), active_context_copy)
+          context_candidates = get_ac_candidates_for_context(active_context_copy.last_context(), active_context_copy)
         end
 
-        # Show all context_commans if active context orignal and it's copy are on same context, and are not on root
-        n_level_ac_candidates = n_level_ac_candidates + @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty?)
+        # checking if results will contain context candidates based on input string segment
+        context_candidates = context_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
+
+        # Show all context tasks if active context orignal and it's copy are on same context, and are not on root
+        task_candidates = []
+        task_candidates = @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty?)
         
         # create results object filtered by user input segment (results_filter) 
-        results = n_level_ac_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
+        task_candidates = task_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
+
+        # autocomplete candidates are both context and task candidates; remove duplicates in results
+        results = (context_candidates + task_candidates).uniq
 
         # default value of input user string
         input_context_path = readline_input
@@ -352,7 +359,8 @@ module DTK
         # Augment input string with candidates to satisfy thor
         results = results.map { |element| (input_context_path + element) }
 
-        return results.size() == 1 ? (results.first + "/") : results
+        # If there is only one candidate, and candidate is not task operation
+        return (results.size() == 1 && !context_candidates.empty?) ? (results.first + "/") : results
 
       end
 
