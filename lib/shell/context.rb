@@ -20,12 +20,13 @@ module DTK
       # current holds context (list of commands) for active context e.g. dtk:\library>
       attr_accessor :current
       attr_accessor :active_context
+      attr_accessor :cached_tasks
       attr_accessor :dirs
 
 
       def initialize(skip_caching=false)
 
-        @cached_tasks, @dirs = {}, []
+        @cached_tasks, @dirs = DTK::Shell::CachedTasks.new, []
         @active_context = ActiveContext.new
 
         # member used to hold current commands loaded for current command
@@ -99,37 +100,10 @@ module DTK
         # Invalid context is user leftover to be matched; i.e. 'cc /assembly/te' - 'te' is leftover
         invalid_context = ""
 
-        # Validate and change context; skip step if user's input is empty
-        active_context_copy, error_message, invalid_context = prepare_context_change([readline_input], active_context_copy) unless readline_input.empty?
+        # Validate and change context; skip step if user's input is empty or it is equal to '/'
+        active_context_copy, error_message, invalid_context = prepare_context_change([readline_input], active_context_copy) unless (readline_input.empty? || readline_input == "/")
         
-        # If last context is command, load all identifiers, otherwise, load next possible context command
-        if last_context = active_context_copy.last_context()
-          if last_context.is_command?
-            command_identifiers   = get_command_identifiers(last_context.name, active_context_copy)
-            n_level_ac_candidates = command_identifiers ? command_identifiers.collect { |e| e[:name] } : []
-          end
-        else
-          n_level_ac_candidates =  ALL_COMMANDS
-        end
-
-        # create results object
-        results = (n_level_ac_candidates||@context_commands).grep( /^#{Regexp.escape(invalid_context)}/ )
-
-        # default value of input user string
-        input_context_path = readline_input
-
-        # cut of last context if it is leftover (invalid_context)
-        unless invalid_context.empty?
-          start_index = goes_from_root ? 1 : 0 # if it starts with / don't take first element after split
-          input_context_path = readline_input.split("/")[start_index.. -2].join("/")
-          input_context_path = input_context_path + "/" unless input_context_path.empty?
-          input_context_path = "/" + input_context_path if goes_from_root
-        end
-
-        # Augment input string with candidates to satisfy thor
-        results = results.map { |element| (input_context_path + element) }
-
-        return results
+        return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root)
 
       end
 
@@ -174,7 +148,7 @@ module DTK
 
           if value
             # context_hash_data is hash with :name, :identifier values
-            context_hash_data, error_message, invalid_context = validate_value(command, value)
+            context_hash_data, error_message, invalid_context = validate_value(command, value, active_context_copy)
             break if error_message
             active_context_copy.push_new_context(context_hash_data[:name], command, context_hash_data[:identifier]) if ((i+1) >= ac_size)
           end
@@ -209,12 +183,12 @@ module DTK
         return error_message, invalid_context
       end
 
-      def validate_value(command, value)
+      def validate_value(command, value, active_context_copy=nil)
         context_hash_data = nil
         invalid_context = ""
          # check value
         if value
-          context_hash_data = valid_id?(command, value)
+          context_hash_data = valid_id?(command, value, nil, active_context_copy)
           unless context_hash_data
             error_message = "Identifier '#{value}' for context '#{command}' is not valid";
             invalid_context = value
@@ -234,7 +208,6 @@ module DTK
 
         # if there is no new context (current) we use old one
         @current = current_context_task_names() || @current
-        
         # we add client commands
         @current.concat(CLIENT_COMMANDS).sort!
 
@@ -243,6 +216,7 @@ module DTK
 
         # we load thor command class identifiers for autocomplete context list
         command_context = get_command_identifiers(command_name)
+
         command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
         @context_commands.concat(command_name_list) if current_command?
 
@@ -266,9 +240,8 @@ module DTK
       # when e.g assembly is deleted we want it to be removed from list without
       # exiting dtk-shell
       def reload_cached_tasks(command_name)
-        @cached_tasks.clear
-       
-        get_latest_tasks(command_name)
+        # we clear @current since this will be reloaded
+        @current = nil
 
         load_context(command_name)
       end
@@ -297,7 +270,7 @@ module DTK
 
       # returns list of tasks for given command name
       def current_context_task_names()
-        @cached_tasks.fetch(@active_context.get_task_cache_id(),[]) 
+        @cached_tasks.fetch(@active_context.get_task_cache_id(),[]).dup
       end
 
       # checks if method name is valid in current context
@@ -318,14 +291,14 @@ module DTK
       end
 
       # calls 'valid_id?' method in Thor class to validate ID/NAME
-      def valid_id?(thor_command_name,value, override_context_params=nil)
+      def valid_id?(thor_command_name,value, override_context_params=nil, active_context_copy=nil)
          
         command_clazz = Context.get_command_class(thor_command_name)
         if command_clazz.list_method_supported?          
           if override_context_params
             context_params = override_context_params
           else
-            context_params = get_command_parameters(thor_command_name,[])[2]
+            context_params = get_command_parameters(thor_command_name, [], active_context_copy)[2]
           end
           tmp = command_clazz.valid_id?(value, @conn, context_params)
           return tmp
@@ -335,6 +308,68 @@ module DTK
         # TODO: Removed this 'put' after this has been implemented where needed
         puts "[DEV] Implement 'valid_id?' method for thor command class: #{thor_command_name} "
         return nil
+      end
+
+      def get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root)
+        
+        # helper indicator for case when there are more options in current context and cc command is not ended with '/'
+        cutoff_forcely = false
+        # input string segment used to filter results candidates
+        results_filter = readline_input.match(/\/$/) ? "" : readline_input.split("/").last
+        results_filter ||= ""
+
+        # If command does not end with '/' check if there are more than one result candidate for current context
+        if !readline_input.match(/\/$/) && invalid_context.empty? && !active_context_copy.empty?
+          context_list = active_context_copy.context_list
+          context_name = context_list.size == 1 ? nil : context_list[context_list.size-2] # if case when on 1st level, return root candidates
+          n_level_ac_candidates = get_ac_candidates_for_context(context_name, active_context_copy)
+          cutoff_forcely = true
+          #results_filter = ""
+        else
+          # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
+          n_level_ac_candidates = get_ac_candidates_for_context(active_context_copy.last_context(), active_context_copy)
+        end
+
+        # Show all context_commans if active context orignal and it's copy are on same context, and are not on root
+        n_level_ac_candidates = n_level_ac_candidates + @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty?)
+        
+        # create results object filtered by user input segment (results_filter) 
+        results = n_level_ac_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
+
+        # default value of input user string
+        input_context_path = readline_input
+
+        # cut off last context if it is leftover (invalid_context), 
+        # or if last context is not finished with '/' and it can have more than option for current context
+        # i.e. dtk> cc assembly - have 2 candidates: 'assembly' and 'assembly-template'
+        if !invalid_context.empty? || cutoff_forcely
+          start_index = goes_from_root ? 1 : 0 # if it starts with / don't take first element after split
+          input_context_path = readline_input.split("/")[start_index.. -2].join("/")
+          input_context_path = input_context_path + "/" unless input_context_path.empty?
+          input_context_path = "/" + input_context_path if goes_from_root
+        end
+
+        # Augment input string with candidates to satisfy thor
+        results = results.map { |element| (input_context_path + element) }
+
+        return results.size() == 1 ? (results.first + "/") : results
+
+      end
+
+      def get_ac_candidates_for_context(context, active_context_copy)
+
+        # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
+        if context
+          if context.is_command?
+            command_identifiers   = get_command_identifiers(context.name, active_context_copy)
+            n_level_ac_candidates = command_identifiers ? command_identifiers.collect { |e| e[:name] } : []
+          else
+            command_clazz = Context.get_command_class(active_context_copy.last_command_name)
+            n_level_ac_candidates = command_clazz.respond_to?(:valid_children) ? command_clazz.valid_children.map { |e| e.to_s } : []
+          end
+        else
+          n_level_ac_candidates =  ROOT_TASKS
+        end
       end
 
       # get class identifiers for given thor command, returns array of identifiers

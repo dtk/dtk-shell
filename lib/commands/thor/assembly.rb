@@ -42,22 +42,43 @@ module DTK::Client
       return response
     end
 
-    # TODO: Hack which is necessery for the specific problem, something to reconsider down the line
+    # TODO: Hack which is necessery for the specific problem (DTK-541), something to reconsider down the line
     # at this point not sure what would be clenear solution
-    def self.override_method_list()
-      {
-        :node      => [
-          ['list','','']
-        ],
-        :component => [
-          ['list','','']
-        ],
-        :attribute => [
-          ['list','','']
-        ]
 
-      }
+    # :all             => include both for commands with command and identifier
+    # :command_only    => only on command level
+    # :identifier_only => only on identifier level for given entity (command)
+    #
+    def self.override_allowed_methods()
+      return DTK::Shell::OverrideTasks.new({
+        :all => {
+          :node      => [
+            ['list',"list [components|attributes|tasks] [FILTER] [--list] ","List  nodes or components, attributes associated with assembly's node."]
+          ],
+          :component => [
+            ['list',"list [components|attributes] [FILTER] [--list] ","List components or attributes associated with given component."]
+          ]
+        },
+        :command_only => {
+          :attribute => [
+            ['list',"list [attributes] [FILTER] [--list] ","List attributess."]
+          ]
+        },
+        :identifier_only => {
+          :node      => [
+            ['info',"info","Return info about node instance belonging to given assembly."]
+          ],
+          :component => [
+            ['info',"info","Return info about component instance belonging to given node."]
+          ],
+          :attribute => [
+            ['info',"info","Return info about attribute instance belonging to given component."]
+          ]
+        }
+      })
     end
+
+    desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
 
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
     def start(context_params)
@@ -113,6 +134,14 @@ module DTK::Client
       post_body = {
         :assembly_id => assembly_id
       }
+
+      response = post rest_url("assembly/find_violations"), post_body
+      return response unless response.ok?
+      if response.data and response.data.size > 0
+        #TODO: may not directly print here; isntead use a lower level fn
+        puts "The following violations were found; they must be corrected before the assembly can be converged".colorize(:red)
+        return response.render_table(:violation)
+      end
 
       post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
 
@@ -336,6 +365,7 @@ TODO: will put in dot release and will rename to 'extend'
       }
 
       response = post rest_url("assembly/delete"), post_body
+         
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
       return response
@@ -686,14 +716,62 @@ TODO: will put in dot release and will rename to 'extend'
       end
     end
     
-    private
+    no_tasks do
+      def assembly_start(assembly_id, node_pattern_filter)             
+        post_body = {
+          :assembly_id  => assembly_id,
+          :node_pattern => node_pattern_filter
+        }
 
-    def get_type_and_raise_error_if_invalid(about, default_about, type_options)
-      about ||= default_about
-      raise DTK::Client::DtkError, "Not supported type '#{about}' for list for current context level. Possible type options: #{type_options.join(', ')}" unless type_options.include?(about)
-      return about, about[0..-2].to_sym
+        # we expect action result ID
+        response = post rest_url("assembly/start"), post_body
+        return response  if response.data(:errors)
+
+        action_result_id = response.data(:action_results_id)
+
+        # bigger number here due to possibilty of multiple nodes
+        # taking too much time to be ready
+        18.times do
+          action_body = {
+            :action_results_id => action_result_id,
+            :using_simple_queue      => true
+          }
+          response = post(rest_url("assembly/get_action_results"),action_body)
+
+          if response['errors']
+            return response
+          end
+
+          break unless response.data(:result).nil?
+
+          puts "Waiting for nodes to be ready ..."
+          sleep(10)
+        end
+
+        if response.data(:result).nil?
+          raise DTK::Client::DtkError, "Server seems to be taking too long to start node(s)."
+        end
+
+        task_id = response.data(:result)['task_id']
+        post(rest_url("task/execute"), "task_id" => task_id)
+      end
+
+      def assembly_stop(assembly_id, node_pattern_filter)
+        post_body = {
+          :assembly_id => assembly_id,
+          :node_pattern => node_pattern_filter
+        }
+
+        post rest_url("assembly/stop"), post_body
+      end
+
+
+      def get_type_and_raise_error_if_invalid(about, default_about, type_options)
+        about ||= default_about
+        raise DTK::Client::DtkError, "Not supported type '#{about}' for list for current context level. Possible type options: #{type_options.join(', ')}" unless type_options.include?(about)
+        return about, about[0..-2].to_sym
+      end
     end
-
   end
 end
 

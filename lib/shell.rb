@@ -128,7 +128,7 @@ def execute_shell_command(line, prompt)
 
       # validate method
       unless @context.method_valid?(method_name)
-        #raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
+        raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
       end
 
       # execute command via Thor
@@ -136,8 +136,8 @@ def execute_shell_command(line, prompt)
 
       # when 'delete' or 'delete-and-destroy' command is executed reload cached tasks with latest commands
       unless (args.nil? || args.empty?)
-        @context.reload_cached_tasks(cmd) if (args.first.include?('delete') || args.first.include?('import'))
-      end
+        @context.reload_cached_tasks(entity_name) if (method_name.include?('delete') || method_name.include?('import'))
+      end       
 
       # check execution status, prints status to sttout
       DTK::Shell::StatusMonitor.check_status()

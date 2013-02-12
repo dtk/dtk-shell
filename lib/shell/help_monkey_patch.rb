@@ -84,21 +84,42 @@ class Thor
         end
 
         commands_with_identifiers =  @@shell_context.active_context.commands_with_identifiers()
+        is_n_level_context        = (commands_with_identifiers && commands_with_identifiers.size > 1)
 
         # first one does not count
-        if commands_with_identifiers && commands_with_identifiers.size > 1
+        if is_n_level_context
           # additional filter list for n-context
           n_filter_list = []
           # we do not need first one, since above code takes care of that one
           filtered_list = filtered_list.select do |filtered_help_item|
             #next unless filtered_help_item
-            commands_with_identifiers[1..-1].each_with_index do |entity,i|
+            commands_with_identifiers[1..-1].each_with_index do |entity,i|                 
               matched = match_help_item_changes(filtered_help_item, entity)
               filtered_help_item = replace_if_matched!(filtered_help_item, matched)
 
               # if it is last command, and there were changes                 
               if (i == (commands_with_identifiers.size - 2) && matched)
                 n_filter_list << filtered_help_item
+              end
+            end
+          end
+
+          # override goes here
+          override_tasks_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
+
+          # this mean we are working with n-context and there are overrides
+          if override_tasks_obj && is_n_level_context
+            last_entity_name = @@shell_context.active_context.last_context_entity_name.to_sym
+
+            command_o_tasks, identifier_o_tasks = override_tasks_obj.get_all_tasks(last_entity_name)
+
+            if @@shell_context.active_context.current_identifier?
+              identifier_o_tasks.each do |o_task|
+                n_filter_list << [o_task[1],o_task[2]]
+              end
+            else
+              command_o_tasks.each do |o_task|
+                n_filter_list << [o_task[1],o_task[2]]
               end
             end
           end

@@ -130,7 +130,8 @@ module DTK
         task_names = all_tasks().map(&:first).collect { |item| item.gsub('_','-')}
       end
 
-      # returns 2 arrays, with tier 1 tasks and tier 2 tasks
+      # caches all the taks names for each possible tier and each thor class
+      # returnes it, executes only once and only on dtk-shell start
       def self.tiered_task_names
         # cached data
         cached_tasks = {}
@@ -147,6 +148,9 @@ module DTK
 
         # n-context children
         all_children = self.respond_to?(:all_children) ? self.all_children() : nil
+
+        # n-context-override task, special case which
+        override_task_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
 
         # we seperate tier 1 and tier 2 tasks
         all_tasks().each do |task|
@@ -172,13 +176,32 @@ module DTK
             current_children = []
             all_children.each do |child|
               current_children << child.to_s
+
               # chreate entry e.g. assembly_node_id
               child_id_sym = (command.downcase + '_' + current_children.join('_') + '_wid').to_sym
 
+              # n-context matching
               matched_data = task[1].usage.match(/\[?#{child.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
               if matched_data
                 cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << task_name 
               end
+
+              # override method list, we add these methods only once
+              if override_task_obj && !override_task_obj.is_completed?(child)
+                command_o_tasks, identifier_o_tasks = override_task_obj.get_all_tasks(child)
+                child_sym    = (command.downcase + '_' + current_children.join('_')).to_sym
+
+                command_o_tasks.each do |o_task|
+                  cached_tasks[child_sym] = cached_tasks.fetch(child_sym,[]) << o_task[0]
+                end
+
+                identifier_o_tasks.each do |o_task|
+                  cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << o_task[0]
+                end
+
+                override_task_obj.add_to_completed(child)
+              end
+
             end
           end
         end
@@ -191,10 +214,10 @@ module DTK
       # we make valid methods to make sure that when context changing
       # we allow change only for valid ID/NAME
       def self.valid_id?(value, conn, context_params)
+
         context_list = self.get_identifiers(conn, context_params)
-
         results = context_list.select { |e| e[:name].eql?(value) || e[:identifier].eql?(value.to_i)}
-
+        
         return results.empty? ? nil : results.first
       end
 
@@ -263,109 +286,6 @@ module DTK
           end          
         end
 
-        ##
-        # SHARED CODE - CODE SHARED BETWEEN 2 or more COMMAND ENTITIES
-        ##
-        # ASSEMBLY & NODE CODE
-        ## 
-        def assembly_start(assembly_id, node_pattern_filter)             
-
-          post_body = {
-            :assembly_id  => assembly_id,
-            :node_pattern => node_pattern_filter
-          }
-
-          # we expect action result ID
-          response = post rest_url("assembly/start"), post_body
-          return response  if response.data(:errors)
-
-          action_result_id = response.data(:action_results_id)
-
-          # bigger number here due to possibilty of multiple nodes
-          # taking too much time to be ready
-          18.times do
-            action_body = {
-              :action_results_id => action_result_id,
-              :using_simple_queue      => true
-            }
-            response = post(rest_url("assembly/get_action_results"),action_body)
-
-            if response['errors']
-              return response
-            end
-
-            break unless response.data(:result).nil?
-
-            puts "Waiting for nodes to be ready ..."
-            sleep(10)
-          end
-
-          if response.data(:result).nil?
-            raise DTK::Client::DtkError, "Server seems to be taking too long to start node(s)."
-          end
-
-          task_id = response.data(:result)['task_id']
-          post(rest_url("task/execute"), "task_id" => task_id)
-        end
-
-        def assembly_stop(assembly_id, node_pattern_filter)
-          post_body = {
-            :assembly_id => assembly_id,
-            :node_pattern => node_pattern_filter
-          }
-
-          post rest_url("assembly/stop"), post_body
-        end
-
-        def node_start(node_id)             
-          post_body = {
-            :node_id  => node_id
-          }
-
-          # we expect action result ID
-          response = post rest_url("node/start"), post_body
-          return response  if response.data(:errors)
-
-          action_result_id = response.data(:action_results_id)
-
-          # bigger number here due to possibilty of multiple nodes
-          # taking too much time to be ready
-          18.times do
-            action_body = {
-              :action_results_id  => action_result_id,
-              :using_simple_queue => true
-            }
-            response = post(rest_url("assembly/get_action_results"),action_body)
-
-            if response['errors']
-              return response
-            end
-
-            break unless response.data(:result).nil?
-
-            puts "Waiting for nodes to be ready ..."
-            sleep(10)
-          end
-
-          if response.data(:result).nil?
-            raise DTK::Client::DtkError, "Server seems to be taking too long to start node(s)."
-          end
-
-          task_id = response.data(:result)['task_id']
-          post(rest_url("task/execute"), "task_id" => task_id)
-        end
-
-        def node_stop(node_id)
-          post_body = {
-            :node_id => node_id
-          }
-
-          post rest_url("node/stop"), post_body
-        end
-
-        ##
-        # SHARED CODE - CODE END
-        ##
       end
 
 
