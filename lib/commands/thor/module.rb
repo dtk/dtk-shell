@@ -155,6 +155,7 @@ module DTK::Client
     desc "import REMOTE-MODULE-NAME","Import remote component module into local environment"
     def import(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+
       local_module_name = remote_module_name
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name)
         raise DtkError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"

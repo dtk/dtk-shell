@@ -319,7 +319,7 @@ module DTK
         results_filter ||= ""
 
         # If command does not end with '/' check if there are more than one result candidate for current context
-        if !readline_input.match(/\/$/) && invalid_context.empty? && !active_context_copy.empty?
+        if !readline_input.empty? && !readline_input.match(/\/$/) && invalid_context.empty? && !active_context_copy.empty?
           context_list = active_context_copy.context_list
           context_name = context_list.size == 1 ? nil : context_list[context_list.size-2] # if case when on 1st level, return root candidates
           n_level_ac_candidates = get_ac_candidates_for_context(context_name, active_context_copy)

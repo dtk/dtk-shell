@@ -234,9 +234,6 @@ module DTK
       end
 
       def post(command_class,url,body=nil)
-        #ap "POST #{url}"
-        #ap "params: "
-        #ap body
         Response.new(command_class,json_parse_if_needed(post_raw(url,body)))
       end
 

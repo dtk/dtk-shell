@@ -15,7 +15,7 @@ module DTK
       attr_accessor :render_view, :skip_render, :print_error_table
 
       def initialize(command_class=nil,hash={})
-        super(hash)
+        super(hash)           
         @command_class     = command_class
         @skip_render       = false
         @print_error_table = false
