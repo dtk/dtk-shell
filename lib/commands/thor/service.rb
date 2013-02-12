@@ -281,7 +281,7 @@ module DTK::Client
 =end
  
     desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
-    def assembly_template(context_params)
+    def assembly_templates(context_params)
 
       service_id, method_name = context_params.retrieve_arguments([:service_id!, :option_1!],method_argument_names)
 
