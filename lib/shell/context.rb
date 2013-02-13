@@ -315,7 +315,7 @@ module DTK
         # helper indicator for case when there are more options in current context and cc command is not ended with '/'
         cutoff_forcely = false
         # input string segment used to filter results candidates
-        results_filter = readline_input.match(/\/$/) ? "" : readline_input.split("/").last
+        results_filter = (readline_input.match(/\/$/) && invalid_context.empty?) ? "" : readline_input.split("/").last
         results_filter ||= ""
 
         # If command does not end with '/' check if there are more than one result candidate for current context
@@ -324,7 +324,6 @@ module DTK
           context_name = context_list.size == 1 ? nil : context_list[context_list.size-2] # if case when on 1st level, return root candidates
           context_candidates = get_ac_candidates_for_context(context_name, active_context_copy)
           cutoff_forcely = true
-          #results_filter = ""
         else
           # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
           context_candidates = get_ac_candidates_for_context(active_context_copy.last_context(), active_context_copy)
@@ -333,9 +332,11 @@ module DTK
         # checking if results will contain context candidates based on input string segment
         context_candidates = context_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
 
-        # Show all context tasks if active context orignal and it's copy are on same context, and are not on root
+        # Show all context tasks if active context orignal and it's copy are on same context, and are not on root, 
+        # and if readline has one split result indicating user is not going trough n-level, but possibly executing a task
         task_candidates = []
-        task_candidates = @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty?)
+        #task_candidates = @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty?)
+        task_candidates = @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty? && readline_input.split("/").size == 1)
         
         # create results object filtered by user input segment (results_filter) 
         task_candidates = task_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
