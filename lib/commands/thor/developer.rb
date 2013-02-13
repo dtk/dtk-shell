@@ -44,8 +44,7 @@ module DTK::Client
     desc "apply-param-set ASSEMBLY-NAME/ID PARAM-SET-PATH", "Uses the parametrs set in the file PARAM-SET-PATH and appleis to teh assembly"
     def apply_param_set(context_params)
       assembly_id,path = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
-      repsonse = nil
-      av_pairs = JSON.parse(File.open("/tmp/params.json").read)
+      av_pairs = JSON.parse(File.open(path).read)
 
       av_pairs.each do |a,v|
         post_body = {
@@ -60,7 +59,7 @@ module DTK::Client
           return response
         end
       end
-      response #TODO: shoudl return just ok not last response
+      Response::Ok.new()
     end
 
   end
