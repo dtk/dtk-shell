@@ -343,6 +343,12 @@ module DTK
         # autocomplete candidates are both context and task candidates; remove duplicates in results
         results = (context_candidates + task_candidates).uniq
 
+        # Send system beep if there are no candidates 
+        if results.empty?
+          print "\a"
+          return []
+        end
+
         # default value of input user string
         input_context_path = readline_input
 
@@ -358,9 +364,6 @@ module DTK
 
         # Augment input string with candidates to satisfy thor
         results = results.map { |element| (input_context_path + element) }
-
-        # Thor results "adjustment" to print no results message if there are no candidates 
-        return ["", "No options available."] if results.empty?
 
         # If there is only one candidate, and candidate is not task operation
         return (results.size() == 1 && !context_candidates.empty?) ? (results.first + "/") : results
