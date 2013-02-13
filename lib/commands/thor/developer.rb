@@ -40,5 +40,28 @@ module DTK::Client
       @@invalidate_map << :assembly
       return response
     end
+
+    desc "apply-param-set ASSEMBLY-NAME/ID PARAM-SET-PATH", "Uses the parametrs set in the file PARAM-SET-PATH and appleis to teh assembly"
+    def apply_param_set(context_params)
+      assembly_id,path = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
+      repsonse = nil
+      av_pairs = JSON.parse(File.open("/tmp/params.json").read)
+
+      av_pairs.each do |a,v|
+        post_body = {
+          :assembly_id => assembly_id,
+          :pattern => a,
+          :value => v
+        }
+        response = post rest_url("assembly/set_attributes"), post_body
+        if response.ok?
+          pp response.data
+        else
+          return response
+        end
+      end
+      response #TODO: shoudl return just ok not last response
+    end
+
   end
 end
