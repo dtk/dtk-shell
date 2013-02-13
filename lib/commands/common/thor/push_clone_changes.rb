@@ -26,11 +26,11 @@ module DTK::Client
       if module_type == :component_module
         dsl_created_info = response.data(:dsl_created_info)
         if dsl_created_info and !dsl_created_info.empty?
-          msg = "First cut of dsl file (#{dsl_created_info["path"]}) has been created in the module directory; edit and then invoke 'dtk module #{module_name} push-clone-changes'"
+        msg = "First cut of dsl file (#{dsl_created_info["path"]}) has been created in module directory (#{repo_obj.repo_dir}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
           return Helper(:git_repo).add_file(repo_obj,dsl_created_info["path"],dsl_created_info["content"],msg)
         end
       end
-      Rersponse::Ok.new(:json_diffs => json_diffs,:commit_sha => commit_sha)
+      Response::Ok.new(:json_diffs => json_diffs,:commit_sha => commit_sha)
     end
   end
 end
