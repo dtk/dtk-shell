@@ -89,7 +89,7 @@ def execute_shell_command(line, prompt)
     raise DTK::Shell::ExitSignal if line == 'exit'
     return prompt if line.empty?
     if line == 'clear'
-      system('clear')
+      DTK::Client::OsUtil::clear_screen
       return prompt
     end
     # when using help on root this is needed
