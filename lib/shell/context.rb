@@ -10,7 +10,8 @@ module DTK
       extend DTK::Client::Aux
       
       # client commands
-      CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs']
+      #CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs']
+      CLIENT_COMMANDS       = ['cc','exit','clear']
       DTK_ROOT_PROMPT       = "dtk:/>"
       COMMAND_HISTORY_LIMIT = 200
       HISTORY_LOCATION      = DTK::Client::OsUtil.dtk_user_app_folder + "shell_history"
