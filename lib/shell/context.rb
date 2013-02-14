@@ -487,8 +487,8 @@ module DTK
 
         # extract thor options
         clazz              = Context.get_command_class(entity_name)
-        option_types       = Context.get_option_types(clazz, cmd) unless clazz.nil?
-        args, thor_options = Context.parse_thor_options(args, option_types)
+        options            = Context.get_thor_options(clazz, cmd) unless clazz.nil?
+        args, thor_options = Context.parse_thor_options(args, options)
 
         # set rest of arguments as method options
         context_params.method_arguments = args
@@ -501,17 +501,18 @@ module DTK
       #
       # method takes paramters that can hold specific thor options
       #
-      def self.parse_thor_options(args, option_types=nil)
+      def self.parse_thor_options(args, options=nil)
         # options for the command e.g. --list 
         # and remove options_args from args
+        type         = nil
         options_args = args.select { |a| a.match(/^\-\-/)}
-        args = args - options_args
+        args         = args - options_args
 
         # options to handle thor options -m MESSAGE
         options_param_args = []
         args.each_with_index do |e,i|
           if e.match(/^\-[a-zA-Z]?/)
-            type = Context.get_specific_option_type(option_types, e) unless option_types.nil?
+            type = Context.get_option_type(options, e) unless options.nil?
             options_param_args << e
             options_param_args << args[i+1] unless type == :boolean
           end
@@ -523,18 +524,18 @@ module DTK
         return args, (options_args + options_param_args)
       end
 
-      def self.get_option_types(clazz, command)
-        command       = command.gsub('-','_')
-        @option_types = nil
-        @option_types = clazz.all_tasks[command].options.collect{|k,v|{:alias=>v.aliases,:name=>v.name,:type=>v.type,:switch=>v.switch_name}} unless clazz.all_tasks[command].nil?
+      def self.get_thor_options(clazz, command)
+        command = command.gsub('-','_')
+        options = nil
+        options = clazz.all_tasks[command].options.collect{|k,v|{:alias=>v.aliases,:name=>v.name,:type=>v.type,:switch=>v.switch_name}} unless clazz.all_tasks[command].nil?
         
-        return @option_types
+        return options
       end
 
-      def self.get_specific_option_type(option_types, option)
+      def self.get_option_type(options, option)
         @ret = nil
         
-        option_types.each do |opt|
+        options.each do |opt|
           @ret = opt[:type] if(opt[:alias].first == option || opt[:switch].first == option)
         end
 
