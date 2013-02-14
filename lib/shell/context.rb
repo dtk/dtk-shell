@@ -304,9 +304,6 @@ module DTK
           return tmp
         end
 
-        # if not implemented we are going to let it in the context
-        # TODO: Removed this 'put' after this has been implemented where needed
-        puts "[DEV] Implement 'valid_id?' method for thor command class: #{thor_command_name} "
         return nil
       end
 
@@ -336,7 +333,7 @@ module DTK
         # and if readline has one split result indicating user is not going trough n-level, but possibly executing a task
         task_candidates = []
         #task_candidates = @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty?)
-        task_candidates = @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty? && readline_input.split("/").size == 1)
+        task_candidates = @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty? && readline_input.split("/").size <= 1)
         
         # create results object filtered by user input segment (results_filter) 
         task_candidates = task_candidates.grep( /^#{Regexp.escape(results_filter)}/ )

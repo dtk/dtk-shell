@@ -53,26 +53,27 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :all => {
           :node      => [
-            ['list',"list [components|attributes|tasks] [FILTER] [--list] ","List  nodes or components, attributes associated with assembly's node."]
+            ['list',"list [components|attributes|tasks] [FILTER] [--list] ","# List  nodes or components, attributes associated with assembly's node."]
           ],
           :component => [
-            ['list',"list [components|attributes] [FILTER] [--list] ","List components or attributes associated with given component."]
+            ['list',"list [components|attributes] [FILTER] [--list] ","# List components or attributes associated with given component."]
           ]
         },
         :command_only => {
           :attribute => [
-            ['list',"list [attributes] [FILTER] [--list] ","List attributess."]
+            ['list',"list [attributes] [FILTER] [--list] ","# List attributess."]
           ]
         },
         :identifier_only => {
           :node      => [
-            ['info',"info","Return info about node instance belonging to given assembly."]
+            ['info',"info","# Return info about node instance belonging to given assembly."],
+            ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context assembly."]
           ],
           :component => [
-            ['info',"info","Return info about component instance belonging to given node."]
+            ['info',"info","# Return info about component instance belonging to given node."]
           ],
           :attribute => [
-            ['info',"info","Return info about attribute instance belonging to given component."]
+            ['info',"info","# Return info about attribute instance belonging to given component."]
           ]
         }
       })

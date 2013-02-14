@@ -105,7 +105,7 @@ module DTK
 
       def self.create_command(name, entity_name)
         instance = ContextEntity.new
-        instance.name   = name.downcase
+        instance.name   = name
         instance.entity = entity_name.to_sym
         return instance
       end
