@@ -35,7 +35,7 @@ module DTK::Client
       if response.data(:diffs).empty?
         raise DtkError, "No changes to push"
       end
-      response
+      Response::Ok.new()
     end
 
   end

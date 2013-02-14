@@ -24,6 +24,11 @@ module DTK
         @render_data_type = nil
       end
 
+
+      def clone_me()      
+        return Marshal.load(Marshal.dump(self))
+      end
+
       def self.wrap_helper_actions(data={},&block)
         begin
           results = (block ? yield : data)

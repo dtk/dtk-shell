@@ -4,29 +4,23 @@ module DTK::Client
 
     def self.validation_list(context_params)
 
-      assembly_id, node_name, component_name = context_params.retrieve_arguments([:assembly_id!, :node_name!, :component_name!])
+      assembly_id, node_id, component_id = context_params.retrieve_arguments([:assembly_id!, :node_id!, :component_id!])
 
       post_body = {
-        :assembly_id => assembly_id,
-        :subtype     => 'instance',
-        :about       => 'attributes',
-        :filter      => nil
+        :assembly_id  => assembly_id,
+        :node_id      => node_id,
+        :component_id => component_id,
+        :subtype      => 'instance',
+        :about        => 'attributes',
+        :filter       => nil
       }
 
-      # TODO: Use cahced response here issue with duplication when we changing response
-      #response = get_cached_response(:attribute, "assembly/info_about", post_body)
-      response = post rest_url("assembly/info_about"), post_body
+      response = get_cached_response(:assembly_node_component_attribute, "assembly/info_about", post_body)
+      modified_response = response.clone_me()
 
-     if assembly_id
-        regexp = Regexp.new("node\[#{node_name}\].?cmp\[#{component_name}\].+")
-
-        response['data'] = response['data'].select {|element| (element['display_name'].include?(component_name) && element['display_name'].include?(node_name)) }
-        response['data'].each do |e|
-          e['display_name'] = e['display_name'].split('/').last
-        end
-      end
-         
-      return response
+      modified_response['data'].each { |e| e['display_name'] = e['display_name'].split('/').last }
+        
+      return modified_response
     end
 
 

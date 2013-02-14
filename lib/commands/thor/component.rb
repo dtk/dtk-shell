@@ -12,29 +12,22 @@ module DTK::Client
 
     def self.validation_list(context_params)
 
-      assembly_id, node_name = context_params.retrieve_arguments([:assembly_id!, :node_name!])
+      assembly_id, node_id, node_name = context_params.retrieve_arguments([:assembly_id!, :node_id!, :node_name!])
 
       post_body = {
         :assembly_id => assembly_id,
+        :node_id     => node_id,
         :subtype     => 'instance',
         :about       => 'components',
         :filter      => nil
       }
 
-      # TODO: Use cahced response here issue with duplication when we changing response
-      #response = get_cached_response(:component, "assembly/info_about", post_body)
-      response = post rest_url("assembly/info_about"), post_body
+      response = get_cached_response(:assembly_node_component, "assembly/info_about", post_body)
+      
+      modified_response = response.clone_me()
+      modified_response['data'].each { |e| e['display_name'] = e['display_name'].split('/').last }
 
-      if assembly_id
-        regexp = Regexp.new("^#{node_name}\/(.+)")
-        response['data'] = response['data'].select {|element| element['display_name'].match(regexp) }
-        response['data'].each do |e|
-          match_data = e['display_name'].match(regexp)
-          e['display_name'] = match_data[1] if match_data
-        end
-      end
-
-      return response
+      return modified_response
     end
 
     desc "ASSEMBLY-NAME/ID set ATTRIBUTE-PATTERN VALUE", "Set target component attributes"
