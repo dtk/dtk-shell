@@ -31,7 +31,7 @@ module DTK
 
         def clear_screen
           command = is_windows? ? "cls" : "clear"
-          system('clear')
+          system(command)
         end
 
         def dtk_home_dir
