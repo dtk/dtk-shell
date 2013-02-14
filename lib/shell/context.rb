@@ -446,9 +446,11 @@ module DTK
             raise DTK::Client::DtkError, "Could not validate identifier \"#{entity_name_id}\"."
           end
         end
-
+        
         # extract thor options
-        args, thor_options = Context.parse_thor_options(args)
+        clazz              = Context.get_command_class(entity_name)
+        options            = Context.get_thor_options(clazz, method_name) unless clazz.nil?
+        args, thor_options = Context.parse_thor_options(args, options)
         context_params.method_arguments = args
 
 
