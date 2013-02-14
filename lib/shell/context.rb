@@ -304,9 +304,6 @@ module DTK
           return tmp
         end
 
-        # if not implemented we are going to let it in the context
-        # TODO: Removed this 'put' after this has been implemented where needed
-        puts "[DEV] Implement 'valid_id?' method for thor command class: #{thor_command_name} "
         return nil
       end
 

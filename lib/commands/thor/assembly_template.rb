@@ -83,10 +83,10 @@ module DTK::Client
       end
     end
 
-    desc "ASSEMBLY-TEMPLATE-NAME/ID stage [INSTANCE-NAME]", "Stage assembly template in target."
+    desc "ASSEMBLY-TEMPLATE-NAME/ID stage [INSTANCE-NAME] -t [TARGET-NAME/ID]", "Stage assembly template in target."
     method_option "in-target",:aliases => "-t" ,
-      :type => :numeric, 
-      :banner => "TARGET-ID",
+      :type => :string, 
+      :banner => "TARGET-NAME/ID",
       :desc => "Target (id) to create assembly in" 
     def stage(context_params)
       assembly_template_id, name = context_params.retrieve_arguments([:assembly_template_id!, :option_1],method_argument_names)

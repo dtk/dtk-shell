@@ -66,7 +66,8 @@ module DTK::Client
         },
         :identifier_only => {
           :node      => [
-            ['info',"info","Return info about node instance belonging to given assembly."]
+            ['info',"info","Return info about node instance belonging to given assembly."],
+            ['get-netstats',"get-netstats","Returns info about node instance belonging to given assembly."]
           ],
           :component => [
             ['info',"info","Return info about component instance belonging to given node."]
