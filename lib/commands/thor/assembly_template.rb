@@ -55,7 +55,8 @@ module DTK::Client
         else
           response = post rest_url("assembly/list"), {:subtype => 'template', :detail_level => 'nodes'}
           data_type = :assembly_template
-          response.render_table(data_type)
+          response.render_table(data_type) unless options.list?
+          return response
         end
 
       else
@@ -79,7 +80,7 @@ module DTK::Client
 
         response.render_table(data_type) unless options.list?
 
-        response
+        return response
       end
     end
 
