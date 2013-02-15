@@ -365,7 +365,8 @@ module DTK
         results = results.map { |element| (input_context_path + element) }
 
         # If there is only one candidate, and candidate is not task operation
-        return (results.size() == 1 && !context_candidates.empty?) ? (results.first + "/") : results
+        #return (results.size() == 1 && !context_candidates.empty?) ? (results.first + "/") : results
+        return results
 
       end
 
