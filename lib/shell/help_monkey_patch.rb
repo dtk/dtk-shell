@@ -27,6 +27,7 @@ class Thor
       end
 
       list.sort!{ |a,b| a[0] <=> b[0] }
+
   
       # monkey patching here => START
       unless @@shell_context.root?
@@ -43,9 +44,6 @@ class Thor
           list.each do |help_item|
             # matches identifiers for ID/NAME
             matched_data          = help_item.first.match(/^\s\[?#{command}.?(NAME\/ID|ID\/NAME)\]?\s/)
-            # if list command matches all bracketed options
-            matched_list_options = help_item.first.match(/list (\[.+\])/)
-            list_optional_data = matched_list_options.nil? ? nil : matched_list_options[1].split(' ')
 
             if matched_data.nil?
               # not found and tier 1 we add it to help list
@@ -53,14 +51,6 @@ class Thor
             else
               # for help we only care about first context name / identifier
               if !is_there_identifier
-                # remove optional data if tier 1 (DTK-211) TODO: Refactor this
-                # help_item.first.gsub!(list_optional_data[0],'') unless list_optional_data.nil?
-                unless list_optional_data.nil?
-                  list_optional_data.each do |item|
-                    help_item.first.gsub!(item,'') unless item.include?('--')
-                  end
-                end
-
                 # if it contains [] it is optional and will be available on both tiers
                 if matched_data[0].include?('[')
                   # we remove it, since there is no need to use it
@@ -68,13 +58,6 @@ class Thor
                   filtered_list << help_item  
                 end
               else
-                # TODO: Better solution for this type of problems (DTK-211)
-                unless list_optional_data.nil?
-                  for i in 1..list_optional_data.size
-                    help_item.first.gsub!(list_optional_data[i].to_s,'') if list_optional_data[i].to_s.include?('--')
-                  end
-                end
-
                 # found and tier 2 we add it to list and remove ID/NAME part of desc
                 help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
                 filtered_list << help_item
