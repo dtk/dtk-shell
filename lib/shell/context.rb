@@ -365,7 +365,8 @@ module DTK
         results = results.map { |element| (input_context_path + element) }
 
         # If there is only one candidate, and candidate is not task operation
-        return (results.size() == 1 && !context_candidates.empty?) ? (results.first + "/") : results
+        #return (results.size() == 1 && !context_candidates.empty?) ? (results.first + "/") : results
+        return results
 
       end
 
@@ -502,16 +503,12 @@ module DTK
       # method takes paramters that can hold specific thor options
       #
       def self.parse_thor_options(args, options=nil)
-        # options for the command e.g. --list 
-        # and remove options_args from args
-        type         = nil
-        options_args = args.select { |a| a.match(/^\-\-/)}
-        args         = args - options_args
+        type = nil
 
-        # options to handle thor options -m MESSAGE
+        # options to handle thor options -m MESSAGE and --list
         options_param_args = []
         args.each_with_index do |e,i|
-          if e.match(/^\-[a-zA-Z]?/)
+          if (e.match(/^\-[a-zA-Z]?/) || e.match(/^\-\-/))
             type = Context.get_option_type(options, e) unless options.nil?
             options_param_args << e
             options_param_args << args[i+1] unless type == :boolean
@@ -521,7 +518,7 @@ module DTK
         # remove thor_options
         args = args - options_param_args
 
-        return args, (options_args + options_param_args)
+        return args, options_param_args
       end
 
       def self.get_thor_options(clazz, command)

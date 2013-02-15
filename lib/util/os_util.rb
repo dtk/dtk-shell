@@ -22,11 +22,11 @@ module DTK
 
         def get_log_location
           if is_windows?
-  	  			"#{genv(:appdata)}/DTK"
-  				else
+            return "#{genv(:appdata)}/DTK"
+          else
   	  			# returns log_path for current user e.g /var/log/user1
-  	  			"/var/log/dtk/#{::DTK::Common::Aux.running_process_user()}"
-  			  end
+            return "/var/log/dtk/#{::DTK::Common::Aux.running_process_user()}"
+          end
         end
 
         def clear_screen
