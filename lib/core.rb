@@ -225,7 +225,7 @@ module DTK
                
 
       def rest_url(route=nil)
-        "https://#{Config[:server_host]}:#{Config[:server_port].to_s}/rest/#{route}"
+        "http://#{Config[:server_host]}:#{Config[:server_port].to_s}/rest/#{route}"
       end
 
       def get(command_class,url)
