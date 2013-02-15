@@ -280,23 +280,6 @@ module DTK::Client
 
     end
 =end
- 
-    desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
-    def assembly_templates(context_params)
-
-      service_id, method_name = context_params.retrieve_arguments([:service_id!, :option_1!],method_argument_names)
-
-      post_body = {
-        :service_module_id => service_id
-      }
-      response = post rest_url("service_module/list_assemblies"), post_body
-
-      data_type = :assembly_template
-      response.render_table(data_type)
-         
-      return response
-    end
-    
 =begin
 TODO: needs to be rewritten
     desc "create-jenkins-project SERVICE-ID", "Create Jenkins project for service module"
