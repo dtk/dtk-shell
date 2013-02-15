@@ -38,7 +38,7 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-    desc "list [assembly-templates] --remote --list","List service modules (local/remote) or assembly/component templates associated with service module."
+    desc "[SERVICE-NAME/ID] list [assembly-templates] --remote --list","List service modules (local/remote) or assembly/component templates associated with service module."
     method_option :list, :type => :boolean, :default => false
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
