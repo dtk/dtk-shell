@@ -1,5 +1,6 @@
 require 'rubygems'
-require 'bundler/setup'
+
+require 'bundler'
 require File.expand_path("require_first", File.dirname(__FILE__))
 
 if gem_only_available?
@@ -7,6 +8,9 @@ if gem_only_available?
   require 'dtk-common'
 end
 
+# Monkey Patching bundler to support loading specific Gemfile from dtk-client project's root - Ticket: DTK-585
+dtk_require("bundler_monkey_patch")
+Bundler.setup
 
 #TODO: should be common gem
 dtk_require_dtk_common("hash_object")
