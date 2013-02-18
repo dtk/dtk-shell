@@ -175,10 +175,12 @@ module DTK
         self[:server_port] = 7000
         self[:component_modules_dir] = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
         self[:service_modules_dir] = OsUtil.service_clone_location(::Config::Configuration.get(:service_location))
+        self[:secure_connection] = true
+        self[:secure_connection_server_port] = 7002
       end
 
       def load_config_file()
-        parse_key_value_file(CONFIG_FILE).each{|k,v|self[k]=v}
+        parse_key_value_file(CONFIG_FILE).each{|k,v|self[k]=v}           
       end
       
       def validate
@@ -225,7 +227,10 @@ module DTK
                
 
       def rest_url(route=nil)
-        "http://#{Config[:server_host]}:#{Config[:server_port].to_s}/rest/#{route}"
+        protocol, port = "http", Config[:server_port].to_s
+        protocol, port = "https", Config[:secure_connection_server_port].to_s if Config[:secure_connection] == "true"
+        
+        "#{protocol}://#{Config[:server_host]}:#{port}/rest/#{route}"
       end
 
       def get(command_class,url)

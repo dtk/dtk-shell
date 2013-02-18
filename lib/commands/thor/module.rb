@@ -253,7 +253,7 @@ module DTK::Client
       module_name = context_params.retrieve_arguments([:module_id],method_argument_names)
 
       # if this is not name it will not work, we need module name
-      if module_name =~ /^[0-9]+$/
+      if module_name.to_s =~ /^[0-9]+$/
         module_id   = module_name
         module_name = nil
         # TODO: See with Rich if there is better way to resolve this
@@ -278,7 +278,8 @@ module DTK::Client
       # check if there is repository cloned 
       unless File.directory?(module_location)
         if Console.confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now"+'?')
-          response = clone(module_name,true)
+          context_params_for_module = create_context_for_module(module_name)
+          response = clone(context_params_for_module,true)
           # if error return
           unless response.ok?
             return response
