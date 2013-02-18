@@ -5,14 +5,14 @@ require File.expand_path('../lib/commands/thor/service', File.dirname(__FILE__))
 include SpecThor
 
 describe DTK::Client::Service do
-  $about       = ['assemblies']
+  $about       = ['assembly-templates']
   $service_id = nil
 
 
   #list all assemblies and take one assembly_id
   context '#list' do
     $service_list = run_from_dtk_shell('service list')
-    
+
     it "should have service listing" do
       $service_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
     end

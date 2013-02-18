@@ -25,11 +25,19 @@ module DTK::Client
         puts "Module '#{module_name}' has been successfully cloned!"
         unless internal_trigger
           if Console.confirmation_prompt("Would you like to edit cloned module now?")
-            return edit(module_name)
+            context_params_for_module = create_context_for_module(module_name)
+            
+            return edit(context_params_for_module)
           end
         end
       end
       response
+    end
+
+    def create_context_for_module(module_name)
+      context_params_for_module = DTK::Shell::ContextParams.new
+      context_params_for_module.add_context_to_params("module", "module", module_name)
+      return context_params_for_module
     end
   end
 end

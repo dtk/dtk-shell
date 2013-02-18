@@ -38,15 +38,12 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-##MERGE-QUESTION:    
-#was not sure how to overload the list command so that sometimes it take
-# desc "[SERVICE-NAME/ID] list [assembly-templates|components] [--remote]","List service modules or assembly/component templates associated with service module."
-    desc "list [--remote]","List local or remote service modules."
+    desc "[SERVICE-NAME/ID] list [assembly-templates] --remote --list","List service modules (local/remote) or assembly/component templates associated with service module."
     method_option :list, :type => :boolean, :default => false
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id],method_argument_names)
-      about = service_module_id  && 'assembly-templates'
+      service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
+
       post_body = {
        :service_module_id => service_module_id,
       }
@@ -56,22 +53,26 @@ module DTK::Client
         data_type = :module
       else
         if options.remote?
-          #TODO: this is temp; will shortly support this
-          raise DTK::Client::DtkError, "Not supported '--remote' option when listing service module assemblies or component templates"
+          # TODO: this is temp; will shortly support this
+          raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies or component templates"
         end
-        post_body.merge!(:about => about)
 
-        response = post rest_url("service_module/info_about"),post_body
+        unless service_module_id
+          raise DTK::Client::DtkValidationError, "Service module is required to list requested '#{about}'"
+        end
+
         case about
          when "assembly-templates"
           data_type = :assembly_template
-         when "components"
-          data_type = :component
+          response = post rest_url("service_module/list_assemblies"), post_body
          else 
-          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+          raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for given command."
         end
       end
-      response.render_table(data_type)
+
+      response.render_table(data_type) unless options.list?
+
+      response
     end
 
     desc "import REMOTE-SERVICE-NAME", "Import remote service module into local environment"
@@ -83,7 +84,7 @@ module DTK::Client
       local_module_name = remote_module_name
       version = options["version"]
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:service_module,local_module_name)
-        raise DtkError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
+        raise DtkValidationError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
       end
 
       post_body = {
@@ -279,23 +280,6 @@ module DTK::Client
 
     end
 =end
- 
-    desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
-    def assembly_templates(context_params)
-
-      service_id, method_name = context_params.retrieve_arguments([:service_id!, :option_1!],method_argument_names)
-
-      post_body = {
-        :service_module_id => service_id
-      }
-      response = post rest_url("service_module/list_assemblies"), post_body
-
-      data_type = :assembly_template
-      response.render_table(data_type)
-         
-      return response
-    end
-    
 =begin
 TODO: needs to be rewritten
     desc "create-jenkins-project SERVICE-ID", "Create Jenkins project for service module"
