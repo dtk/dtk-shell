@@ -18,6 +18,26 @@ module DTK::Client
       include PushToRemoteMixin
       include PullFromRemoteMixin
       include PushCloneChangesMixin
+
+      def get_service_module_name(service_module_id)
+        service_module_name = nil
+        # TODO: See with Rich if there is better way to resolve this
+        response = DTK::Client::CommandBaseThor.get_cached_response(:module, "service_module/list")
+
+        if response.ok?
+          unless response['data'].nil?
+            response['data'].each do |module_item|
+              if service_module_id.to_i == (module_item['id'])
+                service_module_name = module_item['display_name']
+                break
+              end
+            end
+          end
+        end
+
+        raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if service_module_name.nil?
+        return service_module_name
+      end
     end
 
     def self.pretty_print_cols()
@@ -162,9 +182,84 @@ module DTK::Client
     desc "SERVICE-NAME/ID clone [-v VERSION]", "Clone into client the service module files"
     version_method_option
     def clone(context_params, internal_trigger=false)
-      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      version = options["version"]
+      service_module_id   = context_params.retrieve_arguments([:service_id!],method_argument_names)
+      version             = options["version"]
+      service_module_name = context_params.retrieve_arguments([:service_id],method_argument_names)
+
+      # if this is not name it will not work, we need module name
+      if service_module_name.to_s =~ /^[0-9]+$/
+        service_module_id   = service_module_name
+        service_module_name = get_service_module_name(service_module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:service_location))
+      module_location = "#{modules_path}/#{service_module_name}"
+
+      raise DTK::Client::DtkValidationError, "Trying to clone a service module (#{service_module_name}) that exists already!" if File.directory?(module_location)
       clone_aux(:service_module,service_module_id,version,internal_trigger)
+    end
+
+    desc "SERVICE-NAME/ID edit","Switch to unix editing for given module."
+    def edit(context_params)
+      service_module_name = context_params.retrieve_arguments([:service_id],method_argument_names)
+
+      # if this is not name it will not work, we need module name
+      if service_module_name.to_s =~ /^[0-9]+$/
+        service_module_id   = service_module_name
+        service_module_name = get_service_module_name(service_module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:service_location))
+      module_location = "#{modules_path}/#{service_module_name}"
+      # check if there is repository cloned 
+      unless File.directory?(module_location)
+        if Console.confirmation_prompt("Edit not possible, module '#{service_module_name}' has not been cloned. Would you like to clone module now"+'?')
+          context_params_for_service = create_context_for_module(service_module_name, "service")
+          response = clone(context_params_for_service,true)
+          # if error return
+          unless response.ok?
+            return response
+          end
+        else
+          # user choose not to clone needed module
+          return
+        end
+      end
+
+      # here we should have desired module cloned
+      Console.unix_shell(module_location)
+      grit_adapter = DTK::Common::GritAdapter::FileAccess.new(module_location)
+
+      if grit_adapter.changed?
+        grit_adapter.print_status
+
+        # check to see if auto commit flag
+        auto_commit  = ::Config::Configuration.get(:auto_commit_changes)
+        confirmed_ok = false
+
+        # if there is no auto commit ask for confirmation
+        unless auto_commit
+          confirmed_ok = Console.confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?") 
+        end
+
+        if (auto_commit || confirmed_ok)
+          puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
+          commit_msg = user_input("Commit message")
+          grit_adapter.add_remove_commit_all(commit_msg)
+          grit_adapter.push()
+        end
+
+        puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
+      else
+        puts "No changes to repository"
+      end
+
+      #grit_adapter.add_file("baba.xml")
+      #grit_adapter.commit("nesto")
+
+      #repo = Grit::Repo.new(location)
+      #repo.status.files.select { |k,v| (v.type =~ /(M|A|D)/ || v.untracked) }
+
     end
 
     desc "SERVICE-NAME/ID push-clone-changes [-v VERSION]", "Push changes from local copy of service module to server"
