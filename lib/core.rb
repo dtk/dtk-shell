@@ -12,6 +12,7 @@ require 'pp'
 
 dtk_require_from_base('domain/response')
 dtk_require_from_base('util/os_util')
+dtk_require("config/configuration")
 
 def top_level_execute(entity_name, method_name, context_params=nil,options_args=nil,shell_execute=false)
   extend DTK::Client::OsUtil
@@ -220,10 +221,16 @@ module DTK
         @connection_error = nil
         login()
       end
+
+      VERBOSE_MODE_ON = ::Config::Configuration.get(:verbose_rest_calls)
+
       attr_reader :connection_error
 
       # DEBUG SNIPPET >>> REMOVE <<<
-      #require 'ap'
+
+      if VERBOSE_MODE_ON
+        require 'ap'
+      end
                
 
       def rest_url(route=nil)
@@ -234,18 +241,25 @@ module DTK
       end
 
       def get(command_class,url)
-        #ap "GET #{url}"
+        ap "GET #{url}" if VERBOSE_MODE_ON
         Response.new(command_class,json_parse_if_needed(get_raw(url)))
       end
 
       def post(command_class,url,body=nil)
+        if VERBOSE_MODE_ON
+          ap "POST (REST) #{url}"
+          ap "params: "
+          ap body
+        end
         Response.new(command_class,json_parse_if_needed(post_raw(url,body)))
       end
 
       def post_file(command_class,url,body=nil)
-        #ap "POST (FILE) #{url}"
-        #ap "params: "
-        #ap body
+        if VERBOSE_MODE_ON
+          ap "POST (FILE) #{url}"
+          ap "params: "
+          ap body
+        end
         Response.new(command_class,json_parse_if_needed(post_raw(url,body,{:content_type => 'avro/binary'})))
       end
 
