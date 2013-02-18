@@ -1,17 +1,9 @@
 module Bundler
+  module SharedHelpers
 
-  
-  class << self
-
-
-    def setup(*groups)
-      # DEBUG SNIPPET
-      require 'rubygems'
-      require 'ap'
-      ap "SETUP USAO"
-
-         
+    private 
+    def find_gemfile
+    	File.expand_path('../Gemfile', File.dirname(__FILE__))
     end
   end
-
 end
