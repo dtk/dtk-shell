@@ -27,6 +27,21 @@ module DTK::Client
     def self.whoami()
       return :service_module, "service_module/list", nil
     end
+
+    def self.override_allowed_methods()
+      return DTK::Shell::OverrideTasks.new({
+        :command_only => {
+          :self => [
+            ["list"," list --remote --list","# List service modules (local/remote)"]
+          ]
+        },
+        :identifier_only => {
+          :self      => [
+            ["list","list [assembly-templates] --remote --list","# List service modules (local/remote) or assembly/component templates associated with service module."]
+          ]
+        }
+      })
+    end
     
     ##MERGE-QUESTION: need to add options of what info is about
     desc "SERVICE-NAME/ID info", "Provides information about specified service module"

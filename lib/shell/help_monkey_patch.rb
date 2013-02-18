@@ -19,6 +19,25 @@ class Thor
       return help_item
     end
 
+    # Monkey path of printable task methods to include name as well
+    # Returns tasks ready to be printed.
+    def printable_tasks(all = true, subcommand = false)
+      (all ? all_tasks : tasks).map do |_, task|
+        next if task.hidden?
+        item = []
+        item << banner(task, false, subcommand)
+        item << (task.description ? "# #{task.description.gsub(/\s+/m,' ')}" : "")
+        item << task.name
+        item
+      end.compact
+    end
+
+    # method will check if help is overriden and if so it will replace help description,
+    # with overriden one, override_tasks => class => OverrideTasks
+    def overriden_help(override_tasks, help_item, is_command)
+      return (override_tasks && override_tasks.are_there_self_override_tasks?) ? override_tasks.check_help_item(help_item, is_command) : help_item
+    end
+
     def help(shell, subcommand = false)
       list = printable_tasks(true, subcommand)
 
@@ -40,6 +59,9 @@ class Thor
         # since it needs to be empty
         # e.g. assembly/bootstrap1/node> ... HELP IS EMPTY FOR THIS
 
+        # override goes here
+        override_tasks_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
+
         unless (@@shell_context.active_context.is_n_context? && @@shell_context.active_context.current_command?)
           list.each do |help_item|
             # matches identifiers for ID/NAME
@@ -47,7 +69,7 @@ class Thor
 
             if matched_data.nil?
               # not found and tier 1 we add it to help list
-              filtered_list << help_item if @@shell_context.current_command?
+              filtered_list << overriden_help(override_tasks_obj, help_item, true) if @@shell_context.current_command?
             else
               # for help we only care about first context name / identifier
               if !is_there_identifier
@@ -55,12 +77,12 @@ class Thor
                 if matched_data[0].include?('[')
                   # we remove it, since there is no need to use it
                   help_item.first.gsub!(matched_data[0],' ') unless help_item.nil?
-                  filtered_list << help_item  
+                  filtered_list << overriden_help(override_tasks_obj, help_item, true)
                 end
               else
                 # found and tier 2 we add it to list and remove ID/NAME part of desc
                 help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
-                filtered_list << help_item
+                filtered_list << overriden_help(override_tasks_obj, help_item, false)
               end
             end
           end
@@ -87,13 +109,11 @@ class Thor
             end
           end
 
-          # override goes here
-          override_tasks_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
-
           # this mean we are working with n-context and there are overrides
           if override_tasks_obj && is_n_level_context
             last_entity_name = @@shell_context.active_context.last_context_entity_name.to_sym
 
+            # we get commands task, and identifier tasks for given entity (e.g. :assembly)
             command_o_tasks, identifier_o_tasks = override_tasks_obj.get_all_tasks(last_entity_name)
 
             if @@shell_context.active_context.current_identifier?

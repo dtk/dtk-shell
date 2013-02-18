@@ -243,10 +243,42 @@ module DTK
 
       attr_accessor :completed_tasks
 
+
+      # help_item (Thor printable task), structure:
+      # [0] => task defintion
+      # [1] => task description
+      # [2] => task name
+
+      # overriden_task (DTK override task), structure:
+      # [0] => task name
+      # [1] => task defintion
+      # [2] => task description
+
+
       def initialize(hash=nil)
         super
         @completed_tasks = []
         self.merge!(hash)
+      end
+
+      # returns true if there are overrides for tasks on first two levels.
+      def are_there_self_override_tasks?
+        return (self[:all][:self] || self[:command_only][:self] || self[:identifier_only][:self])
+      end
+
+      def check_help_item(help_item, is_command)
+        command_tasks, identifier_tasks = get_all_tasks(:self)
+        found = []
+
+        if is_command
+          found = command_tasks.select { |o_task| o_task[0].eql?(help_item[2]) }
+        else
+          found = identifier_tasks.select { |o_task| o_task[0].eql?(help_item[2]) }
+        end
+
+        # if we find self overriden task we remove it
+        # [found.first[1],found.first[2],found.first[0]] => we convert from o_task structure to thor help structure
+        return found.empty? ? help_item : [found.first[1],found.first[2],found.first[0]]
       end
 
       # returns 2 arrays one for commands and next one for identifiers
