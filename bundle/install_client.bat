@@ -84,7 +84,7 @@ if not exist %HOMEDRIVE%%HOMEPATH%\dtk (
   mkdir  %HOMEDRIVE%%HOMEPATH%\dtk
   )
 if not exist %HOMEDRIVE%%HOMEPATH%\dtk\shell_history.dat (
-  touch %HOMEDRIVE%%HOMEPATH%\dtk\shell_history.dat
+  echo "" > %HOMEDRIVE%%HOMEPATH%\dtk\shell_history.dat
   )
 
 goto :EOF
