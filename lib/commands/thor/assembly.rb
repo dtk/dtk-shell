@@ -354,7 +354,7 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/info"), post_body
     end
 
-    desc "delete-and-destroy ASSEMBLY-NODE/ID [-y]", "Delete assembly instance, termining any nodes taht have been spun up"
+    desc "delete-and-destroy ASSEMBLY-NODE/ID -y", "Delete assembly instance, terminating any nodes that have been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
       assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
