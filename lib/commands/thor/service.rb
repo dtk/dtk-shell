@@ -183,8 +183,8 @@ module DTK::Client
     version_method_option
     def clone(context_params, internal_trigger=false)
       service_module_id   = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      version             = options["version"]
       service_module_name = context_params.retrieve_arguments([:service_id],method_argument_names)
+      version             = options["version"]
 
       # if this is not name it will not work, we need module name
       if service_module_name.to_s =~ /^[0-9]+$/
@@ -193,15 +193,18 @@ module DTK::Client
       end
 
       modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:service_location))
-      module_location = "#{modules_path}/#{service_module_name}"
+      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
 
-      raise DTK::Client::DtkValidationError, "Trying to clone a service module (#{service_module_name}) that exists already!" if File.directory?(module_location)
+      raise DTK::Client::DtkValidationError, "Trying to clone a service module '#{service_module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
       clone_aux(:service_module,service_module_id,version,internal_trigger)
     end
 
-    desc "SERVICE-NAME/ID edit","Switch to unix editing for given module."
+    desc "SERVICE-NAME/ID edit [-v VERSION]","Switch to unix editing for given module."
+    version_method_option
     def edit(context_params)
+      service_module_id   = context_params.retrieve_arguments([:service_id!],method_argument_names)
       service_module_name = context_params.retrieve_arguments([:service_id],method_argument_names)
+      version             = options["version"]
 
       # if this is not name it will not work, we need module name
       if service_module_name.to_s =~ /^[0-9]+$/
@@ -210,12 +213,14 @@ module DTK::Client
       end
 
       modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:service_location))
-      module_location = "#{modules_path}/#{service_module_name}"
+      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
+
       # check if there is repository cloned 
       unless File.directory?(module_location)
-        if Console.confirmation_prompt("Edit not possible, module '#{service_module_name}' has not been cloned. Would you like to clone module now"+'?')
-          context_params_for_service = create_context_for_module(service_module_name, "service")
-          response = clone(context_params_for_service,true)
+        if Console.confirmation_prompt("Edit not possible, module '#{service_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
+          # context_params_for_service = create_context_for_module(service_module_name, "service")
+          # response = clone(context_params_for_service,true)
+          response = clone_aux(:service_module,service_module_id,version,true)
           # if error return
           unless response.ok?
             return response
@@ -227,7 +232,7 @@ module DTK::Client
       end
 
       # here we should have desired module cloned
-      Console.unix_shell(module_location)
+      Console.unix_shell(module_location, service_module_id, :service_module, version)
       grit_adapter = DTK::Common::GritAdapter::FileAccess.new(module_location)
 
       if grit_adapter.changed?

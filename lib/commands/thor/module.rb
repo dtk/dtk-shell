@@ -266,6 +266,7 @@ module DTK::Client
     def clone(context_params, internal_trigger=false)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
+      version             = options["version"]
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
@@ -274,15 +275,18 @@ module DTK::Client
       end
 
       modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
-      module_location = "#{modules_path}/#{module_name}"
+      module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
 
-      raise DTK::Client::DtkValidationError, "Trying to clone a module (#{module_name}) that exists already!" if File.directory?(module_location)
-      clone_aux(:component_module,component_module_id,options["version"],internal_trigger)
+      raise DTK::Client::DtkValidationError, "Trying to clone a module '#{module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
+      clone_aux(:component_module,component_module_id,version,internal_trigger)
     end
 
-    desc "MODULE-NAME/ID edit","Switch to unix editing for given module."
+    desc "MODULE-NAME/ID edit [-v VERSION]","Switch to unix editing for given module."
+    version_method_option
     def edit(context_params)
-      module_name = context_params.retrieve_arguments([:module_id],method_argument_names)
+      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
+      module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
+      version             = options["version"]
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
@@ -291,12 +295,14 @@ module DTK::Client
       end
 
       modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
-      module_location = "#{modules_path}/#{module_name}"
+      module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
+
       # check if there is repository cloned 
       unless File.directory?(module_location)
-        if Console.confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now"+'?')
-          context_params_for_module = create_context_for_module(module_name, "module")
-          response = clone(context_params_for_module,true)
+        if Console.confirmation_prompt("Edit not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
+          # context_params_for_module = create_context_for_module(module_name, "module")
+          # response = clone(context_params_for_module,true)
+          response = clone_aux(:component_module,component_module_id,version,true)
           # if error return
           unless response.ok?
             return response
@@ -308,7 +314,7 @@ module DTK::Client
       end
 
       # here we should have desired module cloned
-      Console.unix_shell(module_location)
+      Console.unix_shell(module_location, component_module_id, :component_module, version)
       grit_adapter = DTK::Common::GritAdapter::FileAccess.new(module_location)
 
       if grit_adapter.changed?
