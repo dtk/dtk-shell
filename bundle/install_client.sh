@@ -127,11 +127,11 @@ fi;
 check_git_config
 
 # check number of arguments
-if [[ $# -ne 0 ]] && [[ $# -ne 4 ]]; then
+if [[ $# -ne 0 ]] && [[ $# -ne 6 ]]; then
         err_msg="ERROR: Invalid number of arguments \n";
         usage
         exit -1;
-elif [[ $# == 4 ]]; then
+elif [[ $# == 6 ]]; then
   autoinstall="true"
 elif [[ $# == 0 ]]; then
   autoinstall="false"
@@ -222,16 +222,35 @@ if [[ ${autoinstall} == "false" ]]; then
   read server
   printf "Enter port number (default: 7000): "
   read port
+  printf "Enable secure connection (default: true) [true,false]: "
+  read secure_connection
+
+  while [[ $secure_connection != "true" ]] && [[ $secure_connection != "false" ]] && [[ $secure_connection != "" ]]; do
+    printf "Invalid secure connection value. Possible values 'true' or 'false', or leave empty for default. "
+    printf "Enable secure connection (default: true) : "
+    read secure_connection
+  done
+  
+  printf "Enter secure connection port number (default: 7002): "
+  read secure_connection_port
 elif [[ ${autoinstall} == "true" ]]; then
   username=$1
   password=$2
   server=$3
   port=$4
+  secure_connection=$5
+  secure_connection_port=$6
 fi;
 
 # set default values
 if [[ $port == "" ]]; then
   port="7000"
+fi
+if [[ $secure_connection == "" ]]; then
+  secure_connection="true"
+fi
+if [[ $secure_connection_port == "" ]]; then
+  secure_connection_port="7002"
 fi
 
 # print to file
@@ -239,6 +258,8 @@ echo "username=$username"  >> $file_path
 echo "password=$password"  >> $file_path
 echo "server_host=$server" >> $file_path
 echo "server_port=$port"   >> $file_path
+echo "secure_connection=$secure_connection"           >> $file_path
+echo "secure_connection_server_port=$secure_connection_port" >> $file_path
 
 
 echo "Installation successfuly finished! Configuration saved to $file_path."

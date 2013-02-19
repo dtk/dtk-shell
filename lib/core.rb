@@ -236,7 +236,11 @@ module DTK
       def rest_url(route=nil)
         protocol, port = "http", Config[:server_port].to_s
         protocol, port = "https", Config[:secure_connection_server_port].to_s if Config[:secure_connection] == "true"
-        
+        # DEBUG SNIPPET
+        require 'rubygems'
+        require 'ap'
+        ap "#{protocol}://#{Config[:server_host]}:#{port}/rest/#{route}"
+           
         "#{protocol}://#{Config[:server_host]}:#{port}/rest/#{route}"
       end
 
