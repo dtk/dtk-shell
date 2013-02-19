@@ -1,9 +1,14 @@
 require 'readline'
 dtk_require("os_util")
+dtk_require_common_commands('../common/thor/push_clone_changes')
+dtk_require_from_base("command_helper")
 
 module DTK::Client
   module Console
     class << self
+      include PushCloneChangesMixin
+      include CommandBase
+      include CommandHelperMixin
 
       # Display confirmation prompt and repeat message until expected answer is given
       def confirmation_prompt(message, add_options=true)
@@ -60,7 +65,7 @@ module DTK::Client
       # Method that will execute until interupted as unix like shell. As input takes
       # path to desire directory from where unix shell can execute normaly.
       #
-      def unix_shell(path=nil)
+      def unix_shell(path=nil, module_id=nil, module_type=nil, version=nil)
 
         if OsUtil.is_windows?
           puts "[NOTICE] Unix shell interaction is currenly not supported on Windows."
@@ -91,6 +96,10 @@ module DTK::Client
                   # we created wanted path 
                   Dir.chdir("#{Dir.getwd()}/#{line}")
                 end
+              elsif line.eql?('dtk-push-changes')
+                response = push_clone_changes_aux(module_type, module_id, version)
+                puts response["data"][:json_diffs]
+                puts "commit_sha: #{response["data"][:commit_sha]}"
               else
                 system(line)        
               end
