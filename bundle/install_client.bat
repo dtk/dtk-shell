@@ -95,7 +95,7 @@ echo secure_connection_server_port=%secure_connection_server_port%   >> %HOMEDRI
 
 
 if not exist %APPDATA%\DTK (
-	mkdir "%APPDATA%\DTK
+	mkdir %APPDATA%\DTK
 )
 echo "" > %log_file%
 
