@@ -13,6 +13,27 @@ module DTK::Client
       include PushToRemoteMixin
       include PullFromRemoteMixin
       include PushCloneChangesMixin
+
+      def get_module_name(module_id)
+        module_name = nil
+        # TODO: See with Rich if there is better way to resolve this
+        response = DTK::Client::CommandBaseThor.get_cached_response(:module, "component_module/list")
+
+        if response.ok?
+          unless response['data'].nil?
+            response['data'].each do |module_item|
+              if module_id.to_i == (module_item['id'])
+                module_name = module_item['display_name']
+                break
+              end
+            end
+          end
+        end
+
+        raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if module_name.nil?
+        return module_name
+      end
+
     end
 
     def self.whoami()
@@ -244,7 +265,18 @@ module DTK::Client
     version_method_option
     def clone(context_params, internal_trigger=false)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
+      module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
 
+      # if this is not name it will not work, we need module name
+      if module_name.to_s =~ /^[0-9]+$/
+        module_id   = module_name
+        module_name = get_module_name(module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
+      module_location = "#{modules_path}/#{module_name}"
+
+      raise DTK::Client::DtkValidationError, "Trying to clone a module (#{module_name}) that exists already!" if File.directory?(module_location)
       clone_aux(:component_module,component_module_id,options["version"],internal_trigger)
     end
 
@@ -255,22 +287,7 @@ module DTK::Client
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
         module_id   = module_name
-        module_name = nil
-        # TODO: See with Rich if there is better way to resolve this
-        response = DTK::Client::CommandBaseThor.get_cached_response(:module, "component_module/list")
-
-        if response.ok?
-          unless response['data'].nil?
-            response['data'].each do |module_item|
-              if module_id.to_i == (module_item['id'])
-                module_name = module_item['display_name']
-                break
-              end
-            end
-          end
-        end
-
-        raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if module_name.nil? 
+        module_name = get_module_name(module_id)
       end
 
       modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
@@ -278,7 +295,7 @@ module DTK::Client
       # check if there is repository cloned 
       unless File.directory?(module_location)
         if Console.confirmation_prompt("Edit not possible, module '#{module_name}' has not been cloned. Would you like to clone module now"+'?')
-          context_params_for_module = create_context_for_module(module_name)
+          context_params_for_module = create_context_for_module(module_name, "module")
           response = clone(context_params_for_module,true)
           # if error return
           unless response.ok?
