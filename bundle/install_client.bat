@@ -67,8 +67,24 @@ set /P username=Enter your username:
 set /P password=Enter your password: 
 set /P server=Enter server name: 
 set /P port=Enter port number (default: 7000): 
+set /P secure_connection=Enable secure connection (default: true) [true,false]:
+
+:while1
+IF NOT $secure_connection == "true" IF NOT $secure_connection != "false" IF NOT $secure_connection != "" (
+  echo "Invalid secure connection value. Possible values 'true' or 'false', or leave empty for default. "
+  set /P secure_connection=Enable secure connection (default: true):
+  goto :while1
+)
+
+set /P secure_connection_port=Enter secure connection port number (default: 7002): : 
 IF "%port%" == "" (
   set port=7000
+)
+IF "%secure_connection%" == "" (
+  set secure_connection="true"
+)
+IF "%secure_connection_server_port%" == "" (
+  set secure_connection_server_port=7002
 )
 ::set filepath='%HOMEDRIVE%%HOMEPATH%\.dtkclient'
 
@@ -76,6 +92,8 @@ echo username=%username%  > %HOMEDRIVE%%HOMEPATH%\.dtkclient
 echo password=%password%  >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
 echo server_host=%server% >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
 echo server_port=%port%   >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
+echo secure_connection=%secure_connection% >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
+echo secure_connection_server_port=%secure_connection_port%   >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
 
 touch %log_file%
 
