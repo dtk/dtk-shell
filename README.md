@@ -33,7 +33,7 @@ Git setup
 - Make sure that you have clone dtk-common in same folder, use: 
 
 ```
-git clone git@github.com:rich-reactor8/dtk-common.git dtk-common
+git clone git@github.com:rich-reactor8/dtk-common.git dtk-common 
 ```
 
 Make sure that in same folder you have cloned dtk-common project. Also that project is under the same name.
