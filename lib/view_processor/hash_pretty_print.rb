@@ -1,7 +1,7 @@
 module DTK
   module Client
     class ViewProcHashPrettyPrint < ViewProcessor
-      include Aux
+      include Auxiliary
       def render(hash)
         object_def = get_top_def()
         raise_error() unless object_def

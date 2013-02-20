@@ -15,7 +15,7 @@ module DTK
         instance.send(method,args_hash)
       end
       class << self
-        include Aux
+        include Auxiliary
         def command_name()
           snake_form(self,"-")
         end
