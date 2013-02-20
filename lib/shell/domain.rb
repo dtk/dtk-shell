@@ -74,6 +74,9 @@ module DTK
       def is_there_command?(entity_name)
         return @current_context.find_command(entity_name) != nil
       end
+      def current_command?
+        return @current_context.current_command?
+      end
     end
 
     class ContextEntity

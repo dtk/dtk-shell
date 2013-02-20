@@ -285,9 +285,13 @@ module DTK
             end
           end          
         end
-
+        
+        def get_type_and_raise_error_if_invalid(about, default_about, type_options)
+          about ||= default_about
+          raise DTK::Client::DtkError, "Not supported type '#{about}' for list for current context level. Possible type options: #{type_options.join(', ')}" unless type_options.include?(about)
+          return about, about[0..-2].to_sym
+        end
       end
-
 
       ##
       # This is fix where we wanna exclude basename print when using dtk-shell.

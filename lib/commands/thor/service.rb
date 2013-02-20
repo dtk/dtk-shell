@@ -79,32 +79,30 @@ module DTK::Client
     def list(context_params)
       service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
 
-      post_body = {
-       :service_module_id => service_module_id,
-      }
-      if about.nil?
-        action = (options.remote? ? "list_remote" : "list")
-        response = post rest_url("service_module/#{action}")
+      post_body = {}
+      action = nil
+
+      # If user is on service level, list task can't have about value set
+      if context_params.current_command?
+        
+        raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for list task." if about
+
         data_type = :module
+        action    = options.remote? ? "list_remote" : "list"
+
+      # If user is on service identifier level, list task can't have '--remote' option.
       else
-        if options.remote?
-          # TODO: this is temp; will shortly support this
-          raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies or component templates"
-        end
-
-        unless service_module_id
-          raise DTK::Client::DtkValidationError, "Service module is required to list requested '#{about}'"
-        end
-
-        case about
-         when "assembly-templates"
-          data_type = :assembly_template
-          response = post rest_url("service_module/list_assemblies"), post_body
-         else 
-          raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for given command."
-        end
+        
+        # TODO: this is temp; will shortly support this
+        raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies or component templates" if options.remote?
+        
+        about, data_type = get_type_and_raise_error_if_invalid(about, "assembly-templates", ["assembly-templates"])
+        data_type        = :assembly_template
+        action           = "list_assemblies"
+        post_body        = { :service_module_id => service_module_id }
       end
 
+      response = post rest_url("service_module/#{action}"), post_body
       response.render_table(data_type) unless options.list?
 
       response
