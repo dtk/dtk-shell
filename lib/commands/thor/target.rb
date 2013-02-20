@@ -9,12 +9,22 @@ module DTK::Client
       return :target, "target/list", nil
     end
 
-    desc "create TARGET-NAME [DESCRIPTION]","Create new target"
+    desc "create TARGET-NAME [DESCRIPTION] [AWS-KEY AWS-SECRET AWS-REGION]","Create new target"
     def create(context_params)
-      target_name, description = context_params.retrieve_arguments([:option_1!,:option_2],method_argument_names)
+      target_name, description, aws_key, aws_secret, aws_region = context_params.retrieve_arguments([:option_1!,:option_2,:option_3,:option_4,:option_5],method_argument_names)
+         
+      unless aws_key && aws_secret && aws_region
+        raise DTK::Client::DtkValidationError, "You must provide all AWS parameters or none at all."
+      end
 
       post_body = {
         :target_name => target_name,
+        :iaas_type => :ec2,
+        :iaas_properties => {
+            :key => aws_key,
+            :region => aws_region,
+            :secret => aws_secret
+          },
         :description => description
       }
       response = post rest_url("target/create"), post_body
