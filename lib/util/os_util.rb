@@ -38,8 +38,13 @@ module DTK
           return "#{home_dir}"
         end
 
+        # for Windows app folder is already under OS username
         def dtk_user_app_folder
-          return "#{dtk_app_folder}#{::DTK::Common::Aux.running_process_user()}/"
+          if is_windows?
+            dtk_app_folder()
+          else
+            "#{dtk_app_folder}#{::DTK::Common::Aux.running_process_user()}/"
+          end
         end
 
         def dtk_app_folder
