@@ -134,6 +134,7 @@ class Thor
 
         # remove double spaces
         list = filtered_list.each { |e| e.first.gsub!(/  /,' ') }
+
       end
 
       if list.empty?
@@ -142,6 +143,9 @@ class Thor
       else  
         shell.say "Tasks:"
       end
+
+      # remove helper 3. element in help item list
+      list = list.collect { |e| e[0..1] }
 
       # monkey patching here => END
       shell.print_table(list, :indent => 2, :truncate => true)
