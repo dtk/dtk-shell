@@ -211,7 +211,7 @@ module DTK::Client
     
     desc "delete-remote REMOTE-MODULE", "Delete remote component module"
     def delete_remote(context_params)
-      remote_modules = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post_body = {
        :remote_module_name => remote_module_name
       }
