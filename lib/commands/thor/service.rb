@@ -57,7 +57,7 @@ module DTK::Client
         },
         :identifier_only => {
           :self      => [
-            ["list","list [assembly-templates] --remote --list","# List service modules (local/remote) or assembly/component templates associated with service module."]
+            ["list","list --list","# List assembly templates associated with service module."]
           ]
         }
       })
@@ -77,26 +77,21 @@ module DTK::Client
     method_option :list, :type => :boolean, :default => false
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
-      service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
+      service_module_id = context_params.retrieve_arguments([:service_id],method_argument_names)
 
       post_body = {}
       action = nil
 
       # If user is on service level, list task can't have about value set
       if context_params.current_command?
-        
-        raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for list task." if about
-
         data_type = :module
         action    = options.remote? ? "list_remote" : "list"
 
       # If user is on service identifier level, list task can't have '--remote' option.
       else
-        
         # TODO: this is temp; will shortly support this
         raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies or component templates" if options.remote?
         
-        about, data_type = get_type_and_raise_error_if_invalid(about, "assembly-templates", ["assembly-templates"])
         data_type        = :assembly_template
         action           = "list_assemblies"
         post_body        = { :service_module_id => service_module_id }
