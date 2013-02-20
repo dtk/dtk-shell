@@ -10,7 +10,7 @@ require 'rspec'
 
 module SpecThor
 
-  include DTK::Client::Aux
+  include DTK::Client::Auxiliary
 
   def run_from_dtk_shell(line)
     args = Shellwords.split(line)

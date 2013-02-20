@@ -7,7 +7,7 @@ module DTK
   module Shell
 
     class Context
-      extend DTK::Client::Aux
+      extend DTK::Client::Auxiliary
       
       # client commands
       #CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs']

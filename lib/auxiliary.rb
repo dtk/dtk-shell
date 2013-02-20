@@ -1,6 +1,6 @@
 module DTK
   module Client
-    module Aux
+    module Auxiliary
       def cap_form(x)
         x.gsub('-','_').to_s.split("_").map{|t|t.capitalize}.join("")
       end

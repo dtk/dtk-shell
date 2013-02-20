@@ -17,7 +17,7 @@ dtk_require("config/configuration")
 def top_level_execute(entity_name, method_name, context_params=nil,options_args=nil,shell_execute=false)
   extend DTK::Client::OsUtil
   begin
-    include DTK::Client::Aux
+    include DTK::Client::Auxiliary
 
     entity_name = entity_name.gsub("-","_")
     load_command(entity_name)
