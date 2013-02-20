@@ -200,9 +200,9 @@ if [[ ! -d ${etc_location_full} ]]; then
   mkdir -p ${etc_location_full}
   chown ${SUDO_USER} ${etc_location_full}
 fi
-if [[ ! -f ${etc_location_full}/shell_history.dat ]]; then
-  touch ${etc_location_full}/shell_history.dat
-  chown ${SUDO_USER} ${etc_location_full}/shell_history.dat
+if [[ ! -f ${etc_location_full}/shell_history ]]; then
+  touch ${etc_location_full}/shell_history
+  chown ${SUDO_USER} ${etc_location_full}/shell_history
 fi
 
 
