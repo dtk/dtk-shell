@@ -103,7 +103,7 @@ module DTK::Client
           when "attributes":
             data_type = :attribute
           else
-            raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+            raise_validation_error_method_usage('list')
         end
 
         response = post rest_url("node_group/info_about"), post_body

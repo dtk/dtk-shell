@@ -54,7 +54,7 @@ module DTK::Client
           response  = post rest_url("target/info_about"), post_body
           data_type =  :assembly
          else
-          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+          raise_validation_error_method_usage('list')
         end
 
         response.render_table(data_type)

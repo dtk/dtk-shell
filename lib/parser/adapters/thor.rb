@@ -260,6 +260,11 @@ module DTK
           raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
         end
 
+        def raise_validation_error_method_usage(method_name)
+          usage_text = self.class.all_tasks[method_name][:usage]
+          raise DTK::Client::DtkValidationError, "Invalid method usage, use: #{usage_text}"
+        end
+
         # returns method name and usage
         def current_method_info
           return @_initializer[2][:current_task].name, @_initializer[2][:current_task].usage

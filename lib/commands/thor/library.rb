@@ -35,7 +35,7 @@ module DTK::Client
          when "components"
           data_type = :component
          else
-          raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+          raise_validation_error_method_usage('list')
         end
 
         post_body = {
