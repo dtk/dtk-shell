@@ -9,7 +9,7 @@ module DTK
 
     class ViewProcessor
       class << self
-        include Aux
+        include Auxiliary
         def render(command_class, ruby_obj, type, data_type, adapter=nil, print_error_table=false)
           adapter ||= get_adapter(type,command_class,data_type)
 
