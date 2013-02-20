@@ -556,7 +556,11 @@ module DTK
       public
 
       def self.load_session_history()
-        return [] unless is_there_history_file()
+        unless is_there_history_file()
+          puts "[INFO] History file is missing, shell history will be disabled. To enable it create file: '#{HISTORY_LOCATION}'"
+          return []
+        end
+   
         content = File.open(HISTORY_LOCATION,'r').read
         return (content.empty? ? [] : JSON.parse(content))
       end
