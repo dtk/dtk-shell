@@ -75,7 +75,7 @@ module DTK::Client
           when "attributes":
             data_type = :attribute
           else
-            raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+            raise_validation_error_method_usage('list')
         end
 
         response = post rest_url("node/info_about"), post_body
@@ -192,6 +192,46 @@ module DTK::Client
       
       node_stop(node_id)
     end
+
+    desc "NODE-NAME/ID get-netstats", "Get netstats"
+    def get_netstats(context_params)
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
+
+      post_body = {
+        :node_id => node_id
+      }  
+
+      response = post(rest_url("node/initiate_get_netstats"), post_body)
+      return response unless response.ok?
+
+      action_results_id = response.data(:action_results_id)
+      end_loop, response, count, ret_only_if_complete = false, nil, 0, true
+
+      until end_loop do
+        post_body = {
+          :action_results_id => action_results_id,
+          :return_only_if_complete => ret_only_if_complete,
+          :disable_post_processing => false
+        }
+        response = post(rest_url("node/get_action_results"),post_body)
+        count += 1
+        if count > GetNetStatsTries or response.data(:is_complete)
+          end_loop = true
+        else
+          #last time in loop return whetever is teher
+          if count == GetNetStatsTries
+            ret_only_if_complete = false
+          end
+          sleep GetNetStatsSleep
+        end
+      end
+
+      #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
+      response.set_data(*response.data(:results))
+      response.render_table(:netstat_data)
+    end
+    GetNetStatsTries = 6
+    GetNetStatsSleep = 0.5
 
     no_tasks do
       def node_start(node_id)             
