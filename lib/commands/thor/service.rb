@@ -260,8 +260,12 @@ module DTK::Client
 
     end
 
-    desc "SERVICE-NAME/ID push-clone-changes [-v VERSION]", "Push changes from local copy of service module to server"
+    desc "SERVICE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of service module to server"
     version_method_option
+    method_option "message",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
     def push_clone_changes(context_params)
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       version = options["version"]

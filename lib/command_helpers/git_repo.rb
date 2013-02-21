@@ -149,7 +149,7 @@ module DTK; module Client; class CommandHelper
       end
       
       if status.any_changes?() 
-        repo.commit("Pushing changes from client") #TODO: make more descriptive
+        repo.commit(opts[:commit_msg]||"Pushing changes from client") #TODO: make more descriptive
       end
 
       if opts[:remote_repo] and opts[:remote_repo_url]
