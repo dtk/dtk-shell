@@ -103,8 +103,8 @@ echo "" > %log_file%
 if not exist %HOMEDRIVE%%HOMEPATH%\dtk (
   mkdir  %HOMEDRIVE%%HOMEPATH%\dtk
   )
-if not exist %HOMEDRIVE%%HOMEPATH%\dtk\shell_history.dat (
-  echo "" > %HOMEDRIVE%%HOMEPATH%\dtk\shell_history.dat
+if not exist %HOMEDRIVE%%HOMEPATH%\dtk\shell_history (
+  echo "" > %HOMEDRIVE%%HOMEPATH%\dtk\shell_history
   )
 
 goto :EOF

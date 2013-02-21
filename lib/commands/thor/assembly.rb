@@ -235,7 +235,7 @@ TODO: will put in dot release and will rename to 'extend'
           when "tasks":
             data_type = :task
           else
-            raise DTK::Client::DtkError, "Not supported type '#{about}' for given command."
+            raise_validation_error_method_usage('list')
         end 
       end
 
