@@ -30,5 +30,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'colorize','~> 0.5.8'
   gem.add_dependency 'fakeweb','~> 1.3.0'
   gem.add_dependency 'awesome_print','~> 1.1.0'
-  gem.add_dependency 'rdoc','~> 3.12'
+  gem.add_dependency 'rdoc','3.12.1'
 end
