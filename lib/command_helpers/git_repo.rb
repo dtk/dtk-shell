@@ -54,7 +54,7 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    def get_diffs(type, module_name, opts={})
+    def get_diffs(type, module_name, version, opts={})
       Response.wrap_helper_actions() do
         repo_dir = local_repo_dir(type,module_name,version)
         repo = create(repo_dir,opts[:local_branch])

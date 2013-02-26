@@ -27,7 +27,7 @@ module DTK::Client
       }
       version = response.data(:version)
 
-      response = Helper(:git_repo).get_diffs(module_type,module_name,opts)
+      response = Helper(:git_repo).get_diffs(module_type,module_name,version,opts)
       return response unless response.ok?
 
       added, deleted, modified = print_diffs(response.data(remote ? :diffs : :status), remote)
