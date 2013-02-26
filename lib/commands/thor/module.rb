@@ -367,11 +367,15 @@ module DTK::Client
 
     end
 
-    desc "MODULE-NAME/ID push-clone-changes [-v VERSION]", "Push changes from local copy of module to server"
+    desc "MODULE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of module to server"
     version_method_option
+    method_option "message",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
     def push_clone_changes(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      push_clone_changes_aux(:component_module,component_module_id,options["version"])
+      push_clone_changes_aux(:component_module,component_module_id,options["version"],options["message"])
     end
 
     #### end: commands related to cloning to and pushing from local clone
