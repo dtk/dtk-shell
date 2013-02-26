@@ -13,7 +13,7 @@ PATH
       hirb (~> 0.7.0)
       jenkins-client (~> 0.0.1)
       json (= 1.7.4)
-      rdoc (~> 3.12.1)
+      rdoc (= 3.12.1)
       rest-client (~> 1.6.7)
       rspec (~> 2.12.0)
       ruby-debug (>= 0.10.4)
