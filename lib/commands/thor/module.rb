@@ -91,12 +91,17 @@ module DTK::Client
 
       # Create component module from user's input git repo
       response = Helper(:git_repo).create_clone_with_branch(:component_module, module_name, git_repo_url)
+      
+      # Raise error if git repository is invalid
+      raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless (response["status"] == "ok")
 
       # Remove .git directory to rid of git pointing to user's github
       FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
       
       # Reuse module create method to create module from local component_module
-      return create(context_params)
+      create_response = create(context_params)
+
+      return create_response
     end
 
     desc "create MODULE-NAME", "Create new module from local clone"
