@@ -74,6 +74,9 @@ module DTK::Client
         when 'components'
           response = post rest_url("assembly/info_about"), post_body
           data_type = :component
+        # when 'attributes'
+          # response = post rest_url("assembly/info_about"), post_body
+          # data_type = :attribute
         else
           raise_validation_error_method_usage('list')
         end
