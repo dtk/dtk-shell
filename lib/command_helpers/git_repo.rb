@@ -5,12 +5,14 @@ require 'fileutils'
 
 module DTK; module Client; class CommandHelper
   class GitRepo < self; class << self
-    def create_clone_with_branch(type,module_name,repo_url,branch,version=nil)
+    def create_clone_with_branch(type,module_name,repo_url,branch=nil,version=nil)
       Response.wrap_helper_actions do 
         modules_dir = modules_dir(type)
         Dir.mkdir(modules_dir) unless File.directory?(modules_dir)
         target_repo_dir = local_repo_dir(type,module_name,version,modules_dir)
-        adapter_class().clone(target_repo_dir,repo_url,:branch => branch)
+        opts = {}
+        opts = { :branch => branch } if branch
+        adapter_class().clone(target_repo_dir,repo_url, opts)
         {"module_directory" => target_repo_dir}
       end
     end

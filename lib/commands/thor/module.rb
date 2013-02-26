@@ -5,6 +5,7 @@ dtk_require_common_commands('thor/list_diffs')
 dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
+require 'fileutils'
 
 module DTK::Client
   class Module < CommandBaseThor
@@ -81,6 +82,28 @@ module DTK::Client
       Helper(:git_repo).unlink_local_clone?(:component_module,module_name)
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :module_component
+    end
+
+    #
+    # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
+    #
+    desc "import-from-git MODULE-NAME GIT-REPO-URL", "Create new local module by importing from provided git repo URL"
+    def import_from_git(context_params)
+      module_name, git_repo_url = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
+
+      # Create component module from user's input git repo
+      response = Helper(:git_repo).create_clone_with_branch(:component_module, module_name, git_repo_url)
+      
+      # Raise error if git repository is invalid
+      raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless (response["status"] == "ok")
+
+      # Remove .git directory to rid of git pointing to user's github
+      FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
+      
+      # Reuse module create method to create module from local component_module
+      create_response = create(context_params)
+
+      return create_response
     end
 
     desc "create MODULE-NAME", "Create new module from local clone"
