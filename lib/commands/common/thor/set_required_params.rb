@@ -15,7 +15,7 @@ module DTK::Client
         response.set_data('Message' => "No parameters to set.")
         response
       else
-        param_bindings = DTK::Shell::InteractiveWizard.new.resolve_missing_params(missing_params)
+        param_bindings = DTK::Shell::InteractiveWizard.resolve_missing_params(missing_params)
         post_body = {
           id_field => id,
           :av_pairs_hash => param_bindings.inject(Hash.new){|h,r|h.merge(r[:id] => r[:value])}
