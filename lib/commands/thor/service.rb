@@ -57,7 +57,7 @@ module DTK::Client
         },
         :identifier_only => {
           :self      => [
-            ["list","list assembly-templates --list","# List assembly templates associated with service module."]
+            ["list","list assembly-templates","# List assembly templates associated with service module."]
           ]
         }
       })
@@ -91,6 +91,7 @@ module DTK::Client
       else
         # TODO: this is temp; will shortly support this
         raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies or component templates" if options.remote?
+        raise DTK::Client::DtkValidationError, "Not supported '--list' option when listing service module assemblies or component templates" if options.list?
         raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for list for current context level. Possible type options: 'assembly-templates'" unless about == "assembly-templates"
         
         data_type        = :assembly_template
