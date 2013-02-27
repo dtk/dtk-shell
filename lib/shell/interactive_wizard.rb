@@ -31,7 +31,8 @@ module DTK
                 validation = nil
               when :question
                 output = "#{metadata[:question]} (#{metadata[:options].join('|')}): "
-                validation = metadata[:options]
+                validation = 
+                metadata[:options]
               when :selection
                 options = ""
                 display_field = metadata[:display_field]
@@ -44,8 +45,10 @@ module DTK
                     options += "\t#{i+1}. #{o}\n"
                   end
                 end
+                options += "\t0. Skip\n".colorize(:yellow) if metadata[:skip_option]
                 output = "Select '#{display_name}': \n\n #{options} \n >> "
-                validation = (1..metadata[:options].size).to_a
+                validation_range_start = metadata[:skip_option] ? 0 : 1
+                validation = (validation_range_start..metadata[:options].size).to_a
               when :group
                 # recursion call to populate second level of hash params
                 puts " Enter '#{display_name}' details: "

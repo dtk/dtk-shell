@@ -14,13 +14,9 @@ module DTK::Client
       
       # we get existing templates
       target_templates = post rest_url("target/list"), { :subtype => :template }
-      
-      # we get names and descriptions for given list
-      selection_names = target_templates['data'].map { |tt| "#{tt['display_name']}" }
-      selection_names << (skip_template = "I do not want to use template.".colorize(:yellow))
 
       # ask user to select target template
-      wizard_params = [{:target_template => { :type => :selection, :options => selection_names, :display_field => 'display_name' }}]
+      wizard_params = [{:target_template => { :type => :selection, :options => target_templates['data'], :display_field => 'display_name', :skip_option => true }}]
       target_template_selected = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
       target_template_id = target_template_selected['id']
 
