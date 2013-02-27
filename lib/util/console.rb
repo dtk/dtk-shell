@@ -1,4 +1,6 @@
 require 'readline'
+require 'shellwords'
+
 dtk_require("os_util")
 dtk_require_common_commands('../common/thor/push_clone_changes')
 dtk_require_from_base("command_helper")
@@ -96,10 +98,20 @@ module DTK::Client
                   # we created wanted path 
                   Dir.chdir("#{Dir.getwd()}/#{line}")
                 end
-              elsif line.eql?('dtk-push-changes')
-                response = push_clone_changes_aux(module_type, module_id, version)
+              # elsif line.eql?('dtk-push-changes')
+              elsif line.match(/^dtk-push-changes/)
+                args       = Shellwords.split(line)
+                commit_msg = nil
+
+                unless args.size==1
+                  raise DTK::Client::DtkValidationError, "To push changes to server use 'dtk-push-changes [-m COMMIT-MSG]'" unless (args[1]=="-m" && args.size==3)
+                  commit_msg = args.last
+                end
+
+                response = push_clone_changes_aux(module_type, module_id, version, commit_msg)
                 puts response["data"][:json_diffs]
                 puts "commit_sha: #{response["data"][:commit_sha]}"
+                puts "commit_msg: #{commit_msg}" unless commit_msg.nil?
               else
                 system(line)        
               end

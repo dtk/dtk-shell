@@ -57,7 +57,7 @@ module DTK::Client
         },
         :identifier_only => {
           :self      => [
-            ["list","list --list","# List assembly templates associated with service module."]
+            ["list","list assembly-templates --list","# List assembly templates associated with service module."]
           ]
         }
       })
@@ -77,7 +77,7 @@ module DTK::Client
     method_option :list, :type => :boolean, :default => false
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id],method_argument_names)
+      service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
 
       post_body = {}
       action = nil
@@ -91,6 +91,7 @@ module DTK::Client
       else
         # TODO: this is temp; will shortly support this
         raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies or component templates" if options.remote?
+        raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for list for current context level. Possible type options: 'assembly-templates'" unless about == "assembly-templates"
         
         data_type        = :assembly_template
         action           = "list_assemblies"
@@ -260,8 +261,12 @@ module DTK::Client
 
     end
 
-    desc "SERVICE-NAME/ID push-clone-changes [-v VERSION]", "Push changes from local copy of service module to server"
+    desc "SERVICE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of service module to server"
     version_method_option
+    method_option "message",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
     def push_clone_changes(context_params)
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       version = options["version"]

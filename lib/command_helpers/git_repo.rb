@@ -5,12 +5,14 @@ require 'fileutils'
 
 module DTK; module Client; class CommandHelper
   class GitRepo < self; class << self
-    def create_clone_with_branch(type,module_name,repo_url,branch,version=nil)
+    def create_clone_with_branch(type,module_name,repo_url,branch=nil,version=nil)
       Response.wrap_helper_actions do 
         modules_dir = modules_dir(type)
         Dir.mkdir(modules_dir) unless File.directory?(modules_dir)
         target_repo_dir = local_repo_dir(type,module_name,version,modules_dir)
-        adapter_class().clone(target_repo_dir,repo_url,:branch => branch)
+        opts = {}
+        opts = { :branch => branch } if branch
+        adapter_class().clone(target_repo_dir,repo_url, opts)
         {"module_directory" => target_repo_dir}
       end
     end
@@ -49,6 +51,14 @@ module DTK; module Client; class CommandHelper
         repo_dir = local_repo_dir(type,module_name,version)
         repo = create(repo_dir,opts[:local_branch])
         push_repo_changes_aux(repo,opts)
+      end
+    end
+
+    def get_diffs(type, module_name, version, opts={})
+      Response.wrap_helper_actions() do
+        repo_dir = local_repo_dir(type,module_name,version)
+        repo = create(repo_dir,opts[:local_branch])
+        get_diffs_aux(repo,opts)
       end
     end
 
@@ -135,6 +145,10 @@ module DTK; module Client; class CommandHelper
       def self.diff(repo,ref1,ref2)
         new(repo.diff(ref1,ref2).ret_summary())
       end
+
+      def self.diff_remote(repo,ref1)
+        new(repo.diff(ref1).ret_summary())
+      end
     end
     
     #returns hash with keys
@@ -149,7 +163,7 @@ module DTK; module Client; class CommandHelper
       end
       
       if status.any_changes?() 
-        repo.commit("Pushing changes from client") #TODO: make more descriptive
+        repo.commit(opts[:commit_msg]||"Pushing changes from client") #TODO: make more descriptive
       end
 
       if opts[:remote_repo] and opts[:remote_repo_url]
@@ -187,6 +201,43 @@ module DTK; module Client; class CommandHelper
         raise Error.new("Unexpected merge_rel (#{merge_rel})")
       end
       {"diffs" => diffs, "commit_sha" => commit_sha, "repo_obj" => repo}
+    end
+
+    def get_diffs_aux(repo,opts={})
+      diffs = DiffSummary.new()
+      #add any file that is untracked
+      status = repo.status()
+
+      if status[:untracked]
+        status[:untracked].each{|untracked_file_path|repo.add_file_command(untracked_file_path)}
+      end
+
+      if opts[:remote_repo] and opts[:remote_repo_url]
+      repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
+      end
+
+      unless opts[:no_fetch]
+        repo.fetch(remote(opts[:remote_repo]))
+      end
+
+      local_branch      = repo.branch 
+      remote_branch_ref = remote_branch_ref(local_branch,opts)
+
+      commit_shas = Hash.new
+      merge_rel   = repo.ret_merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
+      commit_sha  = nil
+      
+      if merge_rel == :equal
+        commit_sha = commit_shas[:other_sha]
+      elsif merge_rel == :no_remote_ref
+        diffs = DiffSummary.new_version()
+        commit_sha = commit_shas[:local_sha]
+      end
+
+      diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+      commit_sha = repo.find_remote_sha(remote_branch_ref)
+      
+      {"diffs" => diffs, "commit_sha" => commit_sha, "repo_obj" => repo, "status" => status}
     end
 
     def pull_repo_changes_aux(repo,opts={})

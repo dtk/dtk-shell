@@ -1,9 +1,11 @@
 dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_dtk_common('grit_adapter')
 dtk_require_common_commands('thor/clone')
+dtk_require_common_commands('thor/list_diffs')
 dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
+require 'fileutils'
 
 module DTK::Client
   class Module < CommandBaseThor
@@ -13,6 +15,7 @@ module DTK::Client
       include PushToRemoteMixin
       include PullFromRemoteMixin
       include PushCloneChangesMixin
+      include ListDiffsMixin
 
       def get_module_name(module_id)
         module_name = nil
@@ -79,6 +82,28 @@ module DTK::Client
       Helper(:git_repo).unlink_local_clone?(:component_module,module_name)
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :module_component
+    end
+
+    #
+    # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
+    #
+    desc "import-from-git MODULE-NAME GIT-REPO-URL", "Create new local module by importing from provided git repo URL"
+    def import_from_git(context_params)
+      module_name, git_repo_url = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
+
+      # Create component module from user's input git repo
+      response = Helper(:git_repo).create_clone_with_branch(:component_module, module_name, git_repo_url)
+      
+      # Raise error if git repository is invalid
+      raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless (response["status"] == "ok")
+
+      # Remove .git directory to rid of git pointing to user's github
+      FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
+      
+      # Reuse module create method to create module from local component_module
+      create_response = create(context_params)
+
+      return create_response
     end
 
     desc "create MODULE-NAME", "Create new module from local clone"
@@ -349,11 +374,50 @@ module DTK::Client
 
     end
 
-    desc "MODULE-NAME/ID push-clone-changes [-v VERSION]", "Push changes from local copy of module to server"
+    desc "MODULE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of module to server"
     version_method_option
+    method_option "message",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
     def push_clone_changes(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      push_clone_changes_aux(:component_module,component_module_id,options["version"])
+      push_clone_changes_aux(:component_module,component_module_id,options["version"],options["message"])
+    end
+
+    desc "MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"
+    version_method_option
+    method_option :remote, :type => :boolean, :default => false
+    def list_diffs(context_params)
+      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
+      module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
+      version             = options["version"]
+
+      # if this is not name it will not work, we need module name
+      if module_name.to_s =~ /^[0-9]+$/
+        module_id   = module_name
+        module_name = get_module_name(module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
+      module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
+
+      # check if there is repository cloned 
+      if File.directory?(module_location)
+        list_diffs_aux(:component_module, component_module_id, options.remote?, version)
+      else
+        if Console.confirmation_prompt("Module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
+          response = clone_aux(:component_module,component_module_id,version,true)
+          # if error return
+          unless response.ok?
+            return response
+          end
+        else
+          # user choose not to clone needed module
+          return
+        end
+      end
+
     end
 
     #### end: commands related to cloning to and pushing from local clone

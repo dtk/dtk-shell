@@ -3,7 +3,7 @@ module DTK::Client
     ##
     #
     # module_type: will be :component_module or :service_module 
-    def push_clone_changes_aux(module_type,module_id,version)
+    def push_clone_changes_aux(module_type,module_id,version,commit_msg=nil)
       id_field = "#{module_type}_id"
       post_body = {
         id_field => module_id
@@ -14,7 +14,8 @@ module DTK::Client
       return response unless response.ok?
       module_name = response.data(:module_name)
 
-      response = Helper(:git_repo).push_changes(module_type,response.data(:module_name),version)
+      opts = {:commit_msg => commit_msg}
+      response = Helper(:git_repo).push_changes(module_type,response.data(:module_name),version,opts)
       return response unless response.ok?
       json_diffs = (response.data(:diffs).empty? ? {} : JSON.generate(response.data(:diffs)))
       commit_sha = response.data(:commit_sha)
