@@ -270,7 +270,7 @@ module DTK::Client
     #### end: commands to interact with remote repo ###
 
     #### commands to manage workspace and versioning ###
-    desc "MODULE-NAME/ID create-new-version NEW-VERSION", "Snapshot current state of module as a new version"
+    desc "MODULE-NAME/ID create-new-version VERSION", "Snapshot current state of module as a new version"
     def create_new_version(context_params)
       component_module_id,version = context_params.retrieve_arguments([:module_id!,:option_1!],method_argument_names)
       post_body = {

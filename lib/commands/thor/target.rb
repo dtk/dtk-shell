@@ -9,25 +9,48 @@ module DTK::Client
       return :target, "target/list", nil
     end
 
-    desc "create TARGET-NAME [DESCRIPTION] [AWS-KEY AWS-SECRET AWS-REGION]","Create new target"
+    desc "create","Wizard that will guide you trough creation of target and target-template"
     def create(context_params)
-      target_name, description, aws_key, aws_secret, aws_region = context_params.retrieve_arguments([:option_1!,:option_2,:option_3,:option_4,:option_5],method_argument_names)
-         
-      unless aws_key && aws_secret && aws_region
-        raise DTK::Client::DtkValidationError, "You must provide all AWS parameters or none at all."
+      
+      # we get existing templates
+      target_templates = post rest_url("target/list"), { :subtype => :template }
+
+      # ask user to select target template
+      wizard_params = [{:target_template => { :type => :selection, :options => target_templates['data'], :display_field => 'display_name', :skip_option => true }}]
+      target_template_selected = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
+      target_template_id = target_template_selected['id']
+
+      wizard_params = [
+        {:target_name     => {}},
+        {:description      => {:optional => true }}
+      ]
+
+      if target_template_id.nil?
+        # in case user has not selected template id we will needed information to create target
+        wizard_params.concact([
+          {:iaas_type       => { :type => :selection, :options => [:ec2] }},
+          {:aws_install     => { :type => :question, 
+                                 :question => "Do we have your permission to add necessery 'key-pair' and 'security-group' to your EC2 account?", 
+                                 :options => ["yes","no"], 
+                                 :required_options => ["yes"],
+                                 :explanation => "This permission is necessary for creation of a custom target."
+                                }},
+          {:iaas_properties => { :type => :group, :options => [
+              {:key    => {}},
+              {:secret => {}},
+              {:region => {}},
+          ]}},
+        ])
       end
 
-      post_body = {
-        :target_name => target_name,
-        :iaas_type => :ec2,
-        :iaas_properties => {
-            :key => aws_key,
-            :region => aws_region,
-            :secret => aws_secret
-          },
-        :description => description
-      }
-      response = post rest_url("target/create"), post_body
+      post_body = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
+
+      # this means that user has not given permission so we skip request
+      return unless post_body[:aws_install]
+
+
+
+      response = post rest_url("target/create"), post_body.merge(:target_template_id => target_template_id)
        # when changing context send request for getting latest targets instead of getting from cache
       @@invalidate_map << :target
 
