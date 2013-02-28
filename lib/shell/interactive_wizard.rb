@@ -11,6 +11,7 @@ module DTK
       PP_LINE_HEAD  = '--------------------------------- DATA ---------------------------------'
       PP_LINE       = '------------------------------------------------------------------------'
       INVALID_INPUT = " Input is not valid.".colorize(:yellow)
+      EC2_REGIONS   = ['us-east-1','us-west-1','us-west-2','eu-west-1','sa-east-1','ap-northeast-1','ap-southeast-1','ap-southeast-2' ]
       
 
       def initialize
@@ -27,7 +28,7 @@ module DTK
             metadata = meta_input.values.first
             case metadata[:type]
               when nil
-                output = recursion_call ? "\t#{display_name.capitalize}: " : "Enter value for '#{display_name}': "
+                output = recursion_call ? "#{display_name.capitalize}: " : "Enter value for '#{display_name}': "
                 validation = nil
               when :question
                 output = "#{metadata[:question]} (#{metadata[:options].join('|')}): "
@@ -38,8 +39,6 @@ module DTK
                 display_field = metadata[:display_field]
                 metadata[:options].each_with_index do |o,i|
                   if display_field
-                    puts display_field
-                    puts o
                     options += "\t#{i+1}. #{o[display_field]}\n"
                   else
                     options += "\t#{i+1}. #{o}\n"
@@ -52,11 +51,11 @@ module DTK
               when :group
                 # recursion call to populate second level of hash params
                 puts " Enter '#{display_name}' details: "
-                results[input_name] = self.gandalf_the_gray(metadata[:options], true)
+                results[input_name] = self.interactive_user_input(metadata[:options], true)
                 next
             end
 
-            input = resolve_input(output,validation,!metadata[:optional])
+            input = resolve_input(output,validation,!metadata[:optional],recursion_call)
 
             if metadata[:required_options] && !metadata[:required_options].include?(input)
               # case where we have to give explicit permission, if answer is not affirmative
@@ -67,7 +66,7 @@ module DTK
 
             # post processing
             if metadata[:type] == :selection
-              input = metadata[:options][input.to_i - 1]
+              input = input.to_i == 0 ? nil : metadata[:options][input.to_i - 1]
             end
 
             results[input_name] = input
@@ -81,9 +80,10 @@ module DTK
       end
 
 
-      def self.resolve_input(output, validation, is_required = true)
+      def self.resolve_input(output, validation, is_required, is_recursion_call)
+        tab_prefix = is_recursion_call ? "\t" : ""
 
-        while line = Readline.readline(" #{output}", false)
+        while line = Readline.readline(" #{tab_prefix}#{output}", false)
           if is_required && line.empty?
             puts INVALID_INPUT
             next

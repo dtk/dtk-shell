@@ -15,10 +15,13 @@ module DTK::Client
       # we get existing templates
       target_templates = post rest_url("target/list"), { :subtype => :template }
 
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require 'ruby-debug';Debugger.start
+      debugger
       # ask user to select target template
       wizard_params = [{:target_template => { :type => :selection, :options => target_templates['data'], :display_field => 'display_name', :skip_option => true }}]
       target_template_selected = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
-      target_template_id = target_template_selected['id']
+      target_template_id = (target_template_selected[:target_template]||{})['id']
 
       wizard_params = [
         {:target_name     => {}},
@@ -27,7 +30,7 @@ module DTK::Client
 
       if target_template_id.nil?
         # in case user has not selected template id we will needed information to create target
-        wizard_params.concact([
+        wizard_params.concat([
           {:iaas_type       => { :type => :selection, :options => [:ec2] }},
           {:aws_install     => { :type => :question, 
                                  :question => "Do we have your permission to add necessery 'key-pair' and 'security-group' to your EC2 account?", 
@@ -38,7 +41,7 @@ module DTK::Client
           {:iaas_properties => { :type => :group, :options => [
               {:key    => {}},
               {:secret => {}},
-              {:region => {}},
+              {:region => {:type => :selection, :options => DTK::Shell::InteractiveWizard::EC2_REGIONS}},
           ]}},
         ])
       end
@@ -46,11 +49,12 @@ module DTK::Client
       post_body = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
 
       # this means that user has not given permission so we skip request
-      return unless post_body[:aws_install]
+      return unless (target_template_id || post_body[:aws_install])
 
+      # in case user chose target ID
+      post_body.merge!(:target_template_id => target_template_id) if target_template_id
 
-
-      response = post rest_url("target/create"), post_body.merge(:target_template_id => target_template_id)
+      response = post rest_url("target/create"), post_body
        # when changing context send request for getting latest targets instead of getting from cache
       @@invalidate_map << :target
 

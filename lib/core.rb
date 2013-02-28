@@ -226,8 +226,6 @@ module DTK
 
       attr_reader :connection_error
 
-      # DEBUG SNIPPET >>> REMOVE <<<
-
       if VERBOSE_MODE_ON
         require 'ap'
       end
