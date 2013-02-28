@@ -67,8 +67,9 @@ module DTK::Client
     desc "delete MODULE-IDENTIFIER", "Delete component module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
-      component_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-     unless options.force?
+      component_module_id, force_delete = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
+
+     unless (options.force? || force_delete)
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
       end
@@ -102,6 +103,14 @@ module DTK::Client
       
       # Reuse module create method to create module from local component_module
       create_response = create(context_params)
+
+      # If server response is not ok, delete cloned module, invoke delete method and notify user about cleanup process.
+      unless create_response["status"] == "ok"
+        FileUtils.rm_rf("#{response['data']['module_directory']}")
+        context_params.method_arguments << "force_delete"
+        delete(context_params)
+        create_response['errors'][0]['message'] += "\nModule '#{module_name}' data is deleted."
+      end
 
       return create_response
     end

@@ -52,7 +52,7 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :command_only => {
           :self => [
-            ["list"," list --remote --list","# List service modules (local/remote)"]
+            ["list"," list --remote","# List service modules (local/remote)"]
           ]
         },
         :identifier_only => {
@@ -73,8 +73,7 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-    desc "[SERVICE-NAME/ID] list [assembly-templates] --remote --list","List service modules (local/remote) or assembly/component templates associated with service module."
-    method_option :list, :type => :boolean, :default => false
+    desc "[SERVICE-NAME/ID] list [assembly-templates] --remote","List service modules (local/remote) or assembly/component templates associated with service module."
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
       service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
@@ -91,7 +90,6 @@ module DTK::Client
       else
         # TODO: this is temp; will shortly support this
         raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies or component templates" if options.remote?
-        raise DTK::Client::DtkValidationError, "Not supported '--list' option when listing service module assemblies or component templates" if options.list?
         raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for list for current context level. Possible type options: 'assembly-templates'" unless about == "assembly-templates"
         
         data_type        = :assembly_template
@@ -100,7 +98,7 @@ module DTK::Client
       end
 
       response = post rest_url("service_module/#{action}"), post_body
-      response.render_table(data_type) unless options.list?
+      response.render_table(data_type)
 
       response
     end
