@@ -15,9 +15,6 @@ module DTK::Client
       # we get existing templates
       target_templates = post rest_url("target/list"), { :subtype => :template }
 
-      # DEBUG SNIPPET >>> REMOVE <<<
-      require 'ruby-debug';Debugger.start
-      debugger
       # ask user to select target template
       wizard_params = [{:target_template => { :type => :selection, :options => target_templates['data'], :display_field => 'display_name', :skip_option => true }}]
       target_template_selected = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
