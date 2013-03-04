@@ -118,7 +118,7 @@ module DTK
               raise DTK::Client::DtkError.new("[#{where} INTERNAL ERROR] #{error_msg}",opts)
             else
               # if usage error occurred, display message to console and display that same message to log
-              raise DTK::Client::DtkError, "Following error occurred: #{error_msg}." 
+              raise DTK::Client::DtkError, "[ERROR] #{error_msg}." 
             end
           end
         end
@@ -225,8 +225,6 @@ module DTK
       VERBOSE_MODE_ON = ::Config::Configuration.get(:verbose_rest_calls)
 
       attr_reader :connection_error
-
-      # DEBUG SNIPPET >>> REMOVE <<<
 
       if VERBOSE_MODE_ON
         require 'ap'

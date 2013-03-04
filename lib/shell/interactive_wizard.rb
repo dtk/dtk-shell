@@ -4,20 +4,104 @@ require 'readline'
 module DTK
   module Shell
 
+
     # we use interactive wizard to give user opertunity
     class InteractiveWizard
 
-      PP_LINE_HEAD = '--------------------------------- DATA ---------------------------------'
-      PP_LINE      = '------------------------------------------------------------------------'
+      PP_LINE_HEAD  = '--------------------------------- DATA ---------------------------------'
+      PP_LINE       = '------------------------------------------------------------------------'
+      INVALID_INPUT = " Input is not valid.".colorize(:yellow)
+      EC2_REGIONS   = ['us-east-1','us-west-1','us-west-2','eu-west-1','sa-east-1','ap-northeast-1','ap-southeast-1','ap-southeast-2' ]
       
 
       def initialize
       end
 
+      # Generic wizard which will return hash map based on metadata input
+      def self.interactive_user_input(wizard_dsl, recursion_call = false)
+        results = {}
+        
+        begin
+          wizard_dsl.each do |meta_input|
+            input_name = meta_input.keys.first
+            display_name = input_name.to_s.gsub(/_/,' ')
+            metadata = meta_input.values.first
+            case metadata[:type]
+              when nil
+                output = recursion_call ? "#{display_name.capitalize}: " : "Enter value for '#{display_name}': "
+                validation = nil
+              when :question
+                output = "#{metadata[:question]} (#{metadata[:options].join('|')}): "
+                validation = 
+                metadata[:options]
+              when :selection
+                options = ""
+                display_field = metadata[:display_field]
+                metadata[:options].each_with_index do |o,i|
+                  if display_field
+                    options += "\t#{i+1}. #{o[display_field]}\n"
+                  else
+                    options += "\t#{i+1}. #{o}\n"
+                  end
+                end
+                options += "\t0. Skip\n".colorize(:yellow) if metadata[:skip_option]
+                output = "Select '#{display_name}': \n\n #{options} \n >> "
+                validation_range_start = metadata[:skip_option] ? 0 : 1
+                validation = (validation_range_start..metadata[:options].size).to_a
+              when :group
+                # recursion call to populate second level of hash params
+                puts " Enter '#{display_name}' details: "
+                results[input_name] = self.interactive_user_input(metadata[:options], true)
+                next
+            end
+
+            input = resolve_input(output,validation,!metadata[:optional],recursion_call)
+
+            if metadata[:required_options] && !metadata[:required_options].include?(input)
+              # case where we have to give explicit permission, if answer is not affirmative
+              # we terminate rest of the wizard
+              puts " #{metadata[:explanation]}".colorize(:red)
+              return nil
+            end
+
+            # post processing
+            if metadata[:type] == :selection
+              input = input.to_i == 0 ? nil : metadata[:options][input.to_i - 1]
+            end
+
+            results[input_name] = input
+          end
+        rescue Interrupt => e
+          puts ""
+          results = {}
+        ensure
+          return results
+        end
+      end
+
+
+      def self.resolve_input(output, validation, is_required, is_recursion_call)
+        tab_prefix = is_recursion_call ? "\t" : ""
+
+        while line = Readline.readline(" #{tab_prefix}#{output}", false)
+          if is_required && line.empty?
+            puts INVALID_INPUT
+            next
+          end
+
+          if !validation || validation.find { |val| line.eql?(val.to_s) }
+            return line
+          end
+
+          puts INVALID_INPUT
+        end
+      end
+
+
+
       # takes hash maps with description of missing params and
       # returns array of hash map with key, value for each missed param
-
-      def resolve_missing_params(param_list)
+      def self.resolve_missing_params(param_list)
         begin
           user_provided_params, checkup_hash = [], {}
 
@@ -63,7 +147,7 @@ module DTK
 
       private
 
-      def pretty_print_provided_user_info(user_information)
+      def self.pretty_print_provided_user_info(user_information)
         puts PP_LINE_HEAD
         user_information.each do |key,info|
           description = info[:description]
