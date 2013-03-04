@@ -14,7 +14,6 @@ module DTK::Client
       post_body.merge!(:rsa_pub_key => rsa_pub_key) if rsa_pub_key
 
       response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
-      # response =  post(rest_url("#{module_type}/get_workspace_branch_info"),post_body) 
       return response unless response.ok?
       
       module_name = response.data(:module_name)
