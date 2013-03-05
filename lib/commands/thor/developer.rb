@@ -3,7 +3,9 @@ require 'base64'
 module DTK::Client
   class Developer < CommandBaseThor
 
-    MATCH_FILE_NAME = /[a-zA-Z0-9]+\.[a-zA-Z]+$/
+    MATCH_FILE_NAME  = /[a-zA-Z0-9]+\.[a-zA-Z]+$/
+    GIT_LOG_LOCATION = File.expand_path('../../../lib/git-logs/git.log', File.dirname(__FILE__))
+    PROJECT_ROOT     = File.expand_path('../../../', File.dirname(__FILE__))
 
     desc "upload_agent PATH-TO-AGENT[.rb,.dll] NODE-ID-PATTERN", "Uploads agent and ddl file to requested nodes, pattern is regexp for filtering node ids." 
     def upload_agent(context_params)
@@ -62,5 +64,33 @@ module DTK::Client
       Response::Ok.new()
     end
 
+    desc "commits", "View last commits that went into the gem"
+    def commits(context_params)
+      unless File.file?(GIT_LOG_LOCATION)
+        raise DTK::Client::DtkError, "Git log file not found, contact DTK support team."
+      end
+
+      File.readlines(GIT_LOG_LOCATION).reverse.each do |line|
+        puts line
+      end
+    end
+
+    desc "content FILE-NAME", "Get content of file name in DTK Client gem"
+    def content(context_params)
+      file_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      found_files = Dir["#{PROJECT_ROOT}/**/*.*"].select { |fname| fname.end_with?(file_name) }
+
+      if found_files.empty?
+        raise DTK::Client::DtkValidationError, "No files found with name '#{file_name}'."
+      else
+        found_files.each do |fname|
+          header = "*********************** #{fname} ***********************"
+          puts header.colorize(:yellow)
+          puts File.open(fname).readlines
+          puts ("*"*header.size).colorize(:yellow)
+        end
+      end  
+
+    end
   end
 end
