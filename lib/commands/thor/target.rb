@@ -102,7 +102,7 @@ module DTK::Client
       end
     end
 
-    desc "delete TARGET-NAME/ID","Deletes target or target template"
+    desc "delete TARGET-IDENTIFIER","Deletes target or target template"
     def delete(context_params)
       target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post_body = {
