@@ -9,6 +9,21 @@ module DTK::Client
       return :target, "target/list", nil
     end
 
+    def self.override_allowed_methods()
+      return DTK::Shell::OverrideTasks.new({
+        :command_only => {
+          :self => [
+            ["list"," list [templates]","# List targets or their templates."]
+          ]
+        },
+        :identifier_only => {
+          :self      => [
+            ["list","list [nodes|assemblies]","# List nodes/assembly instances in given targets."]
+          ]
+        }
+      })
+    end
+
     desc "create","Wizard that will guide you trough creation of target and target-template"
     def create(context_params)
       
@@ -58,11 +73,13 @@ module DTK::Client
       return response
     end
 
-    desc "[TARGET-NAME/ID] list [nodes|assemblies]","List nodes or assembly instances in given targets."
+    desc "[TARGET-NAME/ID] list [nodes|assemblies|templates]","List nodes/assembly instances in given targets or target templates."
     def list(context_params)
       target_id, about = context_params.retrieve_arguments([:target_id, :option_1],method_argument_names)
       if target_id.nil?
-        response  = post rest_url("target/list")
+        post_body = (about||'').include?("template") ?  { :subtype => :template } : {}
+        response  = post rest_url("target/list"), post_body
+           
         response.render_table(:target)
       else
         post_body = {
@@ -83,6 +100,16 @@ module DTK::Client
 
         response.render_table(data_type)
       end
+    end
+
+    desc "delete TARGET-NAME/ID","Deletes target or target template"
+    def delete(context_params)
+      target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      post_body = {
+        :target_id => target_id
+      }
+
+      return post rest_url("target/delete"), post_body
     end
     
     desc "create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create assembly template from nodes in target" 

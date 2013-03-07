@@ -79,8 +79,6 @@ module DTK::Client
       })
     end
 
-    desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
-
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
     def start(context_params)
       if context_params.is_there_identifier?(:node)
