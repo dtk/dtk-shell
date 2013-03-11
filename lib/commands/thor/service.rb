@@ -57,7 +57,7 @@ module DTK::Client
         },
         :identifier_only => {
           :self      => [
-            ["list","list assembly-templates","# List assembly templates associated with service module."]
+            ["list","list [assembly-templates|modules]","# List assembly templates associated with service module."]
           ]
         }
       })
@@ -75,8 +75,7 @@ module DTK::Client
 
     desc "[SERVICE-NAME/ID] list [assembly-templates|modules] --remote","List service modules (local/remote), assembly/component templates or modules associated with service."
     method_option :remote, :type => :boolean, :default => false
-    def
-     list(context_params)
+    def list(context_params)
       service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
 
       post_body = {}
