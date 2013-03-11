@@ -87,6 +87,7 @@ module DTK::Client
         data_type = :module
         action    = options.remote? ? "list_remote" : "list"
 
+        response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
       else
         # TODO: this is temp; will shortly support this
@@ -121,7 +122,7 @@ module DTK::Client
         end
       end
 
-      response.render_table(data_type)
+      response.render_table(data_type) unless response.nil?
 
       response
     end
