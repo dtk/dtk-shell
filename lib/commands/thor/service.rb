@@ -73,7 +73,7 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-    desc "[SERVICE-NAME/ID] list [assembly-templates] --remote","List service modules (local/remote) or assembly/component templates associated with service module."
+    desc "[SERVICE-NAME/ID] list [assembly-templates|modules] --remote","List service modules (local/remote), assembly/component templates or modules associated with service."
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
       service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
@@ -89,15 +89,37 @@ module DTK::Client
       # If user is on service identifier level, list task can't have '--remote' option.
       else
         # TODO: this is temp; will shortly support this
-        raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies or component templates" if options.remote?
-        raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for list for current context level. Possible type options: 'assembly-templates'" unless about == "assembly-templates"
+        raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies, component templates or modules" if options.remote?
+        raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for list for current context level. Possible type options: 'assembly-templates'" unless(about == "assembly-templates" || about == "modules")
         
-        data_type        = :assembly_template
-        action           = "list_assemblies"
-        post_body        = { :service_module_id => service_module_id }
+        if about
+          case about
+          when "assembly-templates":
+            data_type        = :assembly_template
+            action           = "list_assemblies"
+            post_body        = { :service_module_id => service_module_id }
+
+            response = post rest_url("service_module/#{action}"), post_body
+          when "modules":
+            ids       = []
+            data_type = :component
+            post_body = {
+              :service_module_id => service_module_id,
+              :about => 'components'
+            }
+
+            response = post rest_url("service_module/info_about"), post_body
+            return response unless response.ok?
+            response["data"].collect{|a| ids<<a["id"].to_i}
+
+            post_body = { :assemblies => ids }
+            response  = post rest_url("assembly/list_modules"), post_body
+          else
+            raise_validation_error_method_usage('list')
+          end 
+        end
       end
 
-      response = post rest_url("service_module/#{action}"), post_body
       response.render_table(data_type)
 
       response
