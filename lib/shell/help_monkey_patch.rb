@@ -58,7 +58,7 @@ class Thor
         # case when we are not on first level and it is not identifier we skip help 
         # since it needs to be empty
         # e.g. assembly/bootstrap1/node> ... HELP IS EMPTY FOR THIS
-
+   
         # override goes here
         override_tasks_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
 
