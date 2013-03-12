@@ -298,6 +298,9 @@ module DTK::Client
     desc "MODULE-NAME/ID clone [-v VERSION]", "Clone into client the component module files"
     version_method_option
     def clone(context_params, internal_trigger=false)
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require 'ruby-debug';Debugger.start
+      debugger
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
       version             = options["version"]
