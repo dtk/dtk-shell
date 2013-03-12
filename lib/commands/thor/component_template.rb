@@ -26,7 +26,18 @@ module DTK::Client
       return response
     end
 
-    desc "[COMPONENT-TEMPLATE-NAME/ID] list [nodes] [--module MODULE-NAME]", "List all nodes for given component template. Optional filter by modul name."
+    desc "COMPONENT-TEMPLATE-NAME/ID list-nodes [--module MODULE-NAME]", "List all nodes for given component template. Optional filter by modul name."
+    method_option :list, :type => :boolean, :default => false
+    method_option "module",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "MODULE-LIST-FILTER",
+      :desc => "Module list filter"
+    def list_nodes(context_params)
+      context_params.method_arguments = ["nodes"]
+      list(context_params)
+    end
+
+    desc "list [--module MODULE-NAME]", "List all component templates. Optional filter by modul name."
     method_option :list, :type => :boolean, :default => false
     method_option "module",:aliases => "-m" ,
       :type => :string, 

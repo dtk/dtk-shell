@@ -51,10 +51,24 @@ module DTK::Client
        post rest_url("node/info"), post_body
     end
 
-    desc "[NODE-NAME/ID] list [components|attributes]","List components that are on the node instance."
+    desc "NODE-NAME/ID list-components","List components that are on the node instance."
+    method_option :list, :type => :boolean, :default => false
+    def list_components(context_params)
+      context_params.method_arguments = ["components"]
+      list(context_params)
+    end
+
+    desc "NODE-NAME/ID list-attributes","List attributes that are on the node instance."
+    method_option :list, :type => :boolean, :default => false
+    def list_attributes(context_params)
+      context_params.method_arguments = ["attributes"]
+      list(context_params)
+    end
+
+    desc "list","List components that are on the node instance."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
-      node_id, about = context_params.retrieve_arguments([:node_id,:option_1],method_argument_names)
+      node_id, about = context_params.retrieve_arguments([:node_id,:option_1],method_argument_names||="")
       
       if node_id.nil?
         response = post rest_url("node/list")
