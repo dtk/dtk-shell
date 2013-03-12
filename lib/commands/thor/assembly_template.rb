@@ -25,9 +25,31 @@ module DTK::Client
       post rest_url("assembly/info"), post_body
     end
 
+    desc "ASSEMBLY-TEMPLATE-NAME/ID list-nodes [--service SERVICE-NAME]", "List all nodes for given assembly template."
+    method_option :list, :type => :boolean, :default => false
+    method_option "service",:aliases => "-s" ,
+      :type => :string, 
+      :banner => "SERVICE-LIST-FILTER",
+      :desc => "Service list filter"
+    def list_nodes(context_params)
+      context_params.method_arguments = ["nodes"]
+      list(context_params)
+    end
+
+    desc "ASSEMBLY-TEMPLATE-NAME/ID list-components [--service SERVICE-NAME]", "List all components for given assembly template."
+    method_option :list, :type => :boolean, :default => false
+    method_option "service",:aliases => "-s" ,
+      :type => :string, 
+      :banner => "SERVICE-LIST-FILTER",
+      :desc => "Service list filter"
+    def list_components(context_params)
+      context_params.method_arguments = ["components"]
+      list(context_params)
+    end
+
 #    desc "[ASSEMBLY-TEMPLATE-NAME/ID] show [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
     #TODO: temporaily taking out target option
-    desc "[ASSEMBLY-TEMPLATE-NAME/ID] list [nodes|components] [--service SERVICE-NAME]", "List all nodes/components for given assembly template."
+    desc "list [--service SERVICE-NAME]", "List all assembly templates."
     method_option :list, :type => :boolean, :default => false
     method_option "service",:aliases => "-s" ,
       :type => :string, 

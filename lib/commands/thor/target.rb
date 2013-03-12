@@ -13,12 +13,14 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :command_only => {
           :self => [
-            ["list"," list [templates]","# List targets or their templates."]
+            ["list"," list","# List targets."],
+            ["list-templates"," list-templates","# List target templates."]
           ]
         },
         :identifier_only => {
           :self      => [
-            ["list","list [nodes|assemblies]","# List nodes/assembly instances in given targets."]
+            ["list-nodes","list-nodes","# List node instances in given targets."],
+            ["list-assemblies","list-assemblies","# List assembly instances in given targets."]
           ]
         }
       })
@@ -73,9 +75,27 @@ module DTK::Client
       return response
     end
 
-    desc "[TARGET-NAME/ID] list [nodes|assemblies|templates]","List nodes/assembly instances in given targets or target templates."
+    desc "TARGET-NAME/ID list-nodes","List node instances in given targets or target templates."
+    def list_nodes(context_params)
+      context_params.method_arguments = ["nodes"]
+      list(context_params)
+    end
+
+    desc "TARGET-NAME/ID list-assemblies","List assembly instances in given targets or target templates."
+    def list_assemblies(context_params)
+      context_params.method_arguments = ["assemblies"]
+      list(context_params)
+    end
+
+    desc "list-templates","List target templates."
+    def list_templates(context_params)
+      context_params.method_arguments = ["templates"]
+      list(context_params)
+    end
+
+    desc "list","List targets."
     def list(context_params)
-      target_id, about = context_params.retrieve_arguments([:target_id, :option_1],method_argument_names)
+      target_id, about = context_params.retrieve_arguments([:target_id, :option_1],method_argument_names||="")
       if target_id.nil?
         post_body = (about||'').include?("template") ?  { :subtype => :template } : {}
         response  = post rest_url("target/list"), post_body

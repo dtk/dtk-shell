@@ -57,7 +57,8 @@ module DTK::Client
         },
         :identifier_only => {
           :self      => [
-            ["list","list [assembly-templates|modules]","# List assembly templates associated with service module."]
+            ["list-assembly-templates","list-assembly-templates","# List assembly templates associated with service module."],
+            ["list-modules","list-modules","# List modules associated with service module."]
           ]
         }
       })
@@ -73,7 +74,21 @@ module DTK::Client
       response = post rest_url('service_module/info')
     end
 
-    desc "[SERVICE-NAME/ID] list [assembly-templates|modules] --remote","List service modules (local/remote), assembly/component templates or modules associated with service."
+    desc "SERVICE-NAME/ID list-assembly-templates","List assembly templates associated with service."
+    method_option :remote, :type => :boolean, :default => false
+    def list_assembly_templates(context_params)
+      context_params.method_arguments = ["assembly-templates"]
+      list(context_params)
+    end
+
+    desc "SERVICE-NAME/ID list-modules","List modules associated with service."
+    method_option :remote, :type => :boolean, :default => false
+    def list_modules(context_params)
+      context_params.method_arguments = ["modules"]
+      list(context_params)
+    end
+
+    desc "list --remote","List service modules (local/remote)."
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
       service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
