@@ -351,7 +351,7 @@ module DTK::Client
       return response
     end
 
-    desc "delete SERVICE-IDENTIFIER", "Delete service module and all items contained in it"
+    desc "delete SERVICE-IDENTIFIER [-y] [-p]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)

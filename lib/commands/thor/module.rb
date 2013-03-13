@@ -64,7 +64,7 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete MODULE-IDENTIFIER", "Delete component module and all items contained in it"
+    desc "delete MODULE-IDENTIFIER [-y] [-p]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
@@ -87,7 +87,7 @@ module DTK::Client
       if options.purge?
         modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
         module_location = "#{modules_path}/#{module_name}" unless (module_name.nil? || module_name.empty?)
-        
+
         FileUtils.rm_rf("#{module_location}") if module_location
       end
 
