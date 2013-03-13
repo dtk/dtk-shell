@@ -353,6 +353,7 @@ module DTK::Client
 
     desc "delete SERVICE-IDENTIFIER", "Delete service module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
       service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
@@ -365,6 +366,16 @@ module DTK::Client
         :service_module_id => service_module_id
       }
       response = post rest_url("service_module/delete"), post_body
+      return response unless response.ok?
+      module_name = response.data(:module_name)
+
+      if options.purge?
+        modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:service_location))
+        module_location = "#{modules_path}/#{module_name}" unless (module_name.nil? || module_name.empty?)
+        
+        FileUtils.rm_rf("#{module_location}") if module_location
+      end
+
       # when changing context send request for getting latest services instead of getting from cache
       @@invalidate_map << :service_module
 

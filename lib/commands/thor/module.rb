@@ -66,10 +66,12 @@ module DTK::Client
     #### create and delete commands ###
     desc "delete MODULE-IDENTIFIER", "Delete component module and all items contained in it"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
       component_module_id, force_delete = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
+      module_location = nil
 
-     unless (options.force? || force_delete)
+      unless (options.force? || force_delete)
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
       end
@@ -81,6 +83,14 @@ module DTK::Client
       return response unless response.ok?
       module_name = response.data(:module_name)
       Helper(:git_repo).unlink_local_clone?(:component_module,module_name)
+
+      if options.purge?
+        modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
+        module_location = "#{modules_path}/#{module_name}" unless (module_name.nil? || module_name.empty?)
+        
+        FileUtils.rm_rf("#{module_location}") if module_location
+      end
+
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :module_component
     end
