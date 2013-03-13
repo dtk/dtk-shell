@@ -28,7 +28,8 @@ module DTK
       def initialize(skip_caching=false)
 
         @cached_tasks, @dirs = DTK::Shell::CachedTasks.new, []
-        @active_context = ActiveContext.new
+        @active_context   = ActiveContext.new
+        @previous_context = nil
 
         # member used to hold current commands loaded for current command
         @context_commands = []
@@ -68,7 +69,19 @@ module DTK
       # Validates and changes context
       def change_context(args)
         begin
-            # jump to root
+          # check if we are doing switch context
+          if args.to_s.match(/\A\-\Z/)
+            if @previous_context
+              # swap 2 variables
+              @active_context, @previous_context = @previous_context, @active_context
+            end
+            return
+          end
+
+          # remember current context
+          @previous_context = @active_context.clone_me()
+
+          # jump to root
           reset if args.to_s.match(/^\//)
 
           # Validate and change context

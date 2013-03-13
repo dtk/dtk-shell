@@ -24,7 +24,6 @@ module DTK
         @render_data_type = nil
       end
 
-
       def clone_me()      
         return Marshal.load(Marshal.dump(self))
       end
