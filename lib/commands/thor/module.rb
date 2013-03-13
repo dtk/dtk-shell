@@ -82,11 +82,12 @@ module DTK::Client
       response = post(rest_url("component_module/delete"), post_body)
       return response unless response.ok?
       module_name = response.data(:module_name)
+      module_id   = response.data(:component_module_id)
       Helper(:git_repo).unlink_local_clone?(:component_module,module_name)
 
       if options.purge?
         modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
-        module_location = "#{modules_path}/#{module_name}" unless (module_name.nil? || module_name.empty?)
+        module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
 
         FileUtils.rm_rf("#{module_location}") if module_location
       end
