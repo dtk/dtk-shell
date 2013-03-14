@@ -356,9 +356,11 @@ module DTK::Client
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
+      module_id, module_info, module_location, modules_path = nil, nil, nil, nil
       service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       # add component_module_id/name required by info method
       context_params.add_context_to_params("module", "module", service_module_id)
+      module_info = info(context_params)
 
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
@@ -372,20 +374,20 @@ module DTK::Client
       return response unless response.ok?
       module_name = response.data(:module_name)
       
-      # delete local module directory
-      if options.purge?
-        module_id         = nil
-        module_location   = nil
-        module_info       = info(context_params)
-        module_id         = module_info["data"]["display_name"] if module_info["status"] == "ok"
-        modules_path      = OsUtil.module_clone_location(::Config::Configuration.get(:service_location))
-        module_location   = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
-        
-        FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
-      end
-
       # when changing context send request for getting latest services instead of getting from cache
       @@invalidate_map << :service_module
+
+      # delete local module directory
+      if options.purge?
+        raise DTK::Client::DtkValidationError, "Unable to delete local directory. Message: #{module_info['errors'].first['message']}." unless module_info["status"] == "ok"
+        module_id       = module_info["data"]["display_name"]
+        modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:service_location))
+        module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
+        
+        unless (module_location.nil? || ("#{modules_path}/" == module_location))
+          FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
+        end
+      end
 
       return response
     end
