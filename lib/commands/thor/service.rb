@@ -71,7 +71,8 @@ module DTK::Client
       post_body = {
        :service_module_id => service_module_id
       }
-      response = post rest_url('service_module/info')
+
+      response = post rest_url('service_module/info'), post_body
     end
 
     desc "SERVICE-NAME/ID list-assembly-templates","List assembly templates associated with service."
@@ -356,6 +357,8 @@ module DTK::Client
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
       service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      # add component_module_id/name required by info method
+      context_params.add_context_to_params("module", "module", service_module_id)
 
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
@@ -368,13 +371,17 @@ module DTK::Client
       response = post rest_url("service_module/delete"), post_body
       return response unless response.ok?
       module_name = response.data(:module_name)
-      module_id   = response.data(:service_module_id)
       
+      # delete local module directory
       if options.purge?
-        modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:service_location))
-        module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
+        module_id         = nil
+        module_location   = nil
+        module_info       = info(context_params)
+        module_id         = module_info["data"]["display_name"] if module_info["status"] == "ok"
+        modules_path      = OsUtil.module_clone_location(::Config::Configuration.get(:service_location))
+        module_location   = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
         
-        FileUtils.rm_rf("#{module_location}") if module_location
+        FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
       end
 
       # when changing context send request for getting latest services instead of getting from cache

@@ -69,8 +69,9 @@ module DTK::Client
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
       component_module_id, force_delete = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
-      module_location = nil
-
+      # add component_module_id/name required by info method
+      context_params.add_context_to_params("module", "module", component_module_id)
+      
       unless (options.force? || force_delete)
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
@@ -82,14 +83,18 @@ module DTK::Client
       response = post(rest_url("component_module/delete"), post_body)
       return response unless response.ok?
       module_name = response.data(:module_name)
-      module_id   = response.data(:component_module_id)
       Helper(:git_repo).unlink_local_clone?(:component_module,module_name)
 
+      # delete local module directory
       if options.purge?
-        modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
-        module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
+        module_id         = nil
+        module_location   = nil
+        module_info       = info(context_params)
+        module_id         = module_info["data"]["display_name"] if module_info["status"] == "ok"
+        modules_path      = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
+        module_location   = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
 
-        FileUtils.rm_rf("#{module_location}") if module_location
+        FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
       end
 
       # when changing context send request for getting latest modules instead of getting from cache
@@ -172,7 +177,6 @@ module DTK::Client
     #### list and info commands ###
     desc "MODULE-NAME/ID info", "Get information about given component module."
     def info(context_params)
-      
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       
       post_body = {
