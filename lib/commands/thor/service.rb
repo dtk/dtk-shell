@@ -359,7 +359,7 @@ module DTK::Client
       module_id, module_info, module_location, modules_path = nil, nil, nil, nil
       service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       # add component_module_id/name required by info method
-      context_params.add_context_to_params("module", "module", service_module_id)
+      context_params.add_context_to_params("service", "service", service_module_id)
       module_info = info(context_params)
 
       unless options.force?
