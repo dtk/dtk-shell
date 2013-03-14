@@ -67,7 +67,7 @@ module DTK::Client
     ##MERGE-QUESTION: need to add options of what info is about
     desc "SERVICE-NAME/ID info", "Provides information about specified service module"
     def info(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_name!],method_argument_names)
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       post_body = {
        :service_module_id => service_module_id
       }
