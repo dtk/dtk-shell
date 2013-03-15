@@ -64,12 +64,17 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete MODULE-IDENTIFIER", "Delete component module and all items contained in it"
+    desc "delete MODULE-IDENTIFIER [-y] [-p]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
+      module_id, module_info, module_location, modules_path = nil, nil, nil, nil
       component_module_id, force_delete = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
-
-     unless (options.force? || force_delete)
+      # add component_module_id/name required by info method
+      context_params.add_context_to_params("module", "module", component_module_id)
+      module_info = info(context_params)
+      
+      unless (options.force? || force_delete)
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
       end
@@ -81,8 +86,23 @@ module DTK::Client
       return response unless response.ok?
       module_name = response.data(:module_name)
       Helper(:git_repo).unlink_local_clone?(:component_module,module_name)
+      
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :module_component
+
+      # delete local module directory
+      if options.purge?
+        raise DTK::Client::DtkValidationError, "Unable to delete local directory. Message: #{module_info['errors'].first['message']}." unless module_info["status"] == "ok"
+        module_id       = module_info["data"]["display_name"]
+        modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
+        module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
+
+        unless (module_location.nil? || ("#{modules_path}/" == module_location))
+          FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
+        end
+      end
+
+      return response
     end
 
     #
@@ -161,7 +181,6 @@ module DTK::Client
     #### list and info commands ###
     desc "MODULE-NAME/ID info", "Get information about given component module."
     def info(context_params)
-      
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       
       post_body = {

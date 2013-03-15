@@ -67,11 +67,12 @@ module DTK::Client
     ##MERGE-QUESTION: need to add options of what info is about
     desc "SERVICE-NAME/ID info", "Provides information about specified service module"
     def info(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_name!],method_argument_names)
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       post_body = {
        :service_module_id => service_module_id
       }
-      response = post rest_url('service_module/info')
+
+      response = post rest_url('service_module/info'), post_body
     end
 
     desc "SERVICE-NAME/ID list-assembly-templates","List assembly templates associated with service."
@@ -351,10 +352,15 @@ module DTK::Client
       return response
     end
 
-    desc "delete SERVICE-IDENTIFIER", "Delete service module and all items contained in it"
+    desc "delete SERVICE-IDENTIFIER [-y] [-p]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
+      module_id, module_info, module_location, modules_path = nil, nil, nil, nil
       service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      # add component_module_id/name required by info method
+      context_params.add_context_to_params("service", "service", service_module_id)
+      module_info = info(context_params)
 
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
@@ -365,8 +371,23 @@ module DTK::Client
         :service_module_id => service_module_id
       }
       response = post rest_url("service_module/delete"), post_body
+      return response unless response.ok?
+      module_name = response.data(:module_name)
+      
       # when changing context send request for getting latest services instead of getting from cache
       @@invalidate_map << :service_module
+
+      # delete local module directory
+      if options.purge?
+        raise DTK::Client::DtkValidationError, "Unable to delete local directory. Message: #{module_info['errors'].first['message']}." unless module_info["status"] == "ok"
+        module_id       = module_info["data"]["display_name"]
+        modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:service_location))
+        module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
+        
+        unless (module_location.nil? || ("#{modules_path}/" == module_location))
+          FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
+        end
+      end
 
       return response
     end
