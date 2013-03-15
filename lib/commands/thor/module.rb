@@ -293,7 +293,8 @@ module DTK::Client
     ##
     #
     # internal_trigger: this flag means that other method (internal) has trigger this.
-    #                   This will change behaviour of method
+    #                   This will change behaviour of method in such way that edit will not be 
+    #                   triggered after it.
     #
     desc "MODULE-NAME/ID clone [-v VERSION]", "Clone into client the component module files"
     version_method_option
