@@ -40,6 +40,11 @@ def run_shell_command()
   # prompt init
   prompt = DTK::Shell::Context::DTK_ROOT_PROMPT
 
+  # trap CTRL-C and remove current text without leaving the dtk-shell
+  trap("INT"){
+    raise Interrupt
+  }
+  
   # runtime part
   begin
     while line = Readline.readline(prompt, true)
@@ -49,11 +54,13 @@ def run_shell_command()
     # do nothing
   rescue Interrupt => e
     #system('stty', stty_save) # Restore
-    puts
+    puts "\n"
+    retry
   rescue Exception => e
     puts "[CLI INTERNAL ERROR] #{e.message}"
     puts e.backtrace
   ensure
+    puts "\n"
     # logout
     DTK::Client::Session.logout()
     # save users history
