@@ -42,6 +42,7 @@ def run_shell_command()
 
   # trap CTRL-C and remove current text without leaving the dtk-shell
   trap("INT"){
+    puts "\n"
     raise Interrupt
   }
   
@@ -54,13 +55,13 @@ def run_shell_command()
     # do nothing
   rescue Interrupt => e
     #system('stty', stty_save) # Restore
-    puts "\n"
+    
     retry
   rescue Exception => e
     puts "[CLI INTERNAL ERROR] #{e.message}"
     puts e.backtrace
   ensure
-    puts "\n"
+    puts "\n" unless e.is_a? DTK::Shell::ExitSignal
     # logout
     DTK::Client::Session.logout()
     # save users history
