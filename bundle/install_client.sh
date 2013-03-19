@@ -80,6 +80,7 @@ function check_native_gems {
       echo "yum -y install ruby-devel openssl-devel"
       echo "yum -y groupinstall "Development tools""
     fi;
+    exit 1
   fi;
 }
 
