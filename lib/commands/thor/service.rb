@@ -211,12 +211,14 @@ module DTK::Client
     # internal_trigger: this flag means that other method (internal) has trigger this.
     #                   This will change behaviour of method
     #
-    desc "SERVICE-NAME/ID clone [-v VERSION]", "Clone into client the service module files"
+    desc "SERVICE-NAME/ID clone [-v VERSION] [-n]", "Clone into client the service module files. Use -n to skip edit prompt."
+    method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
     version_method_option
     def clone(context_params, internal_trigger=false)
       service_module_id   = context_params.retrieve_arguments([:service_id!],method_argument_names)
       service_module_name = context_params.retrieve_arguments([:service_id],method_argument_names)
       version             = options["version"]
+      internal_trigger    = true if options.skip_edit?
 
       # if this is not name it will not work, we need module name
       if service_module_name.to_s =~ /^[0-9]+$/

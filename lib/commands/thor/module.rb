@@ -330,12 +330,14 @@ module DTK::Client
     #                   This will change behaviour of method in such way that edit will not be 
     #                   triggered after it.
     #
-    desc "MODULE-NAME/ID clone [-v VERSION]", "Clone into client the component module files"
+    desc "MODULE-NAME/ID clone [-v VERSION] [-n]", "Clone into client the component module files. Use -n to skip edit prompt."
+    method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
     version_method_option
     def clone(context_params, internal_trigger=false)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
       version             = options["version"]
+      internal_trigger    = true if options.skip_edit?
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
