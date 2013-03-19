@@ -67,6 +67,23 @@ function check_git_config {
   fi;
 }
 
+# checks if native gems can be installed
+function check_native_gems {
+  gem install linecache --no-rdoc --no-ri  >/dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    echo "An error occured while trying to install native ruby gems on your system."
+    echo "Please make sure all required dependencies are installed before continuing."
+    echo -e "\nHint: you can install the dependencies by running this command:"
+    if [[ `which apt-get` ]]; then
+      echo "apt-get install build-essential libopenssl-ruby ruby-dev"
+    elif [[ `which yum` ]]; then
+      echo "yum -y install ruby-devel openssl-devel"
+      echo "yum -y groupinstall "Development tools""
+    fi;
+    exit 1
+  fi;
+}
+
 # installs gem if not already installed
 function install_gem {
   gem_exists $1
@@ -145,6 +162,7 @@ echo "Welcome to DTK CLI Client installation!"
 # check pre-requsists
 check_for_ruby
 check_for_ruby_gems
+check_native_gems
 
 echo "Wizard is installing necessery gems ..."
 

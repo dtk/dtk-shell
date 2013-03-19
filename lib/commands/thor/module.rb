@@ -37,6 +37,12 @@ module DTK::Client
         return module_name
       end
 
+      # check for delimiter '/', if present returns namespace and name for module/service
+      # returns: namespace, name
+      def get_namespace_and_name(input_remote_name)
+        (input_remote_name||'').include?('/') ? input_remote_name.split('/') : [nil, input_remote_name]
+      end
+
     end
 
     def self.whoami()
@@ -230,7 +236,7 @@ module DTK::Client
     def import(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
-      local_module_name = remote_module_name
+      remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name)
         raise DtkError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
       end
@@ -262,20 +268,29 @@ module DTK::Client
       Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
     end
     
-    desc "delete-remote REMOTE-MODULE", "Delete remote component module"
+    desc "delete-remote [NAME-SPACE/]REMOTE-MODULE", "Delete remote component module"
     def delete_remote(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+
+      remote_namespace, remote_name = get_namespace_and_name(remote_module_name)
+
       post_body = {
-       :remote_module_name => remote_module_name
+       :remote_module_name      => remote_name,
+       :remote_module_namespace => remote_namespace
       }
       post rest_url("component_module/delete_remote"), post_body
     end
 
-    desc "MODULE-NAME/ID export", "Export component module to remote repository."
+    desc "MODULE-NAME/ID export [[NAME-SPACE/]REMOTE-MODULE-NAME]", "Export component module to remote repository."
     def export(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
+      component_module_id, input_remote_name = context_params.retrieve_arguments([:module_id!, :option_1],method_argument_names)
+
+      remote_namespace, remote_name = get_namespace_and_name(input_remote_name)
+      
       post_body = {
-        :component_module_id => component_module_id
+        :component_module_id     => component_module_id,
+        :remote_component_namespace => remote_namespace,
+        :remote_component_name      => remote_name
       }
 
       post rest_url("component_module/export"), post_body

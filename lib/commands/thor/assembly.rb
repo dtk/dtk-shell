@@ -108,6 +108,11 @@ module DTK::Client
       assembly_stop(assembly_id, node_pattern)
     end
 
+    desc "ASSEMBLY-NAME/ID cancel-task TASK_ID", "Cancels task."
+    def cancel_task(context_params)
+      task_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      response = post rest_url("task/cancel_task"), { :task_id => task_id }
+    end
 
     desc "ASSEMBLY-NAME/ID create-new-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Create a new assembly template from workspace assembly" 
     def create_new_template(context_params)        
@@ -804,6 +809,7 @@ TODO: will put in dot release and will rename to 'extend'
 
         return response
       end
+
 
     end
   end
