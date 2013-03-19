@@ -53,10 +53,13 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :all => {
           :node      => [
-            ['list',"list [components|attributes|tasks] [FILTER] [--list] ","# List  nodes or components, attributes associated with assembly's node."]
+            ['list',"list [FILTER] [--list] ","# List nodes"],
+            ['list-components',"list-components [FILTER] [--list] ","# List components associated with assembly's node."],
+            ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with assembly's node."]
           ],
           :component => [
-            ['list',"list [components|attributes] [FILTER] [--list] ","# List components or attributes associated with given component."]
+            ['list',"list [FILTER] [--list] ","# List components."],
+            ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."]
           ]
         },
         :command_only => {
@@ -78,8 +81,6 @@ module DTK::Client
         }
       })
     end
-
-    desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
 
     desc "ASSEMBLY-NAME/ID start [NODE-ID-PATTERN]", "Starts all assembly's nodes,  specific nodes can be selected via node id regex."
     def start(context_params)
@@ -223,12 +224,40 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("task/execute"), "task_id" => task_id
     end
 
+    desc "ASSEMBLY-NAME/ID list-nodes [FILTER] [--list] ","List nodes associated with assembly."
+    method_option :list, :type => :boolean, :default => false
+    def list_nodes(context_params)
+      context_params.method_arguments = ["nodes"]
+      list(context_params)
+    end
+
+    desc "ASSEMBLY-NAME/ID list-components [FILTER] [--list] ","List components associated with assembly."
+    method_option :list, :type => :boolean, :default => false
+    def list_components(context_params)
+      context_params.method_arguments = ["components"]
+      list(context_params)
+    end
+
+    desc "ASSEMBLY-NAME/ID list-attributes [FILTER] [--list] ","List attributes associated with assembly."
+    method_option :list, :type => :boolean, :default => false
+    def list_attributes(context_params)
+      context_params.method_arguments = ["attributes"]
+      list(context_params)
+    end
+
+    desc "ASSEMBLY-NAME/ID list-tasks [FILTER] [--list] ","List tasks associated with assembly."
+    method_option :list, :type => :boolean, :default => false
+    def list_tasks(context_params)
+      context_params.method_arguments = ["tasks"]
+      list(context_params)
+    end
+
     #TODO: put in flag to control detail level
-    desc "[ASSEMBLY-NAME/ID] list [nodes|components|attributes|tasks] [FILTER] [--list] ","List assemblies, nodes, components, attributes or tasks associated with assembly."
+    desc "[ASSEMBLY-NAME/ID] list [FILTER] [--list] ","List assemblies."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
       assembly_id, node_id, component_id, attribute_id, about, filter = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1,:option_2],method_argument_names)
-
+      
       if about
         case about
           when "nodes":

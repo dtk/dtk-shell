@@ -234,6 +234,7 @@ module DTK; module Client; class CommandHelper
         commit_sha = commit_shas[:local_sha]
       end
 
+      # diffs = DiffSummary.diff_remote(repo,"remotes/#{remote_branch_ref}")
       diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
       commit_sha = repo.find_remote_sha(remote_branch_ref)
       

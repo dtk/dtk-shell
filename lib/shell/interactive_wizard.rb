@@ -71,11 +71,11 @@ module DTK
 
             results[input_name] = input
           end
+
+          return results
         rescue Interrupt => e
           puts ""
-          results = {}
-        ensure
-          return results
+          raise DTK::Client::DtkValidationError, "Exiting the wizard ..."
         end
       end
 

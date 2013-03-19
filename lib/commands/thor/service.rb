@@ -57,7 +57,8 @@ module DTK::Client
         },
         :identifier_only => {
           :self      => [
-            ["list","list assembly-templates","# List assembly templates associated with service module."]
+            ["list-assembly-templates","list-assembly-templates","# List assembly templates associated with service module."],
+            ["list-modules","list-modules","# List modules associated with service module."]
           ]
         }
       })
@@ -66,14 +67,29 @@ module DTK::Client
     ##MERGE-QUESTION: need to add options of what info is about
     desc "SERVICE-NAME/ID info", "Provides information about specified service module"
     def info(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_name!],method_argument_names)
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       post_body = {
        :service_module_id => service_module_id
       }
-      response = post rest_url('service_module/info')
+
+      response = post rest_url('service_module/info'), post_body
     end
 
-    desc "[SERVICE-NAME/ID] list [assembly-templates] --remote","List service modules (local/remote) or assembly/component templates associated with service module."
+    desc "SERVICE-NAME/ID list-assembly-templates","List assembly templates associated with service."
+    method_option :remote, :type => :boolean, :default => false
+    def list_assembly_templates(context_params)
+      context_params.method_arguments = ["assembly-templates"]
+      list(context_params)
+    end
+
+    desc "SERVICE-NAME/ID list-modules","List modules associated with service."
+    method_option :remote, :type => :boolean, :default => false
+    def list_modules(context_params)
+      context_params.method_arguments = ["modules"]
+      list(context_params)
+    end
+
+    desc "list --remote","List service modules (local/remote)."
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
       service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
@@ -86,19 +102,42 @@ module DTK::Client
         data_type = :module
         action    = options.remote? ? "list_remote" : "list"
 
+        response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
       else
         # TODO: this is temp; will shortly support this
-        raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies or component templates" if options.remote?
-        raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for list for current context level. Possible type options: 'assembly-templates'" unless about == "assembly-templates"
+        raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies, component templates or modules" if options.remote?
+        raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for list for current context level. Possible type options: 'assembly-templates'" unless(about == "assembly-templates" || about == "modules")
         
-        data_type        = :assembly_template
-        action           = "list_assemblies"
-        post_body        = { :service_module_id => service_module_id }
+        if about
+          case about
+          when "assembly-templates":
+            data_type        = :assembly_template
+            action           = "list_assemblies"
+            post_body        = { :service_module_id => service_module_id }
+
+            response = post rest_url("service_module/#{action}"), post_body
+          when "modules":
+            ids       = []
+            data_type = :component
+            post_body = {
+              :service_module_id => service_module_id,
+              :about => 'components'
+            }
+
+            response = post rest_url("service_module/info_about"), post_body
+            return response unless response.ok?
+            response["data"].collect{|a| ids<<a["id"].to_i}
+
+            post_body = { :assemblies => ids }
+            response  = post rest_url("assembly/list_modules"), post_body
+          else
+            raise_validation_error_method_usage('list')
+          end 
+        end
       end
 
-      response = post rest_url("service_module/#{action}"), post_body
-      response.render_table(data_type)
+      response.render_table(data_type) unless response.nil?
 
       response
     end
@@ -172,12 +211,14 @@ module DTK::Client
     # internal_trigger: this flag means that other method (internal) has trigger this.
     #                   This will change behaviour of method
     #
-    desc "SERVICE-NAME/ID clone [-v VERSION]", "Clone into client the service module files"
+    desc "SERVICE-NAME/ID clone [-v VERSION] [-n]", "Clone into client the service module files. Use -n to skip edit prompt."
+    method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
     version_method_option
     def clone(context_params, internal_trigger=false)
       service_module_id   = context_params.retrieve_arguments([:service_id!],method_argument_names)
       service_module_name = context_params.retrieve_arguments([:service_id],method_argument_names)
       version             = options["version"]
+      internal_trigger    = true if options.skip_edit?
 
       # if this is not name it will not work, we need module name
       if service_module_name.to_s =~ /^[0-9]+$/
@@ -313,10 +354,15 @@ module DTK::Client
       return response
     end
 
-    desc "delete SERVICE-IDENTIFIER", "Delete service module and all items contained in it"
+    desc "delete SERVICE-IDENTIFIER [-y] [-p]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
+      module_id, module_info, module_location, modules_path = nil, nil, nil, nil
       service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      # add component_module_id/name required by info method
+      context_params.add_context_to_params("service", "service", service_module_id)
+      module_info = info(context_params)
 
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
@@ -327,8 +373,23 @@ module DTK::Client
         :service_module_id => service_module_id
       }
       response = post rest_url("service_module/delete"), post_body
+      return response unless response.ok?
+      module_name = response.data(:module_name)
+      
       # when changing context send request for getting latest services instead of getting from cache
       @@invalidate_map << :service_module
+
+      # delete local module directory
+      if options.purge?
+        raise DTK::Client::DtkValidationError, "Unable to delete local directory. Message: #{module_info['errors'].first['message']}." unless module_info["status"] == "ok"
+        module_id       = module_info["data"]["display_name"]
+        modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:service_location))
+        module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
+        
+        unless (module_location.nil? || ("#{modules_path}/" == module_location))
+          FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
+        end
+      end
 
       return response
     end

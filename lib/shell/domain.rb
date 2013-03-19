@@ -9,10 +9,19 @@ module DTK
       def initialize
         @current_context  = ActiveContext.new
         @method_arguments = []
+        @thor_options          = nil
       end
 
       def add_context_to_params(context_name, entity_name, context_value = nil)
         @current_context.push_new_context(context_name, entity_name, context_value)
+      end
+
+      def forward_options(options)
+        @thor_options = options
+      end
+
+      def get_forwarded_thor_option(option_key)
+        return @thor_options ? @thor_options[option_key] : nil
       end
 
       def retrieve_arguments(mapping, method_info = nil)

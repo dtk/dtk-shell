@@ -16,10 +16,27 @@ module DTK::Client
       not_implemented
     end
 
-    desc "[LIBRARY ID/NAME] list [nodes|components|assemblies]","Show nodes, components, or assemblies associated with library"
-    # def show(arg1,arg2)
+    desc "LIBRARY ID/NAME list-nodes","Show nodes associated with library"
+    def list_nodes(context_params)
+      context_params.method_arguments = ["nodes"]
+      list(context_params)
+    end
+
+    desc "LIBRARY ID/NAME list-components","Show components associated with library"
+    def list_components(context_params)
+      context_params.method_arguments = ["components"]
+      list(context_params)
+    end
+
+    desc "LIBRARY ID/NAME list-assemblies","Show assemblies associated with library"
+    def list_assemblies(context_params)
+      context_params.method_arguments = ["assemblies"]
+      list(context_params)
+    end
+
+    desc "list","Show nodes, components, or assemblies associated with library"
     def list(context_params)
-      library_id, about = context_params.retrieve_arguments([:library_id, :option_1],method_argument_names)
+      library_id, about = context_params.retrieve_arguments([:library_id, :option_1],method_argument_names||="")
       if library_id.nil?
         search_hash = SearchHash.new()
         search_hash.cols = pretty_print_cols()
