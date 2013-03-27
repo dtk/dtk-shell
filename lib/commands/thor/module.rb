@@ -36,13 +36,6 @@ module DTK::Client
         raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if module_name.nil?
         return module_name
       end
-
-      # check for delimiter '/', if present returns namespace and name for module/service
-      # returns: namespace, name
-      def get_namespace_and_name(input_remote_name)
-        (input_remote_name||'').include?('/') ? input_remote_name.split('/') : [nil, input_remote_name]
-      end
-
     end
 
     def self.whoami()

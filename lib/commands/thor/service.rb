@@ -148,7 +148,8 @@ module DTK::Client
 
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
-      local_module_name = remote_module_name
+      remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
+
       version = options["version"]
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:service_module,local_module_name)
         raise DtkValidationError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
@@ -182,13 +183,18 @@ module DTK::Client
       Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
     end
 
-    desc "SERVICE-NAME/ID export", "Export service module to remote repo"
+    desc "SERVICE-NAME/ID export [[NAME-SPACE/]REMOTE-MODULE-NAME]","Export service module to remote repository"
     def export(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
+      service_module_id, input_remote_name = context_params.retrieve_arguments([:service_id!, :option_1],method_argument_names)
+
+      remote_namespace, remote_name = get_namespace_and_name(input_remote_name)
 
       post_body = {
-       :service_module_id => service_module_id
+       :service_module_id          => service_module_id,
+       :remote_component_name      => remote_name,
+       :remote_component_namespace => remote_namespace
       }
+
       post rest_url("service_module/export"), post_body
     end
 
