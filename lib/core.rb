@@ -94,7 +94,7 @@ module DTK
             error_code      = nil
             error_timeout   = nil
             error_on_server = nil
-            #TODO: below just 'captures' first error
+            #TODO:  below just 'captures' first error
             response_ruby_obj['errors'].each do |err|
               error_msg       +=  err["message"] unless err["message"].nil?
               error_msg       +=  err["error"]   unless err["error"].nil?
