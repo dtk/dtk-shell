@@ -133,12 +133,20 @@ def execute_shell_command(line, prompt)
       
       # we get command and hash params, will return Validation error if command is not valid
       entity_name, method_name, context_params, thor_options = @context.get_command_parameters(cmd,args)
-
-      # validate method
-      unless @context.method_valid?(method_name)
-        raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
+      # get all next-context-candidates (e.g. for assembly get all assembly_names)
+      context_candidates = @context.get_ac_candidates_for_context(@context.active_context.last_context(), @context.active_context())
+      
+      # check if command is executed from parent context (e.g assembly_name list-nodes)
+      if context_candidates.include?(method_name)
+        context_params.add_context_to_params(method_name, entity_name, method_name)
+        method_name = context_params.method_arguments.first
+      else
+        #validate method
+        unless @context.method_valid?(method_name)
+          raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
+        end
       end
-
+      
       # execute command via Thor
       top_level_execute(entity_name, method_name, context_params, thor_options, true)
 
