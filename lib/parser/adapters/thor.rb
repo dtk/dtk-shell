@@ -245,8 +245,9 @@ module DTK
               return identifiers
             end          
           end
-
-          break if response["status"].eql?('ok')
+          unless response.nil?
+            break if response["status"].eql?('ok')
+          end
           sleep(1)
         end
 
