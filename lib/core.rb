@@ -112,7 +112,7 @@ module DTK
               raise DTK::Client::DtkError, "[FORBIDDEN] Your session has been suspended, please log in again."
             elsif error_code == "timeout"
               raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
-            elsif error_code == "connection_refused"
+            elsif (error_code == "connection_refused" || error_code == "error")
               raise DTK::Client::DtkError, "[CONNECTION REFUSED] Connection refused by server." 
             elsif error_internal
               where = (error_on_server ? "SERVER" : "CLIENT")
