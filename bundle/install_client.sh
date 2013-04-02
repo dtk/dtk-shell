@@ -50,7 +50,7 @@ function check_for_ruby_gems {
 # check for ruby doc generation
 function check_ruby_doc {
   ruby_doc_args="--no-rdoc --no-ri"
-  read -p "Do you want to generate documentation for the installed Ruby Gems? [yN]" -n 1 -r
+  read -p "Do you want to generate documentation for the installed Ruby Gems? [y/N]" -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
