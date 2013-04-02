@@ -51,6 +51,7 @@ function check_for_ruby_gems {
 function check_ruby_doc {
   ruby_doc_args="--no-rdoc --no-ri"
   read -p "Do you want to generate documentation for the installed Ruby Gems? [yN]" -n 1 -r
+  echo
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
       ruby_doc_args=""
@@ -211,6 +212,7 @@ if [ -f $file_path ]; then
   # file exists!
   REPLY=""
   read -p "Configuration $file_path exists. Overwrite? [y/N]: " -n 1 -r
+  echo
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
     rm $file_path
