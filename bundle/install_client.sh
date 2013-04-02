@@ -12,9 +12,11 @@ etc_location="/etc/dtk/"
 
 # print usage instructions
 function usage {
-  echo "usage: install_client.sh [username password dtk_server port]"
-  echo -e "\nIf all of the parameters are provided, installation is performed automatically without additional user input. "
-  echo -e "\nSee https://github.com/rich-reactor8/dtk-client/blob/master/README.md for additional information."
+cat << EOF
+usage: install_client.sh [username password dtk_server port]
+If all of the parameters are provided, installation is performed automatically without additional user input.
+See https://github.com/rich-reactor8/dtk-client/blob/master/README.md for additional information.
+EOF
 }
 
 # check if gem exists sets global var $found_gem to true or false
@@ -43,6 +45,17 @@ function check_for_ruby_gems {
     echo "Ruby gems are needed for installation, please install ruby gems before installing DTK CLI. Example: sudo apt-get install rubygems "
     exit 0
   fi
+}
+
+# check for ruby doc generation
+function check_ruby_doc {
+  ruby_doc_args="--no-rdoc --no-ri"
+  read -p "Do you want to generate documentation for the installed Ruby Gems? [yN]" -n 1 -r
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
+      ruby_doc_args=""
+  fi
+  export ruby_doc_args
 }
 
 # checks that git is configured properly
@@ -98,7 +111,7 @@ function install_gem {
 
     echo "Installing gem $1 (please wait) ..."
     # install gem
-    gem install $1
+    gem install $1 ${ruby_doc_args}
     # check installation
     gem_exists $1
 
@@ -154,10 +167,8 @@ elif [[ $# == 0 ]]; then
   autoinstall="false"
 fi;
 
-clear
-
 # install gems
-echo "Welcome to DTK CLI Client installation!"
+echo "Welcome to DTK CLI Client installation."
 
 # check pre-requsists
 check_for_ruby
