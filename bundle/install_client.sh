@@ -82,6 +82,7 @@ function check_git_config {
 
 # checks if native gems can be installed
 function check_native_gems {
+  echo "Checking for dependencies..."
   gem install linecache --no-rdoc --no-ri  >/dev/null 2>&1
   if [[ $? -ne 0 ]]; then
     echo "An error occured while trying to install native ruby gems on your system."
