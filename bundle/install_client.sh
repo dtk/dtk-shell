@@ -174,6 +174,7 @@ echo "Welcome to DTK CLI Client installation."
 check_for_ruby
 check_for_ruby_gems
 check_native_gems
+check_ruby_doc
 
 echo "Wizard is installing necessery gems ..."
 
