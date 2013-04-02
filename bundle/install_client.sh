@@ -250,10 +250,10 @@ if [[ ${autoinstall} == "false" ]]; then
   echo                                      
   printf "Enter server name: "
   read server
-  printf "Enter port number (default: 7000): "
-  read port
-  printf "Enable secure connection (default: true) [true,false]: "
-  read secure_connection
+  #printf "Enter port number (default: 7000): "
+ # read port
+ # printf "Enable secure connection (default: true) [true,false]: "
+ # read secure_connection
 
   while [[ $secure_connection != "true" ]] && [[ $secure_connection != "false" ]] && [[ $secure_connection != "" ]]; do
     printf "Invalid secure connection value. Possible values 'true' or 'false', or leave empty for default. "
@@ -261,8 +261,8 @@ if [[ ${autoinstall} == "false" ]]; then
     read secure_connection
   done
   
-  printf "Enter secure connection port number (default: 7002): "
-  read secure_connection_port
+ # printf "Enter secure connection port number (default: 7002): "
+ # read secure_connection_port
 elif [[ ${autoinstall} == "true" ]]; then
   username=$1
   password=$2
@@ -274,13 +274,13 @@ fi;
 
 # set default values
 if [[ $port == "" ]]; then
-  port="7000"
+  port="80"
 fi
 if [[ $secure_connection == "" ]]; then
   secure_connection="true"
 fi
 if [[ $secure_connection_port == "" ]]; then
-  secure_connection_port="7002"
+  secure_connection_port="443"
 fi
 
 # print to file
