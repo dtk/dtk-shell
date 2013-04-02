@@ -209,20 +209,17 @@ home_dir=`cd ~ && pwd`
 file_path="$home_dir/.dtkclient"
 if [ -f $file_path ]; then
   # file exists!
-  choice=""
-  while [[ $choice != "y" ]] && [[ $choice != "n" ]]; do
-    printf "Configuration $file_path exists! Overwrite (y/n): "
-    read choice
-  done
-
-  if [ $choice = "n" ]; then
-    # if choice is "no" then exit installation script
-    echo "Exiting, DTL CLI Client will use existing configuration $file_path."
-    exit
-  else
-    # if choice is "yes" then delete previous configuration
+  REPLY=""
+  read -p "Configuration $file_path exists. Overwrite? [y/N]: " -n 1 -r
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
     rm $file_path
+  else
+    echo "DTL CLI Client will use existing configuration: $file_path."
+    echo "Exiting..."
+    exit
   fi
+
 fi
 
 #create dtk dir in /etc
