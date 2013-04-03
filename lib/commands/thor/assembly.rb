@@ -767,7 +767,8 @@ TODO: will put in dot release and will rename to 'extend'
 
         # we expect action result ID
         response = post rest_url("assembly/start"), post_body
-        return response  if response.data(:errors)
+        raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
+        # return response  if response.data(:errors)
 
         action_result_id = response.data(:action_results_id)
 
@@ -804,7 +805,10 @@ TODO: will put in dot release and will rename to 'extend'
           :node_pattern => node_pattern_filter
         }
 
-        post rest_url("assembly/stop"), post_body
+        response = post rest_url("assembly/stop"), post_body
+        raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
+
+        return response
       end
 
 

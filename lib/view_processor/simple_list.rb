@@ -12,6 +12,7 @@ module DTK
         end
       end
      private
+      HIDE_FROM_VIEW = ["assembly_template"]
       def render_simple_assignment(key,val)
         key + KeyValSeperator + val.to_s + "\n" 
       end
@@ -27,16 +28,27 @@ module DTK
             :ident => (ident_info[:ident]||0) +IdentAdd,
             :nested_key => nested.keys.first
           }
+          ident_info_nested[:ident] += IdentAdd
+          ret << "#{ident_str(ident_info_nested[:ident])}#{nested.keys.first.upcase}\n"
           vals = nested.values.first
           vals = [vals] unless vals.kind_of?(Array)
           vals.each_with_index{|val,i|ret << render_ordered_hash(val,ident_info_nested,i+1)}
         end
         unless rest.empty?
+          rest = hide_from_view(rest)
           ret << render_ordered_hash(rest,ident_info.merge(:include_first_key => true))
         end
         ret
       end
 
+      def hide_from_view(ordered_hash)
+        ordered_hash.each do |k,v|
+          ordered_hash.delete_if{|k,v| HIDE_FROM_VIEW.include?(k)}
+        end
+        return ordered_hash
+      end
+
+      # Exclude  = ["op_status","assembly_template"]
       IdentAdd = 2
       def find_first_non_scalar(ordered_hash)
         found = nil
@@ -87,6 +99,7 @@ module DTK
             updated_els[k] = convert_to_string_form(v)
           end
         end
+        
         ordered_hash.merge(updated_els)
       end
 
@@ -106,13 +119,14 @@ module DTK
           :rest_prefix => rest_prefix,
           :sep => KeyValSeperator
         }
+
         SimpleListTemplate.result(template_bindings)
       end
       KeyValSeperator = ": "
 SimpleListTemplate = Erubis::Eruby.new <<eos
 <% keys = ordered_hash.keys %>
 <% first = keys.shift  %>
-<%= first_prefix %><%= ordered_hash[first] %><%= first_suffix %>
+<%= rest_prefix %><%= first_prefix.strip %><%= ordered_hash[first] %>
 <% keys.each do |k| %>
 <%= rest_prefix %><%= k %><%= sep  %><%= ordered_hash[k] %>
 <% end %>

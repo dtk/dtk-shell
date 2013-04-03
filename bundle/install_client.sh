@@ -12,9 +12,11 @@ etc_location="/etc/dtk/"
 
 # print usage instructions
 function usage {
-  echo "usage: install_client.sh [username password dtk_server port]"
-  echo -e "\nIf all of the parameters are provided, installation is performed automatically without additional user input. "
-  echo -e "\nSee https://github.com/rich-reactor8/dtk-client/blob/master/README.md for additional information."
+cat << EOF
+usage: install_client.sh [username password dtk_server port]
+If all of the parameters are provided, installation is performed automatically without additional user input.
+See https://github.com/rich-reactor8/dtk-client/blob/master/README.md for additional information.
+EOF
 }
 
 # check if gem exists sets global var $found_gem to true or false
@@ -45,6 +47,18 @@ function check_for_ruby_gems {
   fi
 }
 
+# check for ruby doc generation
+function check_ruby_doc {
+  ruby_doc_args="--no-rdoc --no-ri"
+  read -p "Do you want to generate documentation for the installed Ruby Gems? [y/N]" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
+      ruby_doc_args=""
+  fi
+  export ruby_doc_args
+}
+
 # checks that git is configured properly
 function check_git_config {
   if [[ `command -v git 2>&1` ]]; then
@@ -67,6 +81,24 @@ function check_git_config {
   fi;
 }
 
+# checks if native gems can be installed
+function check_native_gems {
+  echo "Checking for dependencies..."
+  gem install json --no-rdoc --no-ri  >/dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    echo "An error occured while trying to install native ruby gems on your system."
+    echo "Please make sure all required dependencies are installed before continuing."
+    echo -e "\nHint: you can install the dependencies by running this command:"
+    if [[ `which apt-get` ]]; then
+      echo "apt-get install build-essential libopenssl-ruby ruby-dev"
+    elif [[ `which yum` ]]; then
+      echo "yum -y install ruby-devel openssl-devel"
+      echo "yum -y groupinstall "Development tools""
+    fi;
+    exit 1
+  fi;
+}
+
 # installs gem if not already installed
 function install_gem {
   gem_exists $1
@@ -81,7 +113,7 @@ function install_gem {
 
     echo "Installing gem $1 (please wait) ..."
     # install gem
-    gem install $1
+    gem install $1 ${ruby_doc_args}
     # check installation
     gem_exists $1
 
@@ -137,14 +169,14 @@ elif [[ $# == 0 ]]; then
   autoinstall="false"
 fi;
 
-clear
-
 # install gems
-echo "Welcome to DTK CLI Client installation!"
+echo "Welcome to DTK CLI Client installation."
 
 # check pre-requsists
 check_for_ruby
 check_for_ruby_gems
+check_native_gems
+check_ruby_doc
 
 echo "Wizard is installing necessery gems ..."
 
@@ -178,20 +210,18 @@ home_dir=`cd ~ && pwd`
 file_path="$home_dir/.dtkclient"
 if [ -f $file_path ]; then
   # file exists!
-  choice=""
-  while [[ $choice != "y" ]] && [[ $choice != "n" ]]; do
-    printf "Configuration $file_path exists! Overwrite (y/n): "
-    read choice
-  done
-
-  if [ $choice = "n" ]; then
-    # if choice is "no" then exit installation script
-    echo "Exiting, DTL CLI Client will use existing configuration $file_path."
-    exit
-  else
-    # if choice is "yes" then delete previous configuration
+  REPLY=""
+  read -p "Configuration $file_path exists. Overwrite? [y/N]: " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
     rm $file_path
+  else
+    echo "DTL CLI Client will use existing configuration: $file_path."
+    echo "Exiting..."
+    exit
   fi
+
 fi
 
 #create dtk dir in /etc
@@ -220,10 +250,10 @@ if [[ ${autoinstall} == "false" ]]; then
   echo                                      
   printf "Enter server name: "
   read server
-  printf "Enter port number (default: 7000): "
-  read port
-  printf "Enable secure connection (default: true) [true,false]: "
-  read secure_connection
+  #printf "Enter port number (default: 7000): "
+ # read port
+ # printf "Enable secure connection (default: true) [true,false]: "
+ # read secure_connection
 
   while [[ $secure_connection != "true" ]] && [[ $secure_connection != "false" ]] && [[ $secure_connection != "" ]]; do
     printf "Invalid secure connection value. Possible values 'true' or 'false', or leave empty for default. "
@@ -231,8 +261,8 @@ if [[ ${autoinstall} == "false" ]]; then
     read secure_connection
   done
   
-  printf "Enter secure connection port number (default: 7002): "
-  read secure_connection_port
+ # printf "Enter secure connection port number (default: 7002): "
+ # read secure_connection_port
 elif [[ ${autoinstall} == "true" ]]; then
   username=$1
   password=$2
@@ -244,13 +274,13 @@ fi;
 
 # set default values
 if [[ $port == "" ]]; then
-  port="7000"
+  port="80"
 fi
 if [[ $secure_connection == "" ]]; then
   secure_connection="true"
 fi
 if [[ $secure_connection_port == "" ]]; then
-  secure_connection_port="7002"
+  secure_connection_port="443"
 fi
 
 # print to file

@@ -94,7 +94,7 @@ module DTK
             error_code      = nil
             error_timeout   = nil
             error_on_server = nil
-            #TODO: below just 'captures' first error
+            #TODO:  below just 'captures' first error
             response_ruby_obj['errors'].each do |err|
               error_msg       +=  err["message"] unless err["message"].nil?
               error_msg       +=  err["error"]   unless err["error"].nil?
@@ -112,6 +112,8 @@ module DTK
               raise DTK::Client::DtkError, "[FORBIDDEN] Your session has been suspended, please log in again."
             elsif error_code == "timeout"
               raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
+            elsif error_code == "connection_refused"
+              raise DTK::Client::DtkError, "[CONNECTION REFUSED] Connection refused by server." 
             elsif error_internal
               where = (error_on_server ? "SERVER" : "CLIENT")
               opts = (error_backtrace ? {:backtrace => error_backtrace} : {})

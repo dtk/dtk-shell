@@ -245,8 +245,9 @@ module DTK
               return identifiers
             end          
           end
-
-          break if response["status"].eql?('ok')
+          unless response.nil?
+            break if response["status"].eql?('ok')
+          end
           sleep(1)
         end
 
@@ -295,6 +296,12 @@ module DTK
           about ||= default_about
           raise DTK::Client::DtkError, "Not supported type '#{about}' for list for current context level. Possible type options: #{type_options.join(', ')}" unless type_options.include?(about)
           return about, about[0..-2].to_sym
+        end
+
+        # check for delimiter '/', if present returns namespace and name for module/service
+        # returns: namespace, name
+        def get_namespace_and_name(input_remote_name)
+          (input_remote_name||'').include?('/') ? input_remote_name.split('/') : [nil, input_remote_name]
         end
       end
 
