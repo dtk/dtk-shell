@@ -75,6 +75,7 @@ module DTK
               # swap 2 variables
               @active_context, @previous_context = @previous_context, @active_context
             end
+            load_context(active_context.last_context_name)
             return
           end
 
