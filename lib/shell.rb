@@ -125,8 +125,9 @@ def execute_shell_command(line, prompt)
       puts @context.dirs.inspect
     else
 
-      temp_dev_flag = true
-      puts "dtk-input > #{cmd} #{args.join(' ')}" if temp_dev_flag
+      temp_dev_flag = ::Config::Configuration.get(:development_mode)
+      user_input    = (temp_dev_flag ? ('dtk-input > ' + cmd.to_s + args.join(' ')) : ('Processing...'))
+      puts user_input
 
       # send monkey patch class information about context
       Thor.set_context(@context)

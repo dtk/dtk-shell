@@ -7,9 +7,14 @@ require File.expand_path('../lib/parser/adapters/thor',    File.dirname(__FILE__
 require File.expand_path('../lib/shell/context', File.dirname(__FILE__))
 require File.expand_path('../lib/shell/domain', File.dirname(__FILE__))
 Dir[File.expand_path('../lib/shell/parse_monkey_patch.rb', File.dirname(__FILE__))].each {|file| require file }
+require 'shellwords'
 
 
 $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
+
+temp_dev_flag = ::Config::Configuration.get(:development_mode)
+user_input    = (temp_dev_flag ? 'dtk-input > ' + ARGV.join(' ') : 'Processing...')
+puts user_input
 
 entity_name = ARGV.shift if ARGV.size > 0
 
