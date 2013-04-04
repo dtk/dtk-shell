@@ -487,24 +487,25 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/add_node"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node"
+    desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]", "Add component template to assembly node. Without order index default order location is on the end."
     def add_component(context_params)
     
       # If method is invoked from 'assembly/node' level retrieve node_id argument 
       # directly from active context
       if context_params.is_there_identifier?(:node)
-        mapping = [:assembly_id!,:node_id!,:option_1!]
+        mapping = [:assembly_id!,:node_id!,:option_1!,:option_2]
       else
         # otherwise retrieve node_id from command options
-        mapping = [:assembly_id!,:option_1!,:option_2!]
+        mapping = [:assembly_id!,:option_1!,:option_2!,:option_3]
       end
 
-      assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
+      assembly_id,node_id,component_template_id,order_index = context_params.retrieve_arguments(mapping,method_argument_names)
 
       post_body = {
         :assembly_id => assembly_id,
         :node_id => node_id,
-        :component_template_id => component_template_id
+        :component_template_id => component_template_id,
+        :order_index => order_index
       }
 
       post rest_url("assembly/add_component"), post_body
