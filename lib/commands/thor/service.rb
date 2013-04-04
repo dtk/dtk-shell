@@ -400,11 +400,11 @@ module DTK::Client
       return response
     end
 
-    desc "delete-remote REMOTE-MODULE", "Delete remote service module"
+    desc "delete-remote REMOTE-SERVICE-NAME", "Delete remote service module"
     def delete_remote(context_params)
-      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      remote_service_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post_body = {
-       :remote_module_name => remote_module_name
+       :remote_service_name => remote_service_name
       }
       response = post rest_url("service_module/delete_remote"), post_body
       @@invalidate_map << :module_service
