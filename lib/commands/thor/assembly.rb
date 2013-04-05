@@ -471,7 +471,7 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/add_assembly_template"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID add-node ASSEMBLY-NODE-NAME [-n NODE-TEMPLATE-ID]", "Add (stage) a new node to the assembly"
+    desc "ASSEMBLY-NAME/ID add-node ASSEMBLY-NODES-NAME [-n NODE-TEMPLATE-ID]", "Add (stage) a new node to the assembly"
     method_option "node_template_id",:aliases => "-n" ,
       :type => :string, 
       :banner => "NODE-TEMPLATE-ID",
