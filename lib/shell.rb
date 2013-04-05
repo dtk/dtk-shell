@@ -126,7 +126,7 @@ def execute_shell_command(line, prompt)
     else
 
       temp_dev_flag = ::Config::Configuration.get(:development_mode)
-      user_input    = (temp_dev_flag ? ('dtk-input > ' + cmd.to_s + args.join(' ')) : ('Processing...'))
+      user_input    = (temp_dev_flag ? ('dtk-input > ' + cmd.to_s + ' ' + args.join(' ')) : ('Processing...'))
       puts user_input
 
       # send monkey patch class information about context
