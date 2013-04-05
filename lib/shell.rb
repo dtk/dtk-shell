@@ -140,7 +140,7 @@ def execute_shell_command(line, prompt)
       # check if command is executed from parent context (e.g assembly_name list-nodes)
       if context_candidates.include?(method_name)
         context_params.add_context_to_params(method_name, entity_name, method_name)
-        method_name = context_params.method_arguments.first
+        method_name = context_params.method_arguments.shift
       else
         #validate method
         unless @context.method_valid?(method_name)
