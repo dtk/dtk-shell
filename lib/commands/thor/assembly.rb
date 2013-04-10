@@ -605,8 +605,6 @@ TODO: will put in dot release and will rename to 'extend'
 
       #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
       response.set_data(*response.data['results'].values.flatten)
-      require 'ap'
-      ap response
       response.render_table(:ps_data)
     end
     GetPsTries = 6
