@@ -70,7 +70,8 @@ module DTK::Client
         :identifier_only => {
           :node      => [
             ['info',"info","# Return info about node instance belonging to given assembly."],
-            ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context assembly."]
+            ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context assembly."],
+            ['get-ps', "get-ps", "# Returns a list of running processes for a given node instance belonging to context assembly."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."]
@@ -564,6 +565,47 @@ TODO: will put in dot release and will rename to 'extend'
     end
     GetNetStatsTries = 6
     GetNetStatsSleep = 0.5
+
+    desc "ASSEMBLY-NAME/ID get-ps", "Get ps"
+    def get_ps(context_params)
+      assembly_id,node_id = context_params.retrieve_arguments([:assembly_id!,:node_id],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :node_id => node_id
+      }  
+
+      response = post(rest_url("assembly/initiate_get_ps"),post_body)
+      return response unless response.ok?
+
+      action_results_id = response.data(:action_results_id)
+      end_loop, response, count, ret_only_if_complete = false, nil, 0, true
+
+      until end_loop do
+        post_body = {
+          :action_results_id => action_results_id,
+          :return_only_if_complete => ret_only_if_complete,
+          :disable_post_processing => true
+        }
+        response = post(rest_url("assembly/get_action_results"),post_body)
+        count += 1
+        if count > GetPsTries or response.data(:is_complete)
+          end_loop = true
+        else
+          #last time in loop return whetever is teher
+          if count == GetPsTries
+            ret_only_if_complete = false
+          end
+          sleep GetPsSleep
+        end
+      end
+
+      #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
+      response.set_data(*response.data(:results))
+      response.render_table(:ps_data)
+    end
+    GetPsTries = 6
+    GetPsSleep = 0.5
 
     desc "ASSEMBLY-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
     def set_required_params(context_params)
