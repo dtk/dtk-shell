@@ -176,8 +176,8 @@ module DTK
       end
       def set_defaults()
         self[:server_port] = 7000
-        self[:component_modules_dir] = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
-        self[:service_modules_dir] = OsUtil.service_clone_location(::Config::Configuration.get(:service_location))
+        self[:component_modules_dir] = OsUtil.module_clone_location()
+        self[:service_modules_dir] = OsUtil.service_clone_location()
         self[:secure_connection] = true
         self[:secure_connection_server_port] = 7002
       end
