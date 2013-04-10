@@ -548,14 +548,14 @@ TODO: will put in dot release and will rename to 'extend'
         }
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
-        if count > GetNetStatsTries or response.data(:is_complete)
+        if count > GETNETSTATSTRIES or response.data(:is_complete)
           end_loop = true
         else
           #last time in loop return whetever is teher
-          if count == GetNetStatsTries
+          if count == GETNETSTATSTRIES
             ret_only_if_complete = false
           end
-          sleep GetNetStatsSleep
+          sleep GETNETSTATSSLEEP
         end
       end
 
@@ -566,8 +566,8 @@ TODO: will put in dot release and will rename to 'extend'
       response.set_data(*response.data(:results))
       response.render_table(:netstat_data)
     end
-    GetNetStatsTries = 6
-    GetNetStatsSleep = 0.5
+    GETNETSTATSTRIES = 6
+    GETNETSTATSSLEEP = 0.5
 
     desc "ASSEMBLY-NAME/ID get-ps", "Get ps"
     def get_ps(context_params)
@@ -592,14 +592,14 @@ TODO: will put in dot release and will rename to 'extend'
         }
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
-        if count > GetPsTries or response.data(:is_complete)
+        if count > GETPSTRIES or response.data(:is_complete)
           end_loop = true
         else
           #last time in loop return whetever is teher
-          if count == GetPsTries
+          if count == GETPSTRIES
             ret_only_if_complete = false
           end
-          sleep GetPsSleep
+          sleep GETPSSLEEP
         end
       end
 
@@ -607,8 +607,8 @@ TODO: will put in dot release and will rename to 'extend'
       response.set_data(*response.data['results'].values.flatten)
       response.render_table(:ps_data)
     end
-    GetPsTries = 6
-    GetPsSleep = 0.5
+    GETPSTRIES = 6
+    GETPSSLEEP = 0.5
 
     desc "ASSEMBLY-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
     def set_required_params(context_params)
