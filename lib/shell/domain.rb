@@ -24,6 +24,12 @@ module DTK
         return @thor_options ? @thor_options[option_key] : nil
       end
 
+      def override_method_argument!(key, value)
+        id = match_argument_id(key)
+        raise DTK::Client::DtkImplementationError, "Wrong identifier used '#{key}', ID not matched!" unless id
+        @method_arguments[id] = value
+      end
+
       def retrieve_arguments(mapping, method_info = nil)
         results = []
         errors  = []
@@ -85,6 +91,16 @@ module DTK
       end
       def current_command?
         return @current_context.current_command?
+      end
+
+      private
+
+      # matches argument id (integer) from used identifier (symbol)
+      #
+      # Returns: Integer as ID , or nil if not found
+      def match_argument_id(identifier)
+        matched = identifier.to_s.match(/option_([0-9]+)/)
+        (matched ? matched[1].to_i - 1 : nil)
       end
     end
 

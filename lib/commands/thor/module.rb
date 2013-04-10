@@ -1,4 +1,5 @@
 dtk_require_from_base('command_helpers/ssh_processing')
+dtk_require_from_base('util/dtk_puppet')
 dtk_require_dtk_common('grit_adapter')
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/list_diffs')
@@ -93,7 +94,7 @@ module DTK::Client
       if options.purge?
         raise DTK::Client::DtkValidationError, "Unable to delete local directory. Message: #{module_info['errors'].first['message']}." unless module_info["status"] == "ok"
         module_id       = module_info["data"]["display_name"]
-        modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
+        modules_path    = OsUtil.module_clone_location()
         module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
 
         unless (module_location.nil? || ("#{modules_path}/" == module_location))
@@ -104,76 +105,6 @@ module DTK::Client
       return response
     end
 
-    #
-    # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
-    #
-    desc "import-from-git MODULE-NAME GIT-REPO-URL", "Create new local module by importing from provided git repo URL"
-    def import_from_git(context_params)
-      module_name, git_repo_url = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
-
-      # Create component module from user's input git repo
-      response = Helper(:git_repo).create_clone_with_branch(:component_module, module_name, git_repo_url)
-      
-      # Raise error if git repository is invalid
-      raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless (response["status"] == "ok")
-
-      # Remove .git directory to rid of git pointing to user's github
-      FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
-      
-      # Reuse module create method to create module from local component_module
-      create_response = create(context_params)
-
-      # If server response is not ok, delete cloned module, invoke delete method and notify user about cleanup process.
-      unless create_response["status"] == "ok"
-        FileUtils.rm_rf("#{response['data']['module_directory']}")
-        context_params.method_arguments << "force_delete"
-        delete(context_params)
-        create_response['errors'][0]['message'] += "\nModule '#{module_name}' data is deleted."
-      end
-
-      return create_response
-    end
-
-    desc "create MODULE-NAME", "Create new module from local clone"
-    def create(context_params)
-      module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      
-      #first check that there is a directory there and it is not already a git repo, and it ha appropriate content
-      response = Helper(:git_repo).check_local_dir_exists_with_content(:component_module,module_name)
-      return response unless response.ok?
-      module_directory = response.data(:module_directory)
-
-      #first make call to server to create an empty repo
-      post_body = {
-        :module_name => module_name
-      }
-      response = post rest_url("component_module/create"), post_body
-      return response unless response.ok?
-      @@invalidate_map << :module_component
-
-      repo_url,repo_id,module_id,branch = response.data(:repo_url,:repo_id,:module_id,:workspace_branch)
-      response = Helper(:git_repo).initialize_client_clone_and_push(:component_module,module_name,branch,repo_url)
-      return response unless response.ok?
-      repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
-
-      post_body = {
-        :repo_id => repo_id,
-        :component_module_id => module_id,
-        :commit_sha => commit_sha,
-        :scaffold_if_no_dsl => true
-      }
-      response = post(rest_url("component_module/update_from_initial_create"),post_body)
-      return response unless response.ok?
-
-      dsl_created_info = response.data(:dsl_created_info)
-      if dsl_created_info and !dsl_created_info.empty?
-        msg = "First cut of dsl file (#{dsl_created_info["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
-        response = Helper(:git_repo).add_file(repo_obj,dsl_created_info["path"],dsl_created_info["content"],msg)
-      else
-        response = Response::Ok.new("module_created" => module_name)
-      end
-      response
-    end
 
     #### end: create and delete commands ###
 
@@ -221,12 +152,55 @@ module DTK::Client
     #### end: list and info commands ###
 
     #### commands to interact with remote repo ###
-    
-    #TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
-    #TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
-    #if multiple items and failire; stops on first failure
-    desc "import REMOTE-MODULE-NAME","Import remote component module into local environment"
+
+
+    desc "import MODULE-NAME", "Create new module from local clone"
     def import(context_params)
+      module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      
+      #first check that there is a directory there and it is not already a git repo, and it ha appropriate content
+      response = Helper(:git_repo).check_local_dir_exists_with_content(:component_module,module_name)
+      return response unless response.ok?
+      module_directory = response.data(:module_directory)
+
+      #first make call to server to create an empty repo
+      post_body = {
+        :module_name => module_name
+      }
+      response = post rest_url("component_module/create"), post_body
+      return response unless response.ok?
+      @@invalidate_map << :module_component
+
+      repo_url,repo_id,module_id,branch = response.data(:repo_url,:repo_id,:module_id,:workspace_branch)
+      response = Helper(:git_repo).initialize_client_clone_and_push(:component_module,module_name,branch,repo_url)
+      return response unless response.ok?
+      repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
+
+      post_body = {
+        :repo_id => repo_id,
+        :component_module_id => module_id,
+        :commit_sha => commit_sha,
+        :scaffold_if_no_dsl => true
+      }
+      response = post(rest_url("component_module/update_from_initial_create"),post_body)
+      return response unless response.ok?
+
+      dsl_created_info = response.data(:dsl_created_info)
+      if dsl_created_info and !dsl_created_info.empty?
+        msg = "First cut of dsl file (#{dsl_created_info["path"]}) has been created in module directory (#{module_directory}); edit and then invoke 'dtk module #{module_name} push-clone-changes'"
+        response = Helper(:git_repo).add_file(repo_obj,dsl_created_info["path"],dsl_created_info["content"],msg)
+      else
+        response = Response::Ok.new("module_created" => module_name)
+      end
+      response
+    end
+
+    
+    # TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
+    # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
+    # if multiple items and failire; stops on first failure
+    desc "import-r8n REMOTE-MODULE-NAME","Import remote component module into local environment"
+    def import_r8n(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
@@ -243,6 +217,52 @@ module DTK::Client
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
       Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+    end
+
+    #
+    # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
+    #
+    desc "import-git MODULE-NAME GIT-REPO-URL", "Create new local module by importing from provided git repo URL"
+    def import_git(context_params)
+      module_name, git_repo_url = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
+
+      # Create component module from user's input git repo
+      response = Helper(:git_repo).create_clone_with_branch(:component_module, module_name, git_repo_url)
+      
+      # Raise error if git repository is invalid
+      raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless (response["status"] == "ok")
+
+      # Remove .git directory to rid of git pointing to user's github
+      FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
+      
+      # Reuse module create method to create module from local component_module
+      create_response = create(context_params)
+
+      # If server response is not ok, delete cloned module, invoke delete method and notify user about cleanup process.
+      unless create_response["status"] == "ok"
+        FileUtils.rm_rf("#{response['data']['module_directory']}")
+        context_params.method_arguments << "force_delete"
+        delete(context_params)
+        create_response['errors'][0]['message'] += "\nModule '#{module_name}' data is deleted."
+      end
+
+      return create_response
+    end
+
+    desc "import-puppet-forge PUPPET-FORGE-MODULE-NAME", "Imports puppet module from puppet forge via puppet gem"
+    def import_puppet_forge(context_params)
+      module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      # this call will throw exception if error occurs
+      module_dir_name = DtkPuppet.install_module(module_name)
+
+      # we change module name to be dir name
+      context_params.override_method_argument!(:option_1, module_dir_name)
+
+      # process will take some time adding friendly message
+      puts "Cloning to remote repo, please wait ..."
+
+      # rest of reponsabilty is given to import method
+      import(context_params)
     end
 
     desc "MODULE-NAME/ID import-version VERSION", "Import a specfic version from a linked component module"
@@ -338,7 +358,7 @@ module DTK::Client
         module_name = get_module_name(module_id)
       end
 
-      modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
+      modules_path    = OsUtil.module_clone_location()
       module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
 
       raise DTK::Client::DtkValidationError, "Trying to clone a module '#{module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
@@ -358,7 +378,7 @@ module DTK::Client
         module_name = get_module_name(module_id)
       end
 
-      modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
+      modules_path    = OsUtil.module_clone_location()
       module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
 
       # check if there is repository cloned 
@@ -438,7 +458,7 @@ module DTK::Client
         module_name = get_module_name(module_id)
       end
 
-      modules_path    = OsUtil.module_clone_location(::Config::Configuration.get(:module_location))
+      modules_path    = OsUtil.module_clone_location()
       module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
 
       # check if there is repository cloned 

@@ -24,6 +24,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'erubis','~> 2.7.0'
   gem.add_dependency 'i18n','0.6.1'
   gem.add_dependency 'rest-client','~> 1.6.7'
+  gem.add_dependency 'puppet','~> 3.1.0'
   gem.add_dependency 'rspec','~> 2.12.0'
   gem.add_dependency 'grit','~> 2.5.0'
   gem.add_dependency 'dtk-common','>= 0.1.6'
