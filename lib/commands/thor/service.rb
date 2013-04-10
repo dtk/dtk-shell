@@ -130,7 +130,7 @@ module DTK::Client
             response["data"].collect{|a| ids<<a["id"].to_i}
 
             post_body = { :assemblies => ids }
-            response  = post rest_url("assembly/list_modules"), post_body
+            response  = post rest_url("assembly/list_modules"), post_body unless ids.empty?
           else
             raise_validation_error_method_usage('list')
           end 
