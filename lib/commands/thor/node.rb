@@ -280,9 +280,6 @@ module DTK::Client
         end
       end
 
-      require 'ap'
-      ap response
-
       #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
       response.set_data(*response.data['results'].values.flatten)
       response.render_table(:ps_data)
