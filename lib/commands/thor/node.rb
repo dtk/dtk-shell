@@ -229,14 +229,14 @@ module DTK::Client
         }
         response = post(rest_url("node/get_action_results"),post_body)
         count += 1
-        if count > GetNetStatsTries or response.data(:is_complete)
+        if count > GETNETSTATSTRIES or response.data(:is_complete)
           end_loop = true
         else
           #last time in loop return whetever is teher
-          if count == GetNetStatsTries
+          if count == GETNETSTATSTRIES
             ret_only_if_complete = false
           end
-          sleep GetNetStatsSleep
+          sleep GETNETSTATSSLEEP
         end
       end
 
@@ -244,8 +244,48 @@ module DTK::Client
       response.set_data(*response.data(:results))
       response.render_table(:netstat_data)
     end
-    GetNetStatsTries = 6
-    GetNetStatsSleep = 0.5
+    GETNETSTATSTRIES = 6
+    GETNETSTATSSLEEP = 0.5
+
+    desc "NODE-NAME/ID get-ps", "Get ps"
+    def get_ps(context_params)
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
+
+      post_body = {
+        :node_id => node_id
+      }  
+
+      response = post(rest_url("node/initiate_get_ps"), post_body)
+      return response unless response.ok?
+
+      action_results_id = response.data(:action_results_id)
+      end_loop, response, count, ret_only_if_complete = false, nil, 0, true
+
+      until end_loop do
+        post_body = {
+          :action_results_id => action_results_id,
+          :return_only_if_complete => ret_only_if_complete,
+          :disable_post_processing => true
+        }
+        response = post(rest_url("node/get_action_results"),post_body)
+        count += 1
+        if count > GETPSTRIES or response.data(:is_complete)
+          end_loop = true
+        else
+          #last time in loop return whetever is teher
+          if count == GETPSTRIES
+            ret_only_if_complete = false
+          end
+          sleep GETPSSLEEP
+        end
+      end
+
+      #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
+      response.set_data(*response.data['results'].values.flatten)
+      response.render_table(:ps_data)
+    end
+    GETPSTRIES = 6
+    GETPSSLEEP = 0.5
 
     no_tasks do
       def node_start(node_id)             

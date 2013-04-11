@@ -10,6 +10,12 @@ module DTK::Client
     desc "upload_agent PATH-TO-AGENT[.rb,.dll] NODE-ID-PATTERN", "Uploads agent and ddl file to requested nodes, pattern is regexp for filtering node ids." 
     def upload_agent(context_params)
       agent, node_pattern = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
+
+      nodes = post rest_url("node/list")
+      ids = []
+      # get all nodes which id starts with node_pattern
+      nodes["data"].collect{|a| ids<<a["id"].to_i if a["id"].to_s.start_with?(node_pattern.to_s)}
+      raise DTK::Client::DtkValidationError, "Unable to find nodes to match this pattern: '#{node_pattern}'." if ids.empty?
       # if it doesn't contain extension upload both *.rb and *.ddl
       files = (agent.match(MATCH_FILE_NAME) ? [agent] : ["#{agent}.rb","#{agent}.ddl"])
     
@@ -23,7 +29,7 @@ module DTK::Client
     	end
 
       # send as binary post request
-    	response = post_file rest_url("developer/inject_agent"), { :agent_files => request_body, :node_pattern => node_pattern }
+    	response = post_file rest_url("developer/inject_agent"), { :agent_files => request_body, :node_pattern => node_pattern, :node_list => ids }
       return response
     end
 
