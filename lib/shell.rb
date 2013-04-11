@@ -160,7 +160,7 @@ def execute_shell_command(line, prompt)
       DTK::Shell::StatusMonitor.check_status()
     end
   rescue DTK::Client::DtkValidationError => e
-    puts e.message.colorize(:yellow)
+    DTK::Client::OsUtil.print(e.messsage, :yellow)
   rescue DTK::Shell::Error => e
     puts e.message
   end

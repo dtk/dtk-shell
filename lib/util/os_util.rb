@@ -68,6 +68,26 @@ module DTK
           service_location = ::Config::Configuration.get(:service_location)
           return (service_location.start_with?('/') ? service_location : "#{home_dir}/#{service_location}")
         end
+        
+        # Public method will convert given string, to string with colorize output
+        #
+        # message - String to be colorized
+        # color   - Symbol describing color to be used
+        # 
+        # Returns String with colorize output
+        def colorize(message, color)
+          # at the moment we do not support colors in windows
+          ((is_windows? || message.nil?) ? message : message.colorize(color))
+        end
+
+        # Public method will print to STDOUT with given color
+        #
+        # message - String to be colorize and printed
+        # color   - Symbol describing the color to be used on STDOUT
+        #
+        def print(message, color)
+          puts colorize(message, color)
+        end
 
         private
         

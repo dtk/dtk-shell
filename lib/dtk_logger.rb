@@ -50,12 +50,12 @@ class DtkLogger
   end
 
   def warn(log_text, sttdout_out=false)
-    puts log_text.colorize(:yellow) if sttdout_out || DEVELOPMENT_MODE
+    DTK::Client::OsUtil.print(log_text, :yellow) if sttdout_out || DEVELOPMENT_MODE
     @logger.warn(log_text) if log_created?
   end
 
   def error(log_text, sttdout_out=false)
-    puts log_text.colorize(:red) if sttdout_out || DEVELOPMENT_MODE
+    DTK::Client::OsUtil.print(log_text, :red) if sttdout_out || DEVELOPMENT_MODE
     @logger.error(log_text) if log_created?
   end
 

@@ -92,7 +92,7 @@ module DTK
 
           raise DTK::Client::DtkValidationError, error_message if error_message
         rescue DTK::Client::DtkValidationError => e
-          puts e.message.colorize(:yellow)
+          DTK::Client::OsUtil.print(e.message, :yellow)
         rescue DTK::Shell::Error => e
           puts e.message
         rescue Exception => e

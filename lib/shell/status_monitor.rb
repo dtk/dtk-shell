@@ -90,7 +90,7 @@ module DTK
 
       def colorize_status(status)
         color = status.eql?('FAILED') ? :red : :green
-        return status.colorize(color)
+        return DTK::Client::OsUtil.colorize(status, color)
       end
 
       # return true   if status SUCCEDED, FAILED

@@ -153,7 +153,8 @@ module DTK::Client
       return response unless response.ok?
       if response.data and response.data.size > 0
         #TODO: may not directly print here; isntead use a lower level fn
-        puts "The following violations were found; they must be corrected before the assembly can be converged".colorize(:red)
+        error_message = "The following violations were found; they must be corrected before the assembly can be converged"
+        DTK::Client::OsUtil.print(error_message, :red)
         return response.render_table(:violation)
       end
 
@@ -729,75 +730,75 @@ TODO: will put in dot release and will rename to 'extend'
 
     desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first_match]","Grep log from multiple nodes"
     method_option :first_match, :type => :boolean, :default => false
-    def grep(context_params)
-      
-    if context_params.is_there_identifier?(:node)
-      mapping = [:assembly_id!,:option_1!,:node_id!,:option_2!]
-    else
-      mapping = [:assembly_id!,:option_1!,:option_2!,:option_3!]
-    end
-
-    assembly_id,log_path,node_pattern,grep_pattern = context_params.retrieve_arguments(mapping,method_argument_names)
-       
-    begin
-      post_body = {
-        :assembly_id         => assembly_id,
-        :subtype             => 'instance',
-        :log_path            => log_path,
-        :node_pattern        => node_pattern,
-        :grep_pattern        => grep_pattern,
-        :stop_on_first_match => options.first_match?
-      }
-
-      response = post rest_url("assembly/initiate_grep"), post_body
-
-      unless response.ok?
-        raise DTK::Client::DtkError, "Error while getting log from server. Message: #{response['errors'][0]['message'].nil? ? 'There was no successful response.' : response['errors'].first['message']}"
+    def grep(context_params) 
+      if context_params.is_there_identifier?(:node)
+        mapping = [:assembly_id!,:option_1!,:node_id!,:option_2!]
+      else
+        mapping = [:assembly_id!,:option_1!,:option_2!,:option_3!]
       end
 
-      action_results_id = response.data(:action_results_id)
-      action_body = {
-        :action_results_id => action_results_id,
-        :return_only_if_complete => true,
-        :disable_post_processing => true
-      }
+      assembly_id,log_path,node_pattern,grep_pattern = context_params.retrieve_arguments(mapping,method_argument_names)
+         
+      begin
+        post_body = {
+          :assembly_id         => assembly_id,
+          :subtype             => 'instance',
+          :log_path            => log_path,
+          :node_pattern        => node_pattern,
+          :grep_pattern        => grep_pattern,
+          :stop_on_first_match => options.first_match?
+        }
 
-      # number of re-tries
-      3.downto(1) do
-        response = post(rest_url("assembly/get_action_results"),action_body)
+        response = post rest_url("assembly/initiate_grep"), post_body
 
-        # server has found an error
-        unless response.data(:results).nil?
-          if response.data(:results)['error']
-            raise DTK::Client::DtkError, response.data(:results)['error']
-          end
+        unless response.ok?
+          raise DTK::Client::DtkError, "Error while getting log from server. Message: #{response['errors'][0]['message'].nil? ? 'There was no successful response.' : response['errors'].first['message']}"
         end
 
-        break if response.data(:is_complete)
+        action_results_id = response.data(:action_results_id)
+        action_body = {
+          :action_results_id => action_results_id,
+          :return_only_if_complete => true,
+          :disable_post_processing => true
+        }
 
-        sleep(1)
-      end
+        # number of re-tries
+        3.downto(1) do
+          response = post(rest_url("assembly/get_action_results"),action_body)
 
-      raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
-      
-      console_width = ENV["COLUMNS"].to_i
-
-      response.data(:results).each do |r|
-        raise DTK::Client::DtkError, r[1]["error"] if r[1]["error"]
-
-        if r[1]["output"].empty?
-          puts "NODE-ID #{r[0].inspect.colorize(:green)} - Log does not contain data that matches you pattern #{grep_pattern}!" 
-        else
-          puts "\n"
-          console_width.times do
-            print "="
+          # server has found an error
+          unless response.data(:results).nil?
+            if response.data(:results)['error']
+              raise DTK::Client::DtkError, response.data(:results)['error']
+            end
           end
-          puts "NODE-ID: #{r[0].inspect.colorize(:green)}\n"
-          puts "Log output:\n"
-          puts r[1]["output"].gsub(/`/,'\'')
+
+          break if response.data(:is_complete)
+
+          sleep(1)
         end
-      end
+
+        raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
         
+        console_width = ENV["COLUMNS"].to_i
+
+        response.data(:results).each do |r|
+          raise DTK::Client::DtkError, r[1]["error"] if r[1]["error"]
+
+          message_colorized = DTK::Client::OsUtil.colorize(r[0].inspect, :green)
+
+          if r[1]["output"].empty?
+            puts "NODE-ID #{message_colorized} - Log does not contain data that matches you pattern #{grep_pattern}!" 
+          else
+            puts "\n"
+            console_width.times do
+              print "="
+            end
+            puts "NODE-ID: #{message_colorized}\n"
+            puts "Log output:\n"
+            puts r[1]["output"].gsub(/`/,'\'')
+          end
+        end
       rescue DTK::Client::DtkError => e
         raise e
       end

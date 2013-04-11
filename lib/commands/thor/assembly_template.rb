@@ -160,8 +160,8 @@ module DTK::Client
       response = post rest_url("assembly/find_violations"), post_body
       return response unless response.ok?
       if response.data and response.data.size > 0
-        #TODO: may not directly print here; isntead use a lower level fn
-        puts "The following violations were found; they must be corrected before the assembly-template can be deployed".colorize(:red)
+        error_message =  "The following violations were found; they must be corrected before the assembly-template can be deployed"
+        DTK::Client::OsUtil.print(error_message, :red)
         return response.render_table(:violation)
       end
 

@@ -91,9 +91,9 @@ module DTK::Client
       else
         found_files.each do |fname|
           header = "*********************** #{fname} ***********************"
-          puts header.colorize(:yellow)
+          DTK::Client::OsUtil.print(header, :yellow)
           puts File.open(fname).readlines
-          puts ("*"*header.size).colorize(:yellow)
+          DTK::Client::OsUtil.print("*"*header.size, :yellow)
         end
       end  
 

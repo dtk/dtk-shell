@@ -10,7 +10,7 @@ module DTK
 
       PP_LINE_HEAD  = '--------------------------------- DATA ---------------------------------'
       PP_LINE       = '------------------------------------------------------------------------'
-      INVALID_INPUT = " Input is not valid.".colorize(:yellow)
+      INVALID_INPUT = Client::OsUtil.colorize(" Input is not valid.", :yellow)
       EC2_REGIONS   = ['us-east-1','us-west-1','us-west-2','eu-west-1','sa-east-1','ap-northeast-1','ap-southeast-1','ap-southeast-2' ]
       
 
@@ -44,7 +44,7 @@ module DTK
                     options += "\t#{i+1}. #{o}\n"
                   end
                 end
-                options += "\t0. Skip\n".colorize(:yellow) if metadata[:skip_option]
+                options += DTK::Client::OsUtil.colorize("\t0. Skip\n", :yellow) if metadata[:skip_option]
                 output = "Select '#{display_name}': \n\n #{options} \n >> "
                 validation_range_start = metadata[:skip_option] ? 0 : 1
                 validation = (validation_range_start..metadata[:options].size).to_a
@@ -60,7 +60,7 @@ module DTK
             if metadata[:required_options] && !metadata[:required_options].include?(input)
               # case where we have to give explicit permission, if answer is not affirmative
               # we terminate rest of the wizard
-              puts " #{metadata[:explanation]}".colorize(:red)
+              DTK::Client::OsUtil.print(" #{metadata[:explanation]}", :red)
               return nil
             end
 
@@ -74,7 +74,7 @@ module DTK
 
           return results
         rescue Interrupt => e
-          puts ""
+          puts
           raise DTK::Client::DtkValidationError, "Exiting the wizard ..."
         end
       end
@@ -113,7 +113,8 @@ module DTK
               else 
                 "#{param_info['display_name']} (#{param_info['description']})"
               end
-            string_identifier = description.colorize(:green) + " [#{param_info['datatype'].upcase}]".colorize(:yellow)
+
+            string_identifier = DTK::Client::OsUtil.colorize(description, :green) + DTK::Client::OsUtil.colorize(" [#{param_info['datatype'].upcase}]", :yellow)
 
             puts "Please enter #{string_identifier}:"
             while line = Readline.readline(": ", true)
@@ -137,7 +138,7 @@ module DTK
           end
 
         rescue Interrupt => e
-          puts 
+          puts
           # TODO: Provide original error here 
           raise DTK::Client::DtkError, "You have decided to skip correction wizard."
         end
@@ -152,7 +153,7 @@ module DTK
         user_information.each do |key,info|
           description = info[:description]
           value = info[:value]
-          printf "%48s : %s\n", description.colorize(:green), value.colorize(:yellow)
+          printf "%48s : %s\n", DTK::Client::OsUtil.colorize(description, :green), DTK::Client::OsUtil.colorize(value, :yellow)
         end
         puts PP_LINE
         puts
