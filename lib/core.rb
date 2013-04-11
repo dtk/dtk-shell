@@ -49,7 +49,7 @@ def top_level_execute(entity_name, method_name, context_params=nil,options_args=
     DTK::Client::OsUtil.print(e.message, :yellow)
   rescue DTK::Client::DtkError => e
     # this are expected application errors
-    DTK::Client::OsUtil.print(e.message, :yellow)
+    DTK::Client::OsUtil.print(e.message, :red)
     DtkLogger.instance.error(e.message)
     if e.backtrace
       puts e.backtrace
