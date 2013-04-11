@@ -11,6 +11,10 @@ module DTK
     class DtkValidationError < Error
     end
 
+    # raise by developers to signal wrong usage of components
+    class DtkImplementationError < Error
+    end
+
     # we use this to log application errors
     class DtkError < Error
       def initialize(msg,opts={})
