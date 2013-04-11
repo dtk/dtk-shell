@@ -98,7 +98,10 @@ module DTK; module Client; class CommandHelper
       git_dir = "#{local_repo_dir}/.git"
       if File.directory?(git_dir)
         FileUtils.rm_rf(git_dir)
+        return true
       end
+
+      return false
     end
 
     def check_local_dir_exists_with_content(type,module_name,version=nil)
@@ -109,7 +112,12 @@ module DTK; module Client; class CommandHelper
           raise ErrorUsage.new("The content for module (#{module_name}) should be put in directory (#{local_repo_dir})")
         end
         if File.directory?("#{local_repo_dir}/.git")
-          raise ErrorUsage.new("Directory (#{local_repo_dir} is set as a git repo; to continue it must be a non git repo; this can be handled by shell command 'rm -rf #{local_repo_dir}/.git'")
+          unless unlink_local_clone?(type,module_name,version)
+            # in case delete went wrong, we raise usage error
+            raise ErrorUsage.new("Directory (#{local_repo_dir} is set as a git repo; to continue it must be a non git repo; this can be handled by shell command 'rm -rf #{local_repo_dir}/.git'")
+          end
+
+          # we return to normal flow, since .git dir is removed
         end
         if Dir["#{local_repo_dir}/*"].empty?
           raise ErrorUsage.new("Directory (#{local_repo_dir}) must have ths initial content for module (#{module_name})")
