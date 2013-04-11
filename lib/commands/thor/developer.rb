@@ -29,7 +29,7 @@ module DTK::Client
     	end
 
       # send as binary post request
-    	response = post_file rest_url("developer/inject_agent"), { :agent_files => request_body, :node_pattern => node_pattern }
+    	response = post_file rest_url("developer/inject_agent"), { :agent_files => request_body, :node_pattern => node_pattern, :node_list => ids }
       return response
     end
 
