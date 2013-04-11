@@ -1,4 +1,5 @@
 lib/config/local.conf
+bin/*.bat
 test_scripts
 dtk*.gem
 test.rb
