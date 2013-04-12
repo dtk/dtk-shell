@@ -49,7 +49,7 @@ def run_shell_command()
   # runtime part
   begin
     while line = Readline.readline(prompt, true)
-      prompt = execute_shell_command(line, prompt)
+      prompt = execute_shell_command(line, prompt) unless line.strip.empty?
     end
   rescue DTK::Shell::ExitSignal => e
     # do nothing
