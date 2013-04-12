@@ -240,7 +240,7 @@ module DTK::Client
       FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
       
       # Reuse module create method to create module from local component_module
-      create_response = create(context_params)
+      create_response = import(context_params)
 
       # If server response is not ok, delete cloned module, invoke delete method and notify user about cleanup process.
       unless create_response["status"] == "ok"
