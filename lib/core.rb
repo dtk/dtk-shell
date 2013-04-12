@@ -293,8 +293,12 @@ module DTK
         response = post_raw rest_url("user/process_login"),creds
         if response.kind_of?(Common::Response) and not response.ok?
           @connection_error = response
-        else             
+        else
+                    # DEBUG SNIPPET >>> REMOVE <<<
+          require 'ruby-debug';Debugger.start
+          debugger
           @cookies = response.cookies
+
         end
       end
 
