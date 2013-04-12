@@ -247,9 +247,9 @@ module DTK::Client
     GETNETSTATSTRIES = 6
     GETNETSTATSSLEEP = 0.5
 
-    desc "NODE-NAME/ID get-ps", "Get ps"
+    desc "NODE-NAME/ID get-ps [FILTER]", "Get ps"
     def get_ps(context_params)
-      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
+      node_id, filter_pattern = context_params.retrieve_arguments([:node_id!, :option_1],method_argument_names)
 
       post_body = {
         :node_id => node_id
@@ -280,8 +280,11 @@ module DTK::Client
         end
       end
 
+      response_processed = response.data['results'].values.flatten
+      response_processed.reject! {|r| !r.to_s.include?(filter_pattern)} unless filter_pattern.nil?
+
       #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
-      response.set_data(*response.data['results'].values.flatten)
+      response.set_data(*response_processed)
       response.render_table(:ps_data)
     end
     GETPSTRIES = 6
