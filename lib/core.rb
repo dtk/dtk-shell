@@ -294,11 +294,7 @@ module DTK
         if response.kind_of?(Common::Response) and not response.ok?
           @connection_error = response
         else
-                    # DEBUG SNIPPET >>> REMOVE <<<
-          require 'ruby-debug';Debugger.start
-          debugger
           @cookies = response.cookies
-
         end
       end
 
