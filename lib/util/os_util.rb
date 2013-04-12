@@ -89,6 +89,35 @@ module DTK
           puts colorize(message, color)
         end
 
+        # Public block, method will suspend STDOUT, STDERR in body of it
+        #
+        # Example
+        # suspend_output do
+        #   # some calls 
+        # end
+        def suspend_output
+          if is_windows?
+            retval = yield
+          else
+            begin
+              orig_stderr = $stderr.clone
+              orig_stdout = $stdout.clone
+              $stderr.reopen File.new('/dev/null', 'w')
+              $stdout.reopen File.new('/dev/null', 'w')
+              retval = yield
+            rescue Exception => e
+              $stdout.reopen orig_stdout
+              $stderr.reopen orig_stderr
+              raise e
+            ensure
+              $stdout.reopen orig_stdout
+              $stderr.reopen orig_stderr
+            end
+          end
+          retval
+        end
+
+
         private
         
         def seperator

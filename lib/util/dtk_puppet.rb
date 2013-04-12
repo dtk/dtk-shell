@@ -13,10 +13,19 @@ module DTK
       #
       # Returns: Name of directory where module is saved
       def self.install_module(module_name)
-        output = `puppet module install #{module_name} --modulepath #{MODULE_PATH} --force --render-as json`
+        output = nil
+        
+        OsUtil.suspend_output do
+          output = `puppet module install #{module_name} --modulepath #{MODULE_PATH} --force --render-as json`
+        end
       
         # extract json from output, regex will match json in string
-        result = JSON.parse(output.match(/\{.+\}/)[0])
+        matched = output.match(/\{.+\}/)
+
+        raise DTK::Client::DtkError, "Puppet module '#{module_name}' not found." unless matched
+        
+        # parse matched json
+        result = JSON.parse(matched[0])
 
         if result['result'] == 'failure'
           # we remove puppet specific messages
