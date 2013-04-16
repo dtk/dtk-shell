@@ -4,9 +4,16 @@ require 'fakeweb'
 require File.expand_path('../util/os_util', File.dirname(__FILE__))
 dtk_require("../commands")
 
+
+#
+# Class dedicated for caching data on local system as well as for cookie management
+#
 class DiskCacher
   include DTK::Client::CommandBase
   extend DTK::Client::CommandBase
+
+  # file name to hold cookies
+  COOKIE_HOLDER_NAME = 'tempdtkstore'
 
   def initialize(cache_dir=DTK::Client::OsUtil.get_temp_location())
     @cache_dir = cache_dir
@@ -36,4 +43,19 @@ class DiskCacher
 
     return response_string
   end
+
+  def save_cookie(cookie_content)
+    file_path = File.join(@cache_dir, COOKIE_HOLDER_NAME)
+    File.open(file_path, "w") do |file|
+      #data <<  cookie_content
+      Marshal.dump(cookie_content, file)
+    end
+  end
+
+  def load_cookie()
+    file_path = File.join(@cache_dir, COOKIE_HOLDER_NAME)
+    cookie_content = File.exists?(file_path) ? File.open(file_path) {|f| Marshal.load(f)} : nil
+    cookie_content
+  end
+
 end

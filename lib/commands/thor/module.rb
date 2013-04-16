@@ -199,7 +199,7 @@ module DTK::Client
     # TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     # if multiple items and failire; stops on first failure
-    desc "import-r8n REMOTE-MODULE-NAME [-r R8-REPO-MANAGER]","Import remote component module into local environment"
+    desc "import-r8n NAMESPACE/REMOTE-MODULE-NAME [-r R8-REPO-MANAGER]","Import remote component module into local environment"
     method_option "repo-manager",:aliases => "-r" ,
       :type => :string, 
       :banner => "REPO-MANAGER",
@@ -226,7 +226,7 @@ module DTK::Client
     #
     # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
     #
-    desc "import-git MODULE-NAME GIT-REPO-URL", "Create new local module by importing from provided git repo URL"
+    desc "import-git MODULE-NAME GIT-SSH-REPO-URL", "Create new local module by importing from provided git repo URL"
     def import_git(context_params)
       module_name, git_repo_url = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
 
@@ -240,7 +240,7 @@ module DTK::Client
       FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
       
       # Reuse module create method to create module from local component_module
-      create_response = create(context_params)
+      create_response = import(context_params)
 
       # If server response is not ok, delete cloned module, invoke delete method and notify user about cleanup process.
       unless create_response["status"] == "ok"

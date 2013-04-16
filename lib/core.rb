@@ -106,8 +106,10 @@ module DTK
             error_msg = error_msg.empty? ? 'No error description found' : "#{error_msg}"
             
             # if error_internal.first == true
-            if error_code == "forbidden"
-              raise DTK::Client::DtkError, "[FORBIDDEN] Your session has been suspended, please log in again."
+            if error_code == "unauthorized"
+              raise DTK::Client::DtkError, "[UNAUTHORIZED] Your session has been suspended, please log in again."
+            elsif error_code == "forbidden"
+              raise DTK::Client::DtkError, "[FORBIDDEN] Access not granted, please log in again."
             elsif error_code == "timeout"
               raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
             elsif error_code == "connection_refused"
@@ -217,7 +219,7 @@ module DTK
 
     class Conn
       def initialize()
-        @cookies = Hash.new
+        @cookies = DiskCacher.new.load_cookie
         @connection_error = nil
         login()
       end
@@ -267,7 +269,10 @@ module DTK
 
       def logout()
         response = get_raw rest_url("user/process_logout")
-           
+
+        # save cookies
+        DiskCacher.new.save_cookie(@cookies)
+
         raise DTK::Client::DtkError, "Failed to logout, and terminate session!" unless response
         @cookies = nil
       end
@@ -293,7 +298,7 @@ module DTK
         response = post_raw rest_url("user/process_login"),creds
         if response.kind_of?(Common::Response) and not response.ok?
           @connection_error = response
-        else             
+        else
           @cookies = response.cookies
         end
       end
