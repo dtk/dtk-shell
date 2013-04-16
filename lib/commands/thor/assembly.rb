@@ -560,9 +560,6 @@ TODO: will put in dot release and will rename to 'extend'
         end
       end
 
-      require 'ap'
-      ap response
-
       #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
       response.set_data(*response.data(:results))
       response.render_table(:netstat_data)
@@ -607,6 +604,7 @@ TODO: will put in dot release and will rename to 'extend'
 
       response_processed = response.data['results'].values.flatten
       response_processed.reject! {|r| !r.to_s.include?(filter_pattern)} unless filter_pattern.nil?
+      response_processed.reject! {|r| r == nil }
       #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
       response.set_data(*response_processed)
       response.render_table(:ps_data)
