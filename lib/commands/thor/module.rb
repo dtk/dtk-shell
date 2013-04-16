@@ -11,6 +11,8 @@ require 'fileutils'
 module DTK::Client
   class Module < CommandBaseThor
 
+    DEFAULT_COMMIT_MSG = "Initial commit."
+
     no_tasks do
       include CloneMixin
       include PushToRemoteMixin
@@ -192,6 +194,11 @@ module DTK::Client
       else
         response = Response::Ok.new("module_created" => module_name)
       end
+
+      # we push clone changes anyway, user can change and push again
+      context_params.add_context_to_params("module", "module", module_id)
+      push_clone_changes(context_params)
+
       response
     end
 
@@ -445,7 +452,7 @@ module DTK::Client
       :desc => "Commit message"
     def push_clone_changes(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      push_clone_changes_aux(:component_module,component_module_id,options["version"],options["message"])
+      push_clone_changes_aux(:component_module,component_module_id,options["version"],options["message"]||DEFAULT_COMMIT_MSG)
     end
 
     desc "MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"
