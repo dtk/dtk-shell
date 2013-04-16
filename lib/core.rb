@@ -219,7 +219,8 @@ module DTK
 
     class Conn
       def initialize()
-        @cookies = DiskCacher.new.load_cookie
+        #@cookies = DiskCacher.new.load_cookie
+        @cookies = {}
         @connection_error = nil
         login()
       end
