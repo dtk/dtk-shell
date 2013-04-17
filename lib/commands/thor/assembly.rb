@@ -205,6 +205,20 @@ TODO: will put in dot release and will rename to 'extend'
     end
 =end
 
+    desc "ASSEMBLY-NAME/ID list-task-info", "Task status details of running or last assembly task"
+    def list_task_info(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :format => :list
+      }
+      response = post rest_url("assembly/task_status"), post_body
+      # TODO Amar: remove this error after server code is merged from for_amar branch
+      raise DTK::Client::DtkError, "Not supported command 'list-task-info' with current DTK server version." unless response.ok? 
+      response.override_command_class("list_task")
+      puts response.render_data
+    end
+
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
@@ -387,7 +401,7 @@ TODO: will put in dot release and will rename to 'extend'
         :attribute_id => attribute_id,
         :subtype     => :instance
       }
-      post rest_url("assembly/info"), post_body
+      resp = post rest_url("assembly/info"), post_body
     end
 
     desc "delete-and-destroy ASSEMBLY-NODE/ID -y", "Delete assembly instance, terminating any nodes that have been spun up."

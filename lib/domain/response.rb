@@ -14,6 +14,11 @@ module DTK
       # :print_error_table  => we use it if we want to print 'error legend' for given tables (default: false)
       attr_accessor :render_view, :skip_render, :print_error_table
 
+      # Amar: had to add this in order to get json meta for PP that's not for domain class
+      def override_command_class(json_top_type)
+        @command_class = json_top_type
+      end
+
       def initialize(command_class=nil,hash={})
         super(hash)           
         @command_class     = command_class
@@ -62,6 +67,7 @@ module DTK
 
             # sending raw data from response
             ViewProcessor.render(@command_class, data, @render_view, @render_data_type, nil, @print_error_table)
+            
           else
             hash_part()
           end

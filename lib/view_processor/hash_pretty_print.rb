@@ -43,7 +43,7 @@ module DTK
 
         object_def.values.first.each do |item|
           if item.kind_of?(Hash)
-            render_object_def__hash_def!(ret,hash,item)
+            render_object_def__hash_def!(ret,hash,item)    
           else
             key = item.to_s
             target_key = replace_with_key_alias?(key) 
@@ -57,7 +57,7 @@ module DTK
             ret[key] = hash[key] if hash[key]
           end
         end
-        ret
+        return ret
       end
       def replace_with_key_alias?(key)
         #TODO: fix
@@ -70,7 +70,6 @@ module DTK
         :library_library_id => :library_id,
         :datacenter_datacenter_id => :target_id
       }
-
 
       def render_object_def__hash_def!(ret,hash,hash_def_item)
         key = hash_def_item.keys.first.to_s

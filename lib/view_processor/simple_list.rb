@@ -2,7 +2,7 @@ require 'erubis'
 module DTK
   module Client
     class ViewProcSimpleList < ViewProcessor
-      def render(hash)
+      def render(hash)                  
         pp_adapter = ViewProcessor.get_adapter("hash_pretty_print",@command_class,@data_type_index)
         ordered_hash = pp_adapter.render(hash)
         if ordered_hash.size == 1
@@ -104,6 +104,7 @@ module DTK
       end
 
       def simple_value_render(ordered_hash,ident_info)
+           
         proc_ordered_hash = proc_ordered_hash(ordered_hash)
 
         ident = ident_info[:ident]||0

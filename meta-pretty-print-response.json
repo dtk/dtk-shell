@@ -59,6 +59,7 @@
             "node_name",
             "node_id",
             "os_type",
+            "admin_op_status",
             {
                "external_ref":{
                   "type":"external_ref",
@@ -80,8 +81,7 @@
          "external_ref_def":[
             "image_id",
             "size",
-            "dns_name",
-            "private_dns_name"
+            "dns_name"
          ],
          "assembly_def":[
             "display_name",
@@ -191,6 +191,46 @@
                   "is_array":true
                }
             }
+         ]
+      }
+   },
+   "list_task":{
+      "top_type":"list_task",
+      "defs":{
+         "list_task_def":[
+            "task_name",
+            "task_id",  
+            "temporal_order",
+            {
+               "actions":{
+                  "type":"action",
+                  "is_array":true
+               }
+            }
+         ],
+         "action_def":[
+            "task_name",
+            "temporal_order",
+            {
+               "nodes":{
+                  "type":"node",
+                  "is_array":true                  
+               }
+            }
+         ],
+         "node_def":[
+            "task_name",
+            "node_name",
+            "node_id",
+            {
+               "components":{
+                  "type":"component",
+                  "is_array":true                    
+               }
+            }
+         ],
+         "component_def":[
+            "component_name"
          ]
       }
    }

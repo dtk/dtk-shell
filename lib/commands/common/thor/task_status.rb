@@ -11,7 +11,7 @@ module DTK::Client
                 id_field => id,
                 :format => :table
               }
-              response = post rest_url("#{type}/task_status"), post_body
+              response = post rest_url("#{type}/task_status"), post_body                 
 
               raise DTK::Client::DtkError, "[ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
 
