@@ -1,7 +1,6 @@
 #TODO: user common utils in DTK::Common::Rest
 
 require 'rubygems'
-require 'bundler/setup'
 require 'singleton'
 require 'restclient'
 require 'colorize'
