@@ -71,7 +71,7 @@ module DTK::Client
           :node      => [
             ['info',"info","# Return info about node instance belonging to given assembly."],
             ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context assembly."],
-            ['get-ps', "get-ps [FILTER]", "# Returns a list of running processes for a given node instance belonging to context assembly."]
+            ['get-ps', "get-ps [--filter] [PATTERN]", "# Returns a list of running processes for a given node instance belonging to context assembly."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."]
@@ -567,7 +567,8 @@ TODO: will put in dot release and will rename to 'extend'
     GETNETSTATSTRIES = 6
     GETNETSTATSSLEEP = 0.5
 
-    desc "ASSEMBLY-NAME/ID get-ps  [FILTER]", "Get ps"
+    desc "ASSEMBLY-NAME/ID get-ps [--filter] [PATTERN]", "Get ps"
+    method_option :filter, :type => :boolean, :default => false, :aliases => '-f'
     def get_ps(context_params)
 
       assembly_id,node_id,filter_pattern = context_params.retrieve_arguments([:assembly_id!,:node_id, :option_1],method_argument_names)
@@ -603,7 +604,7 @@ TODO: will put in dot release and will rename to 'extend'
       end
 
       response_processed = response.data['results'].values.flatten
-      response_processed.reject! {|r| !r.to_s.include?(filter_pattern)} unless filter_pattern.nil?
+      response_processed.reject! {|r| !r.to_s.include?(filter_pattern)} unless (filter_pattern.nil? || !options["filter"])
       response_processed.reject! {|r| r == nil }
       #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
       response.set_data(*response_processed)
