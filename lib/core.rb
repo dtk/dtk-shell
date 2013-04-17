@@ -1,7 +1,6 @@
 #TODO: user common utils in DTK::Common::Rest
 
 require 'rubygems'
-require 'bundler/setup'
 require 'singleton'
 require 'restclient'
 require 'colorize'
@@ -219,7 +218,7 @@ module DTK
 
     class Conn
       def initialize()
-        @cookies = DiskCacher.new.load_cookie
+        @cookies = Hash.new
         @connection_error = nil
         login()
       end
@@ -270,8 +269,8 @@ module DTK
       def logout()
         response = get_raw rest_url("user/process_logout")
 
-        # save cookies
-        DiskCacher.new.save_cookie(@cookies)
+        # save cookies - no need to persist them
+        # DiskCacher.new.save_cookie(@cookies)
 
         raise DTK::Client::DtkError, "Failed to logout, and terminate session!" unless response
         @cookies = nil

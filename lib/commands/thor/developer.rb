@@ -30,6 +30,7 @@ module DTK::Client
 
       # send as binary post request
     	response = post_file rest_url("developer/inject_agent"), { :agent_files => request_body, :node_pattern => node_pattern, :node_list => ids }
+      puts "Agent uploaded successfully!";return if response.ok?
       return response
     end
 
