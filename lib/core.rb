@@ -219,7 +219,7 @@ module DTK
     class Conn
       def initialize()
         #@cookies = DiskCacher.new.load_cookie
-        @cookies = {}
+        @cookies = Hash.new
         @connection_error = nil
         login()
       end
@@ -271,7 +271,7 @@ module DTK
         response = get_raw rest_url("user/process_logout")
 
         # save cookies
-        DiskCacher.new.save_cookie(@cookies)
+        #DiskCacher.new.save_cookie(@cookies)
 
         raise DTK::Client::DtkError, "Failed to logout, and terminate session!" unless response
         @cookies = nil
