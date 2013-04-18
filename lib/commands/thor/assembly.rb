@@ -213,8 +213,13 @@ TODO: will put in dot release and will rename to 'extend'
         :format => :list
       }
       response = post rest_url("assembly/task_status"), post_body
-      # TODO Amar: remove this error after server code is merged from for_amar branch
-      raise DTK::Client::DtkError, "Not supported command 'list-task-info' with current DTK server version." unless response.ok? 
+      unless response.ok? 
+        # TODO Amar: remove specific error check after server code is merged from for_amar branch
+        if (response["errors"].first["message"].include?("undefined method `status'"))
+          raise DTK::Client::DtkError, "Not supported command 'list-task-info' with current DTK server version." 
+        end
+        return response
+      end
       response.override_command_class("list_task")
       puts response.render_data
     end
