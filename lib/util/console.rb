@@ -81,7 +81,7 @@ module DTK::Client
         Dir.chdir(path)
         puts "[NOTICE] You are switching to unix-shell, to path #{path}"
         begin
-          prompt = DTK::Client::OsUtil("unix-shell: ", :yellow)
+          prompt = DTK::Client::OsUtil.colorize("unix-shell: ", :yellow)
           while line = Readline.readline(prompt, true)
             begin
               line = line.chomp()
