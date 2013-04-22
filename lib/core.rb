@@ -223,7 +223,7 @@ module DTK
         login()
       end
 
-      VERBOSE_MODE_ON = ::Config::Configuration.get(:verbose_rest_calls)
+      VERBOSE_MODE_ON = ::DTK::Configuration.get(:verbose_rest_calls)
 
       attr_reader :connection_error
 

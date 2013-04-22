@@ -125,7 +125,7 @@ def execute_shell_command(line, prompt)
       puts @context.dirs.inspect
     else
 
-      temp_dev_flag = ::Config::Configuration.get(:development_mode)
+      temp_dev_flag = ::DTK::Configuration.get(:development_mode)
       user_input    = (temp_dev_flag ? ('dtk-input > ' + cmd.to_s + ' ' + args.join(' ')) : ('Processing...'))
       puts user_input
 

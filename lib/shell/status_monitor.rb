@@ -22,7 +22,7 @@ module DTK
       include Singleton
       include DTK::Client::CommandBase
 
-      THREAD_SLEEP_TIME = Config::Configuration.get(:task_check_frequency)
+      THREAD_SLEEP_TIME = DTK::Configuration.get(:task_check_frequency)
 
       def initialize
         @threads        = []

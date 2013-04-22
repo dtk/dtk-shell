@@ -60,12 +60,12 @@ module DTK
         end
 
         def module_clone_location()
-          module_location = ::Config::Configuration.get(:module_location)
+          module_location = ::DTK::Configuration.get(:module_location)
           return (module_location.start_with?('/') ? module_location : "#{home_dir}/#{module_location}")
         end
 
         def service_clone_location()
-          service_location = ::Config::Configuration.get(:service_location)
+          service_location = ::DTK::Configuration.get(:service_location)
           return (service_location.start_with?('/') ? service_location : "#{home_dir}/#{service_location}")
         end
         

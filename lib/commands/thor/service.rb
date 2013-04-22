@@ -111,13 +111,13 @@ module DTK::Client
         
         if about
           case about
-          when "assembly-templates":
+          when "assembly-templates"
             data_type        = :assembly_template
             action           = "list_assemblies"
             post_body        = { :service_module_id => service_module_id }
 
             response = post rest_url("service_module/#{action}"), post_body
-          when "modules":
+          when "modules"
             ids       = []
             data_type = :component
             post_body = {
@@ -279,7 +279,7 @@ module DTK::Client
         grit_adapter.print_status
 
         # check to see if auto commit flag
-        auto_commit  = ::Config::Configuration.get(:auto_commit_changes)
+        auto_commit  = ::DTK::Configuration.get(:auto_commit_changes)
         confirmed_ok = false
 
         # if there is no auto commit ask for confirmation

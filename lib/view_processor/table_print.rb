@@ -15,8 +15,10 @@ end
 
 # override OpenStruct to remove defintion for id
 class DtkOpenStruct < OpenStruct
-  undef id
-  undef type
+  if RUBY_VERSION.match(/^1\.8\..*$/)
+    undef id
+    undef type
+  end
 end
 
 module DTK
@@ -129,7 +131,7 @@ module DTK
       end
 
       def get_metadata
-        content = DiskCacher.new.fetch("table_metadata", ::Config::Configuration.get(:meta_table_ttl))
+        content = DiskCacher.new.fetch("table_metadata", ::DTK::Configuration.get(:meta_table_ttl))
 
         raise DTK::Client::DtkError, "Table metadata is empty, please contact DTK team." if content.empty?
         return JSON.parse(content)

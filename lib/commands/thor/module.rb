@@ -52,15 +52,13 @@ module DTK::Client
       post rest_url("component_module/test_generate_dsl"),{:component_module_id => component_module_id}
     end
 
-    desc "MODULE-NAME/ID dsl-upgrade [UPGRADE-VERSION] [-v MODULE-VERSION]","Component module DSL upgrade"
-    version_method_option
+    desc "MODULE-NAME/ID dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
     def dsl_upgrade(context_params)
       component_module_id, dsl_version = context_params.retrieve_arguments([:module_id, :option_1],method_argument_names)
       dsl_version ||= MostRecentDSLVersion
       post_body = {
         :component_module_id => component_module_id,
-        :dsl_version => dsl_version,
-        :version => options["version"]
+        :dsl_version => dsl_version
       }
        post rest_url("component_module/create_new_dsl_version"),post_body
     end
@@ -415,7 +413,7 @@ module DTK::Client
         grit_adapter.print_status
 
         # check to see if auto commit flag
-        auto_commit  = ::Config::Configuration.get(:auto_commit_changes)
+        auto_commit  = ::DTK::Configuration.get(:auto_commit_changes)
         confirmed_ok = false
 
         # if there is no auto commit ask for confirmation

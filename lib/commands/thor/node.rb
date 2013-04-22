@@ -84,9 +84,9 @@ module DTK::Client
         }
 
         case about
-          when "components":
+          when "components"
             data_type = :component
-          when "attributes":
+          when "attributes"
             data_type = :attribute
           else
             raise_validation_error_method_usage('list')

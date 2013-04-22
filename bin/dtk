@@ -12,7 +12,7 @@ require 'shellwords'
 
 $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
 
-temp_dev_flag = ::Config::Configuration.get(:development_mode)
+temp_dev_flag = ::DTK::Configuration.get(:development_mode)
 user_input    = (temp_dev_flag ? 'dtk-input > ' + ARGV.join(' ') : 'Processing...')
 puts user_input
 
@@ -36,4 +36,6 @@ rescue DTK::Client::DtkError => e
   puts e.message
 rescue Exception => e
   puts e.message
+  # important for debugging unexpected errors, but still protecting client for not needed data
+  puts e.backtrace if DTK::Configuration.get(:development_mode)
 end

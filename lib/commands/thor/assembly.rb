@@ -6,8 +6,8 @@ dtk_require_from_base("util/os_util")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 
-LOG_SLEEP_TIME   = Config::Configuration.get(:tail_log_frequency)
-DEBUG_SLEEP_TIME = Config::Configuration.get(:debug_task_frequency)
+LOG_SLEEP_TIME   = DTK::Configuration.get(:tail_log_frequency)
+DEBUG_SLEEP_TIME = DTK::Configuration.get(:debug_task_frequency)
 
 # regex: (context_params.retrieve_arguments\([a-z\[\]:_,0-9!]+)
 # replace: $1,method_argument_names
@@ -291,13 +291,13 @@ TODO: will put in dot release and will rename to 'extend'
 
       if about
         case about
-          when "nodes":
+          when "nodes"
             data_type = :node
-          when "components":
+          when "components"
             data_type = :component
-          when "attributes":
+          when "attributes"
             data_type = :attribute
-          when "tasks":
+          when "tasks"
             data_type = :task
           else
             raise_validation_error_method_usage('list')
