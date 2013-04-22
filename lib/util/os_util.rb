@@ -25,7 +25,7 @@ module DTK
             return "#{genv(:appdata)}/DTK"
           else
   	  			# returns log_path for current user e.g /var/log/user1
-            return "/var/log/dtk/#{::DTK::Common::Aux.running_process_user()}"
+            return "#{dtk_local_folder}"
           end
         end
 
@@ -48,7 +48,11 @@ module DTK
         end
 
         def dtk_app_folder
-          return (is_windows? ? "#{genv(:homedrive)}#{genv(:homepath)}/dtk/" : "/etc/dtk/")
+          return (is_windows? ? "#{genv(:homedrive)}#{genv(:homepath)}/dtk/" : "#{/etc/}dtk/")
+        end
+
+        def dtk_local_folder
+          return (is_windows? ? "#{genv(:homedrive)}#{genv(:homepath)}/dtk/" : "#{home_dir}/.dtk/")
         end
 
         def home_dir

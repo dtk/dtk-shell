@@ -161,7 +161,7 @@ module DTK
       include Singleton
       include ParseFile
 
-      CONFIG_FILE = File.join(OsUtil.dtk_home_dir, "/.dtk/.dtkconfig")
+      CONFIG_FILE = File.join(OsUtil.dtk_home_dir, "/.dtk/dtkconfig")
       REQUIRED_KEYS = [:server_host]
 
       def self.[](k)

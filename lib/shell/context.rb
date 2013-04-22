@@ -14,7 +14,7 @@ module DTK
       CLIENT_COMMANDS       = ['cc','exit','clear']
       DTK_ROOT_PROMPT       = "dtk:/>"
       COMMAND_HISTORY_LIMIT = 200
-      HISTORY_LOCATION      = DTK::Client::OsUtil.dtk_user_app_folder + "shell_history"
+      HISTORY_LOCATION      = DTK::Client::OsUtil.dtk_local_folder + "shell_history"
       ROOT_TASKS            = DTK::Client::Dtk.task_names
       ALL_COMMANDS          = ROOT_TASKS + ['component','attribute']
 
