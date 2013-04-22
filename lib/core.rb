@@ -161,7 +161,7 @@ module DTK
       include Singleton
       include ParseFile
 
-      CONFIG_FILE = File.join(OsUtil.dtk_home_dir, ".dtkclient")
+      CONFIG_FILE = File.join(OsUtil.dtk_home_dir, "/.dtk/.dtkconfig")
       REQUIRED_KEYS = [:server_host]
 
       def self.[](k)
@@ -174,11 +174,11 @@ module DTK
         validate()
       end
       def set_defaults()
-        self[:server_port] = 7000
+        self[:server_port] = 80
         self[:component_modules_dir] = OsUtil.module_clone_location()
         self[:service_modules_dir] = OsUtil.service_clone_location()
         self[:secure_connection] = true
-        self[:secure_connection_server_port] = 7002
+        self[:secure_connection_server_port] = 443
       end
 
       def load_config_file()
