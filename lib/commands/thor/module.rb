@@ -160,16 +160,13 @@ module DTK::Client
     def import(context_params)
       module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       
-      #first check that there is a directory there and it is not already a git repo, and it ha appropriate content
+      # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
       response = Helper(:git_repo).check_local_dir_exists_with_content(:component_module,module_name)
       return response unless response.ok?
       module_directory = response.data(:module_directory)
 
-      #first make call to server to create an empty repo
-      post_body = {
-        :module_name => module_name
-      }
-      response = post rest_url("component_module/create"), post_body
+      # first make call to server to create an empty repo
+      response = post rest_url("component_module/create"), { :module_name => module_name }
       return response unless response.ok?
       @@invalidate_map << :module_component
 

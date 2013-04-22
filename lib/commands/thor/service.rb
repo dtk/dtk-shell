@@ -142,9 +142,9 @@ module DTK::Client
       response
     end
 
-    desc "import REMOTE-SERVICE-NAME", "Import remote service module into local environment"
+    desc "import-r8n REMOTE-SERVICE-NAME", "Import remote service module into local environment"
     version_method_option
-    def import(context_params)
+    def import_r8n(context_params)
 
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
@@ -346,18 +346,28 @@ module DTK::Client
     end
 
     # TODO: put in two versions, one that creates empty and anotehr taht creates from local dir; use --empty flag
-    desc "create SERVICE-NAME", "Create an empty service module"
-    def create(context_params)
+    desc "import SERVICE-NAME", "Create new service module from local clone"
+    def import(context_params)
       module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
-      post_body = {
-       :module_name => module_name
-      }
-      response = post rest_url("service_module/create"), post_body
-      # when changing context send request for getting latest services instead of getting from cache
+      # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
+      response = Helper(:git_repo).check_local_dir_exists_with_content(:service_module,module_name)
+      return response unless response.ok?
+      service_directory = response.data(:module_directory)
+
+      # first call to create empty module
+      response = post rest_url("service_module/create"), { :module_name => module_name }
+      return response unless response.ok?
       @@invalidate_map << :service_module
 
-      return response
+      # initial commit for given service module
+      service_module_id, repo_info = response.data(:service_module_id, :repo_info)
+      repo_url,repo_id,module_id,branch = [:repo_url,:repo_id,:module_id,:workspace_branch].map { |k| repo_info[k.to_s] }
+      response = Helper(:git_repo).initialize_client_clone_and_push(:service_module, module_name,branch,repo_url)
+      return response unless response.ok?
+      repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
+      puts "Successfully imported service module with ID '#{service_module_id}'"
+      return { :service_module_id => service_module_id }
     end
 
     desc "delete SERVICE-IDENTIFIER [-y] [-p]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
