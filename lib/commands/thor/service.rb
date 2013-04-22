@@ -399,7 +399,7 @@ module DTK::Client
       if options.purge?
         raise DTK::Client::DtkValidationError, "Unable to delete local directory. Message: #{module_info['errors'].first['message']}." unless module_info["status"] == "ok"
         module_id       = module_info["data"]["display_name"]
-        modules_path    = OsUtil.module_clone_location()
+        modules_path    = OsUtil.service_clone_location()
         module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
         
         unless (module_location.nil? || ("#{modules_path}/" == module_location))
