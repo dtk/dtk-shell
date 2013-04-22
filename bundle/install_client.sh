@@ -186,6 +186,8 @@ echo "Wizard is installing necessery gems ..."
 # add ABH gem repository for dtk gems
 add_abh_gem_repository
 
+# install rdoc if document generation is selected
+[[ $ruby_doc_args ]] && install_gem rdoc
 # install dtk gems
 install_gem "dtk-common"                            
 install_gem "dtk-client"
