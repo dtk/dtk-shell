@@ -83,7 +83,7 @@ module DTK
           @previous_context = @active_context.clone_me()
 
           # jump to root
-          reset if args.to_s.match(/^\//)
+          reset if args.join('').match(/^\//)
 
           # Validate and change context
           @active_context, error_message = prepare_context_change(args, @active_context)
@@ -199,6 +199,8 @@ module DTK
       end
 
       def validate_value(command, value, active_context_copy=nil)
+        
+        
         context_hash_data = nil
         invalid_context = ""
          # check value
@@ -514,11 +516,11 @@ module DTK
       private
 
       #
-      # method takes paramters that can hold specific thor options
+      # method takes parameters that can hold specific thor options
       #
       def self.parse_thor_options(args, options=nil)
         type = nil
-
+        
         # options to handle thor options -m MESSAGE and --list
         options_param_args = []
         args.each_with_index do |e,i|
@@ -547,11 +549,11 @@ module DTK
         return options
       end
 
-      def self.get_option_type(options, option)
+      def self.get_option_type(options, option)       
         @ret = nil
         
         options.each do |opt|
-          @ret = opt[:type] if(opt[:alias].first == option || opt[:switch].first == option)
+          @ret = opt[:type] if(opt[:alias].first == option || opt[:switch] == option)
         end
 
         return @ret

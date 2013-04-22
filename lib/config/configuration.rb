@@ -18,7 +18,7 @@ require 'singleton'
 
 dtk_require_from_base('util/os_util')
 
-module Config
+module DTK
   class Configuration
     include Singleton
 

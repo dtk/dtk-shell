@@ -1,5 +1,5 @@
 require 'net/http'
-require 'md5'
+#require 'md5' => Ruby 1.8.7 specific
 require 'fakeweb'
 require File.expand_path('../util/os_util', File.dirname(__FILE__))
 dtk_require("../commands")
@@ -20,7 +20,7 @@ class DiskCacher
   end
 
   def fetch(file_name, max_age=0, use_mock_up=true)
-    file = MD5.hexdigest(file_name)
+    file = Digest::MD5.hexdigest(file_name)
     file_path = File.join(@cache_dir, file)
 
     # we check if the file -- a MD5 hexdigest of the URL -- exists

@@ -12,7 +12,7 @@ class DtkLogger
   LOG_FILE_NAME           = 'client.log'
   LOG_MB_SIZE             = 2
   LOG_NUMBER_OF_OLD_FILES = 10
-  DEVELOPMENT_MODE        = Config::Configuration.get(:development_mode)
+  DEVELOPMENT_MODE        = DTK::Configuration.get(:development_mode)
 
   include Singleton
 
