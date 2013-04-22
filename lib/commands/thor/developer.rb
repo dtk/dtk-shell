@@ -3,7 +3,7 @@ require 'base64'
 module DTK::Client
   class Developer < CommandBaseThor
 
-    MATCH_FILE_NAME  = /[a-zA-Z0-9]+\.[a-zA-Z]+$/
+    MATCH_FILE_NAME  = /[a-zA-Z0-9_]+\.[a-zA-Z]+$/
     GIT_LOG_LOCATION = File.expand_path('../../../lib/git-logs/git.log', File.dirname(__FILE__))
     PROJECT_ROOT     = File.expand_path('../../../', File.dirname(__FILE__))
 

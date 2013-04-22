@@ -52,13 +52,15 @@ module DTK::Client
       post rest_url("component_module/test_generate_dsl"),{:component_module_id => component_module_id}
     end
 
-    desc "MODULE-NAME/ID dsl-upgrade [UPGRADE-VERSION]","Component module DSL upgrade"
+    desc "MODULE-NAME/ID dsl-upgrade [UPGRADE-VERSION] [-v MODULE-VERSION]","Component module DSL upgrade"
+    version_method_option
     def dsl_upgrade(context_params)
       component_module_id, dsl_version = context_params.retrieve_arguments([:module_id, :option_1],method_argument_names)
       dsl_version ||= MostRecentDSLVersion
       post_body = {
         :component_module_id => component_module_id,
-        :dsl_version => dsl_version
+        :dsl_version => dsl_version,
+        :version => options["version"]
       }
        post rest_url("component_module/create_new_dsl_version"),post_body
     end
