@@ -16,7 +16,7 @@ Gem::Specification.new do |gem|
   gem.version       = DtkClient::VERSION
 
   gem.add_dependency 'bundler','>= 1.2.4'
-  # gem.add_dependency 'json','1.7.4'
+  # gem.add_dependency 'json' ,'1.7.4'
   gem.add_dependency 'hirb','~> 0.7.0'
   gem.add_dependency 'thor','~> 0.15.4'
   # gem.add_dependency 'activesupport','~> 3.2.12'
@@ -25,7 +25,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'rest-client','~> 1.6.7'
   # gem.add_dependency 'puppet','~> 3.1.0'
   gem.add_dependency 'grit','~> 2.5.0'
-  gem.add_dependency 'dtk-common','>= 0.1.7'
+  gem.add_dependency 'dtk-common','>= 0.1.8'
   gem.add_dependency 'jenkins-client','~> 0.0.1'
   gem.add_dependency 'colorize','~> 0.5.8'
   # gem.add_dependency 'awesome_print','~> 1.1.0'
