@@ -15,10 +15,6 @@ module DTK::Client
 
               raise DTK::Client::DtkError, "[ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
 
-              response.render_table(:task_status)
-              system('clear')
-              response.render_data(true)
-
               # stop pulling when top level task succeds, fails or timeout
               if response and response.data and response.data.first
                 #TODO: may fix in server, but now top can have non executing state but a concurrent branch can execute; so
@@ -29,9 +25,18 @@ module DTK::Client
                 is_pending   = (response.data.select {|r|r["status"].nil? }).size > 0
                 is_executing = (response.data.select {|r|r["status"].eql? "executing"}).size > 0
  
-                break unless (is_executing || is_pending)
+                # break unless (is_executing || is_pending)
+                unless (is_executing || is_pending)
+                  response.print_error_table = true
+                  response.render_table(:task_status)
+                  return response
+                end
               end
-            
+
+              response.render_table(:task_status)
+              system('clear')
+              response.render_data(true)
+
               Console.wait_animation("Watching '#{type}' task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
             end
           rescue Interrupt => e

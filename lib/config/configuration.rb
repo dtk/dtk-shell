@@ -44,13 +44,13 @@ module DTK
       end
 
       # We load this if there is no local configuration
-      external_file_location = File.join(::DTK::Client::OsUtil.dtk_home_dir(), "#{EXTERNAL_APP_CONF}")
+      external_file_location = File.join(::DTK::Client::OsUtil.dtk_local_folder(), "#{EXTERNAL_APP_CONF}")
 
       if File.exist?(external_file_location)
         external_configuration = load_configuration_to_hash(external_file_location)
         @cache.merge!(external_configuration)
-      else 
-        puts "[INFO] DTK client using default configuration, to override this create your own configuration: #{external_file_location}"
+      #else 
+      #  puts "[INFO] DTK client using default configuration, to override this create your own configuration: #{external_file_location}"
       end
 
     end

@@ -1,5 +1,4 @@
 dtk_require_from_base('command_helpers/ssh_processing')
-dtk_require_from_base('util/dtk_puppet')
 dtk_require_dtk_common('grit_adapter')
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/list_diffs')
@@ -259,6 +258,8 @@ module DTK::Client
       return create_response
     end
 
+=begin 
+    => DUE TO DEPENDENCY TO PUPPET GEM WE OMMIT THIS <=
     desc "import-puppet-forge PUPPET-FORGE-MODULE-NAME", "Imports puppet module from puppet forge via puppet gem"
     def import_puppet_forge(context_params)
       module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
@@ -274,6 +275,7 @@ module DTK::Client
       # rest of reponsabilty is given to import method
       import(context_params)
     end
+=end
 
     desc "MODULE-NAME/ID import-version VERSION", "Import a specfic version from a linked component module"
     def import_version(context_params)

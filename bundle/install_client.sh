@@ -4,9 +4,9 @@
 # GLOBAL VAR
 
 abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
-log_location="/var/log/dtk/${SUDO_USER}"
-etc_location="/etc/dtk/"
-
+home_dir=`cd ~ && pwd`
+etc_location="${home_dir}/.dtk/"
+conf_path="${etc_location}/dtkconfig"
 
 # FUNCTIONS BEGIN
 
@@ -187,39 +187,22 @@ echo "Wizard is installing necessery gems ..."
 add_abh_gem_repository
 
 # install rdoc if document generation is selected
-[[ $ruby_doc_args ]] && install_gem rdoc
+[[ !$ruby_doc_args ]] && install_gem rdoc
 # install dtk gems
 install_gem "dtk-common"                            
 install_gem "dtk-client"
 
-log_file=${log_location}/dtk-client.log
-# check if there is log file if not create it
-if [ -f ${log_file} ]; then
-    echo "DTK client log file already exists $log_file. Continuing installation ..."
-elif [[ ! -d ${log_location} ]]; then
-    mkdir -p ${log_location}
-    chown ${SUDO_USER} ${log_location}
-    touch $log_file
-    chmod 666 $log_file
-elif [ -f $log_file ]; then
-    echo "Created DTK Client log file $file_path!"
-else
-    echo "[WARNING] Unable to create DTK Client log file at $file_path!"
-fi
-
 # check if there is already configuration
-home_dir=`cd ~ && pwd`
-file_path="$home_dir/.dtkclient"
-if [ -f $file_path ]; then
+if [ -f ${conf_path} ]; then
   # file exists!
   REPLY=""
-  read -p "Configuration $file_path exists. Overwrite? [y/N]: " -n 1 -r
+  read -p "Configuration ${conf_path} exists. Overwrite? [y/N]: " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
-    rm $file_path
+    rm ${conf_path}
   else
-    echo "DTL CLI Client will use existing configuration: $file_path."
+    echo "DTL CLI Client will use existing configuration: ${conf_path}."
     echo "Exiting..."
     exit
   fi
@@ -227,14 +210,11 @@ if [ -f $file_path ]; then
 fi
 
 #create dtk dir in /etc
-etc_location_full=${etc_location}/${SUDO_USER}
-if [[ ! -d ${etc_location_full} ]]; then
-  mkdir -p ${etc_location_full}
-  chown ${SUDO_USER} ${etc_location_full}
+if [[ ! -d ${etc_location} ]]; then
+  mkdir -p ${etc_location}
 fi
-if [[ ! -f ${etc_location_full}/shell_history ]]; then
-  touch ${etc_location_full}/shell_history
-  chown ${SUDO_USER} ${etc_location_full}/shell_history
+if [[ ! -f ${etc_location}/shell_history ]]; then
+  touch ${etc_location}/shell_history
 fi
 
 
@@ -286,15 +266,15 @@ if [[ $secure_connection_port == "" ]]; then
 fi
 
 # print to file
-echo "username=$username"  >> $file_path
-echo "password=$password"  >> $file_path
-echo "server_host=$server" >> $file_path
-echo "server_port=$port"   >> $file_path
-echo "secure_connection=$secure_connection"           >> $file_path
-echo "secure_connection_server_port=$secure_connection_port" >> $file_path
+echo "username=$username"  >> ${conf_path}
+echo "password=$password"  >> ${conf_path}
+echo "server_host=$server" >> ${conf_path}
+echo "server_port=$port"   >> ${conf_path}
+echo "secure_connection=$secure_connection"           >> ${conf_path}
+echo "secure_connection_server_port=$secure_connection_port" >> ${conf_path}
 
 
-echo "Installation successfuly finished! Configuration saved to $file_path."
+echo "Installation successfuly finished! Configuration saved to ${conf_path}."
 # END SCRIPT
 
 
