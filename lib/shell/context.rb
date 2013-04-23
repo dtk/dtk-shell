@@ -604,9 +604,13 @@ module DTK
 
       def self.is_there_history_file()
         unless File.exists? HISTORY_LOCATION
-          File.open(HISTORY_LOCATION, 'w') {}
+          begin
+            File.open(HISTORY_LOCATION, 'w') {}
+            return true
+          rescue
+            return false
+          end
           #DtkLogger.instance.info "[INFO] Session shell history has been disabled, please create file '#{HISTORY_LOCATION}' to enable it."
-          return false
         end
         return true
       end
