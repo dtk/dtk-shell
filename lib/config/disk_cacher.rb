@@ -1,6 +1,5 @@
 require 'net/http'
 #require 'md5' => Ruby 1.8.7 specific
-require 'fakeweb'
 require File.expand_path('../util/os_util', File.dirname(__FILE__))
 dtk_require("../commands")
 

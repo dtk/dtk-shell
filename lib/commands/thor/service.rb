@@ -307,18 +307,6 @@ module DTK::Client
 
     end
 
-    desc "SERVICE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of service module to server"
-    version_method_option
-    method_option "message",:aliases => "-m" ,
-      :type => :string, 
-      :banner => "COMMIT-MSG",
-      :desc => "Commit message"
-    def push_clone_changes(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      version = options["version"]
-      push_clone_changes_aux(:service_module,service_module_id,version)
-    end
-
     desc "SERVICE-NAME/ID create-new-version NEW-VERSION", "Snapshot current state of module as a new version"
     def create_new_version(context_params)
       service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
@@ -356,18 +344,32 @@ module DTK::Client
       service_directory = response.data(:module_directory)
 
       # first call to create empty module
-      response = post rest_url("service_module/create"), { :module_name => module_name }
+      response = post rest_url("service_module/create"), { :module_name => module_name }        
       return response unless response.ok?
       @@invalidate_map << :service_module
 
       # initial commit for given service module
-      service_module_id, repo_info = response.data(:service_module_id, :repo_info)
+      service_module_id, repo_info, module_id = response.data(:service_module_id, :repo_info)
       repo_url,repo_id,module_id,branch = [:repo_url,:repo_id,:module_id,:workspace_branch].map { |k| repo_info[k.to_s] }
       response = Helper(:git_repo).initialize_client_clone_and_push(:service_module, module_name,branch,repo_url)
       return response unless response.ok?
       repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
-      puts "Successfully imported service module with ID '#{service_module_id}'"
-      return { :service_module_id => service_module_id }
+            
+      context_params.add_context_to_params("service", "service", module_id)
+      push_clone_changes(context_params)
+    end
+
+
+    desc "SERVICE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of service module to server"
+    version_method_option
+    method_option "message",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    def push_clone_changes(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
+      version = options["version"]
+      push_clone_changes_aux(:service_module,service_module_id,version)
     end
 
     desc "delete SERVICE-IDENTIFIER [-y] [-p]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
