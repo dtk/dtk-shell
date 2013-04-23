@@ -61,9 +61,9 @@ IF "%gemsources%" == "" (
 goto :EOF
 
 
-set port=7000
+set port=80
 set secure_connection="true"
-set secure_connection_server_port=7002
+set secure_connection_server_port=443
 
 :: Create the configuration file in the home directory
 :create_config_log
@@ -71,7 +71,6 @@ echo Please enter DTK server information.
 set /P username=Enter your username: 
 set /P password=Enter your password: 
 set /P server=Enter server name: 
-set /P port=Enter port number (default: 7000): 
 set /P secure_connection=Enable secure connection (default: true) [true,false]: 
 
 :while1
