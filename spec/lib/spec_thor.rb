@@ -4,7 +4,6 @@ require File.expand_path('../../lib/shell/context', File.dirname(__FILE__))
 require File.expand_path('../../lib/shell/domain', File.dirname(__FILE__))
 Dir[File.expand_path('../../lib/shell/parse_monkey_patch.rb', File.dirname(__FILE__))].each {|file| require file }
 
-require 'active_support/core_ext/string/inflections'
 require 'shellwords'
 require 'rspec'
 
