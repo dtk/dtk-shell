@@ -81,16 +81,14 @@ IF NOT "%secure_connection%" == "true" IF NOT "%secure_connection%" == "false" I
   goto :while1
 )
 
-set /P secure_connection_server_port=Enter secure connection port number (default: 7002): 
-
 ::set filepath='%HOMEDRIVE%%HOMEPATH%\.dtkclient'
 
-echo username=%username%  > %HOMEDRIVE%%HOMEPATH%\.dtkclient
-echo password=%password%  >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
-echo server_host=%server% >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
-echo server_port=%port%   >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
-echo secure_connection=%secure_connection% >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
-echo secure_connection_server_port=%secure_connection_server_port%   >> %HOMEDRIVE%%HOMEPATH%\.dtkclient
+echo username=%username%  > %HOMEDRIVE%%HOMEPATH%\dtkconfig
+echo password=%password%  >> %HOMEDRIVE%%HOMEPATH%\dtkconfig
+echo server_host=%server% >> %HOMEDRIVE%%HOMEPATH%\dtkconfig
+echo server_port=%port%   >> %HOMEDRIVE%%HOMEPATH%\dtkconfig
+echo secure_connection=%secure_connection% >> %HOMEDRIVE%%HOMEPATH%\dtkconfig
+echo secure_connection_server_port=%secure_connection_server_port%   >> %HOMEDRIVE%%HOMEPATH%\dtkconfig
 
 
 if not exist %APPDATA%\DTK (
