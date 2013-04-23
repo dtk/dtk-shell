@@ -1,6 +1,5 @@
 require File.expand_path('../commands/thor/dtk', File.dirname(__FILE__))
 require File.expand_path('../auxiliary',         File.dirname(__FILE__))
-require 'active_support/core_ext/string/inflections'
 require 'json'
 
 module DTK
