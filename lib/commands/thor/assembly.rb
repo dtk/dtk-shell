@@ -231,7 +231,7 @@ TODO: will put in dot release and will rename to 'extend'
       response = task_status_aux(assembly_id,:assembly,options.wait?)
 
       # TODO: Hack which is necessery for the specific problem (DTK-725), we don't get proper error message when there is a timeout doing converge
-      unless response.nil?
+      unless response == true
         response["data"].each do |data|
           if data["errors"]
             data["errors"]["message"] = "[TIMEOUT ERROR] Server is taking too long to respond." if data["errors"]["message"] == "error"
