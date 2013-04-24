@@ -99,6 +99,26 @@ function check_native_gems {
   fi;
 }
 
+function create_client_conf {
+  if [[ ! -f ${conf_path}/client.conf ]]; then
+    cat > ${conf_path}/client.conf << EOF
+    development_mode=false
+    meta_table_ttl=7200000            # time to live (ms)
+    meta_constants_ttl=7200000        # time to live (ms)
+    meta_pretty_print_ttl=7200000     # time to live (ms)
+    task_check_frequency=60           # check frequency for task status threads (seconds)
+    tail_log_frequency=2              # assembly - frequency between requests (seconds)
+    debug_task_frequency=5            # assembly - frequency between requests (seconds)
+    auto_commit_changes=false         # autocommit for modules
+    verbose_rest_calls=false          # logging of REST calls
+
+    # if relative path is used we will use HOME + relative path, apsoluth path will override this
+    module_location=component_modules
+    service_location=service_modules
+    EOF
+  fi;
+}
+
 # installs gem if not already installed
 function install_gem {
   gem_exists $1
@@ -272,24 +292,6 @@ echo "server_host=$server" >> ${conf_path}
 echo "server_port=$port"   >> ${conf_path}
 echo "secure_connection=$secure_connection"           >> ${conf_path}
 echo "secure_connection_server_port=$secure_connection_port" >> ${conf_path}
-
-if [[ ! -f ${conf_path}/client.conf ]]; then
-  cat > ${conf_path}/client.conf << EOF
-  development_mode=false
-  meta_table_ttl=7200000            # time to live (ms)
-  meta_constants_ttl=7200000        # time to live (ms)
-  meta_pretty_print_ttl=7200000     # time to live (ms)
-  task_check_frequency=60           # check frequency for task status threads (seconds)
-  tail_log_frequency=2              # assembly - frequency between requests (seconds)
-  debug_task_frequency=5            # assembly - frequency between requests (seconds)
-  auto_commit_changes=false         # autocommit for modules
-  verbose_rest_calls=false          # logging of REST calls
-
-  # if relative path is used we will use HOME + relative path, apsoluth path will override this
-  module_location=component_modules
-  service_location=service_modules
-  EOF
-fi;
 
 echo "Installation successfuly finished! Configuration saved to ${conf_path}."
 # END SCRIPT
