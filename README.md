@@ -64,7 +64,7 @@ NOTE: There is client configuration which can be found in `~/dtk/client.conf`. L
 Configuration Setup
 ----------------------
 
-- Create file <tt>~dtkconfig</tt> in you .dtk dir (~/.dtk) e.g. home/foo-user/.dtk/dtkconfig
+- Create file <tt>~dtkconfig</tt> in you dtk dir (~/dtk) e.g. home/foo-user/dtk/connection.conf
   there you will define user credentials e.g.
 
 ```
