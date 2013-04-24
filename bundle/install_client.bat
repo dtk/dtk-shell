@@ -1,4 +1,4 @@
-::@echo off
+@echo off
 :: This script clear terminal and starts installation process of dtk client.
 
 :: GLOBAL VAR
@@ -60,11 +60,6 @@ IF "%gemsources%" == "" (
 )
 goto :EOF
 
-
-set port=80
-set secure_connection="true"
-set secure_connection_server_port=443
-
 :: Create the configuration file in the home directory
 :create_config_log
 echo Please enter DTK server information.
@@ -88,12 +83,17 @@ if not exist %HOMEDRIVE%%HOMEPATH%\dtk (
 
 ::set filepath='%HOMEDRIVE%%HOMEPATH%\.dtkclient'
 
-echo username=%username%  > %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
-echo password=%password%  >> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
-echo server_host=%server% >> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
-echo server_port=%port%   >> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
-echo secure_connection=%secure_connection% >> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
-echo secure_connection_server_port=%secure_connection_server_port%   >> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
+:: default values
+set port=80
+set secure_connection=true
+set secure_connection_server_port=443
+
+echo username=%username%> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
+echo password=%password%>> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
+echo server_host=%server%>> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
+echo server_port=%port%>> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
+echo secure_connection=%secure_connection%>> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
+echo secure_connection_server_port=%secure_connection_server_port%>> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
 
 
 if not exist %APPDATA%\DTK (
