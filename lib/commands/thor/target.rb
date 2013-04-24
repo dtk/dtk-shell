@@ -61,6 +61,7 @@ module DTK::Client
       end
 
       post_body = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
+      post_body ||= {}
 
       # this means that user has not given permission so we skip request
       return unless (target_template_id || post_body[:aws_install])

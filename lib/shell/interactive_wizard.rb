@@ -45,7 +45,7 @@ module DTK
                   end
                 end
                 options += DTK::Client::OsUtil.colorize("\t0. Skip\n", :yellow) if metadata[:skip_option]
-                output = "Select '#{display_name}': \n\n #{options} \n >> "
+                output = "Select '#{display_name}': \n\n #{options} \n "
                 validation_range_start = metadata[:skip_option] ? 0 : 1
                 validation = (validation_range_start..metadata[:options].size).to_a
               when :group
@@ -83,7 +83,15 @@ module DTK
       def self.resolve_input(output, validation, is_required, is_recursion_call)
         tab_prefix = is_recursion_call ? "\t" : ""
 
-        while line = Readline.readline(" #{tab_prefix}#{output}", false)
+        # there was a bug within windows that does not support multiline input in readline method
+        # following is the fix
+        prompt_input =  " #{tab_prefix}#{output}"
+        if output.match(/\n/)
+          puts prompt_input
+          prompt_input = ">> "
+        end
+        
+        while line = Readline.readline(prompt_input, true)
           if is_required && line.empty?
             puts INVALID_INPUT
             next
