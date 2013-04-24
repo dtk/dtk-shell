@@ -26,7 +26,7 @@ Gem::Specification.new do |gem|
   # gem.add_dependency 'puppet','~> 3.1.0'
   gem.add_dependency 'grit','~> 2.5.0'
   gem.add_dependency 'dtk-common','>= 0.1.9'
-  gem.add_dependency 'jenkins-client','~> 0.0.1'
+  # gem.add_dependency 'jenkins-client','~> 0.0.1'
   gem.add_dependency 'colorize','~> 0.5.8'
   gem.add_dependency 'rspec','~> 2.12.0'
   # gem.add_dependency 'awesome_print','~> 1.1.0'
