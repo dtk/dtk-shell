@@ -1,5 +1,4 @@
 require File.expand_path('../lib/shell',                   File.dirname(__FILE__))
-require 'ap'
 
 describe DTK::Shell do
 

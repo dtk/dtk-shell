@@ -468,6 +468,7 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/set_attributes"), post_body
     end
 
+=begin
     desc "create-jenkins-project ASSEMBLY-TEMPLATE-NAME/ID", "Create Jenkins project for assembly template"
     def create_jenkins_project(context_params)
       assembly_id  = context_params.retrieve_arguments([:option_1!],method_argument_names)
@@ -484,6 +485,7 @@ TODO: will put in dot release and will rename to 'extend'
       JenkinsClient.create_assembly_project?(assembly_name,assembly_id)
       nil
     end
+=end
 
 #TODO: in adot release addd auto-compleet capability
 #    desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID [--auto-complete]", "Add (stage) an assembly template to become part of this assembly instance"

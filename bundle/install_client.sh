@@ -294,6 +294,9 @@ echo "secure_connection=$secure_connection"           >> ${conf_path}
 echo "secure_connection_server_port=$secure_connection_port" >> ${conf_path}
 
 echo "Installation successfuly finished! Configuration saved to ${conf_path}."
+
+# change the owner back to the original
+chown -R ${SUDO_USER}:${SUDO_USER} ${etc_location}
 # END SCRIPT
 
 
