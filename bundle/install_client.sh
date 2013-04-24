@@ -5,8 +5,8 @@
 
 abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
 home_dir=`cd ~ && pwd`
-etc_location="${home_dir}/.dtk/"
-conf_path="${etc_location}/dtkconfig"
+etc_location="${home_dir}/dtk/"
+conf_path="${etc_location}/connection.conf"
 
 # FUNCTIONS BEGIN
 
@@ -100,22 +100,22 @@ function check_native_gems {
 }
 
 function create_client_conf {
-  if [[ ! -f ${conf_path}/client.conf ]]; then
-    cat > ${conf_path}/client.conf << EOF
-    development_mode=false
-    meta_table_ttl=7200000            # time to live (ms)
-    meta_constants_ttl=7200000        # time to live (ms)
-    meta_pretty_print_ttl=7200000     # time to live (ms)
-    task_check_frequency=60           # check frequency for task status threads (seconds)
-    tail_log_frequency=2              # assembly - frequency between requests (seconds)
-    debug_task_frequency=5            # assembly - frequency between requests (seconds)
-    auto_commit_changes=false         # autocommit for modules
-    verbose_rest_calls=false          # logging of REST calls
+  if [[ ! -f ${etc_location}/client.conf ]]; then
+cat > ${etc_location}/client.conf << EOF
+development_mode=false
+meta_table_ttl=7200000            # time to live (ms)
+meta_constants_ttl=7200000        # time to live (ms)
+meta_pretty_print_ttl=7200000     # time to live (ms)
+task_check_frequency=60           # check frequency for task status threads (seconds)
+tail_log_frequency=2              # assembly - frequency between requests (seconds)
+debug_task_frequency=5            # assembly - frequency between requests (seconds)
+auto_commit_changes=false         # autocommit for modules
+verbose_rest_calls=false          # logging of REST calls
 
-    # if relative path is used we will use HOME + relative path, apsoluth path will override this
-    module_location=component_modules
-    service_location=service_modules
-    EOF
+# if relative path is used we will use HOME + relative path, apsoluth path will override this
+module_location=component_modules
+service_location=service_modules
+EOF
   fi;
 }
 
