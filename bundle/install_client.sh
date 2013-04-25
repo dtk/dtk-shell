@@ -294,7 +294,7 @@ fi
 create_client_conf
 
 # print to file
-echo "username=$username"  >> ${cred_path}
+echo "username=$username"  > ${cred_path}
 echo "password=$password"  >> ${cred_path}
 echo "server_host=$server" >> ${conf_path}
 echo "server_port=$port"   >> ${conf_path}
