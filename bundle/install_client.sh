@@ -291,6 +291,8 @@ if [[ $secure_connection_port == "" ]]; then
   secure_connection_port="443"
 fi
 
+create_client_conf
+
 # print to file
 echo "username=$username"  >> ${cred_path}
 echo "password=$password"  >> ${cred_path}
