@@ -8,6 +8,12 @@ home_dir=`cd ~ && pwd`
 etc_location="${home_dir}/dtk/"
 conf_path="${etc_location}/connection.conf"
 
+# check if script was kicked off with root/sudo privileges
+if [ "$(whoami)" != "root" ]; then
+  echo "Not running wtih sudo/root privileges. Exiting..."
+  exit 0
+fi
+
 # FUNCTIONS BEGIN
 
 # print usage instructions
