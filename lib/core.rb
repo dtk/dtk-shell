@@ -162,7 +162,8 @@ module DTK
       include Singleton
       include ParseFile
 
-      CONFIG_FILE = File.join(OsUtil.dtk_home_dir, "/.dtk/dtkconfig")
+      CONFIG_FILE = File.join(OsUtil.dtk_local_folder, "client.conf")
+      CRED_FILE = File.join(OsUtil.dtk_local_folder, ".connection")
       REQUIRED_KEYS = [:server_host]
 
       def self.[](k)
@@ -304,7 +305,7 @@ module DTK
       end
 
       def get_credentials()
-        cred_file = Config::CONFIG_FILE
+        cred_file = Config::CRED_FILE
         raise DTK::Client::DtkError,"Authorization configuration file (#{cred_file}) does not exist" unless File.exists?(cred_file)
         ret = parse_key_value_file(cred_file)
         [:username,:password].each{|k|raise DTK::Client::DtkError,"cannot find #{k}" unless ret[k]}

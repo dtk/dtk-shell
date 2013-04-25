@@ -26,7 +26,7 @@ class dtk_client($server_hostname)
     require => User[$client_user]
   }
   
-  file { "${client_user_homedir}/.dtkclient":
+  file { "${client_user_homedir}/dtk/connection.conf":
     content => template('dtk_client/dtkclient.erb'),
     owner   => $client_user,
     require => User[$client_user]

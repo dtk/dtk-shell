@@ -5,8 +5,15 @@
 
 abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
 home_dir=`cd ~ && pwd`
-etc_location="${home_dir}/.dtk/"
-conf_path="${etc_location}/dtkconfig"
+etc_location="${home_dir}/dtk/"
+conf_path="${etc_location}client.conf"
+cred_path="${etc_location}.connection"
+
+# check if script was kicked off with root/sudo privileges
+if [ "$(whoami)" != "root" ]; then
+  echo "Not running wtih sudo/root privileges. Exiting..."
+  exit 0
+fi
 
 # FUNCTIONS BEGIN
 
@@ -96,6 +103,26 @@ function check_native_gems {
       echo "yum -y groupinstall "Development tools""
     fi;
     exit 1
+  fi;
+}
+
+function create_client_conf {
+  if [[ ! -f ${etc_location}/client.conf ]]; then
+cat > ${etc_location}/client.conf << EOF
+development_mode=false
+meta_table_ttl=7200000            # time to live (ms)
+meta_constants_ttl=7200000        # time to live (ms)
+meta_pretty_print_ttl=7200000     # time to live (ms)
+task_check_frequency=60           # check frequency for task status threads (seconds)
+tail_log_frequency=2              # assembly - frequency between requests (seconds)
+debug_task_frequency=5            # assembly - frequency between requests (seconds)
+auto_commit_changes=false         # autocommit for modules
+verbose_rest_calls=false          # logging of REST calls
+
+# if relative path is used we will use HOME + relative path, apsoluth path will override this
+module_location=component_modules
+service_location=service_modules
+EOF
   fi;
 }
 
@@ -193,10 +220,10 @@ install_gem "dtk-common"
 install_gem "dtk-client"
 
 # check if there is already configuration
-if [ -f ${conf_path} ]; then
+if [[ -f ${conf_path} ]] && [[ -f ${cred_path} ]]; then
   # file exists!
   REPLY=""
-  read -p "Configuration ${conf_path} exists. Overwrite? [y/N]: " -n 1 -r
+  read -p "Configuration files already exist. Overwrite? [y/N]: " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
@@ -206,7 +233,6 @@ if [ -f ${conf_path} ]; then
     echo "Exiting..."
     exit
   fi
-
 fi
 
 #create dtk dir in /etc
@@ -266,8 +292,8 @@ if [[ $secure_connection_port == "" ]]; then
 fi
 
 # print to file
-echo "username=$username"  >> ${conf_path}
-echo "password=$password"  >> ${conf_path}
+echo "username=$username"  >> ${cred_path}
+echo "password=$password"  >> ${cred_path}
 echo "server_host=$server" >> ${conf_path}
 echo "server_port=$port"   >> ${conf_path}
 echo "secure_connection=$secure_connection"           >> ${conf_path}

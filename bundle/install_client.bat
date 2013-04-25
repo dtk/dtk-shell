@@ -3,10 +3,10 @@
 
 :: GLOBAL VAR
 
-set abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:4000/"
-set log_file="%APPDATA%\DTK\dtk-client.log"
+set abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
+set log_file="%APPDATA%\DTK\client.log"
 
-echo "Welcome to DTK CLI Client installation!"
+echo "Welcome to DTK CLI Client installation"
 
 call :check_for_ruby
 call :check_for_ruby_gems 
@@ -60,11 +60,6 @@ IF "%gemsources%" == "" (
 )
 goto :EOF
 
-
-set port=80
-set secure_connection="true"
-set secure_connection_server_port=443
-
 :: Create the configuration file in the home directory
 :create_config_log
 echo Please enter DTK server information.
@@ -81,28 +76,36 @@ IF NOT "%secure_connection%" == "true" IF NOT "%secure_connection%" == "false" I
   goto :while1
 )
 
+::create dtk dir in user's home
+if not exist %HOMEDRIVE%%HOMEPATH%\dtk (
+  mkdir  %HOMEDRIVE%%HOMEPATH%\dtk
+  )
+
+if exist %~dp0\..\lib\config\default.conf (
+  if not exist %HOMEDRIVE%%HOMEPATH%\dtk\client.conf (
+    copy %~dp0\..\lib\config\default.conf %HOMEDRIVE%%HOMEPATH%\dtk\client.conf
+    )
+  )
+
 ::set filepath='%HOMEDRIVE%%HOMEPATH%\.dtkclient'
 
-echo username=%username%  > %HOMEDRIVE%%HOMEPATH%\dtkconfig
-echo password=%password%  >> %HOMEDRIVE%%HOMEPATH%\dtkconfig
-echo server_host=%server% >> %HOMEDRIVE%%HOMEPATH%\dtkconfig
-echo server_port=%port%   >> %HOMEDRIVE%%HOMEPATH%\dtkconfig
-echo secure_connection=%secure_connection% >> %HOMEDRIVE%%HOMEPATH%\dtkconfig
-echo secure_connection_server_port=%secure_connection_server_port%   >> %HOMEDRIVE%%HOMEPATH%\dtkconfig
+:: default values
+set port=80
+set secure_connection=true
+set secure_connection_server_port=443
+
+echo username=%username%> %HOMEDRIVE%%HOMEPATH%\dtk\.connection
+echo password=%password%>> %HOMEDRIVE%%HOMEPATH%\dtk\.connection
+echo server_host=%server%>> %HOMEDRIVE%%HOMEPATH%\dtk\client.conf
+echo server_port=%port%>> %HOMEDRIVE%%HOMEPATH%\dtk\client.conf
+echo secure_connection=%secure_connection%>> %HOMEDRIVE%%HOMEPATH%\dtk\client.conf
+echo secure_connection_server_port=%secure_connection_server_port%>> %HOMEDRIVE%%HOMEPATH%\dtk\client.conf
 
 
 if not exist %APPDATA%\DTK (
 	mkdir %APPDATA%\DTK
 )
 echo "" > %log_file%
-
-::create dtk dir in user's home
-if not exist %HOMEDRIVE%%HOMEPATH%\dtk (
-  mkdir  %HOMEDRIVE%%HOMEPATH%\dtk
-  )
-if not exist %HOMEDRIVE%%HOMEPATH%\dtk\shell_history (
-  echo "" > %HOMEDRIVE%%HOMEPATH%\dtk\shell_history
-  )
 
 goto :EOF
 
