@@ -6,7 +6,8 @@
 abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
 home_dir=`cd ~ && pwd`
 etc_location="${home_dir}/dtk/"
-conf_path="${etc_location}/connection.conf"
+conf_path="${etc_location}client.conf"
+cred_path="${etc_location}.connection"
 
 # check if script was kicked off with root/sudo privileges
 if [ "$(whoami)" != "root" ]; then
@@ -219,10 +220,10 @@ install_gem "dtk-common"
 install_gem "dtk-client"
 
 # check if there is already configuration
-if [ -f ${conf_path} ]; then
+if [[ -f ${conf_path} ]] && [[ -f ${cred_path} ]]; then
   # file exists!
   REPLY=""
-  read -p "Configuration ${conf_path} exists. Overwrite? [y/N]: " -n 1 -r
+  read -p "Configuration files already exist. Overwrite? [y/N]: " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
@@ -232,7 +233,6 @@ if [ -f ${conf_path} ]; then
     echo "Exiting..."
     exit
   fi
-
 fi
 
 #create dtk dir in /etc
@@ -292,8 +292,8 @@ if [[ $secure_connection_port == "" ]]; then
 fi
 
 # print to file
-echo "username=$username"  >> ${conf_path}
-echo "password=$password"  >> ${conf_path}
+echo "username=$username"  >> ${cred_path}
+echo "password=$password"  >> ${cred_path}
 echo "server_host=$server" >> ${conf_path}
 echo "server_port=$port"   >> ${conf_path}
 echo "secure_connection=$secure_connection"           >> ${conf_path}

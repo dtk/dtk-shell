@@ -81,6 +81,12 @@ if not exist %HOMEDRIVE%%HOMEPATH%\dtk (
   mkdir  %HOMEDRIVE%%HOMEPATH%\dtk
   )
 
+if exist %~dp0\..\lib\config\default.conf (
+  if not exist %HOMEDRIVE%%HOMEPATH%\dtk\client.conf (
+    copy %~dp0\..\lib\config\default.conf %HOMEDRIVE%%HOMEPATH%\dtk\client.conf
+    )
+  )
+
 ::set filepath='%HOMEDRIVE%%HOMEPATH%\.dtkclient'
 
 :: default values
@@ -88,12 +94,12 @@ set port=80
 set secure_connection=true
 set secure_connection_server_port=443
 
-echo username=%username%> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
-echo password=%password%>> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
-echo server_host=%server%>> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
-echo server_port=%port%>> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
-echo secure_connection=%secure_connection%>> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
-echo secure_connection_server_port=%secure_connection_server_port%>> %HOMEDRIVE%%HOMEPATH%\dtk\connection.conf
+echo username=%username%> %HOMEDRIVE%%HOMEPATH%\dtk\.connection
+echo password=%password%>> %HOMEDRIVE%%HOMEPATH%\dtk\.connection
+echo server_host=%server%>> %HOMEDRIVE%%HOMEPATH%\dtk\client.conf
+echo server_port=%port%>> %HOMEDRIVE%%HOMEPATH%\dtk\client.conf
+echo secure_connection=%secure_connection%>> %HOMEDRIVE%%HOMEPATH%\dtk\client.conf
+echo secure_connection_server_port=%secure_connection_server_port%>> %HOMEDRIVE%%HOMEPATH%\dtk\client.conf
 
 
 if not exist %APPDATA%\DTK (
