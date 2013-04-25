@@ -10,8 +10,13 @@ end
 
 # Monkey Patching bundler to support loading specific Gemfile from dtk-client project's root - Ticket: DTK-585
 dtk_require("bundler_monkey_patch")
+dtk_require("config/configuration")
+
 # we don't need Bundler.setup but will leave it commented just in case
-Bundler.setup
+# TODO: This is temp solution which will not use bundler.setup when in dev mode
+# thus allowing us to use system gems and not just the ones specified in Gemfile
+Bundler.setup unless DTK::Configuration.get(:development_mode)
+
 
 #TODO: should be common gem
 dtk_require_dtk_common("hash_object")
@@ -25,7 +30,6 @@ dtk_require("dtk_constants")
 dtk_require("commands")
 dtk_require("view_processor")
 dtk_require("search_hash")
-dtk_require("config/configuration")
 dtk_require("dtk_logger")
 
 

@@ -1,7 +1,6 @@
 #TODO: user common utils in DTK::Common::Rest
 
 require 'rubygems'
-require 'bundler/setup'
 require 'singleton'
 require 'restclient'
 require 'colorize'
@@ -85,7 +84,6 @@ module DTK
         def check(response_ruby_obj)
           # check for errors in response
           unless response_ruby_obj["errors"].nil?
-
             error_msg       = ""
             error_internal  = nil
             error_backtrace = nil
@@ -103,11 +101,13 @@ module DTK
             end
             
             # normalize it for display
-            error_msg = error_msg.empty? ? 'No error description found' : "#{error_msg}"
+            error_msg = error_msg.empty? ? 'Internal DTK Client error, please try again' : "#{error_msg}"
             
             # if error_internal.first == true
             if error_code == "unauthorized"
               raise DTK::Client::DtkError, "[UNAUTHORIZED] Your session has been suspended, please log in again."
+            elsif error_code == "broken"
+              raise DTK::Client::DtkError, "[BROKEN] Unable to connect to the DTK server at host: #{Config[:server_host]}"
             elsif error_code == "forbidden"
               raise DTK::Client::DtkError, "[FORBIDDEN] Access not granted, please log in again."
             elsif error_code == "timeout"
