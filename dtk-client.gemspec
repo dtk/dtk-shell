@@ -8,7 +8,14 @@ Gem::Specification.new do |gem|
   gem.summary       = %q{DTK CLI client for R8 server interaction.}
   gem.homepage      = "https://github.com/rich-reactor8/dtk-client"
 
-  gem.files         = `git ls-files`.split($\)
+  gem.files = %w(README.md Gemfile Gemfile.lock dtk-client.gemspec)
+  gem.files += Dir.glob("bin/**/*")
+  gem.files += Dir.glob("lib/**/*")
+  gem.files += Dir.glob("puppet/**/*")
+  gem.files += Dir.glob("spec/**/*")
+  gem.files += Dir.glob("views/**/*")
+
+
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.name          = "dtk-client"
@@ -28,7 +35,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'dtk-common','>= 0.1.9'
   # gem.add_dependency 'jenkins-client','~> 0.0.1'
   gem.add_dependency 'colorize','~> 0.5.8'
-  gem.add_dependency 'rspec','~> 2.12.0'
+  # gem.add_dependency 'rspec','~> 2.12.0'
   # gem.add_dependency 'awesome_print','~> 1.1.0'
   # gem.add_dependency 'rdoc','= 3.12.1'l
 
