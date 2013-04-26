@@ -60,12 +60,12 @@ module DTK
 
         def module_clone_location()
           module_location = ::DTK::Configuration.get(:module_location)
-          return (module_location.start_with?('/') ? module_location : "#{dtk_local_folder}/#{module_location}")
+          return (module_location.start_with?('/') ? module_location : "#{dtk_local_folder}#{module_location}")
         end
 
         def service_clone_location()
           service_location = ::DTK::Configuration.get(:service_location)
-          return (service_location.start_with?('/') ? service_location : "#{dtk_local_folder}/#{service_location}")
+          return (service_location.start_with?('/') ? service_location : "#{dtk_local_folder}#{service_location}")
         end
         
         # Public method will convert given string, to string with colorize output
