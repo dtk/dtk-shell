@@ -148,6 +148,9 @@ def execute_shell_command(line, prompt)
         end
       end
 
+      # raise validation error if option is not valid
+      raise DTK::Client::DtkValidationError, "Option '#{args.first}' is not valid for current command!" if thor_options.nil?
+
       # execute command via Thor
       top_level_execute(entity_name, method_name, context_params, thor_options, true)
 
