@@ -53,6 +53,7 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :all => {
           :node      => [
+            ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
             ['list',"list [FILTER] [--list] ","# List nodes"],
             ['list-components',"list-components [FILTER] [--list] ","# List components associated with assembly's node."],
             ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with assembly's node."]
