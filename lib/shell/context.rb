@@ -526,7 +526,9 @@ module DTK
           if (e.match(/^\-[a-zA-Z]?/) || e.match(/^\-\-/))
             type = Context.get_option_type(options, e) unless options.nil?
             if type.nil?
-              raise DTK::Client::DtkValidationError, "Option '#{e}' is not valid for current command!"
+              options_param_args = nil
+              break
+              # raise DTK::Client::DtkValidationError, "Option '#{e}' is not valid for current command!"
             else
               options_param_args << e
               options_param_args << args[i+1] unless type == :boolean
@@ -535,7 +537,7 @@ module DTK
         end
 
         # remove thor_options
-        args = args - options_param_args
+        args = args - options_param_args unless options_param_args.nil?
 
         return args, options_param_args
       end

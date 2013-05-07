@@ -39,7 +39,7 @@ module DTK
         if method_name == 'help'
           ret = start([method_name] + context_params.method_arguments,:conn => conn)      
         else
-          ret = start([method_name, context_params] + thor_options,:conn => conn)
+          ret = start([method_name, context_params] + (thor_options||[]),:conn => conn)
         end
 
         # special case where we have validation reply
