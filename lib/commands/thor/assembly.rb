@@ -72,7 +72,7 @@ module DTK::Client
           :node      => [
             ['info',"info","# Return info about node instance belonging to given assembly."],
             ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context assembly."],
-            ['get-ps', "get-ps [--filter] [PATTERN]", "# Returns a list of running processes for a given node instance belonging to context assembly."]
+            ['get-ps', "get-ps [--filter PATTERN]", "# Returns a list of running processes for a given node instance belonging to context assembly."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."]
@@ -599,7 +599,7 @@ TODO: will put in dot release and will rename to 'extend'
     GETNETSTATSTRIES = 6
     GETNETSTATSSLEEP = 0.5
 
-    desc "ASSEMBLY-NAME/ID get-ps [--filter] [PATTERN]", "Get ps"
+    desc "ASSEMBLY-NAME/ID get-ps [--filter PATTERN]", "Get ps"
     method_option :filter, :type => :boolean, :default => false, :aliases => '-f'
     def get_ps(context_params)
 
