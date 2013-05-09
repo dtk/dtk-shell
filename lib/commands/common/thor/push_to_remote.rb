@@ -5,7 +5,7 @@ module DTK::Client
     #
     # module_type: will be :component_module or :service_module
 
-    def push_to_remote_aux(module_type,module_id,version=nil)
+    def push_to_remote_aux(module_type,module_id, module_name, version=nil)
       id_field = "#{module_type}_id"
       path_to_key = SshProcessing.default_rsa_pub_key_path()
       unless File.file?(path_to_key)
@@ -22,15 +22,16 @@ module DTK::Client
       response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
       return response unless response.ok?
 
-      module_name = response.data(:module_name)
+      returned_module_name = response.data(:module_name)
       opts = {
         :remote_repo_url => response.data(:remote_repo_url),
         :remote_repo => response.data(:remote_repo),
         :remote_branch => response.data(:remote_branch),
         :local_branch => response.data(:workspace_branch)
       }
+
       version = response.data(:version)
-      response = Helper(:git_repo).push_changes(module_type,module_name,version,opts)
+      response = Helper(:git_repo).push_changes(module_type,returned_module_name,version,opts)
       return response unless response.ok?
       if response.data(:diffs).empty?
         raise DtkError, "No changes to push"
