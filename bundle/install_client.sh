@@ -130,8 +130,12 @@ EOF
 function install_gem {
   gem_exists $1
 
-  if $found_gem ; then
+  if $found_gem; then
     echo "Gem $1 already installed."
+    if [[ $1 == 'dtk-client' ]]; then
+      read -p "Do you want to update DTK Client to the latest version? [Y/n]" -n 1 -r
+      [[ ! $REPLY =~ ^[Nn]$ ]] && gem update $1 ${ruby_doc_args}
+    fi;
   else
     # special case for geminabox
     if [[ $1 = "geminabox" ]]; then
@@ -216,7 +220,7 @@ add_abh_gem_repository
 # install rdoc if document generation is selected
 [[ !$ruby_doc_args ]] && install_gem rdoc
 # install dtk gems
-install_gem "dtk-common"                            
+#install_gem "dtk-common"            
 install_gem "dtk-client"
 
 # check if there is already configuration
@@ -304,7 +308,7 @@ echo "secure_connection_server_port=$secure_connection_port" >> ${conf_path}
 echo "Installation successfuly finished! Configuration saved to ${conf_path}."
 
 # change the owner back to the original
-chown -R ${SUDO_USER}:${SUDO_USER} ${etc_location}
+chown -R ${SUDO_USER}:`groups ${SUDO_USER} | awk '{print $1}'` ${etc_location}
 # END SCRIPT
 
 

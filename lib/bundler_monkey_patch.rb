@@ -3,7 +3,11 @@ module Bundler
 
     private 
     def find_gemfile
-    	File.expand_path('../Gemfile', File.dirname(__FILE__))
+    	if DTK::Configuration.get(:development_mode)
+    		File.expand_path('../Gemfile_dev', File.dirname(__FILE__))
+    	else
+    		File.expand_path('../Gemfile', File.dirname(__FILE__))
+    	end
     end
   end
 end

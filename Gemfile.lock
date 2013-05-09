@@ -2,15 +2,6 @@ PATH
   remote: .
   specs:
     dtk-client (0.1.6)
-      bundler (>= 1.2.4)
-      colorize (~> 0.5.8)
-      dtk-common (>= 0.1.9)
-      erubis (~> 2.7.0)
-      grit (~> 2.5.0)
-      hirb (~> 0.7.0)
-      json (= 1.7.4)
-      rest-client (~> 1.6.7)
-      thor (~> 0.15.4)
 
 GEM
   remote: http://rubygems.org/
@@ -35,7 +26,15 @@ GEM
 
 PLATFORMS
   ruby
-  x86-mingw32
 
 DEPENDENCIES
+  bundler (>= 1.2.4)
+  colorize (~> 0.5.8)
   dtk-client!
+  dtk-common (>= 0.1.9)
+  erubis (~> 2.7.0)
+  grit (~> 2.5.0)
+  hirb (~> 0.7.0)
+  json (= 1.7.4)
+  rest-client (~> 1.6.7)
+  thor (~> 0.15.4)
