@@ -210,7 +210,7 @@ module DTK::Client
       :banner => "REPO-MANAGER",
       :desc => "R8 Repo Manager from which to resolve requested module."
     def import_r8n(context_params)
-      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)    
 
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name)
@@ -318,14 +318,16 @@ module DTK::Client
         :remote_component_name      => remote_name
       }
 
-      post rest_url("component_module/export"), post_body
+      response = post rest_url("component_module/export"), post_body
+      
+      return response         
     end
 
     desc "MODULE-NAME/ID push-to-remote [-v VERSION]", "Push local copy of component module to remote repository."
     version_method_option
     def push_to_remote(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      push_to_remote_aux(:component_module,component_module_id,options["version"])
+      component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!, :module_name],method_argument_names)
+      push_to_remote_aux(:component_module, component_module_id, component_module_name, options["version"])
     end
 
     desc "MODULE-NAME/ID pull-from-remote [-v VERSION]", "Update local component module from remote repository."

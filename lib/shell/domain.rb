@@ -72,7 +72,7 @@ module DTK
         end
 
         unless errors.empty?
-          raise DTK::Client::DtkValidationError, "Missing required argument(s): #{errors.join(', ')}"
+          raise DTK::Client::DtkValidationError, "Missing required argument#{errors.size > 1 ? 's' : ''}: #{errors.join(', ')}"
         end
 
         return ((results.size == 1) ? results.first : results)
