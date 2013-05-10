@@ -9,4 +9,3 @@ gemspec
 # development gems which are not included in production Gemfile
 gem 'rspec','~> 2.12.0'
 gem 'awesome_print','~> 1.1.0'
-gem 'ruby-debug','>= 0.10.4'
