@@ -35,14 +35,14 @@ module DTK
       @cache = load_configuration_to_hash(File.expand_path("../#{DEFAULT_CONF}",__FILE__))
 
       # we will not use local.conf from gemfile because client.conf is required so this is deprecated
-      # if File.exist?(File.expand_path("../#{DEVELOPMENT_CONF}",__FILE__))
-      #   local_configuration = load_configuration_to_hash(File.expand_path("../#{DEVELOPMENT_CONF}",__FILE__))
-      #   # we override only values from local configuration
-      #   # that way developer does not have updates its local configuration all the time
-      #   @cache.merge!(local_configuration)
-      #   # if we have loaded local configuration we will not check external
-      #   return
-      # end
+      if File.exist?(File.expand_path("../#{DEVELOPMENT_CONF}",__FILE__))
+        local_configuration = load_configuration_to_hash(File.expand_path("../#{DEVELOPMENT_CONF}",__FILE__))
+        # we override only values from local configuration
+        # that way developer does not have updates its local configuration all the time
+        @cache.merge!(local_configuration)
+        # if we have loaded local configuration we will not check external
+        return
+      end
 
       # We load this if there is no local configuration
       external_file_location = File.join(::DTK::Client::OsUtil.dtk_local_folder(), "#{EXTERNAL_APP_CONF}")
