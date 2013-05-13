@@ -25,9 +25,6 @@ end
 # thus allowing us to use system gems and not just the ones specified in Gemfile
 Bundler.setup unless DTK::Configuration.get(:development_mode)
 
-
-
-
 #TODO: should be common gem
 dtk_require_dtk_common("hash_object")
 dtk_require_dtk_common("auxiliary")
