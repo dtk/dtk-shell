@@ -275,7 +275,7 @@ module DTK; module Client; class CommandHelper
       elsif [:branchpoint,:local_ahead].include?(merge_rel)
         # TODO: right now just wiping out what is in repo
         diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
-        repo.reset_hard(remote_branch_ref)
+        repo.merge(remote_branch_ref,:strategy_option => "theirs")
         { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif merge_rel == :local_behind
         #see if any diffs between fetched remote and local branch
