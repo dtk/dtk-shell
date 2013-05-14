@@ -273,9 +273,10 @@ module DTK; module Client; class CommandHelper
       if merge_rel == :equal
         { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif [:branchpoint,:local_ahead].include?(merge_rel)
-        # TODO: Look into this logic
-        # raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pulled from server")
-        raise Error.new("TODO: need to write code when there is a branchpoint or local_ahead")
+        # TODO: right now just wiping out what is in repo
+        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+        repo.reset_hard(remote_branch_ref)
+        { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif merge_rel == :local_behind
         #see if any diffs between fetched remote and local branch
         #this has be done after commit
