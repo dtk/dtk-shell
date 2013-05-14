@@ -11,14 +11,21 @@ dtk_require_common_commands('thor/set_required_params')
 module DTK::Client
   class Account < CommandBaseThor
 
+    KEY_EXISTS_ALREADY_CONTENT = 'key exists already'
+
     no_tasks do
       include CloneMixin
       include PushToRemoteMixin
       include PullFromRemoteMixin
       include PushCloneChangesMixin
-    end
 
-  
+      def internal_add_user_access(url, post_body, component_name)
+        response = post(rest_url(url),post_body)
+        key_exists_already = (response.error_message||'').include?(KEY_EXISTS_ALREADY_CONTENT)
+        puts "Key exists already for #{component_name}" if key_exists_already
+        [response, key_exists_already]
+      end
+    end
 
   	desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
 	  def add_direct_access(context_params)
@@ -31,17 +38,24 @@ module DTK::Client
 	    post_body = {
 	      :rsa_pub_key => rsa_pub_key.chomp
 	    }
-	    
-	    response = post(rest_url("service_module/add_user_direct_access"),post_body)
-      puts response["errors"].first["message"] + ' for service module.' unless response.ok?
 
-      response = post(rest_url("component_module/add_user_direct_access"),post_body)
-      puts response["errors"].first["message"]+ ' for component module.' unless response.ok?
+      proper_response = nil
 
-      if response.ok?
-      	repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
+      response, key_exists_already = internal_add_user_access("service_module/add_user_direct_access", post_body, 'service module')
+      return response unless (response.ok? || key_exists_already)
+      proper_response = response if response.ok?
+
+      response, key_exists_already = internal_add_user_access("component_module/add_user_direct_access", post_body, 'component module')
+      return response unless (response.ok? || key_exists_already)
+      proper_response = response if response.ok?
+      
+      # if either of request passed we will add to known hosts
+      if proper_response
+      	repo_manager_fingerprint,repo_manager_dns = proper_response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
       	SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
-      	return response
+      	return proper_response
+      else
+        nil
       end
 	  end
 
