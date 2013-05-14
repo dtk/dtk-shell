@@ -93,6 +93,8 @@ end
 
 def execute_shell_command(line, prompt)
    begin
+    # remove single/double quotes from string because shellwords module is not able to parse it
+    line.gsub!(/['"]/, '')
     # some special cases
     raise DTK::Shell::ExitSignal if line == 'exit'
     return prompt if line.empty?
