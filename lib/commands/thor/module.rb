@@ -340,15 +340,28 @@ module DTK::Client
     #### end: commands to interact with remote repo ###
 
     #### commands to manage workspace and versioning ###
-    desc "MODULE-NAME/ID create-new-version VERSION", "Snapshot current state of module as a new version"
-    def create_new_version(context_params)
+    desc "MODULE-NAME/ID create-version VERSION", "Snapshot current state of module as a new version"
+    def create_version(context_params)
       component_module_id,version = context_params.retrieve_arguments([:module_id!,:option_1!],method_argument_names)
+      component_module_name = nil
+
       post_body = {
         :component_module_id => component_module_id,
         :version => version
       }
 
-      post rest_url("component_module/create_new_version"), post_body
+      response = post rest_url("component_module/create_new_version"), post_body
+      return response unless response.ok?
+
+      if component_module_id.to_s =~ /^[0-9]+$/
+        component_module_name = get_module_name(component_module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location()
+      module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
+
+      raise DTK::Client::DtkValidationError, "Trying to clone a module '#{component_module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
+      clone_aux(:component_module,component_module_id,version,true)
     end
 
     ##
@@ -518,20 +531,21 @@ module DTK::Client
     #   response
     # end
 
-    desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
-    def remove_direct_access(context_params)
-      path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
+    # desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
+    # def remove_direct_access(context_params)
+    #   path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
 
-      path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
-      unless File.file?(path_to_key)
-        raise DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
-      end
-      rsa_pub_key = File.open(path_to_key){|f|f.read}
-      post_body = {
-        :rsa_pub_key => rsa_pub_key.chomp
-      }
-      post rest_url("component_module/remove_user_direct_access"), post_body
-    end
+    #   path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
+    #   unless File.file?(path_to_key)
+    #     raise DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
+    #   end
+    #   rsa_pub_key = File.open(path_to_key){|f|f.read}
+    #   post_body = {
+    #     :rsa_pub_key => rsa_pub_key.chomp
+    #   }
+    #   post rest_url("component_module/remove_user_direct_access"), post_body
+    # end
+    
   end
 end
 
