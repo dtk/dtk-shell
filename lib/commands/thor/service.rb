@@ -416,9 +416,14 @@ module DTK::Client
         module_id       = module_info["data"]["display_name"]
         modules_path    = OsUtil.service_clone_location()
         module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
+        module_versions = Dir.entries(modules_path).select{|a| a.match(/#{module_id}-\d.\d.\d/)}
         
         unless (module_location.nil? || ("#{modules_path}/" == module_location))
           FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
+
+          module_versions.each do |version|
+            FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
+          end
         end
       end
 
