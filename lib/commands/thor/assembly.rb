@@ -53,6 +53,7 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :all => {
           :node      => [
+            ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
             ['list',"list [FILTER] [--list] ","# List nodes"],
             ['list-components',"list-components [FILTER] [--list] ","# List components associated with assembly's node."],
             ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with assembly's node."]
@@ -71,7 +72,7 @@ module DTK::Client
           :node      => [
             ['info',"info","# Return info about node instance belonging to given assembly."],
             ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context assembly."],
-            ['get-ps', "get-ps [--filter] [PATTERN]", "# Returns a list of running processes for a given node instance belonging to context assembly."]
+            ['get-ps', "get-ps [--filter PATTERN]", "# Returns a list of running processes for a given node instance belonging to context assembly."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."]
@@ -283,6 +284,9 @@ TODO: will put in dot release and will rename to 'extend'
     desc "[ASSEMBLY-NAME/ID] list [FILTER] [--list] ","List assemblies."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
+
+      #return post rest_url("monitoring_item/check_idle"), {}
+
       assembly_id, node_id, component_id, attribute_id, about, filter = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1,:option_2],method_argument_names)
 
       if about
@@ -594,7 +598,7 @@ TODO: will put in dot release and will rename to 'extend'
     GETNETSTATSTRIES = 6
     GETNETSTATSSLEEP = 0.5
 
-    desc "ASSEMBLY-NAME/ID get-ps [--filter] [PATTERN]", "Get ps"
+    desc "ASSEMBLY-NAME/ID get-ps [--filter PATTERN]", "Get ps"
     method_option :filter, :type => :boolean, :default => false, :aliases => '-f'
     def get_ps(context_params)
 

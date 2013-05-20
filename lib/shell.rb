@@ -93,6 +93,8 @@ end
 
 def execute_shell_command(line, prompt)
    begin
+    # remove single/double quotes from string because shellwords module is not able to parse it
+    line.gsub!(/['"]/, '')
     # some special cases
     raise DTK::Shell::ExitSignal if line == 'exit'
     return prompt if line.empty?
@@ -147,6 +149,9 @@ def execute_shell_command(line, prompt)
           raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
         end
       end
+
+      # raise validation error if option is not valid
+      raise DTK::Client::DtkValidationError, "Option '#{args.first||method_name}' is not valid for current command!" if thor_options.nil?
 
       # execute command via Thor
       top_level_execute(entity_name, method_name, context_params, thor_options, true)

@@ -99,9 +99,14 @@ module DTK::Client
         module_id       = module_info["data"]["display_name"]
         modules_path    = OsUtil.module_clone_location()
         module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
-
+        module_versions = Dir.entries(modules_path).select{|a| a.match(/#{module_id}-\d.\d.\d/)}
+        
         unless (module_location.nil? || ("#{modules_path}/" == module_location))
           FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
+
+          module_versions.each do |version|
+            FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
+          end
         end
       end
 
@@ -210,7 +215,7 @@ module DTK::Client
       :banner => "REPO-MANAGER",
       :desc => "R8 Repo Manager from which to resolve requested module."
     def import_r8n(context_params)
-      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)    
 
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name)
@@ -318,19 +323,21 @@ module DTK::Client
         :remote_component_name      => remote_name
       }
 
-      post rest_url("component_module/export"), post_body
+      response = post rest_url("component_module/export"), post_body
+      
+      return response         
     end
 
     desc "MODULE-NAME/ID push-to-remote [-v VERSION]", "Push local copy of component module to remote repository."
     version_method_option
     def push_to_remote(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      push_to_remote_aux(:component_module,component_module_id,options["version"])
+      component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!, :module_name],method_argument_names)
+      push_to_remote_aux(:component_module, component_module_id, component_module_name, options["version"])
     end
 
     desc "MODULE-NAME/ID pull-from-remote [-v VERSION]", "Update local component module from remote repository."
     version_method_option
-    def pull_from_remote(context_params)
+    def pull_from_remote(context_params)     
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       pull_from_remote_aux(:component_module,component_module_id,options["version"])
     end
@@ -338,15 +345,28 @@ module DTK::Client
     #### end: commands to interact with remote repo ###
 
     #### commands to manage workspace and versioning ###
-    desc "MODULE-NAME/ID create-new-version VERSION", "Snapshot current state of module as a new version"
-    def create_new_version(context_params)
+    desc "MODULE-NAME/ID create-version VERSION", "Snapshot current state of module as a new version"
+    def create_version(context_params)
       component_module_id,version = context_params.retrieve_arguments([:module_id!,:option_1!],method_argument_names)
+      component_module_name = nil
+
       post_body = {
         :component_module_id => component_module_id,
         :version => version
       }
 
-      post rest_url("component_module/create_new_version"), post_body
+      response = post rest_url("component_module/create_new_version"), post_body
+      return response unless response.ok?
+
+      if component_module_id.to_s =~ /^[0-9]+$/
+        component_module_name = get_module_name(component_module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location()
+      module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
+
+      raise DTK::Client::DtkValidationError, "Trying to clone a module '#{component_module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
+      clone_aux(:component_module,component_module_id,version,true)
     end
 
     ##
@@ -496,39 +516,41 @@ module DTK::Client
 
     #TODO: add-direct-access and remove-direct-access should be removed as commands and instead add-direct-access 
     #Change from having module-command/add_direct_access to being a command to being done when client is installed if user wants this option
-    desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
-    def add_direct_access(context_params)
-      path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
+    # desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
+    # def add_direct_access(context_params)
+    #   path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
 
-      path_to_key ||= SshProcessing.default_rsa_pub_key_path()
-      unless File.file?(path_to_key)
-        raise DTK::Client::DtkError, "No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
-      end
-      rsa_pub_key = File.open(path_to_key){|f|f.read}
-      post_body = {
-        :rsa_pub_key => rsa_pub_key.chomp
-      }
-      response = post(rest_url("component_module/add_user_direct_access"),post_body)
-      return response unless response.ok?
-      repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
-      SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
-      response
-    end
+    #   path_to_key ||= SshProcessing.default_rsa_pub_key_path()
+    #   unless File.file?(path_to_key)
+    #     raise DTK::Client::DtkError, "No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
+    #   end
+    #   rsa_pub_key = File.open(path_to_key){|f|f.read}
+    #   post_body = {
+    #     :rsa_pub_key => rsa_pub_key.chomp
+    #   }
+    #   response = post(rest_url("component_module/add_user_direct_access"),post_body)
+    #   return response unless response.ok?
+      
+    #   repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
+    #   SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
+    #   response
+    # end
 
-    desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
-    def remove_direct_access(context_params)
-      path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
+    # desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
+    # def remove_direct_access(context_params)
+    #   path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
 
-      path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
-      unless File.file?(path_to_key)
-        raise DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
-      end
-      rsa_pub_key = File.open(path_to_key){|f|f.read}
-      post_body = {
-        :rsa_pub_key => rsa_pub_key.chomp
-      }
-      post rest_url("component_module/remove_user_direct_access"), post_body
-    end
+    #   path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
+    #   unless File.file?(path_to_key)
+    #     raise DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
+    #   end
+    #   rsa_pub_key = File.open(path_to_key){|f|f.read}
+    #   post_body = {
+    #     :rsa_pub_key => rsa_pub_key.chomp
+    #   }
+    #   post rest_url("component_module/remove_user_direct_access"), post_body
+    # end
+    
   end
 end
 

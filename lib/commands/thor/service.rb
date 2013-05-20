@@ -201,8 +201,8 @@ module DTK::Client
     desc "SERVICE-NAME/ID push-to-remote [-v VERSION]", "Push local copy of service module to remote repository."
     version_method_option
     def push_to_remote(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      push_to_remote_aux(:service_module,service_module_id,options["version"])
+      service_module_id, service_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
+      push_to_remote_aux(:service_module, service_module_id, service_name, options["version"])
     end
 
     desc "SERVICE-NAME/ID pull-from-remote [-v VERSION]", "Update local service module from remote repository."
@@ -235,7 +235,7 @@ module DTK::Client
       modules_path    = OsUtil.service_clone_location()
       module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
 
-      raise DTK::Client::DtkValidationError, "Trying to clone a service module '#{service_module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
+      raise DTK::Client::DtkValidationErrorl, "Trying to clone a service module '#{service_module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
       clone_aux(:service_module,service_module_id,version,internal_trigger)
     end
 
@@ -307,15 +307,28 @@ module DTK::Client
 
     end
 
-    desc "SERVICE-NAME/ID create-new-version NEW-VERSION", "Snapshot current state of module as a new version"
-    def create_new_version(context_params)
+    desc "SERVICE-NAME/ID create-version NEW-VERSION", "Snapshot current state of module as a new version"
+    def create_version(context_params)
       service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
+      service_module_name = nil
+
       post_body = {
         :service_module_id => service_module_id,
         :version => version
       }
 
-      post rest_url("service_module/create_new_version"), post_body
+      response = post rest_url("service_module/create_new_version"), post_body
+      return response unless response.ok?
+
+      if service_module_id.to_s =~ /^[0-9]+$/
+        service_module_name = get_service_module_name(service_module_id)
+      end
+
+      modules_path    = OsUtil.service_clone_location()
+      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
+
+      raise DTK::Client::DtkValidationError, "Trying to clone a service module '#{service_module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
+      clone_aux(:service_module,service_module_id,version,true)     
     end
 
     desc "SERVICE-NAME/ID set-module-version COMPONENT-MODULE-NAME VERSION", "Set the version of the component module to use in the service's assemblies"
@@ -403,9 +416,14 @@ module DTK::Client
         module_id       = module_info["data"]["display_name"]
         modules_path    = OsUtil.service_clone_location()
         module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
+        module_versions = Dir.entries(modules_path).select{|a| a.match(/#{module_id}-\d.\d.\d/)}
         
         unless (module_location.nil? || ("#{modules_path}/" == module_location))
           FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
+
+          module_versions.each do |version|
+            FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
+          end
         end
       end
 
@@ -424,37 +442,38 @@ module DTK::Client
       return response
     end
 
-    desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
-    def add_direct_access(context_params)
-      path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
-      path_to_key ||= SshProcessing.default_rsa_pub_key_path()
-      unless File.file?(path_to_key)
-        raise DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
-      end
-      rsa_pub_key = File.open(path_to_key){|f|f.read}
-      post_body = {
-        :rsa_pub_key => rsa_pub_key.chomp
-      }
-      response = post(rest_url("service_module/add_user_direct_access"),post_body)
-      return response unless response.ok?
-      repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
-      SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
-      response
-    end
+    # desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
+    # def add_direct_access(context_params)
+    #   path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
+    #   path_to_key ||= SshProcessing.default_rsa_pub_key_path()
+    #   unless File.file?(path_to_key)
+    #     raise DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
+    #   end
+    #   rsa_pub_key = File.open(path_to_key){|f|f.read}
+    #   post_body = {
+    #     :rsa_pub_key => rsa_pub_key.chomp
+    #   }
+    #   response = post(rest_url("service_module/add_user_direct_access"),post_body)
+    #   return response unless response.ok?
+    #   puts "#{response.inspect}"
+    #   repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
+    #   SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
+    #   response
+    # end
 
-    desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
-    def remove_direct_access(context_params)
-      path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
-      path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
-      unless File.file?(path_to_key)
-        raise  DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
-      end
-      rsa_pub_key = File.open(path_to_key){|f|f.read}
-      post_body = {
-        :rsa_pub_key => rsa_pub_key.chomp
-      }
-      post rest_url("service_module/remove_user_direct_access"), post_body
-    end
+    # desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
+    # def remove_direct_access(context_params)
+    #   path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
+    #   path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
+    #   unless File.file?(path_to_key)
+    #     raise  DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
+    #   end
+    #   rsa_pub_key = File.open(path_to_key){|f|f.read}
+    #   post_body = {
+    #     :rsa_pub_key => rsa_pub_key.chomp
+    #   }
+    #   post rest_url("service_module/remove_user_direct_access"), post_body
+    # end
 =begin
     desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
     def assembly_template(context_params)

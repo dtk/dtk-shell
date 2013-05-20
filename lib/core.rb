@@ -314,7 +314,14 @@ module DTK
 
       ####
       RestClientWrapper = Common::Response::RestClientWrapper
-      DefaultRestOpts = {:timeout => 20, :open_timeout => 0.5, :error_response_class => Client::Response::Error}
+
+      # In development mode we want bigger timeout allowing us to debbug on server while still
+      # keeping connection alive and receivinga response
+      if ::DTK::Configuration.get(:development_mode)
+        DefaultRestOpts = {:timeout => 2000, :open_timeout => 2, :error_response_class => Client::Response::Error}
+      else
+        DefaultRestOpts = {:timeout => 50, :open_timeout => 0.5, :error_response_class => Client::Response::Error}
+      end
 
       def get_raw(url)
         RestClientWrapper.get_raw(url,DefaultRestOpts.merge(:cookies => @cookies))

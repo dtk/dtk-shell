@@ -8,6 +8,10 @@ module DTK::Client
 
     # NOTE
     # Following methods are just api descriptors, invocation happens at "bin/dtk" entry point
+    desc "account","Commands to execute, query and manipulate account information."
+    def account
+      # API descriptor
+    end
 
     desc "assembly","Commands to execute, query and manipulate assembly instances."
     def assembly

@@ -71,12 +71,15 @@ module DTK; module Client; class CommandHelper
     #:local_branch
     #:version
     #:commit_sha
+    #
+    # returns:
+    # { :diffs => , :commit_sha => }
     def pull_changes(type,module_name,opts={})
       Response.wrap_helper_actions() do
         repo_dir = local_repo_dir(type,module_name,opts[:version])
         repo = create(repo_dir,opts[:local_branch])
-        diffs = pull_repo_changes_aux(repo,opts)
-        {"diffs" => diffs}
+        response = pull_repo_changes_aux(repo,opts)
+        response
       end
     end
     def pull_changes?(type,module_name,opts={})
@@ -199,8 +202,8 @@ module DTK; module Client; class CommandHelper
         diffs = DiffSummary.new_version()
         commit_sha = commit_shas[:local_sha]
       elsif merge_rel == :local_ahead
-        #see if any diffs between fetched remote and local branch
-        #this has be done after commit
+        # see if any diffs between fetched remote and local branch
+        # this has be done after commit
         diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
         if diffs.any_diffs?()
           repo.push(remote_branch_ref)
@@ -268,10 +271,12 @@ module DTK; module Client; class CommandHelper
       #check if merge needed
       merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch_ref)
       if merge_rel == :equal
-        diffs
+        { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif [:branchpoint,:local_ahead].include?(merge_rel)
-#        raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pulled from server")
-        raise Error.new("TODO: need to write code when there is a branchpoint or local_ahead")
+        # TODO: right now just wiping out what is in repo
+        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+        repo.merge_theirs(remote_branch_ref)
+        { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif merge_rel == :local_behind
         #see if any diffs between fetched remote and local branch
         #this has be done after commit
@@ -284,7 +289,7 @@ module DTK; module Client; class CommandHelper
           raise Error.new("Git synchronization problem: expected local head to have sha (#{commit_sha})")
         end
 
-        diffs
+        { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       else
         raise Error.new("Unexpected merge_rel (#{merge_rel})")
       end

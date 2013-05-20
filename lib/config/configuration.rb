@@ -34,6 +34,7 @@ module DTK
       # default configuration
       @cache = load_configuration_to_hash(File.expand_path("../#{DEFAULT_CONF}",__FILE__))
 
+      # we will not use local.conf from gemfile because client.conf is required so this is deprecated
       if File.exist?(File.expand_path("../#{DEVELOPMENT_CONF}",__FILE__))
         local_configuration = load_configuration_to_hash(File.expand_path("../#{DEVELOPMENT_CONF}",__FILE__))
         # we override only values from local configuration
