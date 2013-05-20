@@ -213,13 +213,7 @@ TODO: will put in dot release and will rename to 'extend'
         :format => :list
       }
       response = post rest_url("assembly/task_status"), post_body
-      unless response.ok? 
-        # TODO Amar: remove specific error check after server code is merged from for_amar branch
-        if (response["errors"].first["message"].include?("undefined method `status'"))
-          raise DTK::Client::DtkError, "Not supported command 'list-task-info' with current DTK server version." 
-        end
-        return response
-      end
+         
       response.override_command_class("list_task")
       puts response.render_data
     end
@@ -232,12 +226,14 @@ TODO: will put in dot release and will rename to 'extend'
 
       # TODO: Hack which is necessery for the specific problem (DTK-725), we don't get proper error message when there is a timeout doing converge
       unless response == true
+        return response.merge("data" => [{ "errors" => {"message" => "Task does not exist for assembly."}}]) unless response["data"]
         response["data"].each do |data|
           if data["errors"]
             data["errors"]["message"] = "[TIMEOUT ERROR] Server is taking too long to respond." if data["errors"]["message"] == "error"
           end
         end
       end
+                  
       response
     end
 
