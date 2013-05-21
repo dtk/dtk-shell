@@ -178,6 +178,12 @@ module DTK::Client
       puts response.render_data
     end
 
+    desc "NODE-NAME/ID cancel-task TASK_ID", "Cancels task."
+    def cancel_task(context_params)
+      task_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      response = post rest_url("task/cancel_task"), { :task_id => task_id }
+    end
+
     # desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
     desc "destroy NODE-ID", "Delete and destroy (terminate) node"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
