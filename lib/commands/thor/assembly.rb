@@ -569,7 +569,8 @@ TODO: will put in dot release and will rename to 'extend'
         post_body = {
           :action_results_id => action_results_id,
           :return_only_if_complete => ret_only_if_complete,
-          :disable_post_processing => false
+          :disable_post_processing => false,
+          :sort_key => "port"
         }
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
@@ -612,7 +613,8 @@ TODO: will put in dot release and will rename to 'extend'
         post_body = {
           :action_results_id => action_results_id,
           :return_only_if_complete => ret_only_if_complete,
-          :disable_post_processing => true
+          :disable_post_processing => false,
+          :sort_key => "pid"
         }
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
@@ -626,12 +628,31 @@ TODO: will put in dot release and will rename to 'extend'
           sleep GETPSSLEEP
         end
       end
+      filtered = response.data(:results).flatten
 
-      response_processed = response.data['results'].values.flatten
-      response_processed.reject! {|r| !r.to_s.include?(filter_pattern)} unless (filter_pattern.nil? || !options["filter"])
-      response_processed.reject! {|r| r == nil }
-      #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
-      response.set_data(*response_processed)
+      # Amar: had to add more complex filtering in order to print node id and node name in output, 
+      #       as these two values are sent only in the first element of node's processes list
+      unless (filter_pattern.nil? || !options["filter"])    
+        node_id = ""
+        node_name = ""    
+        filtered.reject! do |r|
+          match = r.to_s.include?(filter_pattern)
+          if r["node_id"] && r["node_id"] != node_id
+            node_id = r["node_id"]
+            node_name = r["node_name"]
+          end
+             
+          if match && !node_id.empty?
+            r["node_id"] = node_id
+            r["node_name"] = node_name
+            node_id = ""
+            node_name = ""
+          end
+          !match
+        end 
+      end
+
+      response.set_data(*filtered)
       response.render_table(:ps_data)
     end
     GETPSTRIES = 6
