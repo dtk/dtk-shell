@@ -177,7 +177,7 @@ module DTK
             all_children.each do |child|
               current_children << child.to_s
 
-              # chreate entry e.g. assembly_node_id
+              # create entry e.g. assembly_node_id
               child_id_sym = (command.downcase + '_' + current_children.join('_') + '_wid').to_sym
 
               # n-context matching

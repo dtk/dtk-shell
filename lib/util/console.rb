@@ -31,9 +31,6 @@ module DTK::Client
 
       # Loading output used to display waiting status
       def wait_animation(message, time_seconds)
-        # horizontal dash charcter
-        h_dash = ["2014".hex].pack("U")
-
         print message
         print " [     ]"
         STDOUT.flush
