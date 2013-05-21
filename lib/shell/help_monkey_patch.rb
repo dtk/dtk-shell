@@ -143,6 +143,7 @@ class Thor
         shell.say "No tasks for current context '#{@@shell_context.active_context.full_path}'." 
       else  
         shell.say "Tasks:"
+        shell.say ""
       end
 
       # remove helper 3. element in help item list

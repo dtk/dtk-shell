@@ -31,7 +31,7 @@ module DTK::Client
 
      def self.override_allowed_methods()
       return DTK::Shell::OverrideTasks.new({
-        :command_only => {
+        :all => {
           :attribute      => [
             ['list',"list","List attributes for given component"],
           ]
