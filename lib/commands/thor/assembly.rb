@@ -113,7 +113,7 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID cancel-task TASK_ID", "Cancels task."
     def cancel_task(context_params)
       task_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      response = post rest_url("task/cancel_task"), { :task_id => task_id }
+      cancel_task_aux(task_id)
     end
 
     desc "ASSEMBLY-NAME/ID create-new-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Create a new assembly template from workspace assembly" 
@@ -209,14 +209,7 @@ TODO: will put in dot release and will rename to 'extend'
     desc "ASSEMBLY-NAME/ID list-task-info", "Task status details of running or last assembly task"
     def list_task_info(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id,
-        :format => :list
-      }
-      response = post rest_url("assembly/task_status"), post_body
-         
-      response.override_command_class("list_task")
-      puts response.render_data
+      list_task_info_aux("assembly", assembly_id)
     end
 
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"

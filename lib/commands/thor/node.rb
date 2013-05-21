@@ -167,21 +167,14 @@ module DTK::Client
 
     desc "NODE-NAME/ID list-task-info", "Task status details of running or last assembly task"
     def list_task_info(context_params)
-      assembly_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
-      post_body = {
-        :node_id => assembly_id,
-        :format => :list
-      }
-      response = post rest_url("node/task_status"), post_body
-       
-      response.override_command_class("list_task")
-      puts response.render_data
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
+      list_task_info_aux("node", node_id)
     end
 
     desc "NODE-NAME/ID cancel-task TASK_ID", "Cancels task."
     def cancel_task(context_params)
       task_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      response = post rest_url("task/cancel_task"), { :task_id => task_id }
+      cancel_task_aux(task_id)
     end
 
     # desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
