@@ -43,6 +43,7 @@ module DTK
       # this can be fixed with facets, but that is todo for now TODO: use facets with ordered hashes
 
       def initialize(data, data_type, forced_metadata, print_error_table)
+           
         # if there is no custom metadata, then we use metadata predefined in meta-response.json file
         if forced_metadata.nil?
           # get all table definitions from json file
@@ -82,6 +83,7 @@ module DTK
         structured_data.each do |structured_element|
           evaluated_element = DtkOpenStruct.new
           error_element     = DtkOpenStruct.new
+
           # based on mappign we set key = eval(value)
           table_defintion.each do |k,v|
             begin
@@ -89,7 +91,7 @@ module DTK
               # in such a way that those error will be specially printed later on
 
               if print_error_table && k.include?('error')
-                
+
                 error_message = value_of(structured_element, v)
                             
 
@@ -99,15 +101,20 @@ module DTK
                   # no error message just add it as regular element
                   evaluated_element.send("#{k}=",value_of(structured_element, v))
                 else
+                  error_index = ""
+                  error_type = value_of(structured_element,'errors.dtk_type') || ""
+
                   # we set index for each message first => [ 1 ], second => [ 2 ], etc.
-                  error_index = "[ #{@error_data.size + 1} ]"
+                  if error_type == "user_error"
+                    error_index = "[ #{@error_data.size + 1} ]"
+                  end
 
                   # original table takes that index
                   evaluated_element.send("#{k}=", error_index)
 
                   # we set new error element
                   error_element.id       = error_index
-                  error_element.message  = error_message
+                  error_element.message  = (error_index.empty? ? "[SERVER ERROR] " : "[USER ERROR] ") + error_message
 
                   # add it with other
                   @error_data << error_element

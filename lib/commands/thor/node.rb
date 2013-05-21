@@ -165,6 +165,18 @@ module DTK::Client
       task_status_aux(node_id,:node,options.wait?)
     end
 
+    desc "NODE-NAME/ID list-task-info", "Task status details of running or last assembly task"
+    def list_task_info(context_params)
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
+      list_task_info_aux("node", node_id)
+    end
+
+    desc "NODE-NAME/ID cancel-task TASK_ID", "Cancels task."
+    def cancel_task(context_params)
+      task_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      cancel_task_aux(task_id)
+    end
+
     # desc "list-smoketests ASSEMBLY-ID","List smoketests on asssembly"
     desc "destroy NODE-ID", "Delete and destroy (terminate) node"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
