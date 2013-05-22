@@ -152,13 +152,13 @@ module DTK::Client
     end
 
 
-    desc "MODULE-NAME/ID set ATTRIBUTE-NAME/ID VALUE", "Set value of module attributes"
+    desc "MODULE-NAME/ID set ATTRIBUTE-ID VALUE", "Set value of module attributes"
     def set(context_params)
 
       if context_params.is_there_identifier?(:attribute)
-        mapping = [:module_id!,:attribute_id!, :option_1!]
+        mapping = [:module_id!,:attribute_id!, :option_1]
       else
-        mapping = [:module_id!,:option_1!,:option_2!]
+        mapping = [:module_id!,:option_1!,:option_2]
       end
 
       module_component_id, attribute_id, value = context_params.retrieve_arguments(mapping,method_argument_names)
