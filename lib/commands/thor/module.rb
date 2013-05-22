@@ -221,7 +221,7 @@ module DTK::Client
 
     desc "MODULE-NAME/ID list-instances", "List all instances for given component module."
     def list_instances(context_params)
-      module_info_about(context_params, :instances, :node)
+      module_info_about(context_params, :instances, :component)
     end
 
     desc "list-diffs","List difference between workspace and library component modules"
