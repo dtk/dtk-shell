@@ -348,6 +348,18 @@ TODO: will put in dot release and will rename to 'extend'
       
     end
 
+    desc "ASSEMBLY-NAME/ID add-link SERVICE-TYPE COMPONENT1-NAME/ID COMPONENT2-NAME/ID", "Add a service link between two components"
+    def add_link(context_params)
+      assembly_id,service_type,cmp1,cmp2 = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :service_type => service_type,
+        :input_component_id => cmp1, #TODO: need to determine whether two components are distinguished by input and output
+        :output_component_id => cmp2
+      }
+      post rest_url("assembly/add_ad_hoc_service_link"), post_body
+    end
+    #TDOO: above and below wil be harmonized
     desc "ASSEMBLY-NAME/ID add-connection CONN-TYPE SERVICE-REF1/ID SERVICE-REF2/ID", "Add a connection between two services in an assembly"
     def add_connection(context_params)
       assembly_id,conn_type,sr1,sr2 = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
