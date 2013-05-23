@@ -348,14 +348,27 @@ TODO: will put in dot release and will rename to 'extend'
       
     end
 
-    desc "ASSEMBLY-NAME/ID add-link SERVICE-TYPE COMPONENT1-NAME/ID COMPONENT2-NAME/ID", "Add a service link between two components"
+    #TODO: probably subsumed by naviaging to an attribute and binding it
+    desc "ASSEMBLY-NAME/ID add-attr-mapping SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to service link"
+    def add_attr_mapping(context_params)
+      assembly_id,service_link_id,base_attr,arrow,dep_attr = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!,:option_4!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :service_link_id => service_link_id,
+        :attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}" #TODO: probably change to be hash
+      }
+      post rest_url("assembly/add_ad_hoc_attribute_mapping"), post_body
+    end
+
+
+    desc "ASSEMBLY-NAME/ID add-link SERVICE-TYPE BASE-CMP-NAME/ID DEPENDENT-CMP-NAME/ID", "Add a service link between two components"
     def add_link(context_params)
-      assembly_id,service_type,cmp1,cmp2 = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
+      assembly_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
       post_body = {
         :assembly_id => assembly_id,
         :service_type => service_type,
-        :input_component_id => cmp1, #TODO: need to determine whether two components are distinguished by input and output
-        :output_component_id => cmp2
+        :input_component_id => base_cmp, 
+        :output_component_id => dep_cmp
       }
       post rest_url("assembly/add_ad_hoc_service_link"), post_body
     end
