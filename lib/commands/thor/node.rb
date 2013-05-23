@@ -12,7 +12,7 @@ module DTK::Client
     end
 
     def self.valid_children()
-      []
+      [:component]
     end
 
     def self.valid_child?(name_of_sub_context)
