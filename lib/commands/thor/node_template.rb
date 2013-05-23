@@ -28,9 +28,14 @@ module DTK::Client
     end
 =end
     desc "list", "List all node templates."
+    method_option "target_identifier",:aliases => "-t" ,
+      :type => :string, 
+      :banner => "TARGET-IDENTIFIER",
+      :desc => "Name or ID of desired target"
     def list(context_params)
       post_body = {
-        :subtype => 'template'
+        :subtype => 'template',
+        :target_indentifier => options.target_identifier
       }
       response = post rest_url("node/list"), post_body
       response.render_table(:node_template)
@@ -53,7 +58,7 @@ module DTK::Client
     method_option "in-target",:aliases => "-t" ,
       :type => :numeric, 
       :banner => "TARGET-ID",
-      :desc => "Target (id) to create node insatnce in" 
+      :desc => "Target (id) to create node instance in" 
     def stage(context_params)
       node_template_id, name = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       post_body = {

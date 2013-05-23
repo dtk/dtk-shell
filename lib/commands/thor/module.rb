@@ -152,13 +152,13 @@ module DTK::Client
     end
 
 
-    desc "MODULE-NAME/ID set ATTRIBUTE-NAME/ID VALUE", "Set value of module attributes"
+    desc "MODULE-NAME/ID set ATTRIBUTE-ID VALUE", "Set value of module attributes"
     def set(context_params)
 
       if context_params.is_there_identifier?(:attribute)
-        mapping = [:module_id!,:attribute_id!, :option_1!]
+        mapping = [:module_id!,:attribute_id!, :option_1]
       else
-        mapping = [:module_id!,:option_1!,:option_2!]
+        mapping = [:module_id!,:option_1!,:option_2]
       end
 
       module_component_id, attribute_id, value = context_params.retrieve_arguments(mapping,method_argument_names)
@@ -221,7 +221,7 @@ module DTK::Client
 
     desc "MODULE-NAME/ID list-instances", "List all instances for given component module."
     def list_instances(context_params)
-      module_info_about(context_params, :instances, :node)
+      module_info_about(context_params, :instances, :component)
     end
 
     desc "list-diffs","List difference between workspace and library component modules"
