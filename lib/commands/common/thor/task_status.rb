@@ -11,7 +11,7 @@ module DTK::Client
                 id_field => id,
                 :format => :table
               }
-              response = post rest_url("#{type}/task_status"), post_body                 
+              response = post rest_url("#{type}/task_status"), post_body                                       
 
               raise DTK::Client::DtkError, "[ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
 
@@ -24,9 +24,10 @@ module DTK::Client
                 # least one 'successed' has been found
                 is_pending   = (response.data.select {|r|r["status"].nil? }).size > 0
                 is_executing = (response.data.select {|r|r["status"].eql? "executing"}).size > 0
+                is_cancelled  = response.data.first["status"].eql?("cancelled")
  
                 # break unless (is_executing || is_pending)
-                unless (is_executing || is_pending)
+                unless (is_executing || is_pending) && !is_cancelled
                   response.print_error_table = true
                   response.render_table(:task_status)
                   return response
@@ -53,6 +54,26 @@ module DTK::Client
           response.print_error_table = true
           response.render_table(:task_status)
         end
+      end
+
+      def cancel_task_aux(task_id)
+        response = post rest_url("task/cancel_task"), { :task_id => task_id }
+        raise DTK::Client::DtkError, "[SERVER ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
+        return response
+      end
+
+      def list_task_info_aux(type, id)
+        id_sym = "#{type}_id".to_sym
+        post_body = {
+          id_sym => id,
+          :format => :list
+        }
+        response = post rest_url("#{type}/task_status"), post_body
+        
+        raise DTK::Client::DtkError, "[SERVER ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
+           
+        response.override_command_class("list_task")
+        puts response.render_data
       end
     end
 

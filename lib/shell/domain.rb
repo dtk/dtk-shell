@@ -92,6 +92,12 @@ module DTK
       def current_command?
         return @current_context.current_command?
       end
+      def root_command_name
+        @current_context.first_command_name
+      end
+      def last_entity_name
+        @current_context.last_context_entity_name
+      end
 
       private
 

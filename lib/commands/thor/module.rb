@@ -12,6 +12,33 @@ module DTK::Client
 
     DEFAULT_COMMIT_MSG = "Initial commit."
 
+    def self.valid_children()
+      [:attribute]
+    end
+
+    # this includes children of children
+    def self.all_children()
+      [:attribute]
+    end
+
+    def self.valid_child?(name_of_sub_context)
+      return Module.valid_children().include?(name_of_sub_context.to_sym)
+    end
+
+    def self.validation_list(context_params)
+      get_cached_response(:component, "component_module/list", {})
+    end
+
+     def self.override_allowed_methods()
+      return DTK::Shell::OverrideTasks.new({
+        :all => {
+          :attribute      => [
+            ['list',"list","List attributes for given component"],
+          ]
+        }
+      })
+    end
+
     no_tasks do
       include CloneMixin
       include PushToRemoteMixin
@@ -37,6 +64,17 @@ module DTK::Client
 
         raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if module_name.nil?
         return module_name
+      end
+
+      def module_info_about(context_params, about, data_type)
+        component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
+        post_body = {
+          :component_module_id => component_module_id,
+          :about => about
+        }
+        response = post rest_url("component_module/info_about"), post_body
+        data_type = data_type
+        response.render_table(data_type) unless options.list?
       end
     end
 
@@ -114,6 +152,25 @@ module DTK::Client
     end
 
 
+    desc "MODULE-NAME/ID set ATTRIBUTE-ID VALUE", "Set value of module attributes"
+    def set(context_params)
+
+      if context_params.is_there_identifier?(:attribute)
+        mapping = [:module_id!,:attribute_id!, :option_1]
+      else
+        mapping = [:module_id!,:option_1!,:option_2]
+      end
+
+      module_component_id, attribute_id, value = context_params.retrieve_arguments(mapping,method_argument_names)
+
+      post_body = {
+        :attribute_id => attribute_id,
+        :attribute_value => value
+      }
+      
+      post rest_url("attribute/set"), post_body
+    end
+
     #### end: create and delete commands ###
 
     #### list and info commands ###
@@ -131,24 +188,40 @@ module DTK::Client
     desc "list [--remote]", "List library or component remote component modules."
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
+      if context_params.is_there_command?(:attribute)
+        return module_info_about(context_params, :attributes, :attribute)
+      end
+
       action = (options.remote? ? "list_remote" : "list")
       response = post rest_url("component_module/#{action}")
       data_type = :component
       response.render_table(:component)
     end
 
-    # Optionally TODO if needed: change method to be consistent with service/id>assembly-template list
-    desc "MODULE-NAME/ID list-components", "List all components for given component module."
-    #TODO: support info on remote
-    def list_components(context_params)
+
+    desc "MODULE-NAME/ID list-versions","List all versions associated with this module."
+    def list_versions(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       post_body = {
-        :component_module_id => component_module_id,
-        :about => 'components'
+        :component_module_id => component_module_id
       }
-      response = post rest_url("component_module/info_about"), post_body
-      data_type = :component
-      response.render_table(data_type) unless options.list?
+      response = post rest_url("component_module/versions"), post_body
+      response.render_table(:module_version)
+    end
+
+    desc "MODULE-NAME/ID list-components", "List all components for given component module."
+    def list_components(context_params)
+      module_info_about(context_params, :components, :component)
+    end
+
+    desc "MODULE-NAME/ID list-attributes", "List all attributes for given component module."
+    def list_attributes(context_params)
+      module_info_about(context_params, :attributes, :attribute_w_version)
+    end
+
+    desc "MODULE-NAME/ID list-instances", "List all instances for given component module."
+    def list_instances(context_params)
+      module_info_about(context_params, :instances, :component)
     end
 
     desc "list-diffs","List difference between workspace and library component modules"
@@ -244,7 +317,7 @@ module DTK::Client
       response = Helper(:git_repo).create_clone_with_branch(:component_module, module_name, git_repo_url)
       
       # Raise error if git repository is invalid
-      raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless (response["status"] == "ok")
+      raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless response.ok?
 
       # Remove .git directory to rid of git pointing to user's github
       FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
@@ -253,7 +326,7 @@ module DTK::Client
       create_response = import(context_params)
 
       # If server response is not ok, delete cloned module, invoke delete method and notify user about cleanup process.
-      unless create_response["status"] == "ok"
+      unless create_response.ok?
         FileUtils.rm_rf("#{response['data']['module_directory']}")
         context_params.method_arguments << "force_delete"
         delete(context_params)

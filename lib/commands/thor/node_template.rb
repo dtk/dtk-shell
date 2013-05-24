@@ -27,13 +27,20 @@ module DTK::Client
       return response
     end
 =end
-    desc "list", "List all node templates."
+    desc "list -all -t [TARGET-NAME]", "List all node templates."
+    method_option :all, :type => :boolean, :default => false
+    method_option "target_identifier",:aliases => "-t" ,
+      :type => :string, 
+      :banner => "TARGET-IDENTIFIER",
+      :desc => "Name or ID of desired target"
     def list(context_params)
       post_body = {
-        :subtype => 'template'
+        :subtype => 'template',
+        :target_indentifier => options.target_identifier,
+        :is_list_all => options.all
       }
       response = post rest_url("node/list"), post_body
-      response.render_table(:node_template)
+      response.render_table(options.all ? :node_template_all : :node_template)
     end
 
     #TODO: this may be moved to just be a utility fn
@@ -49,15 +56,15 @@ module DTK::Client
 
     #TODO: move to form desc "NODE-TEMPLATE-NAME/ID stage [INSTANCE-NAME]"
     #will then have to reverse arguments
-    desc "stage NODE-TEMPLATE-ID [INSTANCE-NAME]", "Stage node template in target."
+    desc "stage NODE-TEMPLATE-NAME [INSTANCE-NAME]", "Stage node template in target."
     method_option "in-target",:aliases => "-t" ,
       :type => :numeric, 
       :banner => "TARGET-ID",
-      :desc => "Target (id) to create node insatnce in" 
+      :desc => "Target (id) to create node instance in" 
     def stage(context_params)
       node_template_id, name = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       post_body = {
-        :node_template_id => node_template_id
+        :node_template_identifier => node_template_id
       }
       post_body.merge!(:target_id => options["in-target"]) if options["in-target"]
       post_body.merge!(:name => name) if name

@@ -38,8 +38,7 @@ module DTK::Client
     end
 
     def self.validation_list(context_params)
-      response = get_cached_response(:assembly, "assembly/list", {:subtype  => 'instance'})
-      return response
+      get_cached_response(:assembly, "assembly/list", {:subtype  => 'instance'})
     end
 
     # TODO: Hack which is necessery for the specific problem (DTK-541), something to reconsider down the line
@@ -113,7 +112,7 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID cancel-task TASK_ID", "Cancels task."
     def cancel_task(context_params)
       task_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      response = post rest_url("task/cancel_task"), { :task_id => task_id }
+      cancel_task_aux(task_id)
     end
 
     desc "ASSEMBLY-NAME/ID create-new-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Create a new assembly template from workspace assembly" 
@@ -209,20 +208,7 @@ TODO: will put in dot release and will rename to 'extend'
     desc "ASSEMBLY-NAME/ID list-task-info", "Task status details of running or last assembly task"
     def list_task_info(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id,
-        :format => :list
-      }
-      response = post rest_url("assembly/task_status"), post_body
-      unless response.ok? 
-        # TODO Amar: remove specific error check after server code is merged from for_amar branch
-        if (response["errors"].first["message"].include?("undefined method `status'"))
-          raise DTK::Client::DtkError, "Not supported command 'list-task-info' with current DTK server version." 
-        end
-        return response
-      end
-      response.override_command_class("list_task")
-      puts response.render_data
+      list_task_info_aux("assembly", assembly_id)
     end
 
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
@@ -233,12 +219,14 @@ TODO: will put in dot release and will rename to 'extend'
 
       # TODO: Hack which is necessery for the specific problem (DTK-725), we don't get proper error message when there is a timeout doing converge
       unless response == true
+        return response.merge("data" => [{ "errors" => {"message" => "Task does not exist for assembly."}}]) unless response["data"]
         response["data"].each do |data|
           if data["errors"]
             data["errors"]["message"] = "[TIMEOUT ERROR] Server is taking too long to respond." if data["errors"]["message"] == "error"
           end
         end
       end
+                        
       response
     end
 
@@ -360,6 +348,31 @@ TODO: will put in dot release and will rename to 'extend'
       
     end
 
+    #TODO: probably subsumed by naviaging to an attribute and binding it
+    desc "ASSEMBLY-NAME/ID add-attr-mapping SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to service link"
+    def add_attr_mapping(context_params)
+      assembly_id,service_link_id,base_attr,arrow,dep_attr = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!,:option_4!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :service_link_id => service_link_id,
+        :attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}" #TODO: probably change to be hash
+      }
+      post rest_url("assembly/add_ad_hoc_attribute_mapping"), post_body
+    end
+
+
+    desc "ASSEMBLY-NAME/ID add-link SERVICE-TYPE BASE-CMP-NAME/ID DEPENDENT-CMP-NAME/ID", "Add a service link between two components"
+    def add_link(context_params)
+      assembly_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :service_type => service_type,
+        :input_component_id => base_cmp, 
+        :output_component_id => dep_cmp
+      }
+      post rest_url("assembly/add_ad_hoc_service_link"), post_body
+    end
+    #TDOO: above and below wil be harmonized
     desc "ASSEMBLY-NAME/ID add-connection CONN-TYPE SERVICE-REF1/ID SERVICE-REF2/ID", "Add a connection between two services in an assembly"
     def add_connection(context_params)
       assembly_id,conn_type,sr1,sr2 = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
@@ -580,7 +593,8 @@ TODO: will put in dot release and will rename to 'extend'
         post_body = {
           :action_results_id => action_results_id,
           :return_only_if_complete => ret_only_if_complete,
-          :disable_post_processing => false
+          :disable_post_processing => false,
+          :sort_key => "port"
         }
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
@@ -623,7 +637,8 @@ TODO: will put in dot release and will rename to 'extend'
         post_body = {
           :action_results_id => action_results_id,
           :return_only_if_complete => ret_only_if_complete,
-          :disable_post_processing => true
+          :disable_post_processing => false,
+          :sort_key => "pid"
         }
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
@@ -637,12 +652,31 @@ TODO: will put in dot release and will rename to 'extend'
           sleep GETPSSLEEP
         end
       end
+      filtered = response.data(:results).flatten
 
-      response_processed = response.data['results'].values.flatten
-      response_processed.reject! {|r| !r.to_s.include?(filter_pattern)} unless (filter_pattern.nil? || !options["filter"])
-      response_processed.reject! {|r| r == nil }
-      #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
-      response.set_data(*response_processed)
+      # Amar: had to add more complex filtering in order to print node id and node name in output, 
+      #       as these two values are sent only in the first element of node's processes list
+      unless (filter_pattern.nil? || !options["filter"])    
+        node_id = ""
+        node_name = ""    
+        filtered.reject! do |r|
+          match = r.to_s.include?(filter_pattern)
+          if r["node_id"] && r["node_id"] != node_id
+            node_id = r["node_id"]
+            node_name = r["node_name"]
+          end
+             
+          if match && !node_id.empty?
+            r["node_id"] = node_id
+            r["node_name"] = node_name
+            node_id = ""
+            node_name = ""
+          end
+          !match
+        end 
+      end
+
+      response.set_data(*filtered)
       response.render_table(:ps_data)
     end
     GETPSTRIES = 6

@@ -143,8 +143,7 @@ def execute_shell_command(line, prompt)
       if context_candidates.include?(method_name)
         context_params.add_context_to_params(method_name, entity_name, method_name)
         method_name = context_params.method_arguments.shift if context_params.method_arguments.size > 0
-      else
-        #validate method
+      else        
         unless @context.method_valid?(method_name)
           raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
         end

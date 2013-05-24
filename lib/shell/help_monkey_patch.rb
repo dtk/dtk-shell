@@ -58,7 +58,8 @@ class Thor
         # case when we are not on first level and it is not identifier we skip help 
         # since it needs to be empty
         # e.g. assembly/bootstrap1/node> ... HELP IS EMPTY FOR THIS
-   
+
+
         # override goes here
         override_tasks_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
 
@@ -89,7 +90,8 @@ class Thor
         end
 
         commands_with_identifiers =  @@shell_context.active_context.commands_with_identifiers()
-        is_n_level_context        = (commands_with_identifiers && commands_with_identifiers.size > 1)
+        #is_n_level_context        = (commands_with_identifiers && commands_with_identifiers.size > 1)
+        is_n_level_context        = @@shell_context.active_context.command_list.size > 1
 
         # first one does not count
         if is_n_level_context
@@ -108,8 +110,7 @@ class Thor
               end
             end
           end
-
-          # this mean we are working with n-context and there are overrides
+          
           if override_tasks_obj && is_n_level_context
             last_entity_name = @@shell_context.active_context.last_context_entity_name.to_sym
 
@@ -142,6 +143,7 @@ class Thor
         shell.say "No tasks for current context '#{@@shell_context.active_context.full_path}'." 
       else  
         shell.say "Tasks:"
+        shell.say ""
       end
 
       # remove helper 3. element in help item list
