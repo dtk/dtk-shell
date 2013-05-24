@@ -463,7 +463,7 @@ module DTK
             raise DTK::Client::DtkError, "Could not validate identifier \"#{entity_name_id}\"."
           end
         end
-        
+
         # extract thor options
         clazz              = Context.get_command_class(entity_name)
         options            = Context.get_thor_options(clazz, method_name) unless clazz.nil?
@@ -473,6 +473,7 @@ module DTK
 
         unless available_tasks.include?(method_name)
           raise DTK::Client::DtkError, "Could not find task \"#{method_name}\"."
+
         end
 
         return entity_name, method_name, context_params, thor_options
