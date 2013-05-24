@@ -128,10 +128,11 @@ module DTK::Client
       end
 
       # If user is on service level, list task can't have about value set
-      if (context_params.last_entity_name == :service)
+      if (context_params.last_entity_name == :service) and about.nil?
         data_type = :module
         action    = options.remote? ? "list_remote" : "list"
-
+        post_body = {}
+ 
         response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
       else
