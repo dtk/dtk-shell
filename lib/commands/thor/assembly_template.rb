@@ -7,8 +7,15 @@ module DTK::Client
       PPColumns.get(:assembly_template)
     end
 
-    def self.whoami()
-      return :assembly_template, "assembly/list", {:subtype => 'template'}
+
+    # List assembly templates for specific module
+    def self.validation_list(context_params)
+      if context_params.is_there_identifier?(:service)
+        service_module_id = context_params.retrieve_arguments([:service_id!], [])
+        get_cached_response(:assembly_template, "service_module/list_assemblies", { :service_module_id => service_module_id })
+      else
+        get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template' })
+      end
     end
 
     desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."

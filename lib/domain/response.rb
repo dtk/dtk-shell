@@ -56,7 +56,7 @@ module DTK
             @print_error_table ||= print_error_table
 
             # if response is empty, response status is ok but no data is passed back
-            if data.nil? or data.empty?
+            if data.empty? or (data.is_a?(Array) ? data.first.nil? : data.nil?)
               @render_view = RenderView::SIMPLE_LIST
               if data.kind_of?(Array)
                 set_data('Message' => "List is empty.")

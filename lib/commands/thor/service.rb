@@ -7,6 +7,7 @@ dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
 dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
+dtk_require_from_base("commands/thor/assembly_template")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 
@@ -38,6 +39,19 @@ module DTK::Client
         raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if service_module_name.nil?
         return service_module_name
       end
+
+    end
+
+    def self.valid_children()
+      [:"assembly-template"]
+    end
+
+    def self.all_children()
+      [:"assembly-template"]
+    end
+
+    def self.valid_child?(name_of_sub_context)
+      return Service.valid_children().include?(name_of_sub_context.to_sym)
     end
 
     def self.pretty_print_cols()
@@ -53,26 +67,41 @@ module DTK::Client
         :command_only => {
           :self => [
             ["list"," list --remote","# List service modules (local/remote)"]
+          ],
+          :"assembly-template" => [
+            ["list","list","# List assembly templates for given service"]
           ]
         },
         :identifier_only => {
           :self      => [
             ["list-assembly-templates","list-assembly-templates","# List assembly templates associated with service module."],
             ["list-modules","list-modules","# List modules associated with service module."]
+          ],
+          :"assembly-template" => [
+            ["info","info","# Info for given assembly template in current service"],
+            ["stage", "stage [INSTANCE-NAME] -t [TARGET-NAME/ID]", "# Stage assembly template in target."],
+            ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-m COMMIT-MSG]", "# Stage and deploy assembly template in target."],
+            ["list-nodes","list-nodes", "# List all nodes for given assembly template."],
+            ["list-components","list-components", "# List all components for given assembly template."]
           ]
         }
+
       })
     end
     
     ##MERGE-QUESTION: need to add options of what info is about
     desc "SERVICE-NAME/ID info", "Provides information about specified service module"
     def info(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      post_body = {
-       :service_module_id => service_module_id
-      }
+      if context_params.is_there_identifier?(:assembly_template) 
+        response = DTK::Client::ContextRouter.routeTask("assembly_template", "info", context_params, @conn)
+      else  
+        service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
+        post_body = {
+         :service_module_id => service_module_id
+        }
 
-      response = post rest_url('service_module/info'), post_body
+        response = post rest_url('service_module/info'), post_body
+      end
     end
 
     desc "SERVICE-NAME/ID list-assembly-templates","List assembly templates associated with service."
@@ -94,14 +123,16 @@ module DTK::Client
     def list(context_params)
       service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
 
-      post_body = {}
-      action = nil
+      if context_params.is_there_command?(:"assembly-template")
+        about = "assembly-templates"
+      end
 
       # If user is on service level, list task can't have about value set
-      if context_params.current_command?
+      if (context_params.last_entity_name == :service) and about.nil?
         data_type = :module
         action    = options.remote? ? "list_remote" : "list"
-
+        post_body = {}
+ 
         response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
       else

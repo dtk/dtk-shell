@@ -58,7 +58,7 @@ module DTK
         actions = validation_response.validation_actions
 
         actions.each_with_index do |action, i|
-          if Console.confirmation_prompt("Pre-action '#{action['action']}' neeeded, execute?")
+          if Console.confirmation_prompt("Pre-action '#{action['action']}' needed, execute?")
             # we have hash map with values { :assembly_id => 2123123123, :option_1 => true }
             # we translate to array of values, with action as first element
 

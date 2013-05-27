@@ -24,9 +24,15 @@ def top_level_execute(entity_name, method_name, context_params=nil,options_args=
 
     # if connection parameters are not set up properly then don't execute any command
     return if validate_connection(conn)
-
+    
     # call proper thor class and task
     entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
+
+    # call forwarding, in case there is no task for given entity we switch to last (n-context) and try than
+    unless (entity_class.task_names.include?(method_name))
+      entity_class = DTK::Client.const_get "#{cap_form(context_params.last_entity_name.to_s)}"
+    end
+
     response_ruby_obj = entity_class.execute_from_cli(conn,method_name,context_params,options_args,shell_execute)
     
     # this will raise error if found
