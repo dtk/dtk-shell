@@ -12,6 +12,8 @@ module DTK::Client
       include CommandBase
       include CommandHelperMixin
 
+      EDIT_MODULE_COMMANDS = ['cd', 'exit', 'dtk-push-changes', 'ls']
+
       # Display confirmation prompt and repeat message until expected answer is given
       def confirmation_prompt(message, add_options=true)
         # used to disable skip with ctrl+c
@@ -65,6 +67,9 @@ module DTK::Client
       # path to desire directory from where unix shell can execute normaly.
       #
       def unix_shell(path=nil, module_id=nil, module_type=nil, version=nil)
+        
+        dtk_shell_ac_proc = Readline.completion_proc
+        dtk_shell_ac_append_char = Readline.completion_append_character
 
         if OsUtil.is_windows?
           puts "[NOTICE] Unix shell interaction is currenly not supported on Windows."
@@ -79,6 +84,10 @@ module DTK::Client
         puts "[NOTICE] You are switching to unix-shell, to path #{path}"
         begin
           prompt = DTK::Client::OsUtil.colorize("unix-shell: ", :yellow)
+          Readline.completion_append_character = ""
+          Readline.completion_proc = Proc.new do |str|
+            EDIT_MODULE_COMMANDS.concat(Dir[str+'*'].grep(/^#{Regexp.escape(str)}/))
+          end
           while line = Readline.readline(prompt, true)
             begin
               line = line.chomp()
@@ -121,6 +130,9 @@ module DTK::Client
           puts ""
           # do nothing else
         end
+
+        Readline.completion_append_character = dtk_shell_ac_append_char
+        Readline.completion_proc = dtk_shell_ac_proc
         puts "[NOTICE] You are leaving unix-shell."
       end
 
