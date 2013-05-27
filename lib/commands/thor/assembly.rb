@@ -60,7 +60,8 @@ module DTK::Client
           :component => [
             ['list',"list [FILTER] [--list] ","# List components."],
             ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."],
-            ['list-service-links',"list-service-links","# List service links for component."]
+            ['list-service-links',"list-service-links","# List service links for component."],
+            ['add-service-link',"add-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."]
           ]
         },
         :command_only => {
@@ -362,9 +363,14 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
 
-    desc "ASSEMBLY-NAME/ID add-link SERVICE-TYPE BASE-CMP-NAME/ID DEPENDENT-CMP-NAME/ID", "Add a service link between two components"
-    def add_link(context_params)
-      assembly_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
+    desc "ASSEMBLY-NAME/ID add-service-link SERVICE-TYPE BASE-CMP-NAME/ID DEPENDENT-CMP-NAME/ID", "Add a service link between two components"
+    def add_service_link(context_params)
+      if context_params.retrieve_arguments([:component_id])
+        assembly_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([:assembly_id!,:option_1!,:component_id!,:option_2!],method_argument_names)
+      else
+        assembly_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
+      end
+
       post_body = {
         :assembly_id => assembly_id,
         :service_type => service_type,
