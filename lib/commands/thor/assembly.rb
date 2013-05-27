@@ -59,7 +59,8 @@ module DTK::Client
           ],
           :component => [
             ['list',"list [FILTER] [--list] ","# List components."],
-            ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."]
+            ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."],
+            ['list-service-links',"list-service-links","# List service links for component."]
           ]
         },
         :command_only => {
@@ -372,7 +373,7 @@ TODO: will put in dot release and will rename to 'extend'
       }
       post rest_url("assembly/add_ad_hoc_service_link"), post_body
     end
-    #TDOO: above and below wil be harmonized
+    #TDOO: above and below will be harmonized
     desc "ASSEMBLY-NAME/ID add-connection CONN-TYPE SERVICE-REF1/ID SERVICE-REF2/ID", "Add a connection between two services in an assembly"
     def add_connection(context_params)
       assembly_id,conn_type,sr1,sr2 = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
@@ -385,6 +386,17 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/add_connection"), post_body
     end
 
+    desc "ASSEMBLY-NAME/ID list-service-links","List service links"
+    def list_service_links(context_params)
+      assembly_id, component_id = context_params.retrieve_arguments([:assembly_id!,:component_id],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      post_body.merge!(:component_id => component_id) if component_id
+      response = post rest_url("assembly/list_service_links"), post_body
+      response.render_table(:service_connection)
+    end
+    #TODO: below will be deprectaed for above
     desc "ASSEMBLY-NAME/ID list-connections [--missing | --possible]","List connections between services on asssembly"
     method_option "missing",:aliases => "-m" ,
       :type => :boolean,
