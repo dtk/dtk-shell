@@ -12,8 +12,6 @@ module DTK::Client
       include CommandBase
       include CommandHelperMixin
 
-      EDIT_MODULE_COMMANDS = ['cd', 'exit', 'dtk-push-changes', 'ls']
-
       # Display confirmation prompt and repeat message until expected answer is given
       def confirmation_prompt(message, add_options=true)
         # used to disable skip with ctrl+c
@@ -83,29 +81,32 @@ module DTK::Client
         Dir.chdir(path)
         puts "[NOTICE] You are switching to unix-shell, to path #{path}"
         begin
-          prompt = DTK::Client::OsUtil.colorize("unix-shell: ", :yellow)
+          prompt = DTK::Client::OsUtil.colorize("dtk:unix-shell> ", :yellow)
           Readline.completion_append_character = ""
           Readline.completion_proc = Proc.new do |str|
-            EDIT_MODULE_COMMANDS.concat(Dir[str+'*'].grep(/^#{Regexp.escape(str)}/))
+            Dir[str+'*'].grep(/^#{Regexp.escape(str)}/)
           end
-          while line = Readline.readline(prompt, true)
+          while line = Readline.readline("#{prompt}#{Dir.getwd()}>", true)
             begin
               line = line.chomp()
               break if line.eql?('exit')
               # since we are not able to support cd command due to ruby specific restrictions
               # we will be using chdir to this.
               if (line.match(/^cd /))
-                # remove cd part of command
+                 # remove cd part of command
                 line = line.gsub(/^cd /,'')
-                # does the command start with '/'
-                if (line.match(/^\//))
-                  # if so just go to desired line
-                  Dir.chdir(line)
-                else
-                  # we created wanted path 
-                  Dir.chdir("#{Dir.getwd()}/#{line}")
+                # Get path
+                path = line.match(/^\//) ? line : "#{Dir.getwd()}/#{line}"
+                # If filepat* with '*' at the end, match first directory and go in it, else try to change original input
+                if path.match(/\*$/)
+                  dirs = Dir[path].select{|file| File.directory?(file)} 
+                  unless dirs.empty?
+                    Dir.chdir(dirs.first)
+                    next
+                  end
                 end
-              # elsif line.eql?('dtk-push-changes')
+                # Change directory
+                Dir.chdir(path)
               elsif line.match(/^dtk-push-changes/)
                 args       = Shellwords.split(line)
                 commit_msg = nil
