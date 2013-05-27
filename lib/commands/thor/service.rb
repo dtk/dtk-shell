@@ -266,7 +266,7 @@ module DTK::Client
       modules_path    = OsUtil.service_clone_location()
       module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
 
-      raise DTK::Client::DtkValidationErrorl, "Trying to clone a service module '#{service_module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
+      raise DTK::Client::DtkValidationError, "Trying to clone a service module '#{service_module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
       clone_aux(:service_module,service_module_id,version,internal_trigger)
     end
 
