@@ -61,7 +61,8 @@ module DTK::Client
             ['list',"list [FILTER] [--list] ","# List components."],
             ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."],
             ['list-service-links',"list-service-links","# List service links for component."],
-            ['add-service-link',"add-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."]
+            ['add-service-link',"add-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
+            ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."]
           ]
         },
         :command_only => {
@@ -362,10 +363,26 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/add_ad_hoc_attribute_mapping"), post_body
     end
 
+    desc "ASSEMBLY-NAME/ID delete-service-link SERVICE-LINK-ID", "Delete a service link"
+    def delete_service_link(context_params)
+      assembly_id  = context_params.retrieve_arguments([:assembly_id!])
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      if context_params.is_last_command_eql_to?(:component)
+        component_id,service_type = context_params.retrieve_arguments([:component_id!,:option_1!],method_argument_names)
+        post_body.merge!(:input_component_id => component_id,:service_type => service_type)
+      else
+        service_link_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+        post_body.merge!(:service_link_id => service_link_id)
+      end
+
+      post rest_url("assembly/delete_service_link"), post_body
+    end
 
     desc "ASSEMBLY-NAME/ID add-service-link SERVICE-TYPE BASE-CMP-NAME/ID DEPENDENT-CMP-NAME/ID", "Add a service link between two components"
     def add_service_link(context_params)
-      if context_params.retrieve_arguments([:component_id])
+      if context_params.is_last_command_eql_to?(:component)
         assembly_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([:assembly_id!,:option_1!,:component_id!,:option_2!],method_argument_names)
       else
         assembly_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
