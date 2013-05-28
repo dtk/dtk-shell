@@ -411,13 +411,18 @@ TODO: will put in dot release and will rename to 'extend'
 
     desc "ASSEMBLY-NAME/ID list-service-links","List service links"
     def list_service_links(context_params)
-      assembly_id, component_id = context_params.retrieve_arguments([:assembly_id!,:component_id],method_argument_names)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
       post_body = {
         :assembly_id => assembly_id
       }
-      post_body.merge!(:component_id => component_id) if component_id
+      data_type = :service_link
+      if context_params.is_last_command_eql_to?(:component)
+        component_id = context_params.retrieve_arguments([:component_id!],method_argument_names)
+        post_body.merge!(:component_id => component_id, :context => "component")
+        data_type = :service_link_from_component
+      end
       response = post rest_url("assembly/list_service_links"), post_body
-      response.render_table(:service_connection)
+      response.render_table(data_type)
     end
     #TODO: below will be deprectaed for above
     desc "ASSEMBLY-NAME/ID list-connections [--missing | --possible]","List connections between services on asssembly"
