@@ -62,7 +62,8 @@ module DTK::Client
             ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."],
             ['list-service-links',"list-service-links","# List service links for component."],
             ['add-service-link',"add-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
-            ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."]
+            ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."],
+            ['add-attribute-mapping',"add-attribute-mapping SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Add an attribute mapping to service link."]
           ]
         },
         :command_only => {
@@ -352,14 +353,23 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     #TODO: probably subsumed by naviaging to an attribute and binding it
-    desc "ASSEMBLY-NAME/ID add-attr-mapping SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to service link"
-    def add_attr_mapping(context_params)
-      assembly_id,service_link_id,base_attr,arrow,dep_attr = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!,:option_4!],method_argument_names)
+    desc "ASSEMBLY-NAME/ID add-attribute-mapping SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to a service link"
+    def add_attribute_mapping(context_params)
+
+      assembly_id,base_attr,arrow,dep_attr = context_params.retrieve_arguments([:assembly_id!,:option_2!,:option_3!,:option_4!],method_argument_names)
       post_body = {
         :assembly_id => assembly_id,
-        :service_link_id => service_link_id,
         :attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}" #TODO: probably change to be hash
       }
+      
+      if context_params.is_last_command_eql_to?(:component)
+        component_id,service_type = context_params.retrieve_arguments([:component_id!,:option_1!],method_argument_names)
+        post_body.merge!(:input_component_id => component_id,:service_type => service_type)
+      else
+        service_link_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+        post_body.merge!(:service_link_id => service_link_id)
+      end
+
       post rest_url("assembly/add_ad_hoc_attribute_mapping"), post_body
     end
 
