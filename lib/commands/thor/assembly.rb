@@ -425,31 +425,16 @@ TODO: will put in dot release and will rename to 'extend'
       response.render_table(data_type)
     end
     #TODO: below will be deprectaed for above
-    desc "ASSEMBLY-NAME/ID list-connections [--missing | --possible]","List connections between services on asssembly"
-    method_option "missing",:aliases => "-m" ,
-      :type => :boolean,
-      :desc => "List missing connections"
-    method_option "possible",:aliases => "-p" ,
-      :type => :boolean,
-      :desc => "List possible connections"
-    def list_connections(context_params)
+    desc "ASSEMBLY-NAME/ID list-possible-connections","List connections between services on asssembly"
+    def list_possible_connections(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
       post_body = {
-        :assembly_id => assembly_id
+        :assembly_id => assembly_id,
+        :find_possible => true
       }
-      #TODO: make sure that dont have both missing and possible true at same time
-      data_type = :service_connection 
-      if options.missing?
-        post_body.merge!(:find_missing => true) if options.missing?
-        data_type = :service_ref
-      elsif options.possible?
-        data_type = :possible_service_connection
-        post_body.merge!(:find_possible => true) if options.possible?
-      end
-
       response = post rest_url("assembly/list_connections"), post_body
-      response.render_table(data_type)
+      response.render_table(:possible_service_connection)
     end
 
     desc "ASSEMBLY-NAME/ID list-smoketests","List smoketests on asssembly"
