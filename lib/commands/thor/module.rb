@@ -299,11 +299,13 @@ module DTK::Client
         :local_module_name => local_module_name
       }
       response = post rest_url("component_module/import"), post_body
-      @@invalidate_map << :module_component
-
+      
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
-      Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+      response = Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+      @@invalidate_map << :module_component
+
+      response
     end
 
     #
@@ -332,6 +334,8 @@ module DTK::Client
         delete(context_params)
         create_response['errors'][0]['message'] += "\nModule '#{module_name}' data is deleted."
       end
+
+
 
       return create_response
     end

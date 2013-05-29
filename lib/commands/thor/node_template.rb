@@ -27,7 +27,7 @@ module DTK::Client
       return response
     end
 =end
-    desc "list -all -t [TARGET-NAME]", "List all node templates."
+    desc "list --all -t [TARGET-NAME]", "List all node templates."
     method_option :all, :type => :boolean, :default => false
     method_option "target_identifier",:aliases => "-t" ,
       :type => :string, 
