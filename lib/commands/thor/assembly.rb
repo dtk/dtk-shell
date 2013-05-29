@@ -3,6 +3,7 @@ require 'json'
 require 'colorize'
 dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
+dtk_require_from_base("command_helper")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 
@@ -62,7 +63,9 @@ module DTK::Client
             ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."],
             ['list-service-links',"list-service-links","# List service links for component."],
             ['add-service-link',"add-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
-            ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."]
+            ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."],
+            ['add-attribute-mapping',"add-attribute-mapping SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Add an attribute mapping to service link."],
+            ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."]
           ]
         },
         :command_only => {
@@ -350,33 +353,23 @@ TODO: will put in dot release and will rename to 'extend'
       return response
       
     end
+    desc "ASSEMBLY-NAME/ID list-attribute-mappings SERVICE-LINK-NAME/ID", "List attribute mappings associated with service link"
+    def list_attribute_mappings(context_params)
+      post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
+      post rest_url("assembly/list_attribute_mappings"), post_body
+    end
 
-    #TODO: probably subsumed by naviaging to an attribute and binding it
-    desc "ASSEMBLY-NAME/ID add-attr-mapping SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to service link"
-    def add_attr_mapping(context_params)
-      assembly_id,service_link_id,base_attr,arrow,dep_attr = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!,:option_4!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id,
-        :service_link_id => service_link_id,
-        :attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}" #TODO: probably change to be hash
-      }
+    desc "ASSEMBLY-NAME/ID add-attribute-mapping SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to a service link"
+    def add_attribute_mapping(context_params)
+      post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
+      base_attr,arrow,dep_attr = context_params.retrieve_arguments([:option_2!,:option_3!,:option_4!],method_argument_names)
+      post_body.merge!(:attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}") #TODO: probably change to be hash
       post rest_url("assembly/add_ad_hoc_attribute_mapping"), post_body
     end
 
     desc "ASSEMBLY-NAME/ID delete-service-link SERVICE-LINK-ID", "Delete a service link"
     def delete_service_link(context_params)
-      assembly_id  = context_params.retrieve_arguments([:assembly_id!])
-      post_body = {
-        :assembly_id => assembly_id
-      }
-      if context_params.is_last_command_eql_to?(:component)
-        component_id,service_type = context_params.retrieve_arguments([:component_id!,:option_1!],method_argument_names)
-        post_body.merge!(:input_component_id => component_id,:service_type => service_type)
-      else
-        service_link_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-        post_body.merge!(:service_link_id => service_link_id)
-      end
-
+      post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
       post rest_url("assembly/delete_service_link"), post_body
     end
 
@@ -411,40 +404,30 @@ TODO: will put in dot release and will rename to 'extend'
 
     desc "ASSEMBLY-NAME/ID list-service-links","List service links"
     def list_service_links(context_params)
-      assembly_id, component_id = context_params.retrieve_arguments([:assembly_id!,:component_id],method_argument_names)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
       post_body = {
         :assembly_id => assembly_id
       }
-      post_body.merge!(:component_id => component_id) if component_id
+      data_type = :service_link
+      if context_params.is_last_command_eql_to?(:component)
+        component_id = context_params.retrieve_arguments([:component_id!],method_argument_names)
+        post_body.merge!(:component_id => component_id, :context => "component")
+        data_type = :service_link_from_component
+      end
       response = post rest_url("assembly/list_service_links"), post_body
-      response.render_table(:service_connection)
+      response.render_table(data_type)
     end
     #TODO: below will be deprectaed for above
-    desc "ASSEMBLY-NAME/ID list-connections [--missing | --possible]","List connections between services on asssembly"
-    method_option "missing",:aliases => "-m" ,
-      :type => :boolean,
-      :desc => "List missing connections"
-    method_option "possible",:aliases => "-p" ,
-      :type => :boolean,
-      :desc => "List possible connections"
-    def list_connections(context_params)
+    desc "ASSEMBLY-NAME/ID list-possible-connections","List connections between services on asssembly"
+    def list_possible_connections(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
       post_body = {
-        :assembly_id => assembly_id
+        :assembly_id => assembly_id,
+        :find_possible => true
       }
-      #TODO: make sure that dont have both missing and possible true at same time
-      data_type = :service_connection 
-      if options.missing?
-        post_body.merge!(:find_missing => true) if options.missing?
-        data_type = :service_ref
-      elsif options.possible?
-        data_type = :possible_service_connection
-        post_body.merge!(:find_possible => true) if options.possible?
-      end
-
       response = post rest_url("assembly/list_connections"), post_body
-      response.render_table(data_type)
+      response.render_table(:possible_service_connection)
     end
 
     desc "ASSEMBLY-NAME/ID list-smoketests","List smoketests on asssembly"
@@ -495,7 +478,7 @@ TODO: will put in dot release and will rename to 'extend'
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID set ATTRIBUTE-NAME/ID VALUE", "Set target assembly attributes"
+    desc "ASSEMBLY-NAME/ID set ATTRIBUTE-NAME/ID VALUE", "Set assembly attribute value(s)"
     def set(context_params)
 
       if context_params.is_there_identifier?(:attribute)
@@ -515,6 +498,30 @@ TODO: will put in dot release and will rename to 'extend'
         :assembly_id => assembly_id,
         :pattern => pattern,
         :value => value
+      }
+      #TODO: have this return format like assembly show attributes with subset of rows that gt changed
+      post rest_url("assembly/set_attributes"), post_body
+    end
+    desc "ASSEMBLY-NAME/ID unset ATTRIBUTE-NAME/ID VALUE", "Unset assembly attribute values(s)"
+    def unset(context_params)
+
+      if context_params.is_there_identifier?(:attribute)
+        mapping = [:assembly_id!,:attribute_id!]
+      else
+        mapping = [:assembly_id!,:option_1!]
+      end
+
+      # TODO 
+      # for node level add node restriction, so attributes are set just for node in active context
+      # add restriction for attribute-pattern at component level (display attributes just for that component)
+      # same restricton is needed for attribute level, but than only value is provided by the user
+
+      assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :pattern => pattern,
+        :value => nil
       }
       #TODO: have this return format like assembly show attributes with subset of rows that gt changed
       post rest_url("assembly/set_attributes"), post_body
