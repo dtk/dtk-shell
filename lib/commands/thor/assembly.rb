@@ -3,6 +3,7 @@ require 'json'
 require 'colorize'
 dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
+dtk_require_from_base("command_helper")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 
@@ -63,7 +64,8 @@ module DTK::Client
             ['list-service-links',"list-service-links","# List service links for component."],
             ['add-service-link',"add-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
             ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."],
-            ['add-attribute-mapping',"add-attribute-mapping SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Add an attribute mapping to service link."]
+            ['add-attribute-mapping',"add-attribute-mapping SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Add an attribute mapping to service link."],
+            ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."]
           ]
         },
         :command_only => {
@@ -351,42 +353,23 @@ TODO: will put in dot release and will rename to 'extend'
       return response
       
     end
+    desc "ASSEMBLY-NAME/ID list-attribute-mappings SERVICE-LINK-NAME/ID", "List attribute mappings associated with service link"
+    def list_attribute_mappings(context_params)
+      post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
+      post rest_url("assembly/list_attribute_mappings"), post_body
+    end
 
-    #TODO: probably subsumed by naviaging to an attribute and binding it
     desc "ASSEMBLY-NAME/ID add-attribute-mapping SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to a service link"
     def add_attribute_mapping(context_params)
-
-      assembly_id,base_attr,arrow,dep_attr = context_params.retrieve_arguments([:assembly_id!,:option_2!,:option_3!,:option_4!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id,
-        :attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}" #TODO: probably change to be hash
-      }
-      
-      if context_params.is_last_command_eql_to?(:component)
-        component_id,service_type = context_params.retrieve_arguments([:component_id!,:option_1!],method_argument_names)
-        post_body.merge!(:input_component_id => component_id,:service_type => service_type)
-      else
-        service_link_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-        post_body.merge!(:service_link_id => service_link_id)
-      end
-
+      post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
+      base_attr,arrow,dep_attr = context_params.retrieve_arguments([:option_2!,:option_3!,:option_4!],method_argument_names)
+      post_body.merge!(:attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}") #TODO: probably change to be hash
       post rest_url("assembly/add_ad_hoc_attribute_mapping"), post_body
     end
 
     desc "ASSEMBLY-NAME/ID delete-service-link SERVICE-LINK-ID", "Delete a service link"
     def delete_service_link(context_params)
-      assembly_id  = context_params.retrieve_arguments([:assembly_id!])
-      post_body = {
-        :assembly_id => assembly_id
-      }
-      if context_params.is_last_command_eql_to?(:component)
-        component_id,service_type = context_params.retrieve_arguments([:component_id!,:option_1!],method_argument_names)
-        post_body.merge!(:input_component_id => component_id,:service_type => service_type)
-      else
-        service_link_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-        post_body.merge!(:service_link_id => service_link_id)
-      end
-
+      post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
       post rest_url("assembly/delete_service_link"), post_body
     end
 
