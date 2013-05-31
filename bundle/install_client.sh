@@ -3,7 +3,7 @@
 
 # GLOBAL VAR
 
-abh_gem_repository="http://abh:haris@ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000/"
+abh_gem_repository="http://dtkuser:g3msdtk@gems-dev.r8network.com/"
 home_dir=`cd ~ && pwd`
 etc_location="${home_dir}/dtk/"
 conf_path="${etc_location}client.conf"
