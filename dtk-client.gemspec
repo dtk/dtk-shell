@@ -31,6 +31,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'grit','~> 2.5.0'
   gem.add_dependency 'dtk-common','>= 0.1.9'
   gem.add_dependency 'colorize','~> 0.5.8'
+  gem.add_dependency 'diff-lcs','1.1.3'
 
   # gem.add_dependency 'activesupport','~> 3.2.12'
   # gem.add_dependency 'i18n','0.6.1'

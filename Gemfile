@@ -1,6 +1,5 @@
 source 'http://rubygems.org'
-source 'http://ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:3000'
-source 'http://ec2-54-247-191-95.eu-west-1.compute.amazonaws.com:4000'
+source 'http://dtkuser:g3msdtk@gems-dev.r8network.com'
 
 # dependcies are defined in gemspec file since to avoid duplication
 # gemspec :name => 'dtk-client'
