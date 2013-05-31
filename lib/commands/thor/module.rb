@@ -135,9 +135,13 @@ module DTK::Client
       if options.purge?
         raise DTK::Client::DtkValidationError, "Unable to delete local directory. Message: #{module_info['errors'].first['message']}." unless module_info["status"] == "ok"
         module_id       = module_info["data"]["display_name"]
-        modules_path    = OsUtil.module_clone_location()
-        module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
-        module_versions = Dir.entries(modules_path).select{|a| a.match(/#{module_id}-\d.\d.\d/)}
+        # if info method does not return display name use get_module_name method to get 
+        component_module_id = get_module_name(component_module_id) if component_module_id.to_s =~ /^[0-9]+$/
+        module_id           = component_module_id if (module_id.nil? || module_id.empty?)
+        
+        modules_path        = OsUtil.module_clone_location()
+        module_location     = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
+        module_versions     = Dir.entries(modules_path).select{|a| a.match(/#{module_id}-\d.\d.\d/)}
         
         unless (module_location.nil? || ("#{modules_path}/" == module_location))
           FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
