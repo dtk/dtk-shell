@@ -26,7 +26,7 @@ module DTK::Client
     end
 
     def self.validation_list(context_params)
-      get_cached_response(:component, "component_module/list", {})
+      get_cached_response(:module_component, "component_module/list", {})
     end
 
      def self.override_allowed_methods()
