@@ -81,7 +81,7 @@ module DTK::Client
         Dir.chdir(path)
         puts "[NOTICE] You are switching to unix-shell, to path #{path}"
         begin
-          prompt = DTK::Client::OsUtil.colorize("dtk:unix-shell> ", :yellow)
+          prompt = DTK::Client::OsUtil.colorize("$dtk:unix-shell ", :yellow)
           Readline.completion_append_character = ""
           Readline.completion_proc = Proc.new do |str|
             Dir[str+'*'].grep(/^#{Regexp.escape(str)}/)

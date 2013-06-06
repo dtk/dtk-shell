@@ -149,19 +149,11 @@ module DTK::Client
 
             response = post rest_url("service_module/#{action}"), post_body
           when "modules"
-            ids       = []
-            data_type = :component
-            post_body = {
-              :service_module_id => service_module_id,
-              :about => 'components'
-            }
+            data_type        = :component
+            action           = "list_component_modules"
+            post_body        = { :service_module_id => service_module_id }
 
-            response = post rest_url("service_module/info_about"), post_body
-            return response unless response.ok?
-            response["data"].collect{|a| ids<<a["id"].to_i}
-
-            post_body = { :assemblies => ids }
-            response  = post rest_url("assembly/list_modules"), post_body unless ids.empty?
+            response = post rest_url("service_module/#{action}"), post_body
           else
             raise_validation_error_method_usage('list')
           end 
