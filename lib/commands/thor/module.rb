@@ -323,7 +323,8 @@ module DTK::Client
       response = Helper(:git_repo).create_clone_with_branch(:component_module, module_name, git_repo_url)
       
       # Raise error if git repository is invalid
-      raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless response.ok?
+      # raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless response.ok?
+      return response unless response.ok?
 
       # Remove .git directory to rid of git pointing to user's github
       FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
