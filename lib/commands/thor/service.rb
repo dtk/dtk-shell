@@ -416,11 +416,8 @@ module DTK::Client
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
-      module_id, module_info, module_location, modules_path = nil, nil, nil, nil
+      module_location, modules_path = nil, nil
       service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      # add component_module_id/name required by info method
-      context_params.add_context_to_params("service", "service", service_module_id)
-      module_info = info(context_params)
 
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
@@ -439,16 +436,14 @@ module DTK::Client
 
       # delete local module directory
       if options.purge?
-        raise DTK::Client::DtkValidationError, "Unable to delete local directory. Message: #{module_info['errors'].first['message']}." unless module_info["status"] == "ok"
-        module_id       = module_info["data"]["display_name"]
-        # if info method does not return display name use get_module_name method to get 
         service_module_id = get_service_module_name(service_module_id) if service_module_id.to_s =~ /^[0-9]+$/
-        module_id         = service_module_id if (module_id.nil? || module_id.empty?)
-
         modules_path    = OsUtil.service_clone_location()
-        module_location = "#{modules_path}/#{module_id}" unless (module_id.nil? || module_id.empty?)
-        module_versions = Dir.entries(modules_path).select{|a| a.match(/#{module_id}-\d.\d.\d/)}
+        module_location = "#{modules_path}/#{service_module_id}" unless service_module_id.nil?
+
+        raise DTK::Client::DtkValidationError, "Trying to delete local directory ('#{module_location}') that does not exist." unless File.directory?(module_location)
         
+        module_versions = Dir.entries(modules_path).select{|a| a.match(/#{service_module_id}-\d.\d.\d/)}
+
         unless (module_location.nil? || ("#{modules_path}/" == module_location))
           FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
 
