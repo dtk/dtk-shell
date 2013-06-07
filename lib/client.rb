@@ -15,9 +15,9 @@ dtk_require("config/configuration")
 
 
 if DTK::Configuration.get(:development_mode)
-  require 'grit'
+  #require 'grit'
   # enable grit debug logs
-  Grit.debug = true
+  #Grit.debug = true
 end
 
 # we don't need Bundler.setup but will leave it commented just in case

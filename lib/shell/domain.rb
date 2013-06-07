@@ -6,9 +6,9 @@ module DTK
       attr_accessor :current_context
       attr_accessor :method_arguments
 
-      def initialize
+      def initialize(override_method_arguments = [])
         @current_context  = ActiveContext.new
-        @method_arguments = []
+        @method_arguments = override_method_arguments
         @thor_options          = nil
       end
 
@@ -18,6 +18,10 @@ module DTK
 
       def forward_options(options)
         @thor_options = options
+      end
+
+      def get_forwarded_options()
+        @thor_options
       end
 
       def get_forwarded_thor_option(option_key)

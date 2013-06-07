@@ -67,6 +67,14 @@ module DTK
           service_location = ::DTK::Configuration.get(:service_location)
           return (service_location.start_with?('/') ? service_location : "#{dtk_local_folder}#{service_location}")
         end
+
+        #
+        #
+        #
+        def local_component_module_list()
+          component_module_dir = module_clone_location()
+          Dir.entries(component_module_dir).select {|entry| File.directory? File.join(component_module_dir,entry) and !(entry =='.' || entry == '..') }
+        end
         
         # Public method will convert given string, to string with colorize output
         #
@@ -84,6 +92,7 @@ module DTK
         # message - String to be colorize and printed
         # color   - Symbol describing the color to be used on STDOUT
         #
+        # Void
         def print(message, color)
           puts colorize(message, color)
         end
