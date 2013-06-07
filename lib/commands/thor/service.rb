@@ -1,6 +1,7 @@
 #TODO: putting in version as hidden coption that can be enabled when code ready
 #TODO: may be consistent on whether service module id or service module name used as params
 dtk_require_from_base('command_helpers/ssh_processing')
+dtk_require_from_base('command_helpers/service_importer')
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
@@ -19,6 +20,7 @@ module DTK::Client
       include PushToRemoteMixin
       include PullFromRemoteMixin
       include PushCloneChangesMixin
+      include ServiceImporter
 
       def get_service_module_name(service_module_id)
         service_module_name = nil
@@ -39,7 +41,6 @@ module DTK::Client
         raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if service_module_name.nil?
         return service_module_name
       end
-
     end
 
     def self.valid_children()
@@ -92,7 +93,7 @@ module DTK::Client
     ##MERGE-QUESTION: need to add options of what info is about
     desc "SERVICE-NAME/ID info", "Provides information about specified service module"
     def info(context_params)
-      if context_params.is_there_identifier?(:assembly_template) 
+      if context_params.is_there_identifier?(:assembly_template)
         response = DTK::Client::ContextRouter.routeTask("assembly_template", "info", context_params, @conn)
       else  
         service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
@@ -145,21 +146,16 @@ module DTK::Client
           when "assembly-templates"
             data_type        = :assembly_template
             action           = "list_assemblies"
-            post_body        = { :service_module_id => service_module_id }
-
-            response = post rest_url("service_module/#{action}"), post_body
           when "modules"
             data_type        = :component
             action           = "list_component_modules"
-            post_body        = { :service_module_id => service_module_id }
-
-            response = post rest_url("service_module/#{action}"), post_body
           else
             raise_validation_error_method_usage('list')
           end 
         end
       end
 
+      response = post rest_url("service_module/#{action}"), { :service_module_id => service_module_id }
       response.render_table(data_type) unless response.nil?
 
       response
@@ -168,7 +164,6 @@ module DTK::Client
     desc "import-r8n REMOTE-SERVICE-NAME", "Import remote service module into local environment"
     version_method_option
     def import_r8n(context_params)
-
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
@@ -186,8 +181,9 @@ module DTK::Client
       @@invalidate_map << :service_module
 
       return response unless response.ok?
-      module_name,repo_url,branch = response.data(:module_name,:repo_url,:workspace_branch)
+      service_module_id, module_name, namespace, repo_url, branch = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch)
       Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
+      resolve_missing_components(service_module_id, module_name, namespace)
     end
 
     desc "SERVICE-NAME/ID import-version VERSION", "Import a specfic version from a linked service module"
@@ -236,7 +232,7 @@ module DTK::Client
     version_method_option
     def pull_from_remote(context_params)
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      pull_from_remote_aux(:service_module,service_module_id,options["namespace"],options["version"])
+      pull_from_remote_aux(:service_module,service_module_id,options["version"])
     end
 
     ##

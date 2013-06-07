@@ -459,10 +459,11 @@ module DTK::Client
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
     version_method_option
     def clone(context_params, internal_trigger=false)
+      thor_options = context_params.get_forwarded_options() || options
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
-      version             = options["version"]
-      internal_trigger    = true if options.skip_edit?
+      version             = thor_options["version"]
+      internal_trigger    = true if thor_options['skip_edit']   
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
@@ -482,7 +483,7 @@ module DTK::Client
     def edit(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
-      version             = options["version"]
+      version             = thor_options["version"]
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
