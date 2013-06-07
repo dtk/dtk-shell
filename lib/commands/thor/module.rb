@@ -134,14 +134,14 @@ module DTK::Client
         modules_path        = OsUtil.module_clone_location()
         module_location     = "#{modules_path}/#{component_module_id}" unless component_module_id.nil?
 
-        raise DTK::Client::DtkValidationError, "Trying to delete local directory ('#{module_location}') that does not exist." unless File.directory?(module_location)
-        
-        module_versions     = Dir.entries(modules_path).select{|a| a.match(/#{component_module_id}-\d.\d.\d/)}
-        unless (module_location.nil? || ("#{modules_path}/" == module_location))
-          FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
+        if File.directory?(module_location)
+          module_versions     = Dir.entries(modules_path).select{|a| a.match(/#{component_module_id}-\d.\d.\d/)}
+          unless (module_location.nil? || ("#{modules_path}/" == module_location))
+            FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
 
-          module_versions.each do |version|
-            FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
+            module_versions.each do |version|
+              FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
+            end
           end
         end
       end
