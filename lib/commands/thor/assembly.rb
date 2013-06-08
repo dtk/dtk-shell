@@ -286,15 +286,17 @@ TODO: will put in dot release and will rename to 'extend'
       #return post rest_url("monitoring_item/check_idle"), {}
 
       assembly_id, node_id, component_id, attribute_id, about, filter = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1,:option_2],method_argument_names)
-
+detail_level = nil
       if about
         case about
           when "nodes"
             data_type = :node
           when "components"
             data_type = :component
+            detail_to_include = [:component_dependencies]
           when "attributes"
             data_type = :attribute
+            detail_to_include = [:attribute_links]
           when "tasks"
             data_type = :task
           else
@@ -309,6 +311,7 @@ TODO: will put in dot release and will rename to 'extend'
         :subtype     => 'instance',
         :filter      => filter
       }
+      post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
       rest_endpoint = "assembly/info_about"
 
       if context_params.is_last_command_eql_to?(:attribute)
