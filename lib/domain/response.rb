@@ -83,7 +83,8 @@ module DTK
         self
       end
 
-      def render_table(data_type)
+      def render_table(default_data_type=nil)
+        data_type = response_datatype() || default_data_type
         @render_data_type = symbol_to_data_type_upcase(data_type)
         @render_view = RenderView::TABLE
         self

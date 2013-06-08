@@ -293,10 +293,10 @@ TODO: will put in dot release and will rename to 'extend'
             data_type = :node
           when "components"
             data_type = :component
-#TODO: testing            detail_to_include = [:component_dependencies]
+            detail_to_include = [:component_dependencies]
           when "attributes"
             data_type = :attribute
-#TODO: testing            detail_to_include = [:attribute_links]
+            detail_to_include = [:attribute_links]
           when "tasks"
             data_type = :task
           else
