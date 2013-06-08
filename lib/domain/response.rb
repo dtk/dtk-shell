@@ -89,6 +89,10 @@ module DTK
         self
       end
 
+      def response_datatype()
+        self["datatype"] && self["datatype"].to_sym
+      end
+
       def hash_part()
         keys.inject(Hash.new){|h,k|h.merge(k => self[k])}
       end

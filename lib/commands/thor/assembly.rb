@@ -286,17 +286,17 @@ TODO: will put in dot release and will rename to 'extend'
       #return post rest_url("monitoring_item/check_idle"), {}
 
       assembly_id, node_id, component_id, attribute_id, about, filter = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1,:option_2],method_argument_names)
-detail_level = nil
+      detail_to_include = nil
       if about
         case about
           when "nodes"
             data_type = :node
           when "components"
             data_type = :component
-            detail_to_include = [:component_dependencies]
+#TODO: testing            detail_to_include = [:component_dependencies]
           when "attributes"
             data_type = :attribute
-            detail_to_include = [:attribute_links]
+#TODO: testing            detail_to_include = [:attribute_links]
           when "tasks"
             data_type = :task
           else
@@ -349,7 +349,7 @@ detail_level = nil
 
       post_body[:about] = about
       response = post rest_url(rest_endpoint), post_body
-      
+
       # set render view to be used
       response.render_table(data_type) unless options.list?
 
