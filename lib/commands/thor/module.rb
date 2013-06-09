@@ -483,7 +483,7 @@ module DTK::Client
     def edit(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
-      version             = thor_options["version"]
+      version             = options.version
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
