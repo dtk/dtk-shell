@@ -24,7 +24,8 @@ module DTK
 
       @@cached_response = {}
       @@invalidate_map  = []
-      TIME_DIFF         = 60  #second(s)
+      TIME_DIFF         = 60   #second(s)
+      EXTENDED_TIMEOUT  = 360  #second(s)
 
       
       def initialize(args, opts, config)
@@ -256,6 +257,19 @@ module DTK
       end
 
       no_tasks do
+
+        ##
+        # Block that allows users to specify part of the code which is expected to run for longer duration
+        #
+        def extended_timeout
+          puts "Please wait, this could take a few minutes ..."
+          old_timeout = ::DTK::Client::Conn.get_timeout()
+          ::DTK::Client::Conn.set_timeout(EXTENDED_TIMEOUT)
+          result = yield
+          ::DTK::Client::Conn.set_timeout(old_timeout)
+          result
+        end
+
         # Method not implemented error
         def not_implemented
           raise DTK::Client::DtkError, "Method NOT IMPLEMENTED!"
@@ -304,6 +318,7 @@ module DTK
           (input_remote_name||'').include?('/') ? input_remote_name.split('/') : [nil, input_remote_name]
         end
       end
+
 
       ##
       # This is fix where we wanna exclude basename print when using dtk-shell.
