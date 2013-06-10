@@ -89,6 +89,7 @@ module DTK
       class << self
         def check(response_ruby_obj)
           # check for errors in response
+             
           unless response_ruby_obj["errors"].nil?
             error_msg       = ""
             error_internal  = nil
