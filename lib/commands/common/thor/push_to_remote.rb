@@ -16,10 +16,10 @@ module DTK::Client
         id_field => module_id,
         :rsa_pub_key => rsa_pub_key.chomp,
         :access_rights => "rw",
-        :action => "push",
-        :remote_namespace => remote_namespace
+        :action => "push"
       }
       post_body.merge!(:version => version) if version
+      post_body.merge!(:remote_namespace => remote_namespace) if remote_namespace
       response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
 
       return response unless response.ok?
