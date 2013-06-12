@@ -132,7 +132,7 @@ module DTK::Client
       if (context_params.last_entity_name == :service) and about.nil?
         data_type = options.remote? ? :module_remote : :module
         action    = options.remote? ? "list_remote" : "list"
-        post_body = {}
+        post_body = (options.remote? ? {} : {:detail_to_include => ["remotes"]})
  
         response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
