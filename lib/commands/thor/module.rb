@@ -192,8 +192,8 @@ module DTK::Client
 
       action = (options.remote? ? "list_remote" : "list")
       response = post rest_url("component_module/#{action}")
-      data_type = :component
-      response.render_table(:component)
+      data_type = options.remote? ? :component_remote : :component
+      response.render_table(data_type)
     end
 
 
