@@ -153,9 +153,9 @@ module DTK::Client
             raise_validation_error_method_usage('list')
           end 
         end
+        response = post rest_url("service_module/#{action}"), { :service_module_id => service_module_id }
       end
 
-      response = post rest_url("service_module/#{action}"), { :service_module_id => service_module_id }
       response.render_table(data_type) unless response.nil?
 
       response
