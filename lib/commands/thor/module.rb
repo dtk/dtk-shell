@@ -192,6 +192,19 @@ module DTK::Client
 
       action = (options.remote? ? "list_remote" : "list")
       response = post rest_url("component_module/#{action}")
+=begin
+
+      response.data.each do |e|
+        # DEBUG SNIPPET >>> REMOVE <<<
+        require 'ap'
+        ap e
+           
+              post_body = {
+       :component_module_id => e['id']
+      }
+      response2 = post(rest_url("component_module/delete"), post_body)
+      end
+=end
       data_type = :component
       response.render_table(:component)
     end
@@ -475,7 +488,7 @@ module DTK::Client
       module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
 
       raise DTK::Client::DtkValidationError, "Trying to clone a module '#{module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
-      clone_aux(:component_module,component_module_id,version,internal_trigger)
+      clone_aux(:component_module,component_module_id,version,internal_trigger,thor_options['omit_output'])
     end
 
     desc "MODULE-NAME/ID edit [-v VERSION]","Switch to unix editing for given module."

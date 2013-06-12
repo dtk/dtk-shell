@@ -8,7 +8,7 @@ module DTK::Client
     #                   This will change behaviour of method
     # module_type: will be :component_module or :service_module
 
-    def clone_aux(module_type,module_id,version,internal_trigger)
+    def clone_aux(module_type,module_id,version,internal_trigger,omit_output=false)
       id_field = "#{module_type}_id"
       post_body = {
         id_field => module_id
@@ -22,7 +22,7 @@ module DTK::Client
       response = Helper(:git_repo).create_clone_with_branch(module_type,module_name,repo_url,branch,version)
 
       if response.ok?
-        puts "Module '#{module_name}' has been successfully cloned!"
+        puts "Module '#{module_name}' has been successfully cloned!" unless omit_output
         unless internal_trigger
           if Console.confirmation_prompt("Would you like to edit cloned module now?")
             if module_type.to_s.start_with?("service")

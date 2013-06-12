@@ -6,6 +6,21 @@ module DTK::Client
   #
   module ServiceImporter
 
+
+    ##
+    # Method will trigger import for each missing module component
+    #
+    def trigger_module_component_import(missing_component_list)
+      puts "Auto-importing missing module(s)"
+      missing_component_list.each do |m_module|
+        print "Importing module component '#{m_module['name']}' ... "
+        new_context_params = ::DTK::Shell::ContextParams.new(["#{m_module['namespace']}/#{m_module['name']}"])
+        response = ContextRouter.routeTask("module", "import_r8n", new_context_params, @conn)
+        raise DTK::Client::DtkError, response.error_message unless response.ok?
+        puts "Done."
+      end
+    end
+
     def resolve_missing_components(service_module_id, service_module_name, namespace_to_use)
       # Get dependency component modules and cross reference them with local component modules
       module_component_list = post rest_url("service_module/list_component_modules"), { :service_module_id => service_module_id }
@@ -28,15 +43,16 @@ module DTK::Client
 
         if is_install_dependencies
           needed_modules.each do |m|
-            puts "Installing component module '#{m['formated_name']}' from server ... "
+            print "Cloning component module '#{m['formated_name']}' from server ... "
             thor_options = {}
             thor_options["version"] = m['version']
             thor_options["skip_edit"] = true
+            thor_options["omit_output"] = true
             new_context_params = ::DTK::Shell::ContextParams.new
             new_context_params.forward_options(thor_options)
             new_context_params.add_context_to_params("module", "module", m['id'])               
             response = ContextRouter.routeTask("module", "clone", new_context_params, @conn)
-            puts "Done"
+            puts "Done."
           end
         end
       end

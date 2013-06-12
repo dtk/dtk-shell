@@ -177,13 +177,20 @@ module DTK::Client
         :remote_module_name => remote_module_name,
         :local_module_name => local_module_name
       }
-      response = extended_timeout do
-        post rest_url("service_module/import"), post_body
+      
+      response = post rest_url("service_module/import"), post_body
+
+      # case when we need to import additional components
+      if ((missing_components = response.data(:missing_module_components)) && response.ok?)
+        trigger_module_component_import(missing_components)
+        # repeat import call for service
+        response = post rest_url("service_module/import"), post_body
       end
+      
+      return response unless response.ok?
 
       @@invalidate_map << :service_module
 
-      return response unless response.ok?
       service_module_id, module_name, namespace, repo_url, branch = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch)
       Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
       resolve_missing_components(service_module_id, module_name, namespace)
