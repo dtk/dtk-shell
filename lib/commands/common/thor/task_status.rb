@@ -58,7 +58,6 @@ module DTK::Client
 
       def cancel_task_aux(task_id)
         response = post rest_url("task/cancel_task"), { :task_id => task_id }
-        raise DTK::Client::DtkError, "[SERVER ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
         return response
       end
 

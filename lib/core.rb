@@ -89,6 +89,7 @@ module DTK
       class << self
         def check(response_ruby_obj)
           # check for errors in response
+             
           unless response_ruby_obj["errors"].nil?
             error_msg       = ""
             error_internal  = nil
@@ -238,6 +239,14 @@ module DTK
       if VERBOSE_MODE_ON
         require 'ap'
       end
+
+      def self.get_timeout()
+        DefaultRestOpts[:timeout]
+      end
+
+      def self.set_timeout(timeout_sec)
+        DefaultRestOpts[:timeout] = timeout_sec
+      end
                
 
       def rest_url(route=nil)
@@ -325,6 +334,7 @@ module DTK
       # keeping connection alive and receivinga response
       if ::DTK::Configuration.get(:development_mode)
         DefaultRestOpts = {:timeout => 2000, :open_timeout => 2, :error_response_class => Client::Response::Error}
+        # DefaultRestOpts = {:timeout => 50, :open_timeout => 2, :error_response_class => Client::Response::Error}
       else
         DefaultRestOpts = {:timeout => 50, :open_timeout => 0.5, :error_response_class => Client::Response::Error}
       end

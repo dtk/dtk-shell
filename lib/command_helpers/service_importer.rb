@@ -20,32 +20,22 @@ module DTK::Client
       unless needed_modules.empty?
         puts "Service '#{service_module_name}' has following dependencies: \n\n"
         needed_modules.each { |m| puts " - #{m['formated_name']}" }
-        is_install_dependencies = Console.confirmation_prompt("\nDo you want to install missing module component dependencies")
+        is_install_dependencies = Console.confirmation_prompt("\nDo you want to clone missing module component dependencies")
 
         # we get list of modules available on server
-        # NOTE: If module is available on server we use #clone else we #import_r8n method
-        server_available_modules = post rest_url("component_module/list")
-        server_available_namelist = server_available_modules.data.collect { |e| resolve_module_names(e) }.flatten
 
         new_context_params = nil
 
         if is_install_dependencies
           needed_modules.each do |m|
-
-            if server_available_namelist.include?(m['formated_name'])
-              puts "Installing component module '#{m['formated_name']}' from server ... "
-              thor_options = {}
-              thor_options["version"] = m['version']
-              thor_options["skip_edit"] = true
-              new_context_params = ::DTK::Shell::ContextParams.new
-              new_context_params.forward_options(thor_options)
-              new_context_params.add_context_to_params("module", "module", m['id'])               
-              response = ContextRouter.routeTask("module", "clone", new_context_params, @conn)
-            else
-              puts "Installing component module '#{m['formated_name']}' from R8 network ... "
-              new_context_params = ::DTK::Shell::ContextParams.new(["#{namespace_to_use}/#{m['display_name']}"])             
-              response = ContextRouter.routeTask("module", "import_r8n", new_context_params, @conn)
-            end
+            puts "Installing component module '#{m['formated_name']}' from server ... "
+            thor_options = {}
+            thor_options["version"] = m['version']
+            thor_options["skip_edit"] = true
+            new_context_params = ::DTK::Shell::ContextParams.new
+            new_context_params.forward_options(thor_options)
+            new_context_params.add_context_to_params("module", "module", m['id'])               
+            response = ContextRouter.routeTask("module", "clone", new_context_params, @conn)
             puts "Done"
           end
         end

@@ -177,7 +177,10 @@ module DTK::Client
         :remote_module_name => remote_module_name,
         :local_module_name => local_module_name
       }
-      response = post rest_url("service_module/import"), post_body
+      response = extended_timeout do
+        post rest_url("service_module/import"), post_body
+      end
+
       @@invalidate_map << :service_module
 
       return response unless response.ok?
