@@ -3,6 +3,7 @@
 # GLOBAL IDENTIFIER
 $shell_mode = false
 require File.expand_path('../lib/client', File.dirname(__FILE__))
+require File.expand_path('../lib/configurator', File.dirname(__FILE__))
 require File.expand_path('../lib/parser/adapters/thor',    File.dirname(__FILE__))
 require File.expand_path('../lib/shell/context', File.dirname(__FILE__))
 require File.expand_path('../lib/shell/domain', File.dirname(__FILE__))
@@ -11,6 +12,8 @@ require 'shellwords'
 
 
 $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
+
+::DTK::Client::Configurator.check_config_exists
 
 temp_dev_flag = ::DTK::Configuration.get(:development_mode)
 argv 					= 'dtk' if ARGV.empty?
