@@ -22,10 +22,34 @@ module DTK
 
 			def self.generate_cred_file
 				puts "#{CRED_FILE} is missing."
+				generate_conf_file(CRED_FILE, ['username', 'password'], '')
 			end
 
 			def self.generate_config_file
 				puts "#{CONFIG_FILE} is missing."
+				header = File.read(File.expand_path('../lib/config/client.conf.header', File.dirname(__FILE__)))
+			end
+
+			def self.generate_conf_file(file_path, properties, header)
+				property_template = []
+				properties.each do |p|
+					puts "Enter your #{p}:"
+					value = gets.chomp
+					property_template << [p,value]
+				end
+
+				require 'rubygems'
+				require 'awesome_print'
+
+				ap property_template
+
+				File.open(file_path, 'w') do |f|
+					f.puts(header)
+					property_template.each do |prop|
+						f.puts("#{prop[0]}=#{prop[1]}")
+					end
+				end
+
 			end
 
 		end
