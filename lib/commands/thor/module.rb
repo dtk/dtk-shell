@@ -192,21 +192,9 @@ module DTK::Client
 
       action = (options.remote? ? "list_remote" : "list")
       response = post rest_url("component_module/#{action}")
-=begin
 
-      response.data.each do |e|
-        # DEBUG SNIPPET >>> REMOVE <<<
-        require 'ap'
-        ap e
-           
-              post_body = {
-       :component_module_id => e['id']
-      }
-      response2 = post(rest_url("component_module/delete"), post_body)
-      end
-=end
-      data_type = :component
-      response.render_table(:component)
+      data_type = options.remote? ? :component_remote : :component
+      response.render_table(data_type)
     end
 
 

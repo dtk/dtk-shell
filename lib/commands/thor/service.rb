@@ -130,7 +130,7 @@ module DTK::Client
 
       # If user is on service level, list task can't have about value set
       if (context_params.last_entity_name == :service) and about.nil?
-        data_type = :module
+        data_type = options.remote? ? :module_remote : :module
         action    = options.remote? ? "list_remote" : "list"
         post_body = {}
  
@@ -147,7 +147,7 @@ module DTK::Client
             data_type        = :assembly_template
             action           = "list_assemblies"
           when "modules"
-            data_type        = :component
+            data_type        = options.remote? ? :component_remote : :component
             action           = "list_component_modules"
           else
             raise_validation_error_method_usage('list')
