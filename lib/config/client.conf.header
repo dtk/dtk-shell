@@ -11,3 +11,8 @@ verbose_rest_calls=false          # logging of REST calls
 # if relative path is used we will use HOME + relative path, apsoluth path will override this
 module_location=component_modules
 service_location=service_modules
+
+# server connection details
+server_port=80
+secure_connection_server_port=443
+secure_connection=true
