@@ -1,21 +1,16 @@
-DTK Client user install
+DTK Client installation
 ==============================
 
-This is guide only for user installation, development setup is bellow.
+To install DTK Client, follow these steps
 
-- Get the install script under <tt>https://github.com/rich-reactor8/dtk-client/blob/master/bundle/install_client.sh</tt>
+- Ruby installation is required. Ruby 1.8.7 and 1.9.3 are officially supported.
+- Add the R8 Gem repository to your Gem sources:  
+`gem sources -a http://gems.r8network.com`
+- Install the dtk-client gem:  
+`gem install dtk-client`
 
-- Run script with <tt>sudo bash install_client.sh</tt>
-- When prompted use following values in wizard:
-
-```
-username=abh
-password=r8server
-server_host=ec2-54-247-191-95.eu-west-1.compute.amazonaws.com
-secure_connection=true
-```
-
-- Type <tt>dtk</tt> or <tt>dtk-shell</tt> to start using the client
+- Type <tt>dtk</tt> or <tt>dtk-shell</tt> to start using the client  
+On the first run, Client will present you with a wizard to enter your server and authentication info.
 
 DEVELOPMENT SETUP - DTK Client
 ==============================
