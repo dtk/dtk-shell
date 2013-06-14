@@ -1,4 +1,7 @@
 #!/usr/bin/env ruby
 require File.expand_path('../lib/shell', File.dirname(__FILE__))
 
+::DTK::Client::Configurator.check_config_exists
+::DTK::Client::Configurator.check_git
+
 run_shell_command()
