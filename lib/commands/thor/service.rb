@@ -124,13 +124,13 @@ module DTK::Client
     def list(context_params)
       service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
 
+      datatype = nil
       if context_params.is_there_command?(:"assembly-template")
         about = "assembly-templates"
       end
-
+      
       # If user is on service level, list task can't have about value set
       if (context_params.last_entity_name == :service) and about.nil?
-        data_type = options.remote? ? :module_remote : :module
         action    = options.remote? ? "list_remote" : "list"
         post_body = (options.remote? ? {} : {:detail_to_include => ["remotes","versions"]})
  

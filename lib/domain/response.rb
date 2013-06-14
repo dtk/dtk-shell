@@ -84,7 +84,10 @@ module DTK
       end
 
       def render_table(default_data_type=nil)
-        data_type = response_datatype() || default_data_type
+        unless data_type = response_datatype() || default_data_type
+          raise DTK::Client::DtkError, "Server did not return datatype."
+        end
+
         @render_data_type = symbol_to_data_type_upcase(data_type)
         @render_view = RenderView::TABLE
         self

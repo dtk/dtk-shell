@@ -183,7 +183,7 @@ module DTK::Client
       post rest_url("component_module/info"), post_body
     end
 
-    desc "list [--remote]", "List library or component remote component modules."
+    desc "list [--remote]", "List loaded or remote component modules."
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
       if context_params.is_there_command?(:attribute)
@@ -194,8 +194,7 @@ module DTK::Client
       post_body = (options.remote? ? {} : {:detail_to_include => ["remotes","versions"]})
       response = post rest_url("component_module/#{action}"),post_body
 
-      data_type = options.remote? ? :component_remote : :component
-      response.render_table(data_type)
+      response.render_table()
     end
 
 
