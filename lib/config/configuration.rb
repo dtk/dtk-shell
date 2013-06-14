@@ -50,8 +50,6 @@ module DTK
       if File.exist?(external_file_location)
         external_configuration = load_configuration_to_hash(external_file_location)
         @cache.merge!(external_configuration)
-      else 
-        puts "[INFO] DTK client using default configuration, to override this create your own configuration: #{external_file_location}"
       end
 
     end
