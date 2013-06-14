@@ -32,6 +32,18 @@ module DTK
 				end
 			end
 
+			def self.check_git
+				if OsUtil.is_linux?
+					if OsUtil.which('git') == nil
+						puts "[WARNING] Can't find the 'git' command in you path. Please make sure git is installed in order to use all features of DTK Client."
+					else
+						puts '[WARNING] Git username not set. This can cause issues while using DTK Client. To set it, run `git config --global user.name "User Name"`' if `git config --get user.name` == ""
+						puts '[WARNING] Git email not set. This can cause issues while using DTK Client. To set it, run `git config --global user.email "me@here.com"`' if `git config --get user.email` == ""
+					end
+				end
+			end
+
+
 			def self.generate_conf_file(file_path, properties, header)
 				require 'highline/import'
 				property_template = []
