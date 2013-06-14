@@ -14,6 +14,7 @@ require 'shellwords'
 $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
 
 ::DTK::Client::Configurator.check_config_exists
+::DTK::Client::Configurator.check_git
 
 temp_dev_flag = ::DTK::Configuration.get(:development_mode)
 argv 					= 'dtk' if ARGV.empty?
