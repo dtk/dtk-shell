@@ -33,7 +33,7 @@ module DTK
 			end
 
 			def self.check_git
-				if OsUtil.is_linux?
+				if OsUtil.is_linux? || OsUtil.is_mac?
 					if OsUtil.which('git') == nil
 						puts "[WARNING] Can't find the 'git' command in you path. Please make sure git is installed in order to use all features of DTK Client."
 					else
