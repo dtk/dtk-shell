@@ -168,9 +168,10 @@ module DTK
     class Config < Hash
       include Singleton
       include ParseFile
+      dtk_require_from_base('configurator')
 
-      CONFIG_FILE = File.join(OsUtil.dtk_local_folder, "client.conf")
-      CRED_FILE = File.join(OsUtil.dtk_local_folder, ".connection")
+      CONFIG_FILE = ::DTK::Client::Configurator.CONFIG_FILE
+      CRED_FILE = ::DTK::Client::Configurator.CRED_FILE
       REQUIRED_KEYS = [:server_host]
 
       def self.[](k)
