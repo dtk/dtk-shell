@@ -140,7 +140,7 @@ module DTK::Client
         # TODO: this is temp; will shortly support this
         raise DTK::Client::DtkValidationError, "Not supported '--remote' option when listing service module assemblies, component templates or modules" if options.remote?
         raise DTK::Client::DtkValidationError, "Not supported type '#{about}' for list for current context level. Possible type options: 'assembly-templates'" unless(about == "assembly-templates" || about == "modules")
-        
+      
         if about
           case about
           when "assembly-templates"

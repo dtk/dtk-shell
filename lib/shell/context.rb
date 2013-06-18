@@ -290,7 +290,7 @@ module DTK
       end
 
       # checks if method name is valid in current context
-      def method_valid?(method_name)
+      def method_valid?(method_name)           
         # validate method, see if we support given method in current tasks
         (current_context_task_names() + ['help']).include?(method_name)
       end

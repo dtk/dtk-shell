@@ -1,4 +1,4 @@
-dtk_require_from_base('command_helpers/ssh_processing')
+ dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_dtk_common('grit_adapter')
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/list_diffs')
@@ -13,12 +13,13 @@ module DTK::Client
     DEFAULT_COMMIT_MSG = "Initial commit."
 
     def self.valid_children()
-      [:attribute]
+      [:"component-template"]
     end
 
-    # this includes children of children
+    # this includes children of children - has to be sorted by n-level access
     def self.all_children()
-      [:attribute]
+      # [:"component-template", :attribute] # Amar: attribute context commented out per Rich suggeston
+      [:"component-template"]
     end
 
     def self.valid_child?(name_of_sub_context)
@@ -30,12 +31,26 @@ module DTK::Client
     end
 
      def self.override_allowed_methods()
-      return DTK::Shell::OverrideTasks.new({
-        :all => {
-          :attribute      => [
-            ['list',"list","List attributes for given component"],
-          ]
-        }
+      return DTK::Shell::OverrideTasks.new(
+        {
+          :command_only => {
+            :self => [
+              ["list"," list --remote","# List loaded or remote component modules"]
+            ],
+            :"component-template" => [
+              ["list","list","# List all component templates."],
+              ["list-attributes","list-attributes", "# List all attributes for given component module."]
+            ]            
+            #:attribute => [
+            #  ['list',"list","List attributes for given component"]
+            #]
+          },
+          :identifier_only => {
+            :"component-template" => [
+              ["list-attributes","list-attributes", "# List all attributes for given component template."]
+            ]
+          }
+
       })
     end
 
@@ -67,9 +82,10 @@ module DTK::Client
       end
 
       def module_info_about(context_params, about, data_type)
-        component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
+        component_module_id, component_template_id = context_params.retrieve_arguments([:module_id!, :component_template_id],method_argument_names)
         post_body = {
           :component_module_id => component_module_id,
+          :component_template_id => component_template_id,
           :about => about
         }
         response = post rest_url("component_module/info_about"), post_body
@@ -186,8 +202,12 @@ module DTK::Client
     desc "list [--remote]", "List loaded or remote component modules."
     method_option :remote, :type => :boolean, :default => false
     def list(context_params)
-      if context_params.is_there_command?(:attribute)
-        return module_info_about(context_params, :attributes, :attribute)
+      # Amar: attribute context commented out per Rich suggeston
+      #if context_params.is_there_command?(:attribute)
+      #  return module_info_about(context_params, :attributes, :attribute)
+      #elsif context_params.is_there_command?(:"component-template")
+      if context_params.is_there_command?(:"component-template")
+        return module_info_about(context_params, :components, :component)
       end
 
       action = (options.remote? ? "list_remote" : "list")

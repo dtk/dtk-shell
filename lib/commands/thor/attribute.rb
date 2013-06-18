@@ -32,8 +32,10 @@ module DTK::Client
           :about => :attributes
         }
         response = post rest_url("component_module/info_about"), post_body
+           
         modified_response = response.clone_me()
-        modified_response['data'].each { |e| e['display_name'] = e['display_name'].match(/.+\[(.*)\]$/)[1] }
+        modified_response['data'].each { |e| e['display_name'] = e['display_name'].split('/').last }
+        #modified_response['data'].each { |e| e['display_name'] = e['display_name'].match(/.+\[.+::(.*)\]/)[1] }
         
         return modified_response
       end

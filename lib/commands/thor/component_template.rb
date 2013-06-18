@@ -5,8 +5,50 @@ module DTK::Client
       PPColumns.get(:component)
     end
 
-    def self.whoami()
-      return :component_template, "component/list", {:subtype => 'template'}
+    def self.valid_children()
+      # Amar: attribute context commented out per Rich suggeston
+      #[:attribute]
+      []
+    end
+
+    # this includes children of children
+    def self.all_children()
+      # Amar: attribute context commented out per Rich suggeston
+      #[:attribute]
+      []
+    end
+
+    def self.valid_child?(name_of_sub_context)
+      return ComponentTemplate.valid_children().include?(name_of_sub_context.to_sym)
+    end
+
+    def self.validation_list(context_params)
+
+      if context_params.is_there_identifier?(:module)
+        component_module_id = context_params.retrieve_arguments([:module_id!], [])
+        res = get_cached_response(:component_template, "component_module/info_about", { :component_module_id => component_module_id, :about => :components})
+      else
+        get_cached_response(:component_template, "component/list", {:subtype => 'template'})
+      end
+    end
+
+     def self.override_allowed_methods()
+      return DTK::Shell::OverrideTasks.new({})
+      # Amar: attribute context commented out per Rich suggeston
+      #return DTK::Shell::OverrideTasks.new(
+      #  {
+      #    :command_only => {
+      #      :attribute => [
+      #        ['list',"list","List attributes for given component"]
+      #      ]
+      #    },
+      #    :identifier_only => {
+      #      :attribute => [
+      #        ['list',"list","List attributes for given component"]
+      #      ]
+      #    }
+      #
+      #})
     end
 
     desc "COMPONENT-TEMPLATE-NAME/ID info", "Get information about given component template."
