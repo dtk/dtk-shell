@@ -143,11 +143,15 @@ module DTK::Client
       response.render_table(:violation)
     end
     
-    desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
+    desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance. Optionally, puppet version can be forwarded."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
-      :desc => "Commit message"
+      :desc => "Commit message" 
+#    method_option "puppet_version",:aliases => "-p" , AMAR:  COMMENTING OUT OPTION TO SEND PUPPET VERSION, UNTIL ISSUES IN 
+#      :type => :string,                                      DTK-837 COMMENTS ARE FIGURED OUT AND RESOLVED
+#      :banner => "PUPPET-VERSION",
+#      :desc => "Puppet version" 
     def converge(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
@@ -165,6 +169,7 @@ module DTK::Client
       end
 
       post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
+#      post_body.merge!(:puppet_version => options.puppet_version) if options.puppet_version
 
       response = post rest_url("assembly/create_task"), post_body
       return response unless response.ok?
