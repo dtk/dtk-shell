@@ -5,7 +5,7 @@ To install DTK Client, follow these steps
 
 - Ruby installation is required. Ruby 1.8.7 and 1.9.3 are officially supported.
 - Add the R8 Gem repository to your Gem sources:  
-`gem sources -a http://gems.r8network.com`
+`gem sources -a http://dtkuser:g3msdtk@gems-dev.r8network.com`
 - Install the dtk-client gem:  
 `gem install dtk-client`
 
