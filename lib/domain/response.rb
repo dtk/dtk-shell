@@ -1,4 +1,5 @@
 dtk_require_dtk_common("response")
+require 'grit'
 
 # This is wrapper for holding rest response information as well as 
 # passing selection of ViewProcessor from Thor selection to render view 
@@ -39,9 +40,12 @@ module DTK
           Ok.new(results)
          rescue ErrorUsage => e
           Error::Usage.new("message"=> e.to_s)
+         rescue Grit::Git::CommandFailed => e
+          # remove grit internal error handler
+          Error::Usage.new("message"=> e.err.gsub(/^.*:/,'').strip.capitalize)
          rescue => e
           error_hash =  {
-            "message"=> e.inspect,
+            "message"=> e.message,
             "backtrace" => e.backtrace,
             "on_client" => true
             }
