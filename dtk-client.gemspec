@@ -14,8 +14,7 @@ Gem::Specification.new do |gem|
   gem.files += Dir.glob("puppet/**/*")
   gem.files += Dir.glob("spec/**/*")
   gem.files += Dir.glob("views/**/*")
-
-
+  
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.name          = "dtk-client"
@@ -33,6 +32,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'colorize','~> 0.5.8'
   gem.add_dependency 'diff-lcs','1.1.3'
   gem.add_dependency 'highline', '1.6.16'
+  gem.add_dependency 'awesome_print', '1.1.0'
 
   # gem.add_dependency 'activesupport','~> 3.2.12'
   # gem.add_dependency 'i18n','0.6.1'
