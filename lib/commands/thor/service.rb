@@ -475,6 +475,31 @@ module DTK::Client
       return response
     end
 
+    desc "SERVICE-NAME/ID delete-assembly-template ASSEMBLY-TEMPLATE-ID [-y]", "Delete assembly template."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def delete_assembly_template(context_params)
+      service_module_id,assembly_template_id = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
+      
+      unless options.force?
+        return unless Console.confirmation_prompt("Are you sure you want to delete assembly_template '#{assembly_template_id}'"+'?')
+      end
+
+      unless assembly_template_id.to_s =~ /^[0-9]+$/
+        service_module_id = get_service_module_name(service_module_id) if service_module_id.to_s =~ /^[0-9]+$/
+        assembly_template_id = DTK::Client::AssemblyTemplate.get_assembly_template_id_for_service(assembly_template_id,service_module_id)
+      end
+      
+      post_body = {
+        :service_module_id => service_module_id,
+        :assembly_id => assembly_template_id,
+        :subtype => :template                                                                                       
+      }
+      response = post rest_url("service_module/delete_assembly_template"), post_body
+      
+      @@invalidate_map << :assembly_template
+      return response
+    end
+
     # desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     # def add_direct_access(context_params)
     #   path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)

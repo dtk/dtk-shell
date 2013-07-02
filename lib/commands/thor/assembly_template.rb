@@ -3,6 +3,27 @@ dtk_require("../../shell/status_monitor")
 module DTK::Client
   class AssemblyTemplate < CommandBaseThor
 
+    def self.get_assembly_template_id_for_service(assembly_template_name, service)
+      assembly_template_id = nil
+      # TODO: See with Rich if there is better way to resolve this
+      response = DTK::Client::CommandBaseThor.get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template' })
+      # response = DTK::Client::CommandBaseThor.get_cached_response(:module, "service_module/list")
+
+      if response.ok?
+        unless response['data'].nil?
+          response['data'].each do |module_item|
+            if ("#{service.to_s}::#{assembly_template_name.to_s}" == (module_item['display_name']))
+              assembly_template_id = module_item['id']
+              break
+            end
+          end
+        end
+      end
+
+      raise DTK::Client::DtkError, "Not able to resolve assembly_template id, please provide assembly_template_id." if assembly_template_id.nil?
+      return assembly_template_id
+    end
+
     def self.pretty_print_cols()
       PPColumns.get(:assembly_template)
     end
