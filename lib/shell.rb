@@ -55,7 +55,8 @@ def run_shell_command()
     # do nothing
   rescue Interrupt => e
     #system('stty', stty_save) # Restore
-    
+  rescue ArgumentError => e
+    puts e.backtrace if ::DTK::Configuration.get(:development_mode)
     retry
   rescue Exception => e
     puts "[CLI INTERNAL ERROR] #{e.message}"
@@ -78,7 +79,6 @@ def init_shell_context()
     @context.load_context()
 
     @t1   = nil
-
     Readline.completion_append_character=''
     DTK::Shell::Context.load_session_history().each do |c|
       Readline::HISTORY.push(c)
@@ -95,6 +95,7 @@ def execute_shell_command(line, prompt)
    begin
     # remove single/double quotes from string because shellwords module is not able to parse it
     line.gsub!(/['"]/, '')
+    
     # some special cases
     raise DTK::Shell::ExitSignal if line == 'exit'
     return prompt if line.empty?
