@@ -431,6 +431,9 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete service-module '#{service_module_id}' and all items contained in it"+'?')
       end
 
+      #get service module name if service module id is provided on input - to be able to delete service module from local filesystem later
+      service_module_id = get_service_module_name(service_module_id) if service_module_id.to_s =~ /^[0-9]+$/
+
       post_body = {
         :service_module_id => service_module_id
       }
@@ -442,8 +445,7 @@ module DTK::Client
       @@invalidate_map << :service_module
 
       # delete local module directory
-      if options.purge?
-        service_module_id = get_service_module_name(service_module_id) if service_module_id.to_s =~ /^[0-9]+$/
+      if options.purge?       
         modules_path    = OsUtil.service_clone_location()
         module_location = "#{modules_path}/#{service_module_id}" unless service_module_id.nil?
 
