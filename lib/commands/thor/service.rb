@@ -431,6 +431,9 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete service-module '#{service_module_id}' and all items contained in it"+'?')
       end
 
+      #get service module name if service module id is provided on input - to be able to delete service module from local filesystem later
+      service_module_id = get_service_module_name(service_module_id) if service_module_id.to_s =~ /^[0-9]+$/
+
       post_body = {
         :service_module_id => service_module_id
       }
@@ -442,8 +445,7 @@ module DTK::Client
       @@invalidate_map << :service_module
 
       # delete local module directory
-      if options.purge?
-        service_module_id = get_service_module_name(service_module_id) if service_module_id.to_s =~ /^[0-9]+$/
+      if options.purge?       
         modules_path    = OsUtil.service_clone_location()
         module_location = "#{modules_path}/#{service_module_id}" unless service_module_id.nil?
 
@@ -478,25 +480,35 @@ module DTK::Client
     desc "SERVICE-NAME/ID delete-assembly-template ASSEMBLY-TEMPLATE-ID [-y]", "Delete assembly template."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_assembly_template(context_params)
-      service_module_id,assembly_template_id = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
-      
-      unless options.force?
-        return unless Console.confirmation_prompt("Are you sure you want to delete assembly_template '#{assembly_template_id}'"+'?')
-      end
+      service_module_id,assembly_template_id = context_params.retrieve_arguments([:service_id!,:option_1!], method_argument_names)
+      service_module_name    = get_service_module_name(service_module_id)
+      assembly_template_name = (assembly_template_id.to_s =~ /^[0-9]+$/) ? DTK::Client::AssemblyTemplate.get_assembly_template_name_for_service(assembly_template_id, service_module_name) : assembly_template_id
+      assembly_template_id   = DTK::Client::AssemblyTemplate.get_assembly_template_id_for_service(assembly_template_id, service_module_name) unless assembly_template_id.to_s =~ /^[0-9]+$/
 
-      unless assembly_template_id.to_s =~ /^[0-9]+$/
-        service_module_id = get_service_module_name(service_module_id) if service_module_id.to_s =~ /^[0-9]+$/
-        assembly_template_id = DTK::Client::AssemblyTemplate.get_assembly_template_id_for_service(assembly_template_id,service_module_id)
-      end
+      return unless Console.confirmation_prompt("Are you sure you want to delete assembly_template '#{assembly_template_id}'"+'?') unless options.force?
       
       post_body = {
         :service_module_id => service_module_id,
         :assembly_id => assembly_template_id,
         :subtype => :template                                                                                       
       }
+
       response = post rest_url("service_module/delete_assembly_template"), post_body
+      return response unless response.ok?
       
+      modules_path               = OsUtil.service_clone_location()
+      module_location            = "#{modules_path}/#{service_module_name}" if service_module_name
+      assembly_template_location = "#{module_location}/assemblies/#{assembly_template_name}" if (module_location && assembly_template_name) 
+      
+      if File.directory?(assembly_template_location)
+        unless (assembly_template_location.nil? || ("#{module_location}/assemblies/" == assembly_template_location))
+          FileUtils.rm_rf("#{assembly_template_location}")
+        end
+      end
+
+      push_clone_changes_aux(:service_module, service_module_id, nil)
       @@invalidate_map << :assembly_template
+
       return response
     end
 

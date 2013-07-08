@@ -25,6 +25,26 @@ module DTK::Client
       return assembly_template_id
     end
 
+    def self.get_assembly_template_name_for_service(assembly_template_id, service)
+      assembly_template_name = nil
+      # TODO: See with Rich if there is better way to resolve this
+      response = DTK::Client::CommandBaseThor.get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template' })
+
+      if response.ok?
+        unless response['data'].nil?
+          response['data'].each do |module_item|
+            if assembly_template_id.to_i == module_item['id']
+              assembly_template_name = module_item['display_name'].gsub("#{service.to_s}::",'')
+              break
+            end
+          end
+        end
+      end
+
+      raise DTK::Client::DtkError, "Illegal name (#{assembly_template_name}) for template." if assembly_template_name.nil?
+      return assembly_template_name
+    end
+
     def self.pretty_print_cols()
       PPColumns.get(:assembly_template)
     end

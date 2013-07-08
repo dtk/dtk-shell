@@ -133,9 +133,13 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
       end
 
+      #get component module name if component module id is provided on input - to be able to delete component module from local filesystem later
+      component_module_id = get_module_name(component_module_id) if component_module_id.to_s =~ /^[0-9]+$/
+
       post_body = {
        :component_module_id => component_module_id
       }
+
       response = post(rest_url("component_module/delete"), post_body)
       return response unless response.ok?
       module_name = response.data(:module_name)
@@ -146,7 +150,6 @@ module DTK::Client
 
       # delete local module directory
       if options.purge?
-        component_module_id = get_module_name(component_module_id) if component_module_id.to_s =~ /^[0-9]+$/
         modules_path        = OsUtil.module_clone_location()
         module_location     = "#{modules_path}/#{component_module_id}" unless component_module_id.nil?
 
@@ -504,7 +507,7 @@ module DTK::Client
     def edit(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
-      version             = options.version
+      version             = options.version||context_params.retrieve_arguments([:option_1],method_argument_names)
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/

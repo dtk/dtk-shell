@@ -80,7 +80,8 @@ module DTK::Client
             ['get-ps', "get-ps [--filter PATTERN]", "# Returns a list of running processes for a given node instance belonging to context assembly."]
           ],
           :component => [
-            ['info',"info","# Return info about component instance belonging to given node."]
+            ['info',"info","# Return info about component instance belonging to given node."],
+            ['edit',"edit","# Edit component module related to given component."]
           ],
           :attribute => [
             ['info',"info","# Return info about attribute instance belonging to given component."]
@@ -622,6 +623,29 @@ TODO: will put in dot release and will rename to 'extend'
       }
       response = post(rest_url("assembly/delete_component"),post_body)
     end
+
+
+    desc "COMPONENT-NAME/ID edit","Edit component module related to given component."
+    def edit(context_params)
+      assembly_id, component_id = context_params.retrieve_arguments([:assembly_id!, :component_id!], method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :component_id => component_id
+      }
+      response = post(rest_url("assembly/get_components_module"), post_body)
+      return response unless response.ok?
+
+      component_module = response['data']['component']
+      version             = response['data']['version']
+      
+      context_params_for_service = DTK::Shell::ContextParams.new
+      context_params_for_service.add_context_to_params("module", "module", component_module['id']) unless component_module.nil?
+      context_params_for_service.override_method_argument!('option_1', version)
+        
+      response = DTK::Client::ContextRouter.routeTask("module", "edit", context_params_for_service, @conn)
+    end
+
 
 
     desc "ASSEMBLY-NAME/ID get-netstats", "Get netstats"
