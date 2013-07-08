@@ -61,7 +61,7 @@ def run_shell_command()
     retry
   rescue Exception => e
     puts "[CLI INTERNAL ERROR] #{e.message}"
-    puts e.backtrace
+    puts e.backtrace if ::DTK::Configuration.get(:development_mode)
   ensure
     puts "\n" unless e.is_a? DTK::Shell::ExitSignal
     # logout
