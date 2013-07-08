@@ -217,6 +217,8 @@ module DTK::Client
       post_body = (options.remote? ? {} : {:detail_to_include => ["remotes","versions"]})
       response = post rest_url("component_module/#{action}"),post_body
 
+      return response unless response.ok?
+
       response.render_table()
     end
 
