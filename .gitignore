@@ -3,5 +3,6 @@ bin/*.bat
 test_scripts
 dtk*.gem
 test.rb
+.gitattributes
 Gemfile.lock
 Gemfile_dev.lock
