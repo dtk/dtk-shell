@@ -155,7 +155,8 @@ module DTK::Client
         end
         response = post rest_url("service_module/#{action}"), { :service_module_id => service_module_id }
       end
-
+      return response unless response.ok?
+      
       response.render_table(data_type) unless response.nil?
 
       response
