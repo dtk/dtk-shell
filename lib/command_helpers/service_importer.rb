@@ -12,9 +12,12 @@ module DTK::Client
     #
     def trigger_module_component_import(missing_component_list)
       puts "Auto-importing missing module(s)"
+
       missing_component_list.each do |m_module|
         print "Importing module component '#{m_module['name']}' ... "
-        new_context_params = ::DTK::Shell::ContextParams.new(["#{m_module['namespace']}/#{m_module['name']}"])
+        module_name = "#{m_module['namespace']}/#{m_module['name']}"
+        module_name += "/#{m_module['version']}" if m_module['version']
+        new_context_params = ::DTK::Shell::ContextParams.new([module_name])
         response = ContextRouter.routeTask("module", "import_r8n", new_context_params, @conn)
         raise DTK::Client::DtkError, response.error_message unless response.ok?
         puts "Done."

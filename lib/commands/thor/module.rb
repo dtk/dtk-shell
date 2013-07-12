@@ -530,7 +530,7 @@ module DTK::Client
         if Console.confirmation_prompt("Edit not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
           # context_params_for_module = create_context_for_module(module_name, "module")
           # response = clone(context_params_for_module,true)
-          response = clone_aux(:component_module,component_module_id,version,true)
+          response =  response = clone_aux(:component_module,component_module_id,version,true)
           # if error return
           unless response.ok?
             return response
@@ -558,23 +558,21 @@ module DTK::Client
         end
 
         if (auto_commit || confirmed_ok)
-          puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
+          if auto_commit 
+            puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
+          end
           commit_msg = user_input("Commit message")
-          grit_adapter.add_remove_commit_all(commit_msg)
-          grit_adapter.push()
+          response = push_clone_changes_aux(:component_module,component_module_id,version,commit_msg)
+          # if error return
+          return response unless response.ok?
         end
 
-        puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
+#TODO: temporary took out; wil put back in        
+#puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
       else
         puts "No changes to repository"
       end
-
-      #grit_adapter.add_file("baba.xml")
-      #grit_adapter.commit("nesto")
-
-      #repo = Grit::Repo.new(location)
-      #repo.status.files.select { |k,v| (v.type =~ /(M|A|D)/ || v.untracked) }
-
+      return
     end
 
     desc "MODULE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of module to server"

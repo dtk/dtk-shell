@@ -338,6 +338,7 @@ module DTK
 
       desc "help [SUBCOMMAND]", "Describes available subcommands or one specific subcommand"
       def help(*args)
+        puts # pretty print
         not_dtk_clazz = true
 
         if defined?(DTK::Client::Dtk)
@@ -350,10 +351,11 @@ module DTK
         #
         # @@shell_execution - if we run from shell we don't want subcommand output
         #
-        super(args.empty? ? nil : args, not_dtk_clazz && !@@shell_execution)
+        super(args.empty? ? nil : args.first, not_dtk_clazz && !@@shell_execution)
 
         # we will print error in case configuration has reported error
         @conn.print_warning if @conn.connection_error?
+        puts # pretty print
       end
     end
   end
