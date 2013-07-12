@@ -121,13 +121,15 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete MODULE-IDENTIFIER [-y] [-p]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete MODULE-IDENTIFIER [-v VERSION] [-y] [-p]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
       module_location, modules_path = nil, nil
       component_module_id, force_delete = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
-      
+      version = options["version"]
+
       unless (options.force? || force_delete)
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
@@ -140,10 +142,14 @@ module DTK::Client
        :component_module_id => component_module_id
       }
 
-      response = post(rest_url("component_module/delete"), post_body)
+      action = (options.version? ? "delete_version" : "delete")
+      post_body[:version] = options.version if options.version?
+      
+      response = post(rest_url("component_module/#{action}"), post_body)
       return response unless response.ok?
+      
       module_name = response.data(:module_name)
-      Helper(:git_repo).unlink_local_clone?(:component_module,module_name)
+      Helper(:git_repo).unlink_local_clone?(:component_module,module_name,version)
       
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :module_component
@@ -152,15 +158,14 @@ module DTK::Client
       if options.purge?
         modules_path        = OsUtil.module_clone_location()
         module_location     = "#{modules_path}/#{component_module_id}" unless component_module_id.nil?
+        module_location     = module_location + "-#{version}" if options.version?
 
-        if File.directory?(module_location)
-          module_versions     = Dir.entries(modules_path).select{|a| a.match(/#{component_module_id}-\d.\d.\d/)}
-          unless (module_location.nil? || ("#{modules_path}/" == module_location))
-            FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
-
-            module_versions.each do |version|
-              FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
-            end
+        FileUtils.rm_rf("#{module_location}") if (File.directory?(module_location) && ("#{modules_path}/" != module_location))
+        
+        unless options.version?
+          module_versions = Dir.entries(modules_path).select{|a| a.match(/#{component_module_id}-\d.\d.\d/)}
+          module_versions.each do |version|
+            FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
           end
         end
       end
