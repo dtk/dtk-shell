@@ -440,7 +440,7 @@ module DTK::Client
       action = (options.version? ? "delete_version" : "delete")
       post_body[:version] = options.version if options.version?
 
-      response = post rest_url("service_module/delete_version"), post_body
+      response = post rest_url("service_module/#{action}"), post_body
       return response unless response.ok?
       module_name = response.data(:module_name)
       
