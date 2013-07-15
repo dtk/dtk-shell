@@ -121,7 +121,7 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete MODULE-IDENTIFIER [-v VERSION] [-y] [-p]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete MODULE-IDENTIFIER [-v VERSION] [-y] [-p]", "Delete component module or component module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
@@ -221,7 +221,7 @@ module DTK::Client
       action = (options.remote? ? "list_remote" : "list")
       post_body = (options.remote? ? {} : {:detail_to_include => ["remotes","versions"]})
       response = post rest_url("component_module/#{action}"),post_body
-
+      puts response.inspect
       return response unless response.ok?
 
       response.render_table()

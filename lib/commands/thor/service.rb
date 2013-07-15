@@ -420,7 +420,7 @@ module DTK::Client
       push_clone_changes_aux(:service_module,service_module_id,version)
     end
 
-    desc "delete SERVICE-IDENTIFIER [-v VERSION] [-y] [-p]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete SERVICE-IDENTIFIER [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
