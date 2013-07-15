@@ -221,7 +221,7 @@ module DTK::Client
       action = (options.remote? ? "list_remote" : "list")
       post_body = (options.remote? ? {} : {:detail_to_include => ["remotes","versions"]})
       response = post rest_url("component_module/#{action}"),post_body
-      puts response.inspect
+      
       return response unless response.ok?
 
       response.render_table()
@@ -236,8 +236,7 @@ module DTK::Client
         :detail_to_include => ["remotes"]
       }
       response = post rest_url("component_module/versions"), post_body
-      puts response.inspect
-      response
+
       response.render_table(:module_version)
     end
 
