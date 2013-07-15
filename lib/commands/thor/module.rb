@@ -445,7 +445,32 @@ module DTK::Client
         :desc => "Remote namespace"
     def push_to_remote(context_params)
       component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!, :module_name!],method_argument_names)
-      push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], options["version"])
+      version = options["version"]
+
+      if component_module_name.to_s =~ /^[0-9]+$/
+        module_id   = component_module_name
+        component_module_name = get_module_name(module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location()
+      module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
+
+      unless File.directory?(module_location)
+        if Console.confirmation_prompt("Unable to push to remote because module '#{component_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
+          response = clone_aux(:component_module,component_module_id,version,false)
+          
+          if(response.nil? || response.ok?)
+            push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)  if Console.confirmation_prompt("Module '#{component_module_name}#{version && "-#{version}"}' has been successfully cloned. Would you like to push changes to remote"+'?')
+          end
+
+          return response
+        else
+          # user choose not to clone needed module
+          return
+        end
+      end
+
+      push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)
     end
 
     desc "MODULE-NAME/ID pull-from-remote [-v VERSION]", "Update local component module from remote repository."
