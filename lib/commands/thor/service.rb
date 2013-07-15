@@ -323,19 +323,23 @@ module DTK::Client
         end
 
         if (auto_commit || confirmed_ok)
-          if auto_commit
-            puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
-          end
+          puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
           commit_msg = user_input("Commit message")
-          response = push_clone_changes_aux(:service_module,service_module_id,version,commit_msg)
-          return response unless response.ok?
+          grit_adapter.add_remove_commit_all(commit_msg)
+          grit_adapter.push()
         end
-#TODO: temporary took out; wil put back in        
-#        puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
+
+        puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
       else
         puts "No changes to repository"
       end
-      return
+
+      #grit_adapter.add_file("baba.xml")
+      #grit_adapter.commit("nesto")
+
+      #repo = Grit::Repo.new(location)
+      #repo.status.files.select { |k,v| (v.type =~ /(M|A|D)/ || v.untracked) }
+
     end
 
     desc "SERVICE-NAME/ID create-version NEW-VERSION", "Snapshot current state of module as a new version"
@@ -427,7 +431,7 @@ module DTK::Client
 
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete service-module '#{service_module_id}' and all items contained in it"+'?')
+        return unless Console.confirmation_prompt("Are you sure you want to delete service-module #{version.nil? ? '' : 'version '}'#{service_module_id}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
       end
 
       #get service module name if service module id is provided on input - to be able to delete service module from local filesystem later

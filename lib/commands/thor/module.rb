@@ -132,7 +132,7 @@ module DTK::Client
 
       unless (options.force? || force_delete)
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
+        return unless Console.confirmation_prompt("Are you sure you want to delete component-module #{version.nil? ? '' : 'version '}'#{component_module_id}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
       end
 
       #get component module name if component module id is provided on input - to be able to delete component module from local filesystem later
@@ -232,9 +232,12 @@ module DTK::Client
     def list_versions(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       post_body = {
-        :component_module_id => component_module_id
+        :component_module_id => component_module_id,
+        :detail_to_include => ["remotes"]
       }
       response = post rest_url("component_module/versions"), post_body
+      puts response.inspect
+      response
       response.render_table(:module_version)
     end
 
