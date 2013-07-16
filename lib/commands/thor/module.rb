@@ -417,12 +417,9 @@ module DTK::Client
     def export(context_params)
       component_module_id, input_remote_name = context_params.retrieve_arguments([:module_id!, :option_1],method_argument_names)
 
-      remote_namespace, remote_name = get_namespace_and_name(input_remote_name)
-      
       post_body = {
         :component_module_id     => component_module_id,
-        :remote_component_namespace => remote_namespace,
-        :remote_component_name      => remote_name
+        :remote_component_name      => input_remote_name
       }
 
       response = post rest_url("component_module/export"), post_body

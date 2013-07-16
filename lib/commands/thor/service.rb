@@ -218,12 +218,9 @@ module DTK::Client
     def export(context_params)
       service_module_id, input_remote_name = context_params.retrieve_arguments([:service_id!, :option_1],method_argument_names)
 
-      remote_namespace, remote_name = get_namespace_and_name(input_remote_name)
-
       post_body = {
        :service_module_id          => service_module_id,
-       :remote_component_name      => remote_name,
-       :remote_component_namespace => remote_namespace
+       :remote_component_name      => input_remote_name
       }
 
       post rest_url("service_module/export"), post_body
@@ -308,7 +305,7 @@ module DTK::Client
 
       # here we should have desired module cloned
       Console.unix_shell(module_location, service_module_id, :service_module, version)
-      grit_adapter = DTK::Common::GritAdapter::FileAccess.new(module_location)
+      grit_adapter = ::DTK::Common::GritAdapter::FileAccess.new(module_location)
 
       if grit_adapter.changed?
         grit_adapter.print_status

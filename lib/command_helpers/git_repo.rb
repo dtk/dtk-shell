@@ -111,6 +111,7 @@ module DTK; module Client; class CommandHelper
       Response.wrap_helper_actions() do
         ret = Hash.new
         local_repo_dir = local_repo_dir(type,module_name,version)
+        
         unless File.directory?(local_repo_dir)
           raise ErrorUsage.new("The content for module (#{module_name}) should be put in directory (#{local_repo_dir})")
         end
