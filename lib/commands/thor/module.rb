@@ -319,10 +319,12 @@ module DTK::Client
       :banner => "REPO-MANAGER",
       :desc => "R8 Repo Manager from which to resolve requested module."
     def import_r8n(context_params)
-      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)    
+      remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
+      # in case of auto-import via service import, we skip cloning to speed up a process
+      skip_cloning = context_params.get_forwarded_options()['skip_cloning']
 
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
-      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name)
+      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name,version)
         raise DtkError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
       end
       post_body = {
@@ -333,7 +335,11 @@ module DTK::Client
       
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
-      response = Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+      
+      response = ""
+      unless skip_cloning
+        response = Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
+      end
       @@invalidate_map << :module_component
 
       response
@@ -409,6 +415,7 @@ module DTK::Client
     
     desc "delete-remote [NAME-SPACE/]REMOTE-MODULE", "Delete remote component module"
     def delete_remote(context_params)
+      
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       remote_namespace, remote_name = get_namespace_and_name(remote_module_name)
