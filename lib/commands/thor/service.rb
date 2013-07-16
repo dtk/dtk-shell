@@ -417,16 +417,18 @@ module DTK::Client
       push_clone_changes_aux(:service_module,service_module_id,version)
     end
 
-    desc "delete SERVICE-IDENTIFIER [-y] [-p]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete SERVICE-IDENTIFIER [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
+    version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
       module_location, modules_path = nil, nil
       service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      version = options["version"]
 
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete service-module '#{service_module_id}' and all items contained in it"+'?')
+        return unless Console.confirmation_prompt("Are you sure you want to delete service-module #{version.nil? ? '' : 'version '}'#{service_module_id}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
       end
 
       #get service module name if service module id is provided on input - to be able to delete service module from local filesystem later
@@ -435,27 +437,29 @@ module DTK::Client
       post_body = {
         :service_module_id => service_module_id
       }
-      response = post rest_url("service_module/delete"), post_body
+
+      action = (options.version? ? "delete_version" : "delete")
+      post_body[:version] = options.version if options.version?
+
+      response = post rest_url("service_module/#{action}"), post_body
       return response unless response.ok?
       module_name = response.data(:module_name)
       
       # when changing context send request for getting latest services instead of getting from cache
       @@invalidate_map << :service_module
 
-      # delete local module directory
-      if options.purge?       
-        modules_path    = OsUtil.service_clone_location()
-        module_location = "#{modules_path}/#{service_module_id}" unless service_module_id.nil?
 
-        if File.directory?(module_location)
+      if options.purge?
+        modules_path        = OsUtil.service_clone_location()
+        module_location     = "#{modules_path}/#{service_module_id}" unless service_module_id.nil?
+        module_location     = module_location + "-#{version}" if options.version?
+        
+        FileUtils.rm_rf("#{module_location}") if (File.directory?(module_location) && ("#{modules_path}/" != module_location))
+        
+        unless options.version?
           module_versions = Dir.entries(modules_path).select{|a| a.match(/#{service_module_id}-\d.\d.\d/)}
-
-          unless (module_location.nil? || ("#{modules_path}/" == module_location))
-            FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
-
-            module_versions.each do |version|
-              FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
-            end
+          module_versions.each do |version|
+            FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
           end
         end
       end

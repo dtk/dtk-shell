@@ -121,16 +121,18 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete MODULE-IDENTIFIER [-y] [-p]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete MODULE-IDENTIFIER [-v VERSION] [-y] [-p]", "Delete component module or component module version and all items contained in it. Optional parameter [-p] is to delete local directory."
+    version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
       module_location, modules_path = nil, nil
       component_module_id, force_delete = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
-      
+      version = options["version"]
+
       unless (options.force? || force_delete)
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete component-module '#{component_module_id}' and all items contained in it"+'?')
+        return unless Console.confirmation_prompt("Are you sure you want to delete component-module #{version.nil? ? '' : 'version '}'#{component_module_id}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
       end
 
       #get component module name if component module id is provided on input - to be able to delete component module from local filesystem later
@@ -140,10 +142,14 @@ module DTK::Client
        :component_module_id => component_module_id
       }
 
-      response = post(rest_url("component_module/delete"), post_body)
+      action = (options.version? ? "delete_version" : "delete")
+      post_body[:version] = options.version if options.version?
+      
+      response = post(rest_url("component_module/#{action}"), post_body)
       return response unless response.ok?
+      
       module_name = response.data(:module_name)
-      Helper(:git_repo).unlink_local_clone?(:component_module,module_name)
+      Helper(:git_repo).unlink_local_clone?(:component_module,module_name,version)
       
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :module_component
@@ -152,15 +158,14 @@ module DTK::Client
       if options.purge?
         modules_path        = OsUtil.module_clone_location()
         module_location     = "#{modules_path}/#{component_module_id}" unless component_module_id.nil?
+        module_location     = module_location + "-#{version}" if options.version?
 
-        if File.directory?(module_location)
-          module_versions     = Dir.entries(modules_path).select{|a| a.match(/#{component_module_id}-\d.\d.\d/)}
-          unless (module_location.nil? || ("#{modules_path}/" == module_location))
-            FileUtils.rm_rf("#{module_location}") if File.directory?(module_location)
-
-            module_versions.each do |version|
-              FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
-            end
+        FileUtils.rm_rf("#{module_location}") if (File.directory?(module_location) && ("#{modules_path}/" != module_location))
+        
+        unless options.version?
+          module_versions = Dir.entries(modules_path).select{|a| a.match(/#{component_module_id}-\d.\d.\d/)}
+          module_versions.each do |version|
+            FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
           end
         end
       end
@@ -216,7 +221,7 @@ module DTK::Client
       action = (options.remote? ? "list_remote" : "list")
       post_body = (options.remote? ? {} : {:detail_to_include => ["remotes","versions"]})
       response = post rest_url("component_module/#{action}"),post_body
-
+      
       return response unless response.ok?
 
       response.render_table()
@@ -227,9 +232,11 @@ module DTK::Client
     def list_versions(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       post_body = {
-        :component_module_id => component_module_id
+        :component_module_id => component_module_id,
+        :detail_to_include => ["remotes"]
       }
       response = post rest_url("component_module/versions"), post_body
+
       response.render_table(:module_version)
     end
 
@@ -435,7 +442,32 @@ module DTK::Client
         :desc => "Remote namespace"
     def push_to_remote(context_params)
       component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!, :module_name!],method_argument_names)
-      push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], options["version"])
+      version = options["version"]
+
+      if component_module_name.to_s =~ /^[0-9]+$/
+        module_id   = component_module_name
+        component_module_name = get_module_name(module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location()
+      module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
+
+      unless File.directory?(module_location)
+        if Console.confirmation_prompt("Unable to push to remote because module '#{component_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
+          response = clone_aux(:component_module,component_module_id,version,false)
+          
+          if(response.nil? || response.ok?)
+            push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)  if Console.confirmation_prompt("Module '#{component_module_name}#{version && "-#{version}"}' has been successfully cloned. Would you like to push changes to remote"+'?')
+          end
+
+          return response
+        else
+          # user choose not to clone needed module
+          return
+        end
+      end
+
+      push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)
     end
 
     desc "MODULE-NAME/ID pull-from-remote [-v VERSION]", "Update local component module from remote repository."
@@ -522,7 +554,7 @@ module DTK::Client
         if Console.confirmation_prompt("Edit not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
           # context_params_for_module = create_context_for_module(module_name, "module")
           # response = clone(context_params_for_module,true)
-          response = clone_aux(:component_module,component_module_id,version,true)
+          response =  response = clone_aux(:component_module,component_module_id,version,true)
           # if error return
           unless response.ok?
             return response
@@ -550,23 +582,21 @@ module DTK::Client
         end
 
         if (auto_commit || confirmed_ok)
-          puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
+          if auto_commit 
+            puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
+          end
           commit_msg = user_input("Commit message")
-          grit_adapter.add_remove_commit_all(commit_msg)
-          grit_adapter.push()
+          response = push_clone_changes_aux(:component_module,component_module_id,version,commit_msg)
+          # if error return
+          return response unless response.ok?
         end
 
-        puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
+#TODO: temporary took out; wil put back in        
+#puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
       else
         puts "No changes to repository"
       end
-
-      #grit_adapter.add_file("baba.xml")
-      #grit_adapter.commit("nesto")
-
-      #repo = Grit::Repo.new(location)
-      #repo.status.files.select { |k,v| (v.type =~ /(M|A|D)/ || v.untracked) }
-
+      return
     end
 
     desc "MODULE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of module to server"
