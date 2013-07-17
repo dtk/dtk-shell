@@ -464,7 +464,7 @@ module DTK::Client
           response = clone_aux(:component_module,component_module_id,version,false)
           
           if(response.nil? || response.ok?)
-            push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)  if Console.confirmation_prompt("Module '#{component_module_name}#{version && "-#{version}"}' has been successfully cloned. Would you like to push changes to remote"+'?')
+            push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)  if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
           end
 
           return response
