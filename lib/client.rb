@@ -21,7 +21,10 @@ end
 # thus allowing us to use system gems and not just the ones specified in Gemfile
 unless DTK::Configuration.get(:development_mode)
   require 'bundler'
-  Bundler.start
+  #TODO: rich temp hack becaus eof problem with gem dependencies; changed this because it was not working in 0.19.0
+  if Bundler.respond?(:start)
+    Bundler.start
+  end
   dtk_require("bundler_monkey_patch")
 end
 
