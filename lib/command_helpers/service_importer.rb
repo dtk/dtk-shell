@@ -21,8 +21,13 @@ module DTK::Client
         new_context_params.override_method_argument!('option_2', m_module['version'])
         new_context_params.forward_options( { "skip_cloning" => true })
 
-        response = ContextRouter.routeTask("module", "import_r8n", new_context_params, @conn)
-        raise DTK::Client::DtkError, response.error_message unless response.ok?
+        #TODO: Rich: need way to determine if error in ContextRouter.routeTask
+        #Commented out below and relaced it because what is returned is not a response object
+        #for time being using ret being empty as meaning ok
+        #response = ContextRouter.routeTask("module", "import_r8n", new_context_params, @conn)
+        #raise DTK::Client::DtkError, response.error_message unless response.ok?
+        ret = ContextRouter.routeTask("module", "import_r8n", new_context_params, @conn)
+        raise DTK::Client::DtkError, ret.to_s unless ret.empty?
         puts "Done."
       end
     end
