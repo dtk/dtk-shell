@@ -288,7 +288,6 @@ TODO: will put in dot release and will rename to 'extend'
     desc "[ASSEMBLY-NAME/ID] list [FILTER] [--list] ","List assemblies."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
-
       #return post rest_url("monitoring_item/check_idle"), {}
 
       assembly_id, node_id, component_id, attribute_id, about, filter = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1,:option_2],method_argument_names)
