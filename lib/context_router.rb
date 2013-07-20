@@ -13,7 +13,8 @@ module DTK
         load_command(target_context)
         target_context_class = DTK::Client.const_get "#{cap_form(target_context)}"
 
-        return target_context_class.execute_from_cli(conn, target_method, target_context_params, [], false)
+        ret = target_context_class.execute_from_cli(conn, target_method, target_context_params, [], false)
+        ret.kind_of?(Response::NoOp) ? Response::Ok.new() : ret
       end
 
     end
