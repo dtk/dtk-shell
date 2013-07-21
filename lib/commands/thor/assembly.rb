@@ -599,6 +599,17 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/add_component"), post_body
     end
 
+    desc "ASSEMBLY-NAME/ID delete-node NODE-ID","Delete node from assembly"
+    def delete_node(context_params)
+      assembly_id, node_id = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :node_id => node_id
+      }
+      response = post(rest_url("assembly/delete_node"),post_body)
+    end
+
     desc "ASSEMBLY-NAME/ID delete-component COMPONENT-ID","Delete component from assembly"
     def delete_component(context_params)
       assembly_id, node_id, component_id = context_params.retrieve_arguments([:assembly_id!,:node_id,:option_1!],method_argument_names)
