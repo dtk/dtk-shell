@@ -14,7 +14,7 @@ module DTK::Client
       puts "Auto-importing missing module(s)"
 
       missing_component_list.each do |m_module|
-        puts "Importing module component '#{m_module['name']}' ..."
+        print "Importing module component '#{m_module['name']}' ... "
         module_name = "#{m_module['namespace']}/#{m_module['name']}"
         module_name += "/#{m_module['version']}" if m_module['version']
         new_context_params = ::DTK::Shell::ContextParams.new([module_name])
