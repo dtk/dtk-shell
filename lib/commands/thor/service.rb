@@ -266,6 +266,7 @@ module DTK::Client
     version_method_option
     def pull_from_remote(context_params)
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
+      
       pull_from_remote_aux(:service_module,service_module_id,options["version"])
     end
 

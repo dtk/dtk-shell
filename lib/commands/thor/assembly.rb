@@ -288,7 +288,6 @@ TODO: will put in dot release and will rename to 'extend'
     desc "[ASSEMBLY-NAME/ID] list [FILTER] [--list] ","List assemblies."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
-
       #return post rest_url("monitoring_item/check_idle"), {}
 
       assembly_id, node_id, component_id, attribute_id, about, filter = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1,:option_2],method_argument_names)
@@ -396,19 +395,7 @@ TODO: will put in dot release and will rename to 'extend'
         :input_component_id => base_cmp, 
         :output_component_id => dep_cmp
       }
-      post rest_url("assembly/add_ad_hoc_service_link"), post_body
-    end
-    #TDOO: above and below will be harmonized
-    desc "ASSEMBLY-NAME/ID add-connection CONN-TYPE SERVICE-REF1/ID SERVICE-REF2/ID", "Add a connection between two services in an assembly"
-    def add_connection(context_params)
-      assembly_id,conn_type,sr1,sr2 = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!,:option_3!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id,
-        :connection_type => conn_type,
-        :input_service_ref_id => sr1,
-        :output_service_ref_id => sr2
-      }
-      post rest_url("assembly/add_connection"), post_body
+      post rest_url("assembly/add_service_link"), post_body
     end
 
     desc "ASSEMBLY-NAME/ID list-service-links","List service links"
@@ -610,6 +597,17 @@ TODO: will put in dot release and will rename to 'extend'
       }
 
       post rest_url("assembly/add_component"), post_body
+    end
+
+    desc "ASSEMBLY-NAME/ID delete-node NODE-ID","Delete node from assembly"
+    def delete_node(context_params)
+      assembly_id, node_id = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :node_id => node_id
+      }
+      response = post(rest_url("assembly/delete_node"),post_body)
     end
 
     desc "ASSEMBLY-NAME/ID delete-component COMPONENT-ID","Delete component from assembly"

@@ -69,7 +69,7 @@ module DTK
       def change_context(args)
         begin
           # check if we are doing switch context
-          if args.to_s.match(/\A\-\Z/)
+          if args.join("").match(/\A\-\Z/)
             if @previous_context
               # swap 2 variables
               @active_context, @previous_context = @previous_context, @active_context

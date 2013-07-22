@@ -1,6 +1,4 @@
 require 'rubygems'
-
-require 'bundler'
 require File.expand_path("require_first", File.dirname(__FILE__))
 
 if gem_only_available?
@@ -8,9 +6,7 @@ if gem_only_available?
   require 'dtk-common'
 end
 
-
 # Monkey Patching bundler to support loading specific Gemfile from dtk-client project's root - Ticket: DTK-585
-dtk_require("bundler_monkey_patch")
 dtk_require("config/configuration")
 
 
@@ -23,7 +19,14 @@ end
 # we don't need Bundler.setup but will leave it commented just in case
 # TODO: This is temp solution which will not use bundler.setup when in dev mode
 # thus allowing us to use system gems and not just the ones specified in Gemfile
-Bundler.setup unless DTK::Configuration.get(:development_mode)
+unless DTK::Configuration.get(:development_mode)
+  require 'bundler'
+  #TODO: rich temp hack becaus eof problem with gem dependencies; changed this because it was not working in 0.19.0
+  if Bundler.respond_to?(:start)
+    Bundler.start
+  end
+  dtk_require("bundler_monkey_patch")
+end
 
 #TODO: should be common gem
 dtk_require_dtk_common("hash_object")

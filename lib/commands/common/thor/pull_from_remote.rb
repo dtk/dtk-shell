@@ -6,6 +6,7 @@ module DTK::Client
     # module_type: will be :component_module or :service_module
 
     def pull_from_remote_aux(module_type,module_id,version=nil)
+
       #get remote module info, errors raised if remote is not linked or access errors
       path_to_key = SshProcessing.default_rsa_pub_key_path()
       rsa_pub_key = File.file?(path_to_key) && File.open(path_to_key){|f|f.read}.chomp
@@ -22,10 +23,15 @@ module DTK::Client
       module_name = response.data(:module_name)
       remote_params = response.data_hash_form(:remote_repo_url,:remote_repo,:remote_branch)
       remote_params.merge!(:version => version) if version
+
+
       # check whether a local module exists to determine whether pull from local clone or try to pull from server
       if Helper(:git_repo).local_clone_exists?(module_type,module_name,version)
         unless rsa_pub_key
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
+        end
+        if module_type == :service_module
+        
         end
         PullFromRemote.perform_locally(self,module_type,module_id,module_name,remote_params)
       else
