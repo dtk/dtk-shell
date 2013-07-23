@@ -1,7 +1,12 @@
 #!/usr/bin/env ruby
 require File.expand_path('../lib/shell', File.dirname(__FILE__))
+require File.expand_path('../lib/commands/thor/account', File.dirname(__FILE__))
+require File.expand_path('../lib/command_helpers/ssh_processing', File.dirname(__FILE__))
 
 ::DTK::Client::Configurator.check_config_exists
 ::DTK::Client::Configurator.check_git
+
+# check if .add_direct_access file exists, if not then add direct access and create .add_direct_access file
+check_direct_access(::DTK::Client::Configurator.check_direct_access)
 
 run_shell_command()
