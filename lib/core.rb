@@ -83,6 +83,17 @@ def validate_connection(connection)
   end
 end
 
+# check if .add_direct_access file exists, if not then add direct access and create .add_direct_access file
+def check_direct_access(params)
+  return if params[:file_exists]
+
+  puts "Adding direct access for current user..."
+  response = DTK::Client::Account.add_access(params[:ssh_key_path])
+  DTK::Client::OsUtil.print("We were not able to add direct access for current user. In order to properly use dtk-shell you will have to add access manually ('dtk account add-direct-access').\n", :yellow) unless response.ok?
+  
+  FileUtils.touch(params[:file_path])
+end
+
 module DTK
   module Client
     class ResponseErrorHandler

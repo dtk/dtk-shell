@@ -6,11 +6,12 @@ module DTK
 	module Client
 		class Configurator
 
-			CONFIG_FILE = File.join(OsUtil.dtk_local_folder, "client.conf")
-	    CRED_FILE = File.join(OsUtil.dtk_local_folder, ".connection")
+			CONFIG_FILE   = File.join(OsUtil.dtk_local_folder, "client.conf")
+	    CRED_FILE 	  = File.join(OsUtil.dtk_local_folder, ".connection")
+	    DIRECT_ACCESS = File.join(OsUtil.dtk_local_folder, ".add_direct_access")
 
 			require 'fileutils'
-			FileUtils.mkdir(OsUtil.dtk_local_folder) if !File.directory?(OsUtil.dtk_local_folder)
+			FileUtils.mkdir(OsUtil.dtk_local_folder) unless File.directory?(OsUtil.dtk_local_folder)
 
 	    def self.CONFIG_FILE
 	    	CONFIG_FILE
@@ -43,6 +44,13 @@ module DTK
 				end
 			end
 
+			# return true/false, .add_direct_access file location and ssk key file location
+			def self.check_direct_access
+				file_exists  = File.exists?(DIRECT_ACCESS)
+				ssh_key_path = SshProcessing.default_rsa_pub_key_path()
+				
+				{:file_exists => file_exists, :file_path => DIRECT_ACCESS, :ssh_key_path => ssh_key_path}
+			end
 
 			def self.generate_conf_file(file_path, properties, header)
 				require 'highline/import'
@@ -65,7 +73,6 @@ module DTK
 						f.puts("#{prop[0]}=#{prop[1]}")
 					end
 				end
-
 			end
 
 		end

@@ -233,8 +233,33 @@ module DTK::Client
         :banner => "NAMESPACE",
         :desc => "Remote namespace"
     def push_to_remote(context_params)
-      service_module_id, service_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
-      push_to_remote_aux(:service_module, service_module_id, service_name, options["namespace"], options["version"])
+      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
+      version = options["version"]
+
+      if service_module_name.to_s =~ /^[0-9]+$/
+        service_id   = service_module_name
+        service_module_name = get_service_module_name(service_id)
+      end
+
+      modules_path    = OsUtil.service_clone_location()
+      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
+
+      unless File.directory?(module_location)
+        if Console.confirmation_prompt("Unable to push to remote because module '#{service_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
+          response = clone_aux(:service_module,service_module_id,version,false)
+          
+          if(response.nil? || response.ok?)
+            push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], version) if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
+          end
+
+          return response
+        else
+          # user choose not to clone needed module
+          return
+        end
+      end
+
+      push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
     end
 
     desc "SERVICE-NAME/ID pull-from-remote [-v VERSION]", "Update local service module from remote repository."
