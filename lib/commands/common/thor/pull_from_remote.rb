@@ -24,14 +24,30 @@ module DTK::Client
       remote_params = response.data_hash_form(:remote_repo_url,:remote_repo,:remote_branch)
       remote_params.merge!(:version => version) if version
 
-
       # check whether a local module exists to determine whether pull from local clone or try to pull from server
       if Helper(:git_repo).local_clone_exists?(module_type,module_name,version)
         unless rsa_pub_key
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
         end
         if module_type == :service_module
-        
+          post_body = {
+            :service_module_id => module_id
+          }
+          response = post(rest_url("service_module/resolve_pull_from_remote"),post_body)
+
+          print "Resolving dependencies please wait ... "
+          
+          if ((missing_components = response.data(:missing_modules)) && response.ok?)
+            puts " New dependencies found, Installing."
+
+            trigger_module_component_import(missing_components)
+            puts "Resuming pull from remote ..."
+            # repeat import call for service
+            response = post rest_url("service_module/import"), post_body
+          else
+            puts 'Done.'
+          end
+              
         end
         PullFromRemote.perform_locally(self,module_type,module_id,module_name,remote_params)
       else

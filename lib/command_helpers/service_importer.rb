@@ -10,7 +10,7 @@ module DTK::Client
     ##
     # Method will trigger import for each missing module component
     #
-    def trigger_module_component_import(missing_component_list)
+    def trigger_module_component_import(missing_component_list)      
       puts "Auto-importing missing module(s)"
 
       missing_component_list.each do |m_module|
