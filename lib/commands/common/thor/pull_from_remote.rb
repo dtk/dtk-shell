@@ -6,7 +6,6 @@ module DTK::Client
     # module_type: will be :component_module or :service_module
 
     def pull_from_remote_aux(module_type,module_id,version=nil)
-
       #get remote module info, errors raised if remote is not linked or access errors
       path_to_key = SshProcessing.default_rsa_pub_key_path()
       rsa_pub_key = File.file?(path_to_key) && File.open(path_to_key){|f|f.read}.chomp
@@ -37,13 +36,11 @@ module DTK::Client
 
           print "Resolving dependencies please wait ... "
           
-          if ((missing_components = response.data(:missing_modules)) && response.ok?)
+          if (response.ok? && !(missing_components = response.data(:missing_modules)).empty?)
             puts " New dependencies found, Installing."
 
             trigger_module_component_import(missing_components)
             puts "Resuming pull from remote ..."
-            # repeat import call for service
-            response = post rest_url("service_module/import"), post_body
           else
             puts 'Done.'
           end
