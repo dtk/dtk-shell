@@ -6,12 +6,12 @@ module DTK
 	module Client
 		class Configurator
 
-			CONFIG_FILE   = File.join(OsUtil.dtk_local_folder, "client.conf")
+		CONFIG_FILE   = File.join(OsUtil.dtk_local_folder, "client.conf")
 	    CRED_FILE 	  = File.join(OsUtil.dtk_local_folder, ".connection")
 	    DIRECT_ACCESS = File.join(OsUtil.dtk_local_folder, ".add_direct_access")
 
-			require 'fileutils'
-			FileUtils.mkdir(OsUtil.dtk_local_folder) unless File.directory?(OsUtil.dtk_local_folder)
+		require 'fileutils'
+		FileUtils.mkdir(OsUtil.dtk_local_folder) unless File.directory?(OsUtil.dtk_local_folder)
 
 	    def self.CONFIG_FILE
 	    	CONFIG_FILE
@@ -75,6 +75,10 @@ module DTK
 				end
 			end
 
+			def self.create_missing_clone_dirs
+				FileUtils.mkdir(OsUtil.module_clone_location) unless File.directory?(OsUtil.module_clone_location)
+				FileUtils.mkdir(OsUtil.service_clone_location) unless File.directory?(OsUtil.service_clone_location)
+			end
 		end
 	end
 end
