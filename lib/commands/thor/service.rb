@@ -119,8 +119,9 @@ module DTK::Client
       list(context_params)
     end
 
-    desc "list --remote","List service modules (local/remote)."
+    desc "list [--remote] [--diff]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
     method_option :remote, :type => :boolean, :default => false
+    method_option :diff, :type => :boolean, :default => false
     def list(context_params)
       service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
 
@@ -133,7 +134,8 @@ module DTK::Client
       if (context_params.last_entity_name == :service) and about.nil?
         action    = options.remote? ? "list_remote" : "list"
         post_body = (options.remote? ? {} : {:detail_to_include => ["remotes","versions"]})
- 
+        post_body[:diff] = options.diff? ? options.diff : {}
+        
         response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
       else
