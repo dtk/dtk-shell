@@ -208,8 +208,9 @@ module DTK::Client
       post rest_url("component_module/info"), post_body
     end
 
-    desc "list [--remote]", "List loaded or remote component modules."
+    desc "list [--remote] [--diff]", "List loaded or remote component modules."
     method_option :remote, :type => :boolean, :default => false
+    method_option :diff, :type => :boolean, :default => false
     def list(context_params)
       # Amar: attribute context commented out per Rich suggeston
       #if context_params.is_there_command?(:attribute)
@@ -219,12 +220,12 @@ module DTK::Client
         return module_info_about(context_params, :components, :component)
       end
 
-      action = (options.remote? ? "list_remote" : "list")
-      post_body = (options.remote? ? {} : {:detail_to_include => ["remotes","versions"]})
-      response = post rest_url("component_module/#{action}"),post_body
+      action           = (options.remote? ? "list_remote" : "list")
+      post_body        = (options.remote? ? {} : {:detail_to_include => ["remotes","versions"]})
+      post_body[:diff] = options.diff? ? options.diff : {}
+      response         = post rest_url("component_module/#{action}"),post_body
       
       return response unless response.ok?
-
       response.render_table()
     end
 
@@ -259,7 +260,7 @@ module DTK::Client
     desc "list-diffs","List difference between workspace and library component modules"
     def list_diffs()
       response = get rest_url("component_module/get_all_workspace_library_diffs")
-      response.render_table(:module_diff)
+      response.render_table(:list_diffs)
     end
 
     #### end: list and info commands ###
