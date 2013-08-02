@@ -170,6 +170,7 @@ module DTK::Client
         end
       end
 
+      puts "You have successfully deleted component module '#{component_module_id}'."
       return response
     end
 
