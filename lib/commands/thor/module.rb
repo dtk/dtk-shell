@@ -207,7 +207,7 @@ module DTK::Client
       post rest_url("component_module/info"), post_body
     end
 
-    desc "list [--remote] [--diff]", "List loaded or remote component modules."
+    desc "list [--remote] [--diff]", "List loaded or remote component modules. Use --diff to compare loaded and remote modules."
     method_option :remote, :type => :boolean, :default => false
     method_option :diff, :type => :boolean, :default => false
     def list(context_params)
