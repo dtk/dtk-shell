@@ -35,7 +35,7 @@ module DTK::Client
         {
           :command_only => {
             :self => [
-              ["list"," list --remote","# List loaded or remote component modules"]
+              ["list"," list [--remote] [--diff]","# List loaded or remote component modules. Use --diff to compare loaded and remote modules."]
             ],
             :"component-template" => [
               ["list","list","# List all component templates."],
