@@ -490,6 +490,7 @@ module DTK::Client
         end
       end
 
+      puts "You have successfully deleted service '#{service_module_id}'."
       return response
     end
 
