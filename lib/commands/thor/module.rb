@@ -296,7 +296,10 @@ module DTK::Client
       response = post(rest_url("component_module/update_from_initial_create"),post_body)
       return response unless response.ok?
 
-      DTK::Client::OsUtil.print(response["data"]["dsl_errors"], :red) if response["data"]["dsl_errors"]
+      if response["data"]["dsl_parsed_info"]
+        dsl_parsed_message = "Module '#{module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response["data"]["dsl_parsed_info"]}\nYou can fix errors and import module again.\n"
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+      end
 
       dsl_created_info = response.data(:dsl_created_info)
       if dsl_created_info and !dsl_created_info.empty?
@@ -340,7 +343,10 @@ module DTK::Client
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
       
-      DTK::Client::OsUtil.print(response["data"]["dsl_errors"], :red) if response["data"]["dsl_errors"]
+      if response["data"]["dsl_parsed_info"]
+        dsl_parsed_message = "Module '#{module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response["data"]["dsl_parsed_info"]}\nYou can fix errors and import module again.\n"
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+      end
 
       response = ""
       unless skip_cloning
