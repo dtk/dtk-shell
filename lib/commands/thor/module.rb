@@ -296,6 +296,8 @@ module DTK::Client
       response = post(rest_url("component_module/update_from_initial_create"),post_body)
       return response unless response.ok?
 
+      DTK::Client::OsUtil.print(response["data"]["dsl_errors"], :red) if response["data"]["dsl_errors"]
+
       dsl_created_info = response.data(:dsl_created_info)
       if dsl_created_info and !dsl_created_info.empty?
         msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_directory}"
@@ -334,10 +336,12 @@ module DTK::Client
         :local_module_name => local_module_name
       }
       response = post rest_url("component_module/import"), post_body
-      
+
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
       
+      DTK::Client::OsUtil.print(response["data"]["dsl_errors"], :red) if response["data"]["dsl_errors"]
+
       response = ""
       unless skip_cloning
         response = Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)

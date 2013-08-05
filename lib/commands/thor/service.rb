@@ -195,6 +195,8 @@ module DTK::Client
 
       @@invalidate_map << :service_module
 
+      DTK::Client::OsUtil.print(response["data"]["dsl_errors"], :red) if response["data"]["dsl_errors"]
+
       service_module_id, module_name, namespace, repo_url, branch = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch)
       Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
       resolve_missing_components(service_module_id, module_name, namespace)
