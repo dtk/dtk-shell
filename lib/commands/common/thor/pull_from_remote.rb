@@ -82,10 +82,17 @@ module DTK::Client
       def self.perform_on_server(cmd_obj,module_type,module_id,module_name,remote_params)
         post_body = {
           id_field(module_type) => module_id,
-          :remote_repo => remote_params[:remote_repo]
+          :remote_repo => remote_params[:remote_repo],
+          :module_name => module_name
         }
         post_body.merge!(:version => remote_params[:version]) if remote_params[:version]
-        post rest_url("#{module_type}/pull_from_remote"), post_body
+        response = post rest_url("#{module_type}/pull_from_remote"), post_body
+        
+        if response.ok?
+          puts "You have successfully pulled code on server instance."
+        else
+          response
+        end
       end
       
       def self.id_field(module_type)
