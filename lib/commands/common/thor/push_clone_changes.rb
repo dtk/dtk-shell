@@ -24,6 +24,12 @@ module DTK::Client
 
       response = post(rest_url("#{module_type}/update_model_from_clone"),post_body)
       return response unless response.ok?
+      
+      if (!response["data"].empty? && response["data"]["dsl_parsed_info"])
+        dsl_parsed_message = "Module '#{module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response["data"]["dsl_parsed_info"]}\nYou can fix errors and import module again.\n"
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+      end
+      
       if module_type == :component_module
         dsl_created_info = response.data(:dsl_created_info)
         if dsl_created_info and !dsl_created_info.empty?

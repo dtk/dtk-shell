@@ -67,7 +67,7 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :command_only => {
           :self => [
-            ["list"," list --remote","# List service modules (local/remote)"]
+            ["list"," list [--remote] [--diff]","# List service modules (local/remote). Use --diff to compare loaded and remote modules."]
           ],
           :"assembly-template" => [
             ["list","list","# List assembly templates for given service"]
@@ -194,6 +194,11 @@ module DTK::Client
       return response unless response.ok?
 
       @@invalidate_map << :service_module
+
+      if response["data"]["dsl_parsed_info"]
+        dsl_parsed_message = "Module '#{remote_module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response["data"]["dsl_parsed_info"]}\nYou can fix errors and import module again.\n"
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+      end
 
       service_module_id, module_name, namespace, repo_url, branch = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch)
       Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
@@ -420,6 +425,11 @@ module DTK::Client
       response = post rest_url("service_module/create"), { :module_name => module_name }        
       return response unless response.ok?
       @@invalidate_map << :service_module
+
+      if response["data"]["dsl_parsed_info"]
+        dsl_parsed_message = "Module '#{module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response["data"]["dsl_parsed_info"]}\nYou can fix errors and import module again.\n"
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+      end
 
       # initial commit for given service module
       service_module_id, repo_info, module_id = response.data(:service_module_id, :repo_info)

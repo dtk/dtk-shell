@@ -35,7 +35,7 @@ module DTK::Client
         {
           :command_only => {
             :self => [
-              ["list"," list --remote","# List loaded or remote component modules"]
+              ["list"," list [--remote] [--diff]","# List loaded or remote component modules. Use --diff to compare loaded and remote modules."]
             ],
             :"component-template" => [
               ["list","list","# List all component templates."],
@@ -208,7 +208,7 @@ module DTK::Client
       post rest_url("component_module/info"), post_body
     end
 
-    desc "list [--remote] [--diff]", "List loaded or remote component modules."
+    desc "list [--remote] [--diff]", "List loaded or remote component modules. Use --diff to compare loaded and remote modules."
     method_option :remote, :type => :boolean, :default => false
     method_option :diff, :type => :boolean, :default => false
     def list(context_params)
@@ -296,6 +296,11 @@ module DTK::Client
       response = post(rest_url("component_module/update_from_initial_create"),post_body)
       return response unless response.ok?
 
+      if response["data"]["dsl_parsed_info"]
+        dsl_parsed_message = "Module '#{module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response["data"]["dsl_parsed_info"]}\nYou can fix errors and import module again.\n"
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+      end
+
       dsl_created_info = response.data(:dsl_created_info)
       if dsl_created_info and !dsl_created_info.empty?
         msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_directory}"
@@ -334,10 +339,15 @@ module DTK::Client
         :local_module_name => local_module_name
       }
       response = post rest_url("component_module/import"), post_body
-      
+
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
       
+      if response["data"]["dsl_parsed_info"]
+        dsl_parsed_message = "Module '#{module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response["data"]["dsl_parsed_info"]}\nYou can fix errors and import module again.\n"
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+      end
+
       response = ""
       unless skip_cloning
         response = Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)

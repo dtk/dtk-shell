@@ -5,6 +5,7 @@ require File.expand_path('../lib/command_helpers/ssh_processing', File.dirname(_
 
 ::DTK::Client::Configurator.check_config_exists
 ::DTK::Client::Configurator.check_git
+::DTK::Client::Configurator.create_missing_clone_dirs
 
 # check if .add_direct_access file exists, if not then add direct access and create .add_direct_access file
 check_direct_access(::DTK::Client::Configurator.check_direct_access)
