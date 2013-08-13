@@ -5,6 +5,7 @@ dtk_require_common_commands('thor/list_diffs')
 dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
+dtk_require_common_commands('thor/reparse')
 require 'fileutils'
 
 module DTK::Client
@@ -59,6 +60,7 @@ module DTK::Client
       include PushToRemoteMixin
       include PullFromRemoteMixin
       include PushCloneChangesMixin
+      include ReparseMixin
       include ListDiffsMixin
 
       def get_module_name(module_id)
@@ -316,6 +318,20 @@ module DTK::Client
       response
     end
 
+    desc "MODULE-NAME/ID reparse [-v VERSION]", "Check module for parsing errors in json files"
+    version_method_option
+    def reparse(context_params)
+      module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
+      module_name = get_module_name(module_id)
+      version = options["version"]
+
+      modules_path    = OsUtil.module_clone_location()
+      module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
+
+      raise DTK::Client::DtkValidationError, "Unable to parse module '#{module_name}#{version && "-#{version}"}' that doesn't exist on your local machine!" unless File.directory?(module_location)
+
+      reparse_aux(module_location)
+    end
     
     # TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
@@ -476,6 +492,7 @@ module DTK::Client
           response = clone_aux(:component_module,component_module_id,version,false)
           
           if(response.nil? || response.ok?)
+            reparse_aux(module_location)
             push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)  if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
           end
 
@@ -486,6 +503,7 @@ module DTK::Client
         end
       end
 
+      reparse_aux(module_location)
       push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)
     end
 

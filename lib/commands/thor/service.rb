@@ -6,6 +6,7 @@ dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
+dtk_require_common_commands('thor/reparse')
 dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
 dtk_require_from_base("commands/thor/assembly_template")
@@ -20,6 +21,7 @@ module DTK::Client
       include PushToRemoteMixin
       include PullFromRemoteMixin
       include PushCloneChangesMixin
+      include ReparseMixin
       include ServiceImporter
 
       def get_service_module_name(service_module_id)
@@ -205,6 +207,21 @@ module DTK::Client
       resolve_missing_components(service_module_id, module_name, namespace)
     end
 
+    desc "SERVICE-NAME/ID reparse [-v VERSION]", "Check service for parsing errors in json files"
+    version_method_option
+    def reparse(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
+      service_module_name = get_service_module_name(service_module_id)
+      version = options["version"]
+
+      modules_path    = OsUtil.service_clone_location()
+      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
+
+      raise DTK::Client::DtkValidationError, "Unable to parse service '#{service_module_name}#{version && "-#{version}"}' that doesn't exist on your local machine!" unless File.directory?(module_location)
+
+      reparse_aux(module_location)
+    end
+
     desc "SERVICE-NAME/ID import-version VERSION", "Import a specfic version from a linked service module"
     def import_version(context_params)
       service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
@@ -256,6 +273,7 @@ module DTK::Client
           response = clone_aux(:service_module,service_module_id,version,false)
           
           if(response.nil? || response.ok?)
+            reparse_aux(module_location)
             push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], version) if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
           end
 
@@ -265,7 +283,8 @@ module DTK::Client
           return
         end
       end
-
+      
+      reparse_aux(module_location)
       push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
     end
 

@@ -50,6 +50,8 @@ def top_level_execute(entity_name, method_name, context_params=nil,options_args=
         end
       end
     end
+  rescue DTK::Client::DtkValidationError::JSONParsing => e
+    DTK::Client::OsUtil.print(e.message, :red)
   rescue DTK::Client::DtkValidationError => e
     DTK::Client::OsUtil.print(e.message, :yellow)
   rescue DTK::Client::DtkError => e

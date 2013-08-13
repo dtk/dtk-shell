@@ -166,6 +166,8 @@ def execute_shell_command(line, prompt)
       # check execution status, prints status to sttout
       DTK::Shell::StatusMonitor.check_status()
     end
+  rescue DTK::Client::DtkValidationError::JSONParsing => e
+    DTK::Client::OsUtil.print(e.message, :red)
   rescue DTK::Client::DtkValidationError => e
     DTK::Client::OsUtil.print(e.message, :yellow)
   rescue DTK::Shell::Error => e
