@@ -340,7 +340,7 @@ module DTK
       def help(*args)
         puts # pretty print
         not_dtk_clazz = true
-
+        
         if defined?(DTK::Client::Dtk)
           not_dtk_clazz = !self.class.eql?(DTK::Client::Dtk)
         end
@@ -351,6 +351,7 @@ module DTK
         #
         # @@shell_execution - if we run from shell we don't want subcommand output
         #
+
         super(args.empty? ? nil : args.first, not_dtk_clazz && !@@shell_execution)
 
         # we will print error in case configuration has reported error
