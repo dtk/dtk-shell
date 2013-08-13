@@ -122,19 +122,22 @@ module DTK::Client
       cancel_task_aux(task_id)
     end
 
-    desc "ASSEMBLY-NAME/ID create-new-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Create a new assembly template from workspace assembly" 
-    def create_new_template(context_params)        
+    desc "ASSEMBLY-NAME/ID promote-to-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Creates a new assembly template or updates existing one from assembly instance" 
+    def promote_to_template(context_params)        
       assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!],method_argument_names)
       post_body = {
         :assembly_id => assembly_id,
         :service_module_name => service_module_name,
         :assembly_template_name => assembly_template_name
       }
-      response = post rest_url("assembly/create_new_template"), post_body
+      response = post rest_url("assembly/promote_to_template"), post_body
       # when changing context send request for getting latest assembly_templates instead of getting from cache
       @@invalidate_map << :assembly_template
 
-      return response
+      return response unless response.ok?()
+      #synchronize_clone will load new assembly template into service clone on workspace (if it exists)
+      commit_sha,workspace_branch = response.data(:module_name,:workspace_branch)
+      Helper(:git_repo).synchronize_clone(:service_module,service_module_name,commit_sha,:local_branch=>workspace_branch)
     end
     
     desc "ASSEMBLY-NAME/ID find-violations", "Finds violations in assembly that will prevent a converge operation"
@@ -498,7 +501,7 @@ TODO: will put in dot release and will rename to 'extend'
       #TODO: have this return format like assembly show attributes with subset of rows that gt changed
       post rest_url("assembly/set_attributes"), post_body
     end
-    desc "ASSEMBLY-NAME/ID unset ATTRIBUTE-NAME/ID VALUE", "Unset assembly attribute values(s)"
+    desc "ASSEMBLY-NAME/ID unset ATTRIBUTE-NAME/ID", "Unset assembly attribute values(s)"
     def unset(context_params)
 
       if context_params.is_there_identifier?(:attribute)
