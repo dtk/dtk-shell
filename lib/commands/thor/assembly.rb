@@ -501,7 +501,7 @@ TODO: will put in dot release and will rename to 'extend'
       #TODO: have this return format like assembly show attributes with subset of rows that gt changed
       post rest_url("assembly/set_attributes"), post_body
     end
-    desc "ASSEMBLY-NAME/ID unset ATTRIBUTE-NAME/ID VALUE", "Unset assembly attribute values(s)"
+    desc "ASSEMBLY-NAME/ID unset ATTRIBUTE-NAME/ID", "Unset assembly attribute values(s)"
     def unset(context_params)
 
       if context_params.is_there_identifier?(:attribute)
