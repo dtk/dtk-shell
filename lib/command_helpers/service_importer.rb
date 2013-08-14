@@ -28,7 +28,7 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    def resolve_missing_components(service_module_id, service_module_name, namespace_to_use)
+    def resolve_missing_components(service_module_id, service_module_name, namespace_to_use, force_clone=false)
       # Get dependency component modules and cross reference them with local component modules
       module_component_list = post rest_url("service_module/list_component_modules"), { :service_module_id => service_module_id }
       local_modules, needed_modules = OsUtil.local_component_module_list(), Array.new
@@ -42,7 +42,8 @@ module DTK::Client
       unless needed_modules.empty?
         puts "Service '#{service_module_name}' has following dependencies: \n\n"
         needed_modules.each { |m| puts " - #{m['formated_name']}" }
-        is_install_dependencies = Console.confirmation_prompt("\nDo you want to clone missing module component dependencies")
+        is_install_dependencies = true
+        is_install_dependencies = Console.confirmation_prompt("\nDo you want to clone missing module component dependencies") unless force_clone
 
         # we get list of modules available on server
 

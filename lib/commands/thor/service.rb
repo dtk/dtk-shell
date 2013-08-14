@@ -166,8 +166,9 @@ module DTK::Client
       response
     end
 
-    desc "import-r8n REMOTE-SERVICE-NAME", "Import remote service module into local environment"
+    desc "import-r8n REMOTE-SERVICE-NAME [-y]", "Import remote service module into local environment. -y will automatically clone component modules"
     version_method_option
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def import_r8n(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
@@ -204,7 +205,7 @@ module DTK::Client
 
       service_module_id, module_name, namespace, repo_url, branch = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch)
       Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
-      resolve_missing_components(service_module_id, module_name, namespace)
+      resolve_missing_components(service_module_id, module_name, namespace, options.force?)
     end
 
     desc "SERVICE-NAME/ID reparse [-v VERSION]", "Check service for parsing errors in json files"
