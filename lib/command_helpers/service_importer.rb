@@ -1,3 +1,4 @@
+dtk_require_from_base('configurator')
 module DTK::Client
   #
   # Main purpose of this module is to recognize which local modules are missing based on 
@@ -5,7 +6,9 @@ module DTK::Client
   # module#clone and module#import_r8n method to get missing component modules 
   #
   module ServiceImporter
-
+    def create_missing_clone_dirs()
+      ::DTK::Client::Configurator.create_missing_clone_dirs
+    end
 
     ##
     # Method will trigger import for each missing module component

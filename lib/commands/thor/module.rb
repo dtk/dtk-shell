@@ -1,4 +1,4 @@
- dtk_require_from_base('command_helpers/ssh_processing')
+dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_dtk_common('grit_adapter')
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/list_diffs')
@@ -6,6 +6,7 @@ dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
 dtk_require_common_commands('thor/reparse')
+dtk_require_from_base('configurator')
 require 'fileutils'
 
 module DTK::Client
@@ -342,6 +343,7 @@ module DTK::Client
       :banner => "REPO-MANAGER",
       :desc => "R8 Repo Manager from which to resolve requested module."
     def import_r8n(context_params)
+      create_missing_clone_dirs()
       remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       # in case of auto-import via service import, we skip cloning to speed up a process
       skip_cloning = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
