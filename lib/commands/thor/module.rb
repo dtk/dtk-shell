@@ -7,6 +7,8 @@ dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
 dtk_require_common_commands('thor/reparse')
 dtk_require_from_base('configurator')
+dtk_require_from_base('command_helpers/service_importer')
+
 require 'fileutils'
 
 module DTK::Client
@@ -63,6 +65,7 @@ module DTK::Client
       include PushCloneChangesMixin
       include ReparseMixin
       include ListDiffsMixin
+      include ServiceImporter
 
       def get_module_name(module_id)
         module_name = nil
