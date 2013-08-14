@@ -223,7 +223,13 @@ TODO: will put in dot release and will rename to 'extend'
     desc "ASSEMBLY-NAME/ID list-task-info", "Task status details of running or last assembly task"
     def list_task_info(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-      list_task_info_aux("assembly", assembly_id)
+      #TODO: deprecate this method: list_task_info_aux("assembly", assembly_id)
+      post_body = {
+        :assembly_id => assembly_id,
+        :subtype     => 'instance'
+      }
+      response = post(rest_url("assembly/info_about_task"),post_body)
+      response
     end
 
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
