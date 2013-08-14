@@ -91,7 +91,6 @@ module DTK
 
           raise DTK::Client::DtkValidationError, error_message if error_message
         rescue DTK::Client::DtkValidationError => e
-          puts "BBBBBBBBBBBBBBBBBBBBBBBBBBB"
           DTK::Client::OsUtil.print(e.message, :yellow)
         rescue DTK::Shell::Error => e
           puts e.message
