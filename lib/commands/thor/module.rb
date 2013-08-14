@@ -7,6 +7,8 @@ dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
 dtk_require_common_commands('thor/reparse')
 dtk_require_from_base('configurator')
+dtk_require_from_base('command_helpers/service_importer')
+
 require 'fileutils'
 
 module DTK::Client
