@@ -63,6 +63,7 @@ module DTK::Client
       include PushCloneChangesMixin
       include ReparseMixin
       include ListDiffsMixin
+      include ServiceImporter
 
       def get_module_name(module_id)
         module_name = nil
