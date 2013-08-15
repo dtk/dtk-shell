@@ -12,6 +12,7 @@ dtk_require_from_base("util/os_util")
 dtk_require_from_base("commands/thor/assembly_template")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
+dtk_require_dtk_common('grit_adapter')
 
 module DTK::Client
   class Service < CommandBaseThor

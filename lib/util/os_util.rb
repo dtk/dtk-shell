@@ -58,6 +58,11 @@ module DTK
           return ENV[name.to_s.upcase].gsub(/\\/,'/')
         end
 
+        
+        def module_location(module_type)
+          module_type == :service_module ? OsUtil.service_clone_location() : OsUtil.module_clone_location()
+        end
+
         def module_clone_location()
           module_location = ::DTK::Configuration.get(:module_location)
           return (module_location.start_with?('/') ? module_location : "#{dtk_local_folder}#{module_location}")

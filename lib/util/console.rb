@@ -73,10 +73,10 @@ module DTK::Client
           puts "[NOTICE] Unix shell interaction is currenly not supported on Windows."
           return
         end
+        
+        # set module path if path not given
+        path = path || OsUtil.module_location(module_type)
 
-        application_dir     = Dir.getwd()
-        # if no directory provided we are using application shell
-        path = path || application_dir
         # we need to change path like this since system call 'cd' is not supported
         Dir.chdir(path)
         puts "[NOTICE] You are switching to unix-shell, to path #{path}"
@@ -132,8 +132,8 @@ module DTK::Client
           # do nothing else
         end
 
-        Readline.completion_append_character = dtk_shell_ac_append_char
-        Readline.completion_proc = dtk_shell_ac_proc
+        Readline.completion_append_character = dtk_shell_ac_append_char unless dtk_shell_ac_append_char.nil?
+        Readline.completion_proc = dtk_shell_ac_proc unless dtk_shell_ac_proc.nil?
         puts "[NOTICE] You are leaving unix-shell."
       end
 
