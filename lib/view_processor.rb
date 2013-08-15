@@ -23,6 +23,8 @@ module DTK
             adapter.render(ruby_obj)
           elsif ruby_obj.kind_of?(Array)
             ruby_obj.map{|el|render(command_class,el,type,nil,adapter)}
+          elsif ruby_obj.kind_of?(String)
+            ruby_obj
           else
             raise Error.new("ruby_obj has unexepected type")
           end
