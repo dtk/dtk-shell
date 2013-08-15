@@ -167,6 +167,18 @@ module DTK::Client
       response
     end
 
+    desc "SERVICE-NAME/ID list-versions","List all versions associated with this service."
+    def list_versions(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
+      post_body = {
+        :service_module_id => service_module_id,
+        :detail_to_include => ["remotes"]
+      }
+      response = post rest_url("service_module/versions"), post_body
+
+      response.render_table(:module_version)
+    end
+
     desc "import-r8n REMOTE-SERVICE-NAME [-y]", "Import remote service module into local environment. -y will automatically clone component modules"
     version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
@@ -200,8 +212,8 @@ module DTK::Client
 
       @@invalidate_map << :service_module
 
-      if response["data"]["dsl_parsed_info"]
-        dsl_parsed_message = "Module '#{remote_module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response["data"]["dsl_parsed_info"]}\nYou can fix errors and import module again.\n"
+      if response.data(:dsl_parsed_info)
+        dsl_parsed_message = "Module '#{remote_module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
@@ -448,8 +460,8 @@ module DTK::Client
       return response unless response.ok?
       @@invalidate_map << :service_module
 
-      if response["data"]["dsl_parsed_info"]
-        dsl_parsed_message = "Module '#{module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response["data"]["dsl_parsed_info"]}\nYou can fix errors and import module again.\n"
+      if response.data(:dsl_parsed_info)
+        dsl_parsed_message = "Module '#{module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
