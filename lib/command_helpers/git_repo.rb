@@ -13,7 +13,17 @@ module DTK; module Client; class CommandHelper
         target_repo_dir = local_repo_dir(type,module_name,version,modules_dir)
         opts = {}
         opts = { :branch => branch } if branch
-        adapter_class().clone(target_repo_dir,repo_url, opts)
+        begin 
+          adapter_class().clone(target_repo_dir,repo_url, opts)
+        rescue => e
+          #cleanup by deleting directory
+          FileUtils.rm_rf(target_repo_dir) if File.directory?(target_repo_dir)
+          error_msg = "Clone to directory (#{target_repo_dir}) failed"
+          if e.kind_of?(::Grit::Git::CommandFailed)
+            error_msg << " (#{e.err.chomp()})"
+          end
+          raise ErrorUsage.new(error_msg,:log_error=>false)
+        end
         {"module_directory" => target_repo_dir}
       end
     end

@@ -40,9 +40,9 @@ module DTK
           Ok.new(results)
          rescue ErrorUsage => e
           Error::Usage.new("message"=> e.to_s)
-         rescue Grit::Git::CommandFailed => e
+         rescue ::Grit::Git::CommandFailed => e
           # remove grit internal error handler
-          Error::Usage.new("message"=> e.err.gsub(/^.*:/,'').strip.capitalize)
+          Error::Usage.new("message"=> "Grit Error: #{e.err.gsub(/^.*:/,'').strip.capitalize}")
          rescue => e
           error_hash =  {
             "message"=> e.message,
