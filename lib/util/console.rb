@@ -74,13 +74,14 @@ module DTK::Client
           return
         end
 
-        application_dir     = Dir.getwd()
-        # if no directory provided we are using application shell
-        path = path || application_dir
-        # we need to change path like this since system call 'cd' is not supported
-        Dir.chdir(path)
-        puts "[NOTICE] You are switching to unix-shell, to path #{path}"
         begin
+          application_dir = Dir.pwd()
+          # if no directory provided we are using application shell
+          path = path || application_dir
+          # we need to change path like this since system call 'cd' is not supported
+          Dir.chdir(path)
+          puts "[NOTICE] You are switching to unix-shell, to path #{path}"
+
           prompt = DTK::Client::OsUtil.colorize("$dtk:unix-shell ", :yellow)
           Readline.completion_append_character = ""
           Readline.completion_proc = Proc.new do |str|
@@ -130,6 +131,8 @@ module DTK::Client
         rescue Interrupt
           puts ""
           # do nothing else
+        rescue Exception => e
+          puts e.message
         end
 
         Readline.completion_append_character = dtk_shell_ac_append_char
