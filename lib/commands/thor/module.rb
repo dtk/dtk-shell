@@ -5,6 +5,7 @@ dtk_require_common_commands('thor/list_diffs')
 dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
+dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/reparse')
 dtk_require_from_base('configurator')
 dtk_require_from_base('command_helpers/service_importer')
@@ -63,6 +64,7 @@ module DTK::Client
       include PushToRemoteMixin
       include PullFromRemoteMixin
       include PushCloneChangesMixin
+      include EditMixin
       include ReparseMixin
       include ListDiffsMixin
       include ServiceImporter
@@ -588,57 +590,7 @@ module DTK::Client
         module_name = get_module_name(module_id)
       end
 
-      modules_path    = OsUtil.module_clone_location()
-      module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
-
-      # check if there is repository cloned 
-      unless File.directory?(module_location)
-        if Console.confirmation_prompt("Edit not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
-          # context_params_for_module = create_context_for_module(module_name, "module")
-          # response = clone(context_params_for_module,true)
-          response =  response = clone_aux(:component_module,component_module_id,version,true)
-          # if error return
-          unless response.ok?
-            return response
-          end
-        else
-          # user choose not to clone needed module
-          return
-        end
-      end
-
-      # here we should have desired module cloned
-      Console.unix_shell(module_location, component_module_id, :component_module, version)
-      grit_adapter = DTK::Common::GritAdapter::FileAccess.new(module_location)
-
-      if grit_adapter.changed?
-        grit_adapter.print_status
-
-        # check to see if auto commit flag
-        auto_commit  = ::DTK::Configuration.get(:auto_commit_changes)
-        confirmed_ok = false
-
-        # if there is no auto commit ask for confirmation
-        unless auto_commit
-          confirmed_ok = Console.confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?") 
-        end
-
-        if (auto_commit || confirmed_ok)
-          if auto_commit 
-            puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
-          end
-          commit_msg = user_input("Commit message")
-          response = push_clone_changes_aux(:component_module,component_module_id,version,commit_msg)
-          # if error return
-          return response unless response.ok?
-        end
-
-#TODO: temporary took out; wil put back in        
-#puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
-      else
-        puts "No changes to repository"
-      end
-      return
+      edit_aux(:component_module,module_id,module_name,version)
     end
 
     desc "MODULE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of module to server"
