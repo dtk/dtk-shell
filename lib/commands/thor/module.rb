@@ -446,12 +446,16 @@ module DTK::Client
       Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
     end
     
-    desc "delete-remote [NAME-SPACE/]REMOTE-MODULE", "Delete remote component module"
+    desc "delete-remote [NAME-SPACE/]REMOTE-MODULE [-y]", "Delete remote component module"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_remote(context_params)
-      
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
-
       remote_namespace, remote_name = get_namespace_and_name(remote_module_name)
+
+      unless options.force?
+        # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
+        return unless Console.confirmation_prompt("Are you sure you want to delete remote component-module '#{remote_namespace.nil? ? '' : remote_namespace+'/'}#{remote_name}' and all items contained in it"+'?')
+      end
 
       post_body = {
        :remote_module_name      => remote_name,

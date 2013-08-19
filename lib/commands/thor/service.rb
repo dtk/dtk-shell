@@ -540,9 +540,16 @@ module DTK::Client
       return response
     end
 
-    desc "delete-remote REMOTE-SERVICE-NAME", "Delete remote service module"
+    desc "delete-remote REMOTE-SERVICE-NAME [-y]", "Delete remote service module"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_remote(context_params)
       remote_service_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      
+      unless options.force?
+        # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
+        return unless Console.confirmation_prompt("Are you sure you want to delete remote service-module '#{remote_service_name}' and all items contained in it"+'?')
+      end
+
       post_body = {
        :remote_service_name => remote_service_name
       }
