@@ -76,12 +76,12 @@ module DTK::Client
         
         # set module path if path not given
         path = path || OsUtil.module_location(module_type)
-
-        # we need to change path like this since system call 'cd' is not supported
-        Dir.chdir(path)
-        puts "[NOTICE] You are switching to unix-shell, to path #{path}"
-
         begin
+          # we need to change path like this since system call 'cd' is not supported
+          initial_dir = Dir.pwd
+          Dir.chdir(path)
+          puts "[NOTICE] You are switching to unix-shell, to path #{path}"
+
           prompt = DTK::Client::OsUtil.colorize("$dtk:unix-shell ", :yellow)
           Readline.completion_append_character = ""
           Readline.completion_proc = Proc.new do |str|
@@ -128,9 +128,11 @@ module DTK::Client
               puts e.message
             end
           end
-        rescue Interrupt
+         rescue Interrupt
           puts ""
           # do nothing else
+         ensure
+          Dir.chdir(initial_dir)
         end
 
         Readline.completion_append_character = dtk_shell_ac_append_char unless dtk_shell_ac_append_char.nil?

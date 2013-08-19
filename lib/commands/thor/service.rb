@@ -6,6 +6,7 @@ dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
+dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/reparse')
 dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
@@ -22,6 +23,7 @@ module DTK::Client
       include PushToRemoteMixin
       include PullFromRemoteMixin
       include PushCloneChangesMixin
+      include EditMixin
       include ReparseMixin
       include ServiceImporter
 
@@ -351,59 +353,7 @@ module DTK::Client
         service_module_name = get_service_module_name(service_module_id)
       end
 
-      modules_path    = OsUtil.service_clone_location()
-      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
-
-      # check if there is repository cloned 
-      unless File.directory?(module_location)
-        if Console.confirmation_prompt("Edit not possible, module '#{service_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
-          # context_params_for_service = create_context_for_module(service_module_name, "service")
-          # response = clone(context_params_for_service,true)
-          response = clone_aux(:service_module,service_module_id,version,true)
-          # if error return
-          unless response.ok?
-            return response
-          end
-        else
-          # user choose not to clone needed module
-          return
-        end
-      end
-
-      # here we should have desired module cloned
-      Console.unix_shell(module_location, service_module_id, :service_module, version)
-      grit_adapter = ::DTK::Common::GritAdapter::FileAccess.new(module_location)
-
-      if grit_adapter.changed?
-        grit_adapter.print_status
-
-        # check to see if auto commit flag
-        auto_commit  = ::DTK::Configuration.get(:auto_commit_changes)
-        confirmed_ok = false
-
-        # if there is no auto commit ask for confirmation
-        unless auto_commit
-          confirmed_ok = Console.confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?") 
-        end
-
-        if (auto_commit || confirmed_ok)
-          puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
-          commit_msg = user_input("Commit message")
-          grit_adapter.add_remove_commit_all(commit_msg)
-          grit_adapter.push()
-        end
-
-        puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
-      else
-        puts "No changes to repository"
-      end
-
-      #grit_adapter.add_file("baba.xml")
-      #grit_adapter.commit("nesto")
-
-      #repo = Grit::Repo.new(location)
-      #repo.status.files.select { |k,v| (v.type =~ /(M|A|D)/ || v.untracked) }
-
+      edit_aux(:service_module,service_module_id,service_module_name,version)
     end
 
     desc "SERVICE-NAME/ID create-version NEW-VERSION", "Snapshot current state of module as a new version"
