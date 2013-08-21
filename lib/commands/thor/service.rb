@@ -215,7 +215,7 @@ module DTK::Client
       @@invalidate_map << :service_module
 
       if response.data(:dsl_parsed_info)
-        dsl_parsed_message = "Module '#{remote_module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
+        dsl_parsed_message = "Module '#{remote_module_name}' imported with errors:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
@@ -411,7 +411,7 @@ module DTK::Client
       @@invalidate_map << :service_module
 
       if response.data(:dsl_parsed_info)
-        dsl_parsed_message = "Module '#{module_name}' imported. Failed to parse dsl because of syntax error in:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
+        dsl_parsed_message = "Module '#{module_name}' imported with errors:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
