@@ -8,17 +8,23 @@ module DTK
     class Error < NameError
     end
 
-    class DtkValidationError < Error
-      class JSONParsing < self
-        def initialize(base_json_error,file_path=nil)
-          super(err_msg(base_json_error,file_path))
-        end
-        private
-        def err_msg(base_json_error,file_path=nil)
-          file_ref = file_path && " in file (#{file_path})"
-          "JSON parsing error#{file_ref}: #{base_json_error}"
-        end
+    class DSLParsing < Error
+      def initialize(base_json_error,file_path=nil)
+        super(err_msg(base_json_error,file_path))
       end
+      private
+      def err_msg(base_json_error,file_path=nil)
+        "#{base_json_error}: #{file_path}"
+      end
+
+      class JSONParsing < self
+      end
+
+      class YAMLParsing < self
+      end
+    end
+
+    class DtkValidationError < Error
     end
 
     # raise by developers to signal wrong usage of components

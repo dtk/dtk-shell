@@ -324,7 +324,7 @@ module DTK::Client
       response
     end
 
-    desc "MODULE-NAME/ID reparse [-v VERSION]", "Check module for parsing errors in json files"
+    desc "MODULE-NAME/ID reparse [-v VERSION]", "Check module for syntax errors in json/yaml files."
     version_method_option
     def reparse(context_params)
       module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)

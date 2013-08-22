@@ -224,7 +224,7 @@ module DTK::Client
       resolve_missing_components(service_module_id, module_name, namespace, options.force?)
     end
 
-    desc "SERVICE-NAME/ID reparse [-v VERSION]", "Check service for parsing errors in json files"
+    desc "SERVICE-NAME/ID reparse [-v VERSION]", "Check service for syntax errors in json/yaml files."
     version_method_option
     def reparse(context_params)
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
