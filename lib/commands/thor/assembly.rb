@@ -370,6 +370,18 @@ TODO: will put in dot release and will rename to 'extend'
       return response
       
     end
+
+    desc "ASSEMBLY-NAME/ID set-attribute-relation TARGET-ATTR-TERM SOURCE-ATTR-TERM", "Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM"
+    def set_attribute_relation(context_params)
+      assembly_id, target_attr_term, source_attr_term = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :target_attribute_term => target_attr_term,
+        :source_attribute_term => source_attr_term
+      }
+      post rest_url("assembly/add_ad_hoc_attribute_links"), post_body
+    end
+
     desc "ASSEMBLY-NAME/ID list-attribute-mappings SERVICE-LINK-NAME/ID", "List attribute mappings associated with service link"
     def list_attribute_mappings(context_params)
       post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
@@ -485,20 +497,12 @@ TODO: will put in dot release and will rename to 'extend'
 
     desc "ASSEMBLY-NAME/ID set ATTRIBUTE-NAME/ID VALUE", "Set assembly attribute value(s)"
     def set(context_params)
-
       if context_params.is_there_identifier?(:attribute)
         mapping = [:assembly_id!,:attribute_id!, :option_1!]
       else
         mapping = [:assembly_id!,:option_1!,:option_2!]
       end
-
-      # TODO 
-      # for node level add node restriction, so attributes are set just for node in active context
-      # add restriction for attribute-pattern at component level (display attributes just for that component)
-      # same restricton is needed for attribute level, but than only value is provided by the user
-
       assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
-
       post_body = {
         :assembly_id => assembly_id,
         :pattern => pattern,
@@ -507,22 +511,33 @@ TODO: will put in dot release and will rename to 'extend'
       #TODO: have this return format like assembly show attributes with subset of rows that gt changed
       post rest_url("assembly/set_attributes"), post_body
     end
+
+    desc "ASSEMBLY-NAME/ID create_attribute ATTRIBUTE-NAME VALUE", "Create attribute and assign it a value"
+    def create_attribute(context_params)
+      if context_params.is_there_identifier?(:attribute)
+        mapping = [:assembly_id!,:attribute_id!, :option_1!]
+      else
+        mapping = [:assembly_id!,:option_1!,:option_2!]
+      end
+      assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :pattern => pattern,
+        :value => value,
+        :create => true,
+      }
+      #TODO: have this return format like assembly show attributes with subset of rows that gt changed
+      post rest_url("assembly/set_attributes"), post_body
+    end
+
     desc "ASSEMBLY-NAME/ID unset ATTRIBUTE-NAME/ID", "Unset assembly attribute values(s)"
     def unset(context_params)
-
       if context_params.is_there_identifier?(:attribute)
         mapping = [:assembly_id!,:attribute_id!]
       else
         mapping = [:assembly_id!,:option_1!]
       end
-
-      # TODO 
-      # for node level add node restriction, so attributes are set just for node in active context
-      # add restriction for attribute-pattern at component level (display attributes just for that component)
-      # same restricton is needed for attribute level, but than only value is provided by the user
-
       assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
-
       post_body = {
         :assembly_id => assembly_id,
         :pattern => pattern,
