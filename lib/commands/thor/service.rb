@@ -222,6 +222,7 @@ module DTK::Client
       service_module_id, module_name, namespace, repo_url, branch = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch)
       Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
       resolve_missing_components(service_module_id, module_name, namespace, options.force?)
+      puts "Service module '#{module_name}' imported successfully."
     end
 
     desc "SERVICE-NAME/ID reparse [-v VERSION]", "Check service for syntax errors in json/yaml files."
