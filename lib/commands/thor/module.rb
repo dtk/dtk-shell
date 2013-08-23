@@ -73,7 +73,7 @@ module DTK::Client
         module_name = nil
         # TODO: See with Rich if there is better way to resolve this
         response = DTK::Client::CommandBaseThor.get_cached_response(:module, "component_module/list")
-
+        
         if response.ok?
           unless response['data'].nil?
             response['data'].each do |module_item|
@@ -335,9 +335,13 @@ module DTK::Client
     desc "MODULE-NAME/ID reparse [-v VERSION]", "Check module for syntax errors in json/yaml files."
     version_method_option
     def reparse(context_params)
-      module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      module_name = get_module_name(module_id)
+      module_id, module_name = context_params.retrieve_arguments([:module_id!, :module_name],method_argument_names)
       version = options["version"]
+
+      if module_name.to_s =~ /^[0-9]+$/
+        module_id   = module_name
+        module_name = get_module_name(module_id)
+      end
 
       modules_path    = OsUtil.module_clone_location()
       module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
@@ -385,7 +389,7 @@ module DTK::Client
         response = Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
       end
       @@invalidate_map << :module_component
-      
+
       response
     end
 
@@ -500,8 +504,8 @@ module DTK::Client
       version = options["version"]
 
       if component_module_name.to_s =~ /^[0-9]+$/
-        module_id   = component_module_name
-        component_module_name = get_module_name(module_id)
+        component_module_id   = component_module_name
+        component_module_name = get_module_name(component_module_id)
       end
 
       modules_path    = OsUtil.module_clone_location()
@@ -540,7 +544,7 @@ module DTK::Client
     desc "MODULE-NAME/ID create-version VERSION", "Snapshot current state of module as a new version"
     def create_version(context_params)
       component_module_id,version = context_params.retrieve_arguments([:module_id!,:option_1!],method_argument_names)
-      component_module_name = nil
+      component_module_name = context_params.retrieve_arguments([:module_name],method_argument_names)
 
       post_body = {
         :component_module_id => component_module_id,
@@ -550,7 +554,8 @@ module DTK::Client
       response = post rest_url("component_module/create_new_version"), post_body
       return response unless response.ok?
 
-      if component_module_id.to_s =~ /^[0-9]+$/
+      if component_module_name.to_s =~ /^[0-9]+$/
+        component_module_id = component_module_name
         component_module_name = get_module_name(component_module_id)
       end
 
@@ -573,14 +578,14 @@ module DTK::Client
     def clone(context_params, internal_trigger=false)
       thor_options = context_params.get_forwarded_options() || options
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
+      module_name         = context_params.retrieve_arguments([:module_name],method_argument_names)
       version             = thor_options["version"]
       internal_trigger    = true if thor_options['skip_edit']   
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
-        module_id   = module_name
-        module_name = get_module_name(module_id)
+        component_module_id   = module_name
+        module_name = get_module_name(component_module_id)
       end
 
       modules_path    = OsUtil.module_clone_location()
@@ -594,16 +599,16 @@ module DTK::Client
     version_method_option
     def edit(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
+      module_name         = context_params.retrieve_arguments([:module_name],method_argument_names)
       version             = options.version||context_params.retrieve_arguments([:option_1],method_argument_names)
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
-        module_id   = module_name
-        module_name = get_module_name(module_id)
+        component_module_id   = module_name
+        module_name = get_module_name(component_module_id)
       end
 
-      edit_aux(:component_module,module_id,module_name,version)
+      edit_aux(:component_module,component_module_id,module_name,version)
     end
 
     desc "MODULE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of module to server"
@@ -622,13 +627,13 @@ module DTK::Client
     method_option :remote, :type => :boolean, :default => false
     def list_diffs(context_params)
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      module_name         = context_params.retrieve_arguments([:module_id],method_argument_names)
+      module_name         = context_params.retrieve_arguments([:module_name],method_argument_names)
       version             = options["version"]
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
-        module_id   = module_name
-        module_name = get_module_name(module_id)
+        component_module_id   = module_name
+        module_name = get_module_name(component_module_id)
       end
 
       modules_path    = OsUtil.module_clone_location()

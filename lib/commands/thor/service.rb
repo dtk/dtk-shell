@@ -230,9 +230,13 @@ module DTK::Client
     desc "SERVICE-NAME/ID reparse [-v VERSION]", "Check service for syntax errors in json/yaml files."
     version_method_option
     def reparse(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      service_module_name = get_service_module_name(service_module_id)
+      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
       version = options["version"]
+
+      if service_module_name.to_s =~ /^[0-9]+$/
+        service_module_id   = service_module_name
+        service_module_name = get_service_module_name(service_module_id)
+      end
 
       modules_path    = OsUtil.service_clone_location()
       module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
@@ -325,8 +329,7 @@ module DTK::Client
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
     version_method_option
     def clone(context_params, internal_trigger=false)
-      service_module_id   = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      service_module_name = context_params.retrieve_arguments([:service_id],method_argument_names)
+      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
       version             = options["version"]
       internal_trigger    = true if options.skip_edit?
 
@@ -346,8 +349,7 @@ module DTK::Client
     desc "SERVICE-NAME/ID edit [-v VERSION]","Switch to unix editing for given module."
     version_method_option
     def edit(context_params)
-      service_module_id   = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      service_module_name = context_params.retrieve_arguments([:service_id],method_argument_names)
+      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
       version             = options["version"]
 
       # if this is not name it will not work, we need module name
@@ -362,7 +364,7 @@ module DTK::Client
     desc "SERVICE-NAME/ID create-version NEW-VERSION", "Snapshot current state of module as a new version"
     def create_version(context_params)
       service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
-      service_module_name = nil
+      service_module_name = context_params.retrieve_arguments([:service_name],method_argument_names)
 
       post_body = {
         :service_module_id => service_module_id,
@@ -372,7 +374,8 @@ module DTK::Client
       response = post rest_url("service_module/create_new_version"), post_body
       return response unless response.ok?
 
-      if service_module_id.to_s =~ /^[0-9]+$/
+      if service_module_name.to_s =~ /^[0-9]+$/
+        service_module_id   = service_module_name
         service_module_name = get_service_module_name(service_module_id)
       end
 
@@ -524,9 +527,14 @@ module DTK::Client
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_assembly_template(context_params)
       service_module_id,assembly_template_id = context_params.retrieve_arguments([:service_id!,:option_1!], method_argument_names)
-      service_module_name    = get_service_module_name(service_module_id)
+      service_module_name = context_params.retrieve_arguments([:service_name],method_argument_names)
       assembly_template_name = (assembly_template_id.to_s =~ /^[0-9]+$/) ? DTK::Client::AssemblyTemplate.get_assembly_template_name_for_service(assembly_template_id, service_module_name) : assembly_template_id
       assembly_template_id   = DTK::Client::AssemblyTemplate.get_assembly_template_id_for_service(assembly_template_id, service_module_name) unless assembly_template_id.to_s =~ /^[0-9]+$/
+
+      if service_module_name.to_s =~ /^[0-9]+$/
+        service_module_id   = service_module_name
+        service_module_name = get_service_module_name(service_module_id)
+      end
 
       return unless Console.confirmation_prompt("Are you sure you want to delete assembly_template '#{assembly_template_id}'"+'?') unless options.force?
       
