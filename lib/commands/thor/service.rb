@@ -475,7 +475,15 @@ module DTK::Client
         modules_path        = OsUtil.service_clone_location()
         module_location     = "#{modules_path}/#{service_module_id}" unless service_module_id.nil?
         module_location     = module_location + "-#{version}" if options.version?
-        
+        pwd                 = Dir.getwd()
+
+        if (pwd == module_location)
+          DTK::Client::OsUtil.print("Local directory '#{module_location}' is not deleted because it is your current working directory.", :yellow) 
+          
+          puts "You have successfully deleted service '#{service_module_id}'."
+          return response
+        end
+
         FileUtils.rm_rf("#{module_location}") if (File.directory?(module_location) && ("#{modules_path}/" != module_location))
         
         unless options.version?
