@@ -479,7 +479,7 @@ module DTK::Client
 
         if (pwd == module_location)
           DTK::Client::OsUtil.print("Local directory '#{module_location}' is not deleted because it is your current working directory.", :yellow) 
-          
+
           puts "You have successfully deleted service '#{service_module_id}'."
           return response
         end
@@ -551,39 +551,6 @@ module DTK::Client
 
       return response
     end
-
-    # desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
-    # def add_direct_access(context_params)
-    #   path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
-    #   path_to_key ||= SshProcessing.default_rsa_pub_key_path()
-    #   unless File.file?(path_to_key)
-    #     raise DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
-    #   end
-    #   rsa_pub_key = File.open(path_to_key){|f|f.read}
-    #   post_body = {
-    #     :rsa_pub_key => rsa_pub_key.chomp
-    #   }
-    #   response = post(rest_url("service_module/add_user_direct_access"),post_body)
-    #   return response unless response.ok?
-    #   puts "#{response.inspect}"
-    #   repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
-    #   SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
-    #   response
-    # end
-
-    # desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
-    # def remove_direct_access(context_params)
-    #   path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
-    #   path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
-    #   unless File.file?(path_to_key)
-    #     raise  DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
-    #   end
-    #   rsa_pub_key = File.open(path_to_key){|f|f.read}
-    #   post_body = {
-    #     :rsa_pub_key => rsa_pub_key.chomp
-    #   }
-    #   post rest_url("service_module/remove_user_direct_access"), post_body
-    # end
 =begin
     desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
     def assembly_template(context_params)

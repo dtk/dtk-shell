@@ -7,8 +7,8 @@ module DTK
 		class Configurator
 
 		CONFIG_FILE   = File.join(OsUtil.dtk_local_folder, "client.conf")
-	    CRED_FILE 	  = File.join(OsUtil.dtk_local_folder, ".connection")
-	    DIRECT_ACCESS = File.join(OsUtil.dtk_local_folder, ".add_direct_access")
+	  CRED_FILE 	  = File.join(OsUtil.dtk_local_folder, ".connection")
+	  DIRECT_ACCESS = File.join(OsUtil.dtk_local_folder, ".add_direct_access")
 
 		require 'fileutils'
 		FileUtils.mkdir(OsUtil.dtk_local_folder) unless File.directory?(OsUtil.dtk_local_folder)

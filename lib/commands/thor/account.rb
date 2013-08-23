@@ -48,33 +48,10 @@ module DTK::Client
 	  def add_direct_access(context_params)
 	    path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
 	    path_to_key ||= SshProcessing.default_rsa_pub_key_path()
-      Account.add_access(path_to_key)
-	    # unless File.file?(path_to_key)
-	    #   raise DTK::Client::DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
-	    # end
-	    # rsa_pub_key = File.open(path_to_key){|f|f.read}
-	    # post_body = {
-	    #   :rsa_pub_key => rsa_pub_key.chomp
-	    # }
+      access_granted = Account.add_access(path_to_key)
 
-     #  proper_response = nil
-
-     #  response, key_exists_already = internal_add_user_access("service_module/add_user_direct_access", post_body, 'service module')
-     #  return response unless (response.ok? || key_exists_already)
-     #  proper_response = response if response.ok?
-
-     #  response, key_exists_already = internal_add_user_access("component_module/add_user_direct_access", post_body, 'component module')
-     #  return response unless (response.ok? || key_exists_already)
-     #  proper_response = response if response.ok?
-      
-     #  # if either of request passed we will add to known hosts
-     #  if proper_response
-     #  	repo_manager_fingerprint,repo_manager_dns = proper_response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
-     #  	SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
-     #  	return proper_response
-     #  else
-     #    nil
-     #  end
+      FileUtils.touch(DTK::Client::Configurator::DIRECT_ACCESS) if access_granted
+      access_granted
 	  end
 
 	  desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
@@ -96,6 +73,7 @@ module DTK::Client
       response = post rest_url("service_module/remove_user_direct_access"), post_body
       return response unless response.ok?
 
+      FileUtils.rm(DTK::Client::Configurator::DIRECT_ACCESS) if File.exists?(DTK::Client::Configurator::DIRECT_ACCESS)
       return response
     end
 
