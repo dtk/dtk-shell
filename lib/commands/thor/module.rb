@@ -385,7 +385,6 @@ module DTK::Client
       end
       @@invalidate_map << :module_component
 
-      puts "Component module '#{module_name}' imported successfully."
       response
     end
 
