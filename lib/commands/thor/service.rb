@@ -186,6 +186,7 @@ module DTK::Client
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def import_r8n(context_params)
       create_missing_clone_dirs()
+      check_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
@@ -222,7 +223,7 @@ module DTK::Client
       service_module_id, module_name, namespace, repo_url, branch = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch)
       response = Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
       resolve_missing_components(service_module_id, module_name, namespace, options.force?)
-      
+
       return response
     end
 

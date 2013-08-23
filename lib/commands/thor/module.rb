@@ -357,6 +357,7 @@ module DTK::Client
       :desc => "R8 Repo Manager from which to resolve requested module."
     def import_r8n(context_params)
       create_missing_clone_dirs()
+      check_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       # in case of auto-import via service import, we skip cloning to speed up a process
       skip_cloning = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
@@ -384,7 +385,7 @@ module DTK::Client
         response = Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
       end
       @@invalidate_map << :module_component
-
+      
       response
     end
 
