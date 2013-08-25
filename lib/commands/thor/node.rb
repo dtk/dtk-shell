@@ -215,7 +215,8 @@ module DTK::Client
     desc "NODE-NAME/ID start", "Start node instance."
     def start(context_params)
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
-      assembly_id,node_id = get_assembly_and_node_id(context_params)
+      #TODO: Rich: took this out; think it is a bug
+      #assembly_id,node_id = get_assembly_and_node_id(context_params)
 
       node_start(node_id)
     end
@@ -224,7 +225,8 @@ module DTK::Client
     def stop(context_params)
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
       # Retrieving assembly_id to stop a node.. TODO create server side method that takes only node id
-      assembly_id, node_id = get_assembly_and_node_id(context_params)
+      #TODO: Rich: took this out; think it is a bug
+      #assembly_id, node_id = get_assembly_and_node_id(context_params)
       
       node_stop(node_id)
     end
