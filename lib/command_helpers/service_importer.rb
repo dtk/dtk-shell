@@ -26,8 +26,9 @@ module DTK::Client
 
         response = ContextRouter.routeTask("module", "import_r8n", new_context_params, @conn)
         raise DTK::Client::DtkError, response.error_message unless response.ok?
+        puts "Done."
       end
-      puts "Done."
+      
       Response::Ok.new()
     end
 
