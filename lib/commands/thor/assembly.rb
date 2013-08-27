@@ -895,7 +895,7 @@ TODO: will put in dot release and will rename to 'extend'
       end
     end
 
-    desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first_match]","Grep log from multiple nodes"
+    desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","Grep log from multiple nodes. --first option returns first match (latest log entry)."
     method_option :first_match, :type => :boolean, :default => false
     def grep(context_params) 
       if context_params.is_there_identifier?(:node)
