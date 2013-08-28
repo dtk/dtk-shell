@@ -24,10 +24,17 @@ module DTK::Client
                 # least one 'successed' has been found
                 is_pending   = (response.data.select {|r|r["status"].nil? }).size > 0
                 is_executing = (response.data.select {|r|r["status"].eql? "executing"}).size > 0
-                is_cancelled  = response.data.first["status"].eql?("cancelled")
- 
-                # break unless (is_executing || is_pending)
+                is_failed    = (response.data.select {|r|r["status"].eql? "failed"}).size > 0
+                is_cancelled = response.data.first["status"].eql?("cancelled")
+                
+                # when some of the converge tasks fail, stop task-status --wait and set task status to '' for remaining tasks which are not executed
+                if is_failed
+                  response.data.each {|r| (r["status"] = "") if r["status"].eql?("executing")}
+                  is_cancelled = true
+                end
+                
                 unless (is_executing || is_pending) && !is_cancelled
+                  system('clear')
                   response.print_error_table = true
                   response.render_table(:task_status)
                   return response
