@@ -896,7 +896,7 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     desc "ASSEMBLY-NAME/ID grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","Grep log from multiple nodes. --first option returns first match (latest log entry)."
-    method_option :first_match, :type => :boolean, :default => false
+    method_option :first, :type => :boolean, :default => false
     def grep(context_params) 
       if context_params.is_there_identifier?(:node)
         mapping = [:assembly_id!,:option_1!,:node_id!,:option_2!]
@@ -913,7 +913,7 @@ TODO: will put in dot release and will rename to 'extend'
           :log_path            => log_path,
           :node_pattern        => node_pattern,
           :grep_pattern        => grep_pattern,
-          :stop_on_first_match => options.first_match?
+          :stop_on_first_match => options.first?
         }
 
         response = post rest_url("assembly/initiate_grep"), post_body
