@@ -44,7 +44,7 @@ begin
   dtk_require("search_hash")
   dtk_require("dtk_logger")
 rescue SystemExit, Interrupt
-  puts "DTK Client action canceled."
+  #puts "DTK Client action canceled."
   exit(1)
 end
 
