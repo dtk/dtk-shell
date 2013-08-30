@@ -512,12 +512,12 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/set_attributes"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID create_attribute ATTRIBUTE-NAME VALUE", "Create attribute and assign it a value"
+    desc "ASSEMBLY-NAME/ID create_attribute ATTRIBUTE-NAME [VALUE]", "Create attribute and optionally assign it a value"
     def create_attribute(context_params)
       if context_params.is_there_identifier?(:attribute)
-        mapping = [:assembly_id!,:attribute_id!, :option_1!]
+        mapping = [:assembly_id!,:attribute_id!, :option_1]
       else
-        mapping = [:assembly_id!,:option_1!,:option_2!]
+        mapping = [:assembly_id!,:option_1!,:option_2]
       end
       assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
       post_body = {
