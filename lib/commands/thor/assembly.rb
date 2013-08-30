@@ -523,9 +523,10 @@ TODO: will put in dot release and will rename to 'extend'
       post_body = {
         :assembly_id => assembly_id,
         :pattern => pattern,
-        :value => value,
         :create => true,
       }
+      post_body.merge!(:value => value) if value
+
       #TODO: have this return format like assembly show attributes with subset of rows that gt changed
       post rest_url("assembly/set_attributes"), post_body
     end
@@ -583,18 +584,14 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/add_assembly_template"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID add-node ASSEMBLY-NODES-NAME [-n NODE-TEMPLATE-ID]", "Add (stage) a new node to the assembly"
-    method_option "node_template_id",:aliases => "-n" ,
-      :type => :string, 
-      :banner => "NODE-TEMPLATE-ID",
-      :desc => "Node Template id"
+    desc "ASSEMBLY-NAME/ID add-node ASSEMBLY-NODES-NAME [NODE-TEMPLATE]", "Add (stage) a new node to the assembly"
     def add_node(context_params)
-      assembly_id,assembly_node_name = context_params.retrieve_arguments([:assembly_id,:option_1!],method_argument_names)
+      assembly_id,assembly_node_name,node_template_identifier = context_params.retrieve_arguments([:assembly_id,:option_1!,:option_2],method_argument_names)
       post_body = {
         :assembly_id => assembly_id,
         :assembly_node_name => assembly_node_name
       }
-      post_body.merge!(:node_template_id => options["node_template_id"]) if options["node_template_id"]
+      post_body.merge!(:node_template_identifier => node_template_identifier) if node_template_identifier
 
       post rest_url("assembly/add_node"), post_body
     end
