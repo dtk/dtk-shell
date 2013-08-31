@@ -471,7 +471,7 @@ TODO: will put in dot release and will rename to 'extend'
       resp = post rest_url("assembly/info"), post_body
     end
 
-    desc "delete-and-destroy ASSEMBLY-NODE/ID -y", "Delete assembly instance, terminating any nodes that have been spun up."
+    desc "delete-and-destroy ASSEMBLY-NODE/ID [-y]", "Delete assembly instance, terminating any nodes that have been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
       assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
@@ -620,9 +620,29 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/add_component"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID delete-node NODE-ID","Delete node from assembly"
+    #TODO: WORKSPACE-COMMAND may move to seperate workspace command
+    desc "ASSEMBLY-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def purge(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+      unless options.force?
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy all nodes in the workspace"+'?')
+      end
+
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      response = post(rest_url("assembly/purge"),post_body)
+    end
+
+    desc "ASSEMBLY-NAME/ID delete-node [-y] NODE-NAME/ID","Delete node, terminating it if the node has been spun up"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       assembly_id, node_id = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
+      unless options.force?
+        what = "node"
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{node_id}'"+'?')
+      end
 
       post_body = {
         :assembly_id => assembly_id,
