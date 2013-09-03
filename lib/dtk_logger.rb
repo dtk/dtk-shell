@@ -4,6 +4,8 @@
 require 'singleton'
 require 'logger'
 require 'colorize'
+require 'pp'
+
 require File.expand_path('./util/os_util', File.dirname(__FILE__))
 
 class DtkLogger
@@ -58,6 +60,19 @@ class DtkLogger
     DTK::Client::OsUtil.print(log_text, :red) if sttdout_out || DEVELOPMENT_MODE
     @logger.error(log_text) if log_created?
   end
+
+  def error_pp(message, backtrace)
+    error(message, true)
+    # we do not print this to STDOUT (will be overriden with DEVELOPMENT_MODE)
+    error(PP.pp(backtrace, ""), false) if backtrace
+  end
+
+  def fatal_pp(message, backtrace)
+    fatal(message, true)
+    # we do not print this to STDOUT (will be overriden with DEVELOPMENT_MODE)
+    fatal(PP.pp(backtrace, ""), false) if backtrace
+  end
+
 
   def fatal(log_text, sttdout_out=false)
     puts log_text if sttdout_out || DEVELOPMENT_MODE

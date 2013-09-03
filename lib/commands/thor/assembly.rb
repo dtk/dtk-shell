@@ -298,7 +298,7 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
       #return post rest_url("monitoring_item/check_idle"), {}
-
+      
       assembly_id, node_id, component_id, attribute_id, about, filter = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1,:option_2],method_argument_names)
       detail_to_include = nil
       if about
@@ -471,7 +471,7 @@ TODO: will put in dot release and will rename to 'extend'
       resp = post rest_url("assembly/info"), post_body
     end
 
-    desc "delete-and-destroy ASSEMBLY-NODE/ID -y", "Delete assembly instance, terminating any nodes that have been spun up."
+    desc "delete-and-destroy ASSEMBLY-NODE/ID [-y]", "Delete assembly instance, terminating any nodes that have been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
       assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
@@ -512,20 +512,21 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/set_attributes"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID create_attribute ATTRIBUTE-NAME VALUE", "Create attribute and assign it a value"
+    desc "ASSEMBLY-NAME/ID create_attribute ATTRIBUTE-NAME [VALUE]", "Create attribute and optionally assign it a value"
     def create_attribute(context_params)
       if context_params.is_there_identifier?(:attribute)
-        mapping = [:assembly_id!,:attribute_id!, :option_1!]
+        mapping = [:assembly_id!,:attribute_id!, :option_1]
       else
-        mapping = [:assembly_id!,:option_1!,:option_2!]
+        mapping = [:assembly_id!,:option_1!,:option_2]
       end
       assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
       post_body = {
         :assembly_id => assembly_id,
         :pattern => pattern,
-        :value => value,
         :create => true,
       }
+      post_body.merge!(:value => value) if value
+
       #TODO: have this return format like assembly show attributes with subset of rows that gt changed
       post rest_url("assembly/set_attributes"), post_body
     end
@@ -583,18 +584,14 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/add_assembly_template"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID add-node ASSEMBLY-NODES-NAME [-n NODE-TEMPLATE-ID]", "Add (stage) a new node to the assembly"
-    method_option "node_template_id",:aliases => "-n" ,
-      :type => :string, 
-      :banner => "NODE-TEMPLATE-ID",
-      :desc => "Node Template id"
+    desc "ASSEMBLY-NAME/ID add-node ASSEMBLY-NODES-NAME [NODE-TEMPLATE]", "Add (stage) a new node to the assembly"
     def add_node(context_params)
-      assembly_id,assembly_node_name = context_params.retrieve_arguments([:assembly_id,:option_1!],method_argument_names)
+      assembly_id,assembly_node_name,node_template_identifier = context_params.retrieve_arguments([:assembly_id,:option_1!,:option_2],method_argument_names)
       post_body = {
         :assembly_id => assembly_id,
         :assembly_node_name => assembly_node_name
       }
-      post_body.merge!(:node_template_id => options["node_template_id"]) if options["node_template_id"]
+      post_body.merge!(:node_template_identifier => node_template_identifier) if node_template_identifier
 
       post rest_url("assembly/add_node"), post_body
     end
@@ -623,9 +620,29 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/add_component"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID delete-node NODE-ID","Delete node from assembly"
+    #TODO: WORKSPACE-COMMAND may move to seperate workspace command
+    desc "ASSEMBLY-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def purge(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+      unless options.force?
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy all nodes in the workspace"+'?')
+      end
+
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      response = post(rest_url("assembly/purge"),post_body)
+    end
+
+    desc "ASSEMBLY-NAME/ID delete-node [-y] NODE-NAME/ID","Delete node, terminating it if the node has been spun up"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       assembly_id, node_id = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
+      unless options.force?
+        what = "node"
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{node_id}'"+'?')
+      end
 
       post_body = {
         :assembly_id => assembly_id,

@@ -81,7 +81,7 @@ module DTK
             end
 
           rescue Exception => e
-            puts "[THREAD ERROR] Error getting task status with message: #{e.message}, #{e.backtrace}"
+            DtkLogger.instance.error_pp("[THREAD ERROR] Error getting task status with message: #{e.message}", e.backtrace)
           end
         end
       end

@@ -85,8 +85,7 @@ module DTK
           dtk_require("../views/#{view}/#{type}")
           view_const = DTK::Client::ViewMeta.const_get cap_form(view)
           ret = view_const.const_get cap_form(type)
-         rescue Exception => e
-             
+        rescue Exception
           ret = failback_meta(command_class.respond_to?(:pretty_print_cols) ? command_class.pretty_print_cols() : [])
         end
            

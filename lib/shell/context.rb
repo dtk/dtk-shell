@@ -92,11 +92,8 @@ module DTK
           raise DTK::Client::DtkValidationError, error_message if error_message
         rescue DTK::Client::DtkValidationError => e
           DTK::Client::OsUtil.print(e.message, :yellow)
-        rescue DTK::Shell::Error => e
-          puts e.message
-        rescue Exception => e
-          puts e.message
-          puts e.backtrace
+        rescue DTK::Shell::Error, Exception => e
+          DtkLogger.instance.error_pp(e.message, e.backtrace)
         ensure
           return shell_prompt
         end

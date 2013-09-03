@@ -46,9 +46,7 @@ begin
 
   top_level_execute(entity_name, method_name, context_params, thor_options, false)
 rescue DTK::Client::DtkError => e
-  puts e.message
+  DtkLogger.instance.error(e.message, true)
 rescue Exception => e
-  puts e.message
-  # important for debugging unexpected errors, but still protecting client for not needed data
-  puts e.backtrace if DTK::Configuration.get(:development_mode)
+  DtkLogger.instance.error_pp(e.message, e.backtrace)
 end

@@ -179,6 +179,7 @@ module DTK; module Client; class CommandHelper
     # commit_sha - sha of currenet_commit
     def push_repo_changes_aux(repo,opts={})
       diffs = DiffSummary.new()
+
       #add any file that is untracked
       status = repo.status()
       if status[:untracked]
