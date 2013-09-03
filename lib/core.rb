@@ -102,6 +102,7 @@ module DTK
             error_backtrace = nil
             error_code      = nil
             error_on_server = nil
+
             #TODO:  below just 'captures' first error
             response_ruby_obj['errors'].each do |err|
               error_msg       +=  err["message"] unless err["message"].nil?
@@ -111,7 +112,7 @@ module DTK
               error_internal  ||= (err["internal"] or error_code == "not_found") #"not_found" code is at Ramaze level; so error_internal not set
               error_backtrace ||= err["backtrace"]
             end
-            
+
             # normalize it for display
             error_msg = error_msg.empty? ? 'Internal DTK Client error, please try again' : "#{error_msg}"
             
@@ -125,7 +126,9 @@ module DTK
             elsif error_code == "timeout"
               raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
             elsif error_code == "connection_refused"
-              raise DTK::Client::DtkError, "[CONNECTION REFUSED] Connection refused by server." 
+              raise DTK::Client::DtkError, "[CONNECTION REFUSED] Connection refused by server."
+            elsif error_code == "resource_not_found"
+              raise DTK::Client::DtkError, "[RESOURCE NOT FOUND] #{error_msg}"
             elsif error_internal
               where = (error_on_server ? "SERVER" : "CLIENT")
               #opts = (error_backtrace ? {:backtrace => error_backtrace} : {})
