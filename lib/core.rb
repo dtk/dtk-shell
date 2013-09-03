@@ -56,16 +56,9 @@ def top_level_execute(entity_name, method_name, context_params=nil,options_args=
     DTK::Client::OsUtil.print(e.message, :yellow)
   rescue DTK::Client::DtkError => e
     # this are expected application errors
-    DTK::Client::OsUtil.print(e.message, :red)
-    DtkLogger.instance.error(e.message)
-    if e.backtrace
-      puts e.backtrace
-    end
+    DtkLogger.instance.error_pp(e.message, e.backtrace)
   rescue Exception => e
-    # All errors for task will be handled here
-    DtkLogger.instance.fatal("[INTERNAL ERROR] DTK has encountered an error #{e.class}: #{e.message}",true)
-    DtkLogger.instance.fatal(e.backtrace)
-    puts e.backtrace
+    DtkLogger.instance.fatal_pp("[INTERNAL ERROR] DTK has encountered an error #{e.class}: #{e.message}", e.backtrace)
   end
 end
 
@@ -108,7 +101,6 @@ module DTK
             error_internal  = nil
             error_backtrace = nil
             error_code      = nil
-            error_timeout   = nil
             error_on_server = nil
             #TODO:  below just 'captures' first error
             response_ruby_obj['errors'].each do |err|
@@ -136,7 +128,7 @@ module DTK
               raise DTK::Client::DtkError, "[CONNECTION REFUSED] Connection refused by server." 
             elsif error_internal
               where = (error_on_server ? "SERVER" : "CLIENT")
-              opts = (error_backtrace ? {:backtrace => error_backtrace} : {})
+              #opts = (error_backtrace ? {:backtrace => error_backtrace} : {})
               raise DTK::Client::DtkError.new("[#{where} INTERNAL ERROR] #{error_msg}")
             else
               # if usage error occurred, display message to console and display that same message to log

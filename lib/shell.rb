@@ -60,8 +60,7 @@ def run_shell_command()
     #system('stty', stty_save) # Restore
     retry
   rescue Exception => e
-    puts "[CLI INTERNAL ERROR] #{e.message}"
-    puts e.backtrace if ::DTK::Configuration.get(:development_mode)
+    DtkLogger.instance.error_pp("[CLI INTERNAL ERROR] #{e.message}", e.backtrace)
   ensure
     puts "\n" unless e.is_a? DTK::Shell::ExitSignal
     # logout
@@ -86,7 +85,7 @@ def init_shell_context()
     end
 
   rescue DTK::Client::DtkError => e
-    puts e.message
+    DtkLogger.instance.error(e.message, true)
     puts "Exiting ..."
     raise DTK::Shell::ExitSignal
   end
@@ -171,7 +170,7 @@ def execute_shell_command(line, prompt)
   rescue DTK::Client::DtkValidationError => e
     DTK::Client::OsUtil.print(e.message, :yellow)
   rescue DTK::Shell::Error => e
-    puts e.message
+    DtkLogger.instance.error(e.message, true)
   end
     
   return prompt

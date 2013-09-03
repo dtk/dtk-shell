@@ -125,7 +125,7 @@ module DTK::Client
                 system(line)        
               end
             rescue Exception => e
-              puts e.message
+              DtkLogger.instance.error_pp(e.message, e.backtrace)
             end
           end
          rescue Interrupt
