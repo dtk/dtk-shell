@@ -139,6 +139,8 @@ module DTK
               raise DTK::Client::DtkError, "[CONNECTION REFUSED] Connection refused by server."
             elsif error_code == "resource_not_found"
               raise DTK::Client::DtkError, "[RESOURCE NOT FOUND] #{error_msg}"
+            elsif error_code == "pg_error"
+              raise DTK::Client::DtkError, "[PG_ERROR] #{error_msg}"
             elsif error_internal
               where = (error_on_server ? "SERVER" : "CLIENT")
               #opts = (error_backtrace ? {:backtrace => error_backtrace} : {})
@@ -331,7 +333,10 @@ module DTK
       def login()
         creds = get_credentials()
         response = post_raw rest_url("user/process_login"),creds
-        if response.kind_of?(Common::Response) and not response.ok?
+        errors = response['errors']
+
+        if response.kind_of?(Common::Response) and not response.ok?    
+          DTK::Client::OsUtil.print(errors.first['message'].gsub!("403 Forbidden", "[PG_ERROR]"), :red); exit if (errors && errors.first['code']=="pg_error")
           @connection_error = response
         else
           @cookies = response.cookies
