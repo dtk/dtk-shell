@@ -128,7 +128,14 @@ module DTK
 
       # returns all task names for given thor class with use friendly names (with '-' instead '_')
       def self.task_names     
-        task_names = all_tasks().map(&:first).collect { |item| item.gsub('_','-')}
+        all_tasks().map(&:first).collect { |item| item.gsub('_','-')}
+      end
+
+      def self.get_usage_info(entity_name, method)
+        # no need for nil checks since task will be found
+        # [0] element contains desire usage description
+        # [2] element contains method name with '_'
+        printable_tasks().select { |help_item|  help_item[2].gsub('_','-') == method }.flatten[0]
       end
 
       # caches all the taks names for each possible tier and each thor class

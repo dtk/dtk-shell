@@ -15,6 +15,9 @@ dtk_require("config/configuration")
 
 def top_level_execute(entity_name, method_name, context_params=nil,options_args=nil,shell_execute=false)
   extend DTK::Client::OsUtil
+
+  entity_class = nil
+
   begin
     include DTK::Client::Auxiliary
 
@@ -53,7 +56,14 @@ def top_level_execute(entity_name, method_name, context_params=nil,options_args=
   rescue DTK::Client::DSLParsing => e
     DTK::Client::OsUtil.print(e.message, :red)
   rescue DTK::Client::DtkValidationError => e
-    DTK::Client::OsUtil.print(e.message, :yellow)
+    validation_message = e.message
+    
+    if entity_class && method_name
+      usage_info = entity_class.get_usage_info(entity_name, method_name)
+      validation_message += ", usage: #{usage_info}"
+    end
+
+    DTK::Client::OsUtil.print(validation_message, :yellow)
   rescue DTK::Client::DtkError => e
     # this are expected application errors
     DtkLogger.instance.error_pp(e.message, e.backtrace)
