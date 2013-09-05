@@ -327,7 +327,7 @@ module DTK::Client
 
       # we push clone changes anyway, user can change and push again
       context_params.add_context_to_params("module", "module", module_id)
-      push_clone_changes(context_params)
+      push_clone_changes(context_params, true)
 
       response
     end
@@ -617,9 +617,19 @@ module DTK::Client
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    def push_clone_changes(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      push_clone_changes_aux(:component_module,component_module_id,options["version"],options["message"]||DEFAULT_COMMIT_MSG)
+    def push_clone_changes(context_params, internal_trigger=false)
+      component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!, :module_name],method_argument_names)
+      version = options["version"]
+      if component_module_name.to_s =~ /^[0-9]+$/
+        component_module_id   = component_module_name
+        component_module_name = get_module_name(component_module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location()
+      module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
+
+      reparse_aux(module_location)
+      push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
     end
 
     desc "MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"
