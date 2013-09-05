@@ -135,7 +135,9 @@ module DTK
         # no need for nil checks since task will be found
         # [0] element contains desire usage description
         # [2] element contains method name with '_'
-        printable_tasks().select { |help_item|  help_item[2].gsub('_','-') == method }.flatten[0]
+        result = printable_tasks().select { |help_item|  help_item[2].gsub('_','-') == method }.flatten[0]
+        # we add entity name with dashes
+        return result.gsub('dtk', "dtk #{entity_name.gsub('_','-')}")
       end
 
       # caches all the taks names for each possible tier and each thor class
