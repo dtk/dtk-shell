@@ -326,7 +326,11 @@ module DTK
         errors = response['errors']
 
         if response.kind_of?(Common::Response) and not response.ok?    
-          DTK::Client::OsUtil.print(errors.first['message'].gsub!("403 Forbidden", "[PG_ERROR]"), :red); exit if (errors && errors.first['code']=="pg_error")
+          puts errors.first['code']
+          if (errors && errors.first['code']=="pg_error")
+            DTK::Client::OsUtil.print(errors.first['message'].gsub!("403 Forbidden", "[PG_ERROR]"), :red)
+            exit
+          end
           @connection_error = response
         else
           @cookies = response.cookies
