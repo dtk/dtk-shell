@@ -179,7 +179,7 @@ module DTK::Client
         FileUtils.rm_rf("#{module_location}") if (File.directory?(module_location) && ("#{modules_path}/" != module_location))
         
         unless options.version?
-          module_versions = Dir.entries(modules_path).select{|a| a.match(/#{component_module_id}-\d.\d.\d/)}
+          module_versions = Dir.entries(modules_path).select{|a| a.match(/^#{component_module_id}-\d.\d.\d$/)}
           module_versions.each do |version|
             FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
           end
