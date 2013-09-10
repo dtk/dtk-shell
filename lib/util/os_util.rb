@@ -89,9 +89,9 @@ module DTK
         def clone_base_path(module_type)
           path = 
             case module_type
-              when :service_module then Config[:service_location)
-              when :component_module then Config[:module_location)
-              when :assembly_module then Config[:assembly_module_base_location)
+              when :service_module then Config[:service_location]
+              when :component_module then Config[:module_location]
+              when :assembly_module then Config[:assembly_module_base_location]
               else raise Client::DtkError, "Unexpected module_type (#{module_type})"
             end
           path.start_with?('/') ? path : "#{dtk_local_folder}#{path}"

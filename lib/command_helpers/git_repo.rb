@@ -8,7 +8,7 @@ module DTK; module Client; class CommandHelper
 
     def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil, opts={})
       Response.wrap_helper_actions do 
-        modules_dir = modules_dir(type)
+        modules_dir = modules_dir(type,module_name,version,opts)
         FileUtils.mkdir_p(modules_dir) unless File.directory?(modules_dir)
         target_repo_dir = local_repo_dir(type,module_name,version,opts)
         opts = {}
@@ -314,11 +314,6 @@ module DTK; module Client; class CommandHelper
       "#{remote(opts[:remote_repo])}/#{opts[:remote_branch]||local_branch}"
     end
 
-    def create_or_init(type,repo_dir,branch)
-      create_opts = (local_repo_dirs(type).include?(repo_dir) ? {} : {:init => true})
-      create(repo_dir,branch,create_opts)
-    end
-
     def create(repo_dir,branch=nil,opts={})
       adapter_class().new(repo_dir,branch,opts)
     end
@@ -333,10 +328,6 @@ module DTK; module Client; class CommandHelper
       else
         raise Error.new("Unexpected module type (#{type})")
       end
-    end
-
-    def local_repo_dirs(type)
-      Dir["/root/component_modules/*/.git"].map{|d|d.gsub(Regexp.new("/\.git$"),"")}
     end
 
     def local_repo_dir(type,module_name,version=nil,opts={})
