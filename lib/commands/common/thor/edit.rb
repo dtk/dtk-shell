@@ -7,10 +7,11 @@ module DTK::Client
 
     ##
     #
-    # module_type: will be :component_module or :service_module 
-    def edit_aux(module_type,module_id,module_name,version)
-      modules_path    = OsUtil.module_location(module_type)
-      module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
+    # module_type: will be one of 
+    # :component_module
+    # :service_module 
+    def edit_aux(module_type,module_id,module_name,version,opts={})
+      module_location  = OsUtil.module_location(module_type,module_name,version,opts)
 
       # check if there is repository cloned 
       unless File.directory?(module_location)

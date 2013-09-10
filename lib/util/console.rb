@@ -64,7 +64,7 @@ module DTK::Client
       # Method that will execute until interupted as unix like shell. As input takes
       # path to desire directory from where unix shell can execute normaly.
       #
-      def unix_shell(path=nil, module_id=nil, module_type=nil, version=nil)
+      def unix_shell(path,module_id,module_type,version=nil)
         
         dtk_shell_ac_proc = Readline.completion_proc
         dtk_shell_ac_append_char = Readline.completion_append_character
@@ -74,8 +74,6 @@ module DTK::Client
           return
         end
         
-        # set module path if path not given
-        path = path || OsUtil.module_location(module_type)
         begin
           # we need to change path like this since system call 'cd' is not supported
           initial_dir = Dir.pwd

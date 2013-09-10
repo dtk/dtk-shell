@@ -57,22 +57,37 @@ module DTK
         def genv(name)
           return ENV[name.to_s.upcase].gsub(/\\/,'/')
         end
-
         
-        def module_location(module_type)
-          module_type == :service_module ? OsUtil.service_clone_location() : OsUtil.module_clone_location()
+        def module_location(module_type,module_name,version=nil,opts={})
+          base_path = clone_base_path(module_type,opts)
+          if assembly_module = opts[:assembly_module]
+            assembly_name = opts[:assembly_module][:assembly_name]
+            type = clone_base_path(module_type).split('/').last
+            "#{base_path}/#{assembly_name}/#{type}/#{module_name}"
+          else
+            "#{base_path}/#{module_name}#{version && "-#{version}"}"
+          end
         end
 
         def module_clone_location()
-          module_location = ::DTK::Configuration.get(:module_location)
-          return (module_location.start_with?('/') ? module_location : "#{dtk_local_folder}#{module_location}")
+          clone_base_path(:component_module)
         end
 
         def service_clone_location()
-          service_location = ::DTK::Configuration.get(:service_location)
-          return (service_location.start_with?('/') ? service_location : "#{dtk_local_folder}#{service_location}")
+          clone_base_path(:service_module)
         end
 
+        def clone_base_path(module_type,opts={})
+          path = 
+            if opts[:assembly_module]
+              #TODO: below is hard-coded for ::DTK::Configuration.get(:assembly_module_location)
+              'assemblies'
+            else
+              ::DTK::Configuration.get(module_type == :service_module ? :service_location : :module_location)
+            end
+          path.start_with?('/') ? path : "#{dtk_local_folder}#{path}"
+        end
+        private :clone_base_path
         #
         #
         #
