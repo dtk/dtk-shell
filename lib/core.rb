@@ -205,8 +205,7 @@ module DTK
       end
       def set_defaults()
         self[:server_port] = 80
-        self[:component_modules_dir] = OsUtil.module_clone_location()
-        self[:service_modules_dir] = OsUtil.service_clone_location()
+        self[:assembly_module_base_location] = 'assemblies'
         self[:secure_connection] = true
         self[:secure_connection_server_port] = 443
       end

@@ -6,11 +6,11 @@ require 'fileutils'
 module DTK; module Client; class CommandHelper
   class GitRepo < self; class << self
 
-    def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil)
+    def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil, opts={})
       Response.wrap_helper_actions do 
         modules_dir = modules_dir(type)
-        Dir.mkdir(modules_dir) unless File.directory?(modules_dir)
-        target_repo_dir = local_repo_dir(type,module_name,version,modules_dir)
+        FileUtils.mkdir_p(modules_dir) unless File.directory?(modules_dir)
+        target_repo_dir = local_repo_dir(type,module_name,version,opts)
         opts = {}
         opts = { :branch => branch } if branch
         begin 
@@ -307,7 +307,6 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-
     def remote(remote_repo=nil)
       remote_repo||"origin"
     end
@@ -324,12 +323,13 @@ module DTK; module Client; class CommandHelper
       adapter_class().new(repo_dir,branch,opts)
     end
 
-    def modules_dir(type)
-      case type
-      when :component_module
-        Config[:component_modules_dir]
-      when :service_module
-        Config[:service_modules_dir]
+    def modules_dir(type,module_name,version=nil,opts={})
+      if assembly_module = opts[:assembly_module]
+        OsUtil.module_location_parts(type,module_name,version,opts)[0]
+      elsif type == :component_module
+        OsUtil.module_clone_location()
+      elsif type == :service_module
+        OsUtil.service_clone_location()
       else
         raise Error.new("Unexpected module type (#{type})")
       end
@@ -339,9 +339,8 @@ module DTK; module Client; class CommandHelper
       Dir["/root/component_modules/*/.git"].map{|d|d.gsub(Regexp.new("/\.git$"),"")}
     end
 
-    def local_repo_dir(type,module_name,version=nil,modules_dir=nil)
-      modules_dir ||= modules_dir(type)
-      "#{modules_dir}/#{module_name}#{version && "-#{version}"}"
+    def local_repo_dir(type,module_name,version=nil,opts={})
+      OsUtil.module_location(type,module_name,version,opts)
     end
 
     def adapter_class()

@@ -8,18 +8,21 @@ module DTK::Client
     #                   This will change behaviour of method
     # module_type: will be :component_module or :service_module
 
-    def clone_aux(module_type,module_id,version,internal_trigger,omit_output=false)
+    def clone_aux(module_type,module_id,version,internal_trigger,omit_output=false,opts={})
       id_field = "#{module_type}_id"
       post_body = {
         id_field => module_id
       }
       post_body.merge!(:version => version) if version
+      if assembly_module = opts[:assembly]
+        post_body.merge!(:assembly_module => true,:assembly_name => assembly_module[:assembly_name])
+      end
 
       response = post(rest_url("#{module_type}/get_workspace_branch_info"),post_body)
       return response unless response.ok?
 
       module_name,repo_url,branch = response.data(:module_name,:repo_url,:workspace_branch)
-      response = Helper(:git_repo).create_clone_with_branch(module_type,module_name,repo_url,branch,version)
+      response = Helper(:git_repo).create_clone_with_branch(module_type,module_name,repo_url,branch,version,opts)
 
       if response.ok?
         puts "Module '#{module_name}' has been successfully cloned!" unless omit_output

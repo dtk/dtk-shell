@@ -59,13 +59,18 @@ module DTK
         end
         
         def module_location(module_type,module_name,version=nil,opts={})
-          base_path = clone_base_path(module_type,opts)
+          module_location_parts(module_type,module_name,version,opts).join('/')
+        end
+        
+        #if module location is /a/b/d/mod it returns ['/a/b/d','mod']
+        def module_location_parts(module_type,module_name,version=nil,opts={})
+          base_path = clone_base_path(opts[:assembly_module] ? :assembly_module : module_type)
           if assembly_module = opts[:assembly_module]
             assembly_name = opts[:assembly_module][:assembly_name]
             type = clone_base_path(module_type).split('/').last
-            "#{base_path}/#{assembly_name}/#{type}/#{module_name}"
+            ["#{base_path}/#{assembly_name}/#{type}", module_name]
           else
-            "#{base_path}/#{module_name}#{version && "-#{version}"}"
+            [base_path, "#{module_name}#{version && "-#{version}"}"]
           end
         end
 
@@ -77,13 +82,17 @@ module DTK
           clone_base_path(:service_module)
         end
 
-        def clone_base_path(module_type,opts={})
+        def assembly_module_base_location()
+          clone_base_path(:assembly_module)
+        end
+
+        def clone_base_path(module_type)
           path = 
-            if opts[:assembly_module]
-              #TODO: below is hard-coded for ::DTK::Configuration.get(:assembly_module_location)
-              'assemblies'
-            else
-              ::DTK::Configuration.get(module_type == :service_module ? :service_location : :module_location)
+            case module_type
+              when :service_module then Config[:service_location)
+              when :component_module then Config[:module_location)
+              when :assembly_module then Config[:assembly_module_base_location)
+              else raise Client::DtkError, "Unexpected module_type (#{module_type})"
             end
           path.start_with?('/') ? path : "#{dtk_local_folder}#{path}"
         end
