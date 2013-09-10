@@ -185,6 +185,65 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
+    desc "ASSEMBLY-NAME/ID edit-module COMPONENT-MODULE-NAME", "Edit component module used by the assembly"
+    def edit_module(context_params)
+      assembly_id, component_module_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :module_name => component_module_name,
+        :module_type => 'component_module'
+      }
+      response = post rest_url("assembly/prepare_for_edit_module"), post_body
+      return response unless response.ok?
+      assembly_name,repo_url,branch,component_module_id = response.data(:assembly_name,:repo_url,:workspace_branch,:component_module_id)
+      edit_opts = {
+        :assembly_module => {
+          :assembly_name => assembly_name,
+          :repo_url => repo_url,
+          :branch => branch
+        }
+      }
+      version = nil
+      edit_aux(:component_module,component_module_id,component_module_name,version,opts)
+    end
+
+=begin
+TODO: will put in dot release and will rename to 'extend'
+    desc "ASSEMBLY-NAME/ID add EXTENSION-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly"
+    method_option "count",:aliases => "-n" ,
+      :type => :string, #integer 
+      :banner => "COUNT",
+      :desc => "Number of sub-assemblies to add"
+    def add_node(context_params)
+      assembly_id,service_add_on_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
+
+      # create task
+      post_body = {
+        :assembly_id => assembly_id,
+        :service_add_on_name => service_add_on_name
+      }
+
+      post_body.merge!(:count => options.count) if options.count
+
+      response = post rest_url("assembly/add__service_add_on"), post_body
+      # when changing context send request for getting latest assemblies instead of getting from cache
+      @@invalidate_map << :assembly
+
+      return response
+    end
+
+    desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to the assembly" 
+    def possible_extensions(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      response = post(rest_url("assembly/list_possible_add_ons"),post_body)
+      response.render_table(:service_add_on)
+    end
+=end
+
     desc "ASSEMBLY-NAME/ID list-task-info", "Task status details of running or last assembly task"
     def list_task_info(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
