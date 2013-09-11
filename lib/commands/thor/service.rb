@@ -566,8 +566,10 @@ module DTK::Client
           FileUtils.rm_rf("#{assembly_template_location}")
         end
       end
-
-      push_clone_changes_aux(:service_module, service_module_id, nil)
+      version = nil
+      commit_msg = "Deleting assembly template #{assembly_template_id.to_s}"
+      internal_trigger = true
+      push_clone_changes_aux(:service_module, service_module_id, version, commit_msg, internal_trigger)
       @@invalidate_map << :assembly_template
 
       return response
