@@ -29,6 +29,13 @@ module DTK::Client
       [:node]
     end
 
+    # using extended_context when we want to use autocomplete from other context
+    # e.g. we are in assembly/apache context and want to add-component we will use extended context to add 
+    # component-templates to autocomplete
+    def self.extended_context()
+      {:add_component => "component_template", :add_node => "node_template"}
+    end
+
     # this includes children of children
     def self.all_children()
       [:node, :component, :attribute]
