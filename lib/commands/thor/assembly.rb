@@ -6,7 +6,7 @@ dtk_require_from_base("util/os_util")
 dtk_require_from_base("command_helper")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
-
+dtk_require_common_commands('thor/edit')
 LOG_SLEEP_TIME   = DTK::Configuration.get(:tail_log_frequency)
 DEBUG_SLEEP_TIME = DTK::Configuration.get(:debug_task_frequency)
 
@@ -195,7 +195,7 @@ module DTK::Client
       }
       response = post rest_url("assembly/prepare_for_edit_module"), post_body
       return response unless response.ok?
-      assembly_name,repo_url,branch,component_module_id = response.data(:assembly_name,:repo_url,:workspace_branch,:component_module_id)
+      assembly_name,repo_url,branch,component_module_id = response.data(:assembly_name,:repo_url,:workspace_branch,:module_id)
       edit_opts = {
         :assembly_module => {
           :assembly_name => assembly_name,
@@ -204,7 +204,7 @@ module DTK::Client
         }
       }
       version = nil
-      edit_aux(:component_module,component_module_id,component_module_name,version,opts)
+      edit_aux(:component_module,component_module_id,component_module_name,version,edit_opts)
     end
 
 =begin
