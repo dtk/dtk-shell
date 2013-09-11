@@ -113,10 +113,9 @@ module DTK
         # Validate and change context; skip step if user's input is empty or it is equal to '/'
         active_context_copy, error_message, invalid_context = prepare_context_change([readline_input], active_context_copy) unless (readline_input.empty? || readline_input == "/")
         
-        
-
-
-
+        # using extended_context when we want to use autocomplete from other context
+        # e.g. we are in assembly/apache context and want to add-component we will use extended context to add 
+        # component-templates to autocomplete
         extended_candidates, new_context = {}, nil
         line_buffer   = line_buffer.split(' ').first.gsub!('-','_') unless (line_buffer.nil? || line_buffer.empty?)
         command_clazz = Context.get_command_class(active_context_copy.last_command_name)
