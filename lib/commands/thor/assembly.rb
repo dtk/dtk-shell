@@ -19,6 +19,7 @@ module DTK::Client
     no_tasks do
       include TaskStatusMixin
       include SetRequiredParamsMixin
+      include EditMixin
     end
 
     def self.pretty_print_cols()
