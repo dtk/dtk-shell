@@ -455,13 +455,14 @@ module DTK::Client
       response = post rest_url("component_module/import_version"), post_body
       @@invalidate_map << :module_component
 
+      return response unless response.ok?
+      module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
+
       if response.data(:dsl_parsed_info)
         dsl_parsed_message = "Module '#{module_name}-#{version}' imported with errors:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
-      return response unless response.ok?
-      module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
       #TODO: need to check if local clone directory exists
       Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
     end
