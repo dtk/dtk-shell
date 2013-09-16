@@ -38,7 +38,7 @@ module DTK::Client
     def module_info(module_type,module_id,version,opts={})
       module_name = opts[:module_name]
       repo_url = opts[:repo_url]
-      branch = opts[:opts]
+      branch = opts[:branch]
       if module_name and repo_url and branch
         [module_name,repo_url,branch]
       else
@@ -54,7 +54,7 @@ module DTK::Client
         unless response.ok?
           [nil,nil,nil,response]
         else
-          [response.data(:module_name,:repo_url,:workspace_branch)]
+          response.data(:module_name,:repo_url,:workspace_branch)
         end
       end
     end
