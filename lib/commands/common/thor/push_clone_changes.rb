@@ -1,23 +1,17 @@
+dtk_require_common_commands('thor/common')
 module DTK::Client
   module PushCloneChangesMixin
+    include CommonMixin
     ##
     #
     # module_type: will be :component_module or :service_module 
-    def push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger=false)
-      id_field = "#{module_type}_id"
-      post_body = {
-        id_field => module_id
-      }
-      post_body.merge!(:version => version) if version 
-      post_body.merge!(:internal_trigger => internal_trigger)
-      
-      response =  post(rest_url("#{module_type}/get_workspace_branch_info"),post_body) 
-      return response unless response.ok?
-      module_name = response.data(:module_name)
+    def push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger=false,opts={})
+      module_name,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version,opts)
+      return not_ok_response if not_ok_response
 
-      opts = {:commit_msg => commit_msg}
-      response = Helper(:git_repo).push_changes(module_type,response.data(:module_name),version,opts)
+      response = Helper(:git_repo).push_changes(module_type,module_name,version,opts.merge(:commit_msg => commit_msg))
       return response unless response.ok?
+
       json_diffs = (response.data(:diffs).empty? ? {} : JSON.generate(response.data(:diffs)))
       commit_sha = response.data(:commit_sha)
       repo_obj = response.data(:repo_obj)

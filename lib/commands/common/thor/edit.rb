@@ -50,7 +50,8 @@ module DTK::Client
             puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
           end
           commit_msg = user_input("Commit message")
-          response = push_clone_changes_aux(module_type,module_id,version,commit_msg)
+          internal_trigger=true
+          response = push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger,opts)
           # if error return
           return response unless response.ok?
         end

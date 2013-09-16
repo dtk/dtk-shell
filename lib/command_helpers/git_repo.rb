@@ -59,7 +59,7 @@ module DTK; module Client; class CommandHelper
     #
     def push_changes(type,module_name,version,opts={})
       Response.wrap_helper_actions() do
-        repo_dir = local_repo_dir(type,module_name,version)
+        repo_dir = local_repo_dir(type,module_name,version,opts)
         repo = create(repo_dir,opts[:local_branch])
         push_repo_changes_aux(repo,opts)
       end

@@ -201,9 +201,11 @@ module DTK::Client
         :assembly_module => {
           :assembly_name => assembly_name,
         },
-        :repo_url => repo_url,
-        :branch => branch,
-        :module_name => component_module_name
+        :workspace_branch_info => {
+          :repo_url => repo_url,
+          :branch => branch,
+          :module_name => component_module_name
+        }
       }
       version = nil
       edit_aux(:component_module,component_module_id,component_module_name,version,edit_opts)
