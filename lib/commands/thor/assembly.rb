@@ -200,9 +200,10 @@ module DTK::Client
       edit_opts = {
         :assembly_module => {
           :assembly_name => assembly_name,
-          :repo_url => repo_url,
-          :branch => branch
-        }
+        },
+        :repo_url => repo_url,
+        :branch => branch,
+        :module_name => component_module_name
       }
       version = nil
       edit_aux(:component_module,component_module_id,component_module_name,version,edit_opts)
