@@ -9,7 +9,8 @@ module DTK::Client
       module_name,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version,opts)
       return not_ok_response if not_ok_response
 
-      response = Helper(:git_repo).push_changes(module_type,module_name,version,opts.merge(:commit_msg => commit_msg))
+      push_opts = opts.merge(:commit_msg => commit_msg, :local_branch => branch)
+      response = Helper(:git_repo).push_changes(module_type,module_name,version,push_opts)
       return response unless response.ok?
 
       json_diffs = (response.data(:diffs).empty? ? {} : JSON.generate(response.data(:diffs)))
