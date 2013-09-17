@@ -258,6 +258,12 @@ module DTK::Client
 
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
+
+      if response.data(:dsl_parsed_info)
+        dsl_parsed_message = "Module '#{module_name}-#{version}' imported with errors:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+      end
+
       #TODO: need to check if local clone directory exists
       Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
     end
@@ -410,12 +416,12 @@ module DTK::Client
       response = Helper(:git_repo).check_local_dir_exists_with_content(:service_module,module_name)
       return response unless response.ok?
       service_directory = response.data(:module_directory)
-
+      
       # first call to create empty module
       response = post rest_url("service_module/create"), { :module_name => module_name }        
       return response unless response.ok?
       @@invalidate_map << :service_module
-
+      
       if response.data(:dsl_parsed_info)
         dsl_parsed_message = "Module '#{module_name}' imported with errors:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
@@ -427,9 +433,9 @@ module DTK::Client
       response = Helper(:git_repo).initialize_client_clone_and_push(:service_module, module_name,branch,repo_url)
       return response unless response.ok?
       repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
-            
+
       context_params.add_context_to_params("service", "service", module_id)
-      push_clone_changes(context_params)
+      push_clone_changes(context_params,true)
     end
 
 
@@ -439,10 +445,20 @@ module DTK::Client
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    def push_clone_changes(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
+    def push_clone_changes(context_params, internal_trigger=false)
+      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
       version = options["version"]
-      push_clone_changes_aux(:service_module,service_module_id,version)
+
+      if service_module_name.to_s =~ /^[0-9]+$/
+        service_module_id   = service_module_name
+        service_module_name = get_service_module_name(service_module_id)
+      end
+
+      modules_path    = OsUtil.service_clone_location()
+      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
+
+      reparse_aux(module_location) unless internal_trigger
+      push_clone_changes_aux(:service_module,service_module_id,version,nil,internal_trigger)
     end
 
     desc "delete SERVICE-IDENTIFIER [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
@@ -493,7 +509,7 @@ module DTK::Client
         FileUtils.rm_rf("#{module_location}") if (File.directory?(module_location) && ("#{modules_path}/" != module_location))
         
         unless options.version?
-          module_versions = Dir.entries(modules_path).select{|a| a.match(/#{service_module_id}-\d.\d.\d/)}
+          module_versions = Dir.entries(modules_path).select{|a| a.match(/^#{service_module_id}-\d.\d.\d$/)}
           module_versions.each do |version|
             FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
           end
@@ -556,8 +572,10 @@ module DTK::Client
           FileUtils.rm_rf("#{assembly_template_location}")
         end
       end
-
-      push_clone_changes_aux(:service_module, service_module_id, nil)
+      version = nil
+      commit_msg = "Deleting assembly template #{assembly_template_id.to_s}"
+      internal_trigger = true
+      push_clone_changes_aux(:service_module, service_module_id, version, commit_msg, internal_trigger)
       @@invalidate_map << :assembly_template
 
       return response

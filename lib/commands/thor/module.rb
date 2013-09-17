@@ -179,7 +179,7 @@ module DTK::Client
         FileUtils.rm_rf("#{module_location}") if (File.directory?(module_location) && ("#{modules_path}/" != module_location))
         
         unless options.version?
-          module_versions = Dir.entries(modules_path).select{|a| a.match(/#{component_module_id}-\d.\d.\d/)}
+          module_versions = Dir.entries(modules_path).select{|a| a.match(/^#{component_module_id}-\d.\d.\d$/)}
           module_versions.each do |version|
             FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
           end
@@ -327,7 +327,7 @@ module DTK::Client
 
       # we push clone changes anyway, user can change and push again
       context_params.add_context_to_params("module", "module", module_id)
-      push_clone_changes(context_params)
+      push_clone_changes(context_params, true)
 
       response
     end
@@ -457,6 +457,12 @@ module DTK::Client
 
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
+
+      if response.data(:dsl_parsed_info)
+        dsl_parsed_message = "Module '#{module_name}-#{version}' imported with errors:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+      end
+
       #TODO: need to check if local clone directory exists
       Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
     end
@@ -617,9 +623,19 @@ module DTK::Client
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    def push_clone_changes(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      push_clone_changes_aux(:component_module,component_module_id,options["version"],options["message"]||DEFAULT_COMMIT_MSG)
+    def push_clone_changes(context_params, internal_trigger=false)
+      component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!, :module_name],method_argument_names)
+      version = options["version"]
+      if component_module_name.to_s =~ /^[0-9]+$/
+        component_module_id   = component_module_name
+        component_module_name = get_module_name(component_module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location()
+      module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
+
+      reparse_aux(module_location)
+      push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
     end
 
     desc "MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"

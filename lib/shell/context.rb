@@ -100,8 +100,7 @@ module DTK
       end
 
       # this method is used to scan and provide context to be available Readline.complete_proc
-      def dynamic_autocomplete_context(readline_input)
-
+      def dynamic_autocomplete_context(readline_input, line_buffer)        
         # special case indicator when user starts cc with '/' (go from root)
         goes_from_root = readline_input.start_with?('/')
         # Cloning existing active context, as all changes shouldn't be permanent, but temporary for autocomplete
@@ -114,8 +113,24 @@ module DTK
         # Validate and change context; skip step if user's input is empty or it is equal to '/'
         active_context_copy, error_message, invalid_context = prepare_context_change([readline_input], active_context_copy) unless (readline_input.empty? || readline_input == "/")
         
-        return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root)
+        # using extended_context when we want to use autocomplete from other context
+        # e.g. we are in assembly/apache context and want to add-component we will use extended context to add 
+        # component-templates to autocomplete
+        extended_candidates, new_context = {}, nil
+        line_buffer   = line_buffer.split(' ').first.gsub!('-','_') unless (line_buffer.nil? || line_buffer.empty?)
+        command_clazz = Context.get_command_class(active_context_copy.last_command_name)
+        
+        unless command_clazz.nil?
+          extended_context    = command_clazz.respond_to?(:extended_context) ? command_clazz.extended_context() : {}
+          
+          unless extended_context.empty?
+            extended_candidates = extended_context.select{|k,v| k.to_s==line_buffer}      
+            new_context = extended_candidates[line_buffer.to_sym] unless line_buffer.nil?
+            active_context_copy.push_new_context(new_context, new_context) unless new_context.nil?
+          end
+        end
 
+        return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root)
       end
 
       def prepare_context_change(args, active_context_copy)
@@ -235,7 +250,7 @@ module DTK
 
         # logic behind context loading
         #Readline.completer_word_break_characters=" "
-        Readline.completion_proc = proc { |input| dynamic_autocomplete_context(input) }
+        Readline.completion_proc = proc { |input| dynamic_autocomplete_context(input,Readline.line_buffer)}
       end
 
       def push_context()
@@ -383,7 +398,6 @@ module DTK
       end
 
       def get_ac_candidates_for_context(context, active_context_copy)
-
         # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
         if context
           if context.is_command?

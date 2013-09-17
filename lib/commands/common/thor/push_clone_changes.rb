@@ -3,12 +3,13 @@ module DTK::Client
     ##
     #
     # module_type: will be :component_module or :service_module 
-    def push_clone_changes_aux(module_type,module_id,version,commit_msg=nil)
+    def push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger=false)
       id_field = "#{module_type}_id"
       post_body = {
         id_field => module_id
       }
       post_body.merge!(:version => version) if version 
+      post_body.merge!(:internal_trigger => internal_trigger)
       
       response =  post(rest_url("#{module_type}/get_workspace_branch_info"),post_body) 
       return response unless response.ok?
