@@ -4,6 +4,10 @@ module DTK::Client
   # Following are descriptions of available commands 
   class Dtk < CommandBaseThor
 
+    desc "workspace","Manipulate provided workspace"
+    def workspace
+      # API descriptor
+    end
     
 
     # NOTE
