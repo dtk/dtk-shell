@@ -253,7 +253,7 @@ module DTK
 
         # logic behind context loading
         #Readline.completer_word_break_characters=" "
-        Readline.completion_proc = proc { |input| dynamic_autocomplete_context(input, Readline.line_buffer)}
+        Readline.completion_proc = proc { |input| dynamic_autocomplete_context(input, Readline.respond_to?("line_buffer") ? Readline.line_buffer : [])}
       end
 
       def push_context()

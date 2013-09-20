@@ -1,6 +1,5 @@
 require 'colorize'
-# require 'readline'
-require 'rb-readline'
+require 'readline'
 
 module DTK
   module Shell
