@@ -25,7 +25,6 @@ module DTK
 
 
       def initialize(skip_caching=false)
-
         @cached_tasks, @dirs = DTK::Shell::CachedTasks.new, []
         @active_context   = ActiveContext.new
         @previous_context = nil
@@ -43,7 +42,6 @@ module DTK
           ALL_COMMANDS.each do |task_name|
             # we exclude help since there is no command class for it
             next if task_name.eql? "help"
-
             Context.require_command_class(task_name)
 
             get_latest_tasks(task_name)
