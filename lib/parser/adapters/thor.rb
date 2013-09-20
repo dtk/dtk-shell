@@ -1,6 +1,7 @@
 require 'thor'
 require 'thor/group'
-require 'readline'
+# require 'readline'
+require 'rb-readline'
 require 'colorize'
 
 dtk_require("../../shell/interactive_wizard")

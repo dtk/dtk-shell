@@ -7,7 +7,8 @@ require File.expand_path('error',                   File.dirname(__FILE__))
 Dir[File.expand_path('shell/*.rb', File.dirname(__FILE__))].each { |file| require file }
 
 require 'shellwords'
-require 'readline'
+# require 'readline'
+require 'rb-readline'
 require 'colorize'
 require 'thor'
 

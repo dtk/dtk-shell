@@ -100,7 +100,7 @@ module DTK
       end
 
       # this method is used to scan and provide context to be available Readline.complete_proc
-      def dynamic_autocomplete_context(readline_input, line_buffer)        
+      def dynamic_autocomplete_context(readline_input, line_buffer)
         # special case indicator when user starts cc with '/' (go from root)
         goes_from_root = readline_input.start_with?('/')
         # Cloning existing active context, as all changes shouldn't be permanent, but temporary for autocomplete
@@ -117,14 +117,19 @@ module DTK
         # e.g. we are in assembly/apache context and want to add-component we will use extended context to add 
         # component-templates to autocomplete
         extended_candidates, new_context = {}, nil
-        line_buffer   = line_buffer.split(' ').first.gsub!('-','_') unless (line_buffer.nil? || line_buffer.empty?)
+        line_buffer = nil if line_buffer.empty?
         command_clazz = Context.get_command_class(active_context_copy.last_command_name)
         
+        unless line_buffer.nil?
+          line_buffer = line_buffer.split(' ').first
+          line_buffer.gsub!('-','_') unless (line_buffer.nil? || line_buffer.empty?)
+        end
+
         unless command_clazz.nil?
           extended_context    = command_clazz.respond_to?(:extended_context) ? command_clazz.extended_context() : {}
           
           unless extended_context.empty?
-            extended_candidates = extended_context.select{|k,v| k.to_s==line_buffer}      
+            extended_candidates = extended_context.reject!{|k,v| k.to_s!=line_buffer}
             new_context = extended_candidates[line_buffer.to_sym] unless line_buffer.nil?
             active_context_copy.push_new_context(new_context, new_context) unless new_context.nil?
           end
@@ -250,7 +255,7 @@ module DTK
 
         # logic behind context loading
         #Readline.completer_word_break_characters=" "
-        Readline.completion_proc = proc { |input| dynamic_autocomplete_context(input,Readline.line_buffer)}
+        Readline.completion_proc = proc { |input| dynamic_autocomplete_context(input, Readline.line_buffer)}
       end
 
       def push_context()
