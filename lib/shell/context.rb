@@ -127,8 +127,10 @@ module DTK
           extended_context    = command_clazz.respond_to?(:extended_context) ? command_clazz.extended_context() : {}
           
           unless extended_context.empty?
-            extended_candidates = extended_context.reject!{|k,v| k.to_s!=line_buffer}
-            new_context = extended_candidates[line_buffer.to_sym] unless line_buffer.nil?
+            # extended_candidates = extended_context.reject!{|k,v| k.to_s!=line_buffer}
+            # new_context = extended_candidates[line_buffer.to_sym] unless line_buffer.nil?
+            extended_context.reject!{|k,v| k.to_s!=line_buffer}
+            new_context = extended_context[line_buffer.to_sym] unless line_buffer.nil?
             active_context_copy.push_new_context(new_context, new_context) unless new_context.nil?
           end
         end
