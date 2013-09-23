@@ -45,7 +45,9 @@ module DTK::Client
       def get_workspace_object()
         return @workspace_object if @workspace_object
         response = CommandBaseThor.get_cached_response(:workspace, "assembly/workspace_object", {})
-        raise DTK::Client::DtkError.new("Workspace object not found.") unless response.ok?
+
+        raise DTK::Client::DtkError.new("Workspace could not be found.") if !response.ok? || response.data.first.nil?
+
         response.data.first
       end
 
