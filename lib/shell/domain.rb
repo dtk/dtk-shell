@@ -161,8 +161,17 @@ module DTK
       # using it as such
       NO_IDENTIFIER_PROVIDED = -1
 
+
+      # list of cases where we want entity to behave differently 
+      SHADOWING_ENTITIES = { :workspace => :assembly }
+
       # TODO: Remove accessor for debug purpose only
       attr_accessor :context_list
+
+
+      def self.is_shadowed_entity?(entity_name)
+        !!SHADOWING_ENTITIES[(entity_name||"NONE_FOUND").to_sym]
+      end
 
       def clone_me()
         inst = ActiveContext.new
@@ -239,12 +248,34 @@ module DTK
         return @context_list.empty? ? false : @context_list.last.is_identifier?
       end
 
+      # includes shadowed entities in their search
+      def first_command_name_with_shadow()
+        @context_list.each do |e|
+          if e.is_command?
+            shadowed_entity = SHADOWING_ENTITIES[e.name.to_sym]
+
+            return shadowed_entity ? shadowed_entity.to_s : e.name
+          end
+        end
+
+        return nil
+      end
+
       def first_command_name()
         @context_list.each do |e|
           return e.name if e.is_command?
         end
 
         return nil
+      end
+
+      def is_shadowed_entity?
+        first_command = first_command_name()
+        !!SHADOWING_ENTITIES[(first_command||"NONE_FOUND").to_sym]
+      end
+
+      def is_there_indetifier_for_first_context_or_shadowed?
+        is_there_identifier_for_first_context? || is_shadowed_entity?
       end
 
       def is_there_identifier_for_first_context?

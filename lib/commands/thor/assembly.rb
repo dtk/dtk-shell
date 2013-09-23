@@ -159,10 +159,6 @@ module DTK::Client
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message" 
-#    method_option "puppet_version",:aliases => "-p" , AMAR:  COMMENTING OUT OPTION TO SEND PUPPET VERSION, UNTIL ISSUES IN 
-#      :type => :string,                                      DTK-837 COMMENTS ARE FIGURED OUT AND RESOLVED
-#      :banner => "PUPPET-VERSION",
-#      :desc => "Puppet version" 
     def converge(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
@@ -180,7 +176,6 @@ module DTK::Client
       end
 
       post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
-#      post_body.merge!(:puppet_version => options.puppet_version) if options.puppet_version
 
       response = post rest_url("assembly/create_task"), post_body
       return response unless response.ok?
@@ -189,43 +184,6 @@ module DTK::Client
       task_id = response.data(:task_id)
       post rest_url("task/execute"), "task_id" => task_id
     end
-
-=begin
-TODO: will put in dot release and will rename to 'extend'
-    desc "ASSEMBLY-NAME/ID add EXTENSION-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly"
-    method_option "count",:aliases => "-n" ,
-      :type => :string, #integer 
-      :banner => "COUNT",
-      :desc => "Number of sub-assemblies to add"
-    def add_node(context_params)
-      assembly_id,service_add_on_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
-
-      # create task
-      post_body = {
-        :assembly_id => assembly_id,
-        :service_add_on_name => service_add_on_name
-      }
-
-      post_body.merge!(:count => options.count) if options.count
-
-      response = post rest_url("assembly/add__service_add_on"), post_body
-      # when changing context send request for getting latest assemblies instead of getting from cache
-      @@invalidate_map << :assembly
-
-      return response
-    end
-
-    desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to the assembly" 
-    def possible_extensions(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-
-      post_body = {
-        :assembly_id => assembly_id
-      }
-      response = post(rest_url("assembly/list_possible_add_ons"),post_body)
-      response.render_table(:service_add_on)
-    end
-=end
 
     desc "ASSEMBLY-NAME/ID list-task-info", "Task status details of running or last assembly task"
     def list_task_info(context_params)
@@ -304,10 +262,9 @@ TODO: will put in dot release and will rename to 'extend'
     desc "[ASSEMBLY-NAME/ID] list [FILTER] [--list] ","List assemblies."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
-      #return post rest_url("monitoring_item/check_idle"), {}
-      
       assembly_id, node_id, component_id, attribute_id, about, filter = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1,:option_2],method_argument_names)
       detail_to_include = nil
+
       if about
         case about
           when "nodes"
@@ -335,37 +292,29 @@ TODO: will put in dot release and will rename to 'extend'
       post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
       rest_endpoint = "assembly/info_about"
 
-      if context_params.is_last_command_eql_to?(:attribute)
-        
+      if context_params.is_last_command_eql_to?(:attribute)        
         raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
         about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
-
       elsif context_params.is_last_command_eql_to?(:component)
-        
         if component_id
           about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
         else
           about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
         end
-
       elsif context_params.is_last_command_eql_to?(:node)
-
         if node_id
           about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
         else
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
         end
-
       else
-
         if assembly_id
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
         else
           data_type = :assembly
           post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
           rest_endpoint = "assembly/list"
-        end
-          
+        end  
       end
 
       post_body[:about] = about
@@ -375,7 +324,6 @@ TODO: will put in dot release and will rename to 'extend'
       response.render_table(data_type) unless options.list?
 
       return response
-      
     end
 
     desc "ASSEMBLY-NAME/ID set-attribute-relation TARGET-ATTR-TERM SOURCE-ATTR-TERM", "Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM"
@@ -441,7 +389,7 @@ TODO: will put in dot release and will rename to 'extend'
       response = post rest_url("assembly/list_service_links"), post_body
       response.render_table(data_type)
     end
-    #TODO: below will be deprectaed for above
+
     desc "ASSEMBLY-NAME/ID list-possible-connections","List connections between services on asssembly"
     def list_possible_connections(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
@@ -555,27 +503,6 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/set_attributes"), post_body
     end
 
-=begin
-    desc "create-jenkins-project ASSEMBLY-TEMPLATE-NAME/ID", "Create Jenkins project for assembly template"
-    def create_jenkins_project(context_params)
-      assembly_id  = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      #require put here so dont necessarily have to install jenkins client gems
-      dtk_require_from_base('command_helpers/jenkins_client')
-      post_body = {
-        :assembly_id => assembly_id,
-        :subtype => :template
-      }
-      response = post(rest_url("assembly/info"),post_body)
-      return response unless response.ok?
-      assembly_id,assembly_name = response.data(:id,:display_name)
-      #TODO: modify JenkinsClient to use response wrapper
-      JenkinsClient.create_assembly_project?(assembly_name,assembly_id)
-      nil
-    end
-=end
-
-#TODO: in adot release addd auto-compleet capability
-#    desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID [--auto-complete]", "Add (stage) an assembly template to become part of this assembly instance"
     desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID", "Add (stage) an assembly template to become part of this assembly instance"
     method_option "auto-complete",:aliases => "-a" ,
       :type => :boolean, 
@@ -627,21 +554,6 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/add_component"), post_body
     end
 
-    #TODO: WORKSPACE-COMMAND may move to seperate workspace command
-    desc "ASSEMBLY-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def purge(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-      unless options.force?
-        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy all nodes in the workspace"+'?')
-      end
-
-      post_body = {
-        :assembly_id => assembly_id
-      }
-      response = post(rest_url("assembly/purge"),post_body)
-    end
-
     desc "ASSEMBLY-NAME/ID delete-node [-y] NODE-NAME/ID","Delete node, terminating it if the node has been spun up"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
@@ -670,7 +582,6 @@ TODO: will put in dot release and will rename to 'extend'
       response = post(rest_url("assembly/delete_component"),post_body)
     end
 
-
     desc "COMPONENT-NAME/ID edit","Edit component module related to given component."
     def edit(context_params)
       assembly_id, component_id = context_params.retrieve_arguments([:assembly_id!, :component_id!], method_argument_names)
@@ -692,10 +603,11 @@ TODO: will put in dot release and will rename to 'extend'
       response = DTK::Client::ContextRouter.routeTask("module", "edit", context_params_for_service, @conn)
     end
 
-
-
     desc "ASSEMBLY-NAME/ID get-netstats", "Get netstats"
     def get_netstats(context_params)
+      netstat_tries = 6
+      netstat_sleep = 0.5
+
       assembly_id,node_id = context_params.retrieve_arguments([:assembly_id!,:node_id],method_argument_names)
 
       post_body = {
@@ -718,14 +630,14 @@ TODO: will put in dot release and will rename to 'extend'
         }
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
-        if count > GETNETSTATSTRIES or response.data(:is_complete)
+        if count > netstat_tries or response.data(:is_complete)
           end_loop = true
         else
           #last time in loop return whetever is teher
-          if count == GETNETSTATSTRIES
+          if count == netstat_tries
             ret_only_if_complete = false
           end
-          sleep GETNETSTATSSLEEP
+          sleep netstat_sleep
         end
       end
 
@@ -733,12 +645,13 @@ TODO: will put in dot release and will rename to 'extend'
       response.set_data(*response.data(:results))
       response.render_table(:netstat_data)
     end
-    GETNETSTATSTRIES = 6
-    GETNETSTATSSLEEP = 0.5
 
     desc "ASSEMBLY-NAME/ID get-ps [--filter PATTERN]", "Get ps"
     method_option :filter, :type => :boolean, :default => false, :aliases => '-f'
     def get_ps(context_params)
+
+      get_ps_tries = 6
+      get_ps_sleep = 0.5
 
       assembly_id,node_id,filter_pattern = context_params.retrieve_arguments([:assembly_id!,:node_id, :option_1],method_argument_names)
 
@@ -762,14 +675,14 @@ TODO: will put in dot release and will rename to 'extend'
         }
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
-        if count > GETPSTRIES or response.data(:is_complete)
+        if count > get_ps_tries or response.data(:is_complete)
           end_loop = true
         else
           #last time in loop return whetever is teher
-          if count == GETPSTRIES
+          if count == get_ps_tries
             ret_only_if_complete = false
           end
-          sleep GETPSSLEEP
+          sleep get_ps_sleep
         end
       end
       filtered = response.data(:results).flatten
@@ -799,8 +712,7 @@ TODO: will put in dot release and will rename to 'extend'
       response.set_data(*filtered)
       response.render_table(:ps_data)
     end
-    GETPSTRIES = 6
-    GETPSSLEEP = 0.5
+
 
     desc "ASSEMBLY-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
     def set_required_params(context_params)
@@ -994,7 +906,7 @@ TODO: will put in dot release and will rename to 'extend'
         raise e
       end
     end
-    
+
     no_tasks do
       def assembly_start(assembly_id, node_pattern_filter)             
         post_body = {
@@ -1047,6 +959,7 @@ TODO: will put in dot release and will rename to 'extend'
 
         return response
       end
+
 
 
     end
