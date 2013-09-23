@@ -33,8 +33,8 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'diff-lcs','1.1.3'
   gem.add_dependency 'highline', '1.6.16'
   gem.add_dependency 'awesome_print', '1.1.0'
-  gem.add_dependency 'rb-readline', '0.5.0'
 
+  # gem.add_dependency 'rb-readline', '0.5.0'
   # gem.add_dependency 'activesupport','~> 3.2.12'
   # gem.add_dependency 'i18n','0.6.1'
   # gem.add_dependency 'puppet','~> 3.1.0'

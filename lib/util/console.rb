@@ -1,5 +1,4 @@
-# require 'readline'
-require 'rb-readline'
+require 'readline'
 require 'shellwords'
 
 dtk_require("os_util")
