@@ -20,7 +20,7 @@ module DTK::Client
 
     # Method remove (list of methods from assembly that should not be available in workspace)
     [:delete_and_destroy, :list].each do |meth|
-      self.superclass.remove_task(meth, { :undefine => false })
+      self.remove_task(meth, { :undefine => false })
     end
 
 
@@ -31,10 +31,6 @@ module DTK::Client
       # Important to set
       shadow_entity = true
 
-      def list(context_params)
-        []
-      end
-      
       def send(symbol,*args)
         @workspace_object = get_workspace_object()
         args.first.add_context_to_params(:assembly, :assembly, @workspace_object['id']) if args.first

@@ -47,8 +47,6 @@ class Thor
 
       list.sort!{ |a,b| a[0] <=> b[0] }
 
-      
-
       # monkey patching here => START
       if @@shell_context
         unless @@shell_context.root?
