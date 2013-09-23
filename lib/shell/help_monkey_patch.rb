@@ -52,8 +52,9 @@ class Thor
       # monkey patching here => START
       if @@shell_context
         unless @@shell_context.root?
-          command             = @@shell_context.active_context.first_command_name.upcase
-          is_there_identifier = @@shell_context.active_context.is_there_identifier_for_first_context?
+          command             = @@shell_context.active_context.first_command_name_with_shadow.upcase
+          is_there_identifier = @@shell_context.active_context.is_there_indetifier_for_first_context_or_shadowed?
+          is_shadowed         = @@shell_context.active_context.is_shadowed_entity?
 
           filtered_list = []
 

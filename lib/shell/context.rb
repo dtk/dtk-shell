@@ -246,7 +246,8 @@ module DTK
         @context_commands = @current
 
         # we load thor command class identifiers for autocomplete context list
-        command_context = get_command_identifiers(command_name)
+        # shadowed entity does not have identifiers
+        command_context =  ActiveContext.is_shadowed_entity?(command_name) ? nil : get_command_identifiers(command_name)
 
         command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
         @context_commands.concat(command_name_list) if current_command?
@@ -363,6 +364,7 @@ module DTK
         # Show all context tasks if active context orignal and it's copy are on same context, and are not on root, 
         # and if readline has one split result indicating user is not going trough n-level, but possibly executing a task
         task_candidates = []
+
         #task_candidates = @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty?)
         task_candidates = @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty? && readline_input.split("/").size <= 1)
         
@@ -401,6 +403,9 @@ module DTK
       end
 
       def get_ac_candidates_for_context(context, active_context_copy)
+        # shadowed entities do not have identifiers or valid children
+        return [] if active_context_copy.is_shadowed_entity?
+        
         # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
         if context
           if context.is_command?
