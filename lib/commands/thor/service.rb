@@ -324,6 +324,9 @@ module DTK::Client
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       
       pull_from_remote_aux(:service_module,service_module_id,options["version"])
+      # server repo needs to be sync with local clone, so we will use push-clone-changes when pull changes from remote to local
+      # to automatically sync local with server repo
+      push_clone_changes_aux(:service_module,service_module_id,options["version"],nil,true)
     end
 
     ##

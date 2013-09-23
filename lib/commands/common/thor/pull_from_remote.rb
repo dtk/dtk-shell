@@ -65,20 +65,13 @@ module DTK::Client
           raise DtkError, "No changes to pull from remote"
         end
         
-        # [Haris] - I do not undestand this second call and I am removing it
-        #response = cmd_obj.Helper(:git_repo).pull_changes(module_type,module_name)
-        #return response unless response.ok?
-
-        #if response.data(:diffs).empty?
-        #  raise DTK::Client::DtkError, "Unexepected that there are no diffs with workspace"
-        #end
-                
-        post_body = {
-          id_field(module_type) => module_id,
-          :commit_sha => response.data[:commit_sha],
-          :json_diffs => JSON.generate(response.data[:diffs])
-        }
-        post rest_url("#{module_type}/update_model_from_clone"), post_body
+        # removing this for now, because we will use push-clone-changes as part of pull-from-remote command 
+        # post_body = {
+        #   id_field(module_type) => module_id,
+        #   :commit_sha => response.data[:commit_sha],
+        #   :json_diffs => JSON.generate(response.data[:diffs])
+        # }
+        # post rest_url("#{module_type}/update_model_from_clone"), post_body
       end
 
       def self.perform_on_server(cmd_obj,module_type,module_id,module_name,remote_params)
