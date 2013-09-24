@@ -17,6 +17,11 @@ module DTK
       ROOT_TASKS            = DTK::Client::Dtk.task_names
       ALL_COMMANDS          = ROOT_TASKS + ['component','attribute']
 
+
+      SYM_LINKS = [
+        { :alias => :workspace, :path => 'assembly/workspace' }
+      ]
+
       # current holds context (list of commands) for active context e.g. dtk:\library>
       attr_accessor :current
       attr_accessor :active_context
@@ -62,6 +67,31 @@ module DTK
         file_name = command_name.gsub('-','_')
         require File.expand_path("../commands/thor/#{file_name}", File.dirname(__FILE__))
       end
+
+      # SYM_LINKS methods is used to calculate aliases that will be used for certain entities
+      # one of those approaches will be as such
+      def self.check_for_sym_link(entries)
+        if (entries.size == 1)
+          SYM_LINKS.each do |sym_link|
+            if entries.first.downcase.to_sym.eql?(sym_link[:alias])
+              return sym_link[:path].split('/')
+            end
+          end
+        end
+
+        entries
+      end
+
+      # take current path and see if it is aliased path
+      def self.enchance_path_with_alias(path)
+        SYM_LINKS.each do |sym_link|
+          if path.downcase.include?(sym_link[:path])
+            return path.gsub(sym_link[:path], sym_link[:alias].to_s)
+          end
+        end
+
+        path
+      end
       
       # Validates and changes context
       def change_context(args)
@@ -93,7 +123,7 @@ module DTK
         rescue DTK::Shell::Error, Exception => e
           DtkLogger.instance.error_pp(e.message, e.backtrace)
         ensure
-          return shell_prompt
+          return shell_prompt()
         end
       end
 
@@ -139,9 +169,11 @@ module DTK
       end
 
       def prepare_context_change(args, active_context_copy)
-
         # split original cc command
         entries = args.first.split(/\//)
+
+        # transform alias to full path
+        entries = Context.check_for_sym_link(entries)
 
         # if only '/' or just cc skip validation
         return active_context_copy if entries.empty?

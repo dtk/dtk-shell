@@ -225,7 +225,10 @@ module DTK
       end
 
       def full_path()
-        return "/#{name_list.join('/')}"
+        path = name_list.join('/')
+        path = Context.enchance_path_with_alias(path)
+
+        return "/#{path}"
       end
 
       def clear()

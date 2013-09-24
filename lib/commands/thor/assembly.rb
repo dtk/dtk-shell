@@ -525,6 +525,20 @@ module DTK::Client
       post rest_url("assembly/add_node"), post_body
     end
 
+    desc "ASSEMBLY-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def purge(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+      unless options.force?
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy all nodes in the workspace"+'?')
+      end
+
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      response = post(rest_url("assembly/purge"),post_body)
+    end
+
     desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]", "Add component template to assembly node. Without order index default order location is on the end."
     def add_component(context_params)
     
