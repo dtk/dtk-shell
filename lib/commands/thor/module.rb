@@ -375,8 +375,9 @@ module DTK::Client
         :local_module_name => local_module_name
       }
       response = post rest_url("component_module/import"), post_body
-
       return response unless response.ok?
+
+      return response if response.data(:does_not_exist)      
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
       
       if response.data(:dsl_parsed_info)

@@ -25,8 +25,8 @@ module DTK::Client
         new_context_params.forward_options( { "skip_cloning" => true })
 
         response = ContextRouter.routeTask("module", "import_r8n", new_context_params, @conn)
-        raise DTK::Client::DtkError, response.error_message unless response.ok?
-        puts "Done."
+        puts(response.data['does_not_exist'] ? response.data['does_not_exist'] : "Done.")
+        raise DTK::Client::DtkError, response.error_message unless response.ok?        
       end
       
       Response::Ok.new()

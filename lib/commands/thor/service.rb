@@ -208,6 +208,7 @@ module DTK::Client
         trigger_module_component_import(missing_components)
         puts "Resuming R8 network import for service '#{remote_module_name}' ..."
         # repeat import call for service
+        post_body.merge!(:do_not_import => true)
         response = post rest_url("service_module/import"), post_body
       end
       
