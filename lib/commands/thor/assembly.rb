@@ -69,9 +69,9 @@ module DTK::Client
             ['list',"list [FILTER] [--list] ","# List components."],
             ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."],
             ['list-service-links',"list-service-links","# List service links for component."],
-            ['add-service-link',"add-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
+            ['create-service-link',"create-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
             ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."],
-            ['add-attribute-mapping',"add-attribute-mapping SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Add an attribute mapping to service link."],
+            ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
             ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."]
           ]
         },
@@ -216,6 +216,7 @@ module DTK::Client
       response
     end
 
+=begin
     desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
     def run_smoketests(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
@@ -229,40 +230,35 @@ module DTK::Client
       task_id = response.data(:task_id)
       post rest_url("task/execute"), "task_id" => task_id
     end
+=end
 
-    desc "ASSEMBLY-NAME/ID list-nodes [FILTER] [--list] ","List nodes associated with assembly."
-    method_option :list, :type => :boolean, :default => false
+    desc "ASSEMBLY-NAME/ID list-nodes","List nodes associated with assembly."
     def list_nodes(context_params)
       context_params.method_arguments = ["nodes"]
       list(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-components [FILTER] [--list] ","List components associated with assembly."
-    method_option :list, :type => :boolean, :default => false
+    desc "ASSEMBLY-NAME/ID list-components","List components associated with assembly."
     def list_components(context_params)
       context_params.method_arguments = ["components"]
       list(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-attributes [FILTER] [--list] ","List attributes associated with assembly."
-    method_option :list, :type => :boolean, :default => false
+    desc "ASSEMBLY-NAME/ID list-attributes","List attributes associated with assembly."
     def list_attributes(context_params)
       context_params.method_arguments = ["attributes"]
       list(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-tasks [FILTER] [--list] ","List tasks associated with assembly."
-    method_option :list, :type => :boolean, :default => false
+    desc "ASSEMBLY-NAME/ID list-tasks","List tasks associated with assembly."
     def list_tasks(context_params)
       context_params.method_arguments = ["tasks"]
       list(context_params)
     end
 
-    #TODO: put in flag to control detail level
-    desc "[ASSEMBLY-NAME/ID] list [FILTER] [--list] ","List assemblies."
-    method_option :list, :type => :boolean, :default => false
+    desc "[ASSEMBLY-NAME/ID] list","List assemblies."
     def list(context_params)
-      assembly_id, node_id, component_id, attribute_id, about, filter = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1,:option_2],method_argument_names)
+      assembly_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
       detail_to_include = nil
 
       if about
@@ -286,8 +282,7 @@ module DTK::Client
         :assembly_id => assembly_id,
         :node_id => node_id,
         :component_id => component_id,
-        :subtype     => 'instance',
-        :filter      => filter
+        :subtype     => 'instance'
       }
       post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
       rest_endpoint = "assembly/info_about"
@@ -321,7 +316,7 @@ module DTK::Client
       response = post rest_url(rest_endpoint), post_body
 
       # set render view to be used
-      response.render_table(data_type) unless options.list?
+      response.render_table(data_type)
 
       return response
     end
@@ -343,8 +338,8 @@ module DTK::Client
       post rest_url("assembly/list_attribute_mappings"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID add-attribute-mapping SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to a service link"
-    def add_attribute_mapping(context_params)
+    desc "ASSEMBLY-NAME/ID create-attribute SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to a service link"
+    def create_attribute(context_params)
       post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
       base_attr,arrow,dep_attr = context_params.retrieve_arguments([:option_2!,:option_3!,:option_4!],method_argument_names)
       post_body.merge!(:attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}") #TODO: probably change to be hash
@@ -357,8 +352,8 @@ module DTK::Client
       post rest_url("assembly/delete_service_link"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID add-service-link SERVICE-TYPE BASE-CMP-NAME/ID DEPENDENT-CMP-NAME/ID", "Add a service link between two components"
-    def add_service_link(context_params)
+    desc "ASSEMBLY-NAME/ID create-service-link SERVICE-TYPE BASE-CMP-NAME/ID DEPENDENT-CMP-NAME/ID", "Add a service link between two components"
+    def create_service_link(context_params)
       if context_params.is_last_command_eql_to?(:component)
         assembly_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([:assembly_id!,:option_1!,:component_id!,:option_2!],method_argument_names)
       else
@@ -390,8 +385,8 @@ module DTK::Client
       response.render_table(data_type)
     end
 
-    desc "ASSEMBLY-NAME/ID list-possible-connections","List connections between services on asssembly"
-    def list_possible_connections(context_params)
+    desc "ASSEMBLY-NAME/ID list-connections","List connections between services on asssembly"
+    def list_connections(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
       post_body = {
@@ -450,8 +445,8 @@ module DTK::Client
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID set ATTRIBUTE-NAME/ID VALUE", "Set assembly attribute value(s)"
-    def set(context_params)
+    desc "ASSEMBLY-NAME/ID set-attribute ATTRIBUTE-NAME/ID VALUE", "Set assembly attribute value(s)"
+    def  set_attribute(context_params)
       if context_params.is_there_identifier?(:attribute)
         mapping = [:assembly_id!,:attribute_id!, :option_1!]
       else
@@ -518,8 +513,8 @@ module DTK::Client
       post rest_url("assembly/add_assembly_template"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID add-node ASSEMBLY-NODES-NAME [NODE-TEMPLATE]", "Add (stage) a new node to the assembly"
-    def add_node(context_params)
+    desc "ASSEMBLY-NAME/ID create-node ASSEMBLY-NODES-NAME [NODE-TEMPLATE]", "Add (stage) a new node to the assembly"
+    def create_node(context_params)
       assembly_id,assembly_node_name,node_template_identifier = context_params.retrieve_arguments([:assembly_id,:option_1!,:option_2],method_argument_names)
       post_body = {
         :assembly_id => assembly_id,
@@ -528,6 +523,20 @@ module DTK::Client
       post_body.merge!(:node_template_identifier => node_template_identifier) if node_template_identifier
 
       post rest_url("assembly/add_node"), post_body
+    end
+
+    desc "ASSEMBLY-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def purge(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+      unless options.force?
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy all nodes in the workspace"+'?')
+      end
+
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      response = post(rest_url("assembly/purge"),post_body)
     end
 
     desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]", "Add component template to assembly node. Without order index default order location is on the end."

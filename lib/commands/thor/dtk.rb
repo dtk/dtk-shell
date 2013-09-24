@@ -6,7 +6,7 @@ module DTK::Client
 
     desc "workspace","Manipulate provided workspace"
     def workspace
-      # API descriptor
+      # API descriptor, SYM_LINK!
     end
     
 
