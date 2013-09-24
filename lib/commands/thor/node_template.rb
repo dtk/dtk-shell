@@ -8,6 +8,10 @@ module DTK::Client
     def self.whoami()
       return :node_template, "node/list", {:subtype => 'template'}
     end
+
+    def self.extended_context()
+      {:add_component => "component_template"}
+    end
 =begin
   #Not implemented yet
     desc "NODE-TEMPLATE-NAME/ID info", "Get information about given node template."
