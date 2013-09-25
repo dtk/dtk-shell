@@ -205,10 +205,11 @@ module DTK::Client
 
       # case when we need to import additional components
       if (response.ok? && (missing_components = response.data(:missing_module_components)))
-        trigger_module_component_import(missing_components)
+        opts = {:do_not_raise=>true}
+        trigger_module_component_import(missing_components,opts)
         puts "Resuming R8 network import for service '#{remote_module_name}' ..."
         # repeat import call for service
-        post_body.merge!(:do_not_import => true)
+        post_body.merge!(opts)
         response = post rest_url("service_module/import"), post_body
       end
       

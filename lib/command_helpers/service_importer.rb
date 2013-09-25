@@ -13,7 +13,7 @@ module DTK::Client
     ##
     # Method will trigger import for each missing module component
     #
-    def trigger_module_component_import(missing_component_list)      
+    def trigger_module_component_import(missing_component_list,opts={})      
       puts "Auto-importing missing module(s)"
 
       missing_component_list.each do |m_module|
@@ -22,7 +22,7 @@ module DTK::Client
         module_name += "/#{m_module['version']}" if m_module['version']
         new_context_params = ::DTK::Shell::ContextParams.new([module_name])
         new_context_params.override_method_argument!('option_2', m_module['version'])
-        new_context_params.forward_options( { "skip_cloning" => true })
+        new_context_params.forward_options( { "skip_cloning" => true}).merge!(opts)
 
         response = ContextRouter.routeTask("module", "import_r8n", new_context_params, @conn)
         puts(response.data['does_not_exist'] ? response.data['does_not_exist'] : "Done.")

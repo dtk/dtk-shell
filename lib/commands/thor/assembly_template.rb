@@ -200,7 +200,12 @@ module DTK::Client
       return response unless response.ok?
 
       # create task      
-      assembly_id = response.data(:assembly_id)
+      # commented assemlby_id until we implement json to yaml parsing on client side instead of server side
+      # assembly_id = response.data(:assembly_id)
+
+      # temp solution just to make deploy to work, since response we get from 'stage' command is simple string presented as yaml
+      assembly_id = response.data.match(/(id:)\s*(\d+)/)[2]
+
       post_body = {
         :assembly_id => assembly_id,
         :commit_msg => options["commit_msg"]||"Initial deploy"
