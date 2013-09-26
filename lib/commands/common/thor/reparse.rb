@@ -25,7 +25,7 @@ module DTK::Client
         begin 
           YAML.load(file_content)
         rescue Exception => e
-          raise DTK::Client::DSLParsing::YAMLParsing.new("YAML #{e} in file",file)
+          raise DTK::Client::DSLParsing::YAMLParsing.new("YAML parsing error #{e} in file",file)
         end
       end
       
