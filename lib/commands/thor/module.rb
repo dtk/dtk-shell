@@ -543,8 +543,20 @@ module DTK::Client
     desc "MODULE-NAME/ID pull-from-remote [-v VERSION]", "Update local component module from remote repository."
     version_method_option
     def pull_from_remote(context_params)     
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      pull_from_remote_aux(:component_module,component_module_id,options["version"])
+      component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!,:module_name],method_argument_names)
+      version = options["version"]
+
+      pull_from_remote_aux(:component_module,component_module_id,version)
+
+      if component_module_name.to_s =~ /^[0-9]+$/
+        component_module_id = component_module_name
+        component_module_name = get_module_name(component_module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location()
+      module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
+
+      push_clone_changes_aux(:component_module,component_module_id,version,nil,true) if File.directory?(module_location)
     end
 
     #### end: commands to interact with remote repo ###
