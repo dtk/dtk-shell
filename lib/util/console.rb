@@ -3,12 +3,14 @@ require 'shellwords'
 
 dtk_require("os_util")
 dtk_require_common_commands('../common/thor/push_clone_changes')
+dtk_require_common_commands('../common/thor/reparse')
 dtk_require_from_base("command_helper")
 
 module DTK::Client
   module Console
     class << self
       include PushCloneChangesMixin
+      include ReparseMixin
       include CommandBase
       include CommandHelperMixin
 
@@ -115,6 +117,7 @@ module DTK::Client
                   commit_msg = args.last
                 end
 
+                reparse_aux(path)
                 response = push_clone_changes_aux(module_type, module_id, version, commit_msg)
                 puts response["data"][:json_diffs]
                 puts "commit_sha: #{response["data"][:commit_sha]}"

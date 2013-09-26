@@ -51,6 +51,7 @@ module DTK::Client
           end
           commit_msg = user_input("Commit message")
           internal_trigger=true
+          reparse_aux(module_location)
           response = push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger,opts)
           # if error return
           return response unless response.ok?
