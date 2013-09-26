@@ -323,12 +323,22 @@ module DTK::Client
     desc "SERVICE-NAME/ID pull-from-remote [-v VERSION]", "Update local service module from remote repository."
     version_method_option
     def pull_from_remote(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      
-      pull_from_remote_aux(:service_module,service_module_id,options["version"])
+      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!,:service_name],method_argument_names)
+      version = options["version"]
+
+      pull_from_remote_aux(:service_module,service_module_id,version)
+
+      if service_module_name.to_s =~ /^[0-9]+$/
+        service_module_id   = service_module_name
+        service_module_name = get_service_module_name(service_module_id)
+      end
+
+      modules_path    = OsUtil.service_clone_location()
+      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
+
       # server repo needs to be sync with local clone, so we will use push-clone-changes when pull changes from remote to local
       # to automatically sync local with server repo
-      push_clone_changes_aux(:service_module,service_module_id,options["version"],nil,true)
+      push_clone_changes_aux(:service_module,service_module_id,version,nil,true) if File.directory?(module_location)
     end
 
     ##
@@ -341,8 +351,8 @@ module DTK::Client
     version_method_option
     def clone(context_params, internal_trigger=false)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
-      version             = options["version"]
-      internal_trigger    = true if options.skip_edit?
+      internal_trigger = true if options.skip_edit?
+      version          = options["version"]
 
       # if this is not name it will not work, we need module name
       if service_module_name.to_s =~ /^[0-9]+$/
