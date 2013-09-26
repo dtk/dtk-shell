@@ -504,7 +504,7 @@ module DTK::Client
         module_location     = module_location + "-#{version}" if options.version?
         pwd                 = Dir.getwd()
 
-        if (pwd == module_location)
+        if ((pwd == module_location) || (pwd.include?("#{module_location}/")))
           DTK::Client::OsUtil.print("Local directory '#{module_location}' is not deleted because it is your current working directory.", :yellow) 
 
           puts "You have successfully deleted service '#{service_module_id}'."
