@@ -326,7 +326,8 @@ module DTK::Client
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!,:service_name],method_argument_names)
       version = options["version"]
 
-      pull_from_remote_aux(:service_module,service_module_id,version)
+      response = pull_from_remote_aux(:service_module,service_module_id,version)
+      return response unless response.ok?
 
       if service_module_name.to_s =~ /^[0-9]+$/
         service_module_id   = service_module_name

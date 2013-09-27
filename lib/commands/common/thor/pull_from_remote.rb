@@ -59,11 +59,13 @@ module DTK::Client
       def self.perform_locally(cmd_obj,module_type,module_id,module_name,remote_params)
         opts = remote_params
         response = cmd_obj.Helper(:git_repo).pull_changes(module_type,module_name,opts)
-        return response unless response.ok?
+        # return response unless response.ok?
 
         if response.data[:diffs].empty?
           raise DtkError, "No changes to pull from remote"
         end
+
+        return response
         
         # removing this for now, because we will use push-clone-changes as part of pull-from-remote command 
         # post_body = {
