@@ -1,5 +1,6 @@
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/push_clone_changes')
+dtk_require_common_commands('thor/reparse')
 module DTK::Client
   module EditMixin
     include CloneMixin
