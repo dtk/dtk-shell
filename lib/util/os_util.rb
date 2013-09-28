@@ -59,7 +59,8 @@ module DTK
         end
         
         def module_location(module_type,module_name,version=nil,opts={})
-          module_location_parts(module_type,module_name,version,opts).join('/')
+          #compact used because module_name can be nil
+          module_location_parts(module_type,module_name,version,opts).compact.join('/')
         end
         
         #if module location is /a/b/d/mod it returns ['/a/b/d','mod']
@@ -72,6 +73,12 @@ module DTK
           else
             [base_path, "#{module_name}#{version && "-#{version}"}"]
           end
+        end
+
+        def module_version_locations(module_type,module_name,version=nil,opts={})
+          base_path = module_location_parts(module_type,module_name,version,opts).first
+          module_versions = Dir.entries(base_path).select{|a| a.match(/^#{module_location}-\d.\d.\d$/)}
+          module_versions.map{|version|"#{base_path}/#{version}"}
         end
 
         def module_clone_location()

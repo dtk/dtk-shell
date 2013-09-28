@@ -17,7 +17,7 @@ module DTK::Client
 
       # check if there is repository cloned 
       unless File.directory?(module_location)
-        if Console.confirmation_prompt("Edit not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
+        if opts[:automatically_clone] or Console.confirmation_prompt("Edit not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
           internal_trigger = true
           omit_output = true
           response = clone_aux(module_type,module_id,version,internal_trigger,omit_output,opts)

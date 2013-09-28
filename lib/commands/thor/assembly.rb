@@ -198,6 +198,7 @@ module DTK::Client
       return response unless response.ok?
       assembly_name,component_module_id,version,repo_url,branch = response.data(:assembly_name,:module_id,:version,:repo_url,:workspace_branch)
       edit_opts = {
+        :automatically_clone => true,
         :assembly_module => {
           :assembly_name => assembly_name,
           :version => version
@@ -506,7 +507,15 @@ TODO: will put in dot release and will rename to 'extend'
          
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
-      return response
+      #purge local clone
+      assembly_name = response.data(:assembly_name)
+      opts = {
+        :assembly_module => {
+          :assembly_name => assembly_name
+        }
+      }
+      purge_clone_aux(:component_module,opts)
+      response
     end
 
     desc "ASSEMBLY-NAME/ID set-attribute ATTRIBUTE-NAME/ID VALUE", "Set assembly attribute value(s)"

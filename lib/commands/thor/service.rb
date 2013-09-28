@@ -484,7 +484,7 @@ module DTK::Client
     def delete(context_params)
       module_location, modules_path = nil, nil
       service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      version = options["version"]
+      version = options.version
 
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
@@ -498,8 +498,8 @@ module DTK::Client
         :service_module_id => service_module_id
       }
 
-      action = (options.version? ? "delete_version" : "delete")
-      post_body[:version] = options.version if options.version?
+      action = (version ? "delete_version" : "delete")
+      post_body[:version] = version if version
 
       response = post rest_url("service_module/#{action}"), post_body
       return response unless response.ok?
@@ -508,32 +508,18 @@ module DTK::Client
       # when changing context send request for getting latest services instead of getting from cache
       @@invalidate_map << :service_module
 
-
       if options.purge?
-        modules_path        = OsUtil.service_clone_location()
-        module_location     = "#{modules_path}/#{service_module_id}" unless service_module_id.nil?
-        module_location     = module_location + "-#{version}" if options.version?
-        pwd                 = Dir.getwd()
-
-        if ((pwd == module_location) || (pwd.include?("#{module_location}/")))
-          DTK::Client::OsUtil.print("Local directory '#{module_location}' is not deleted because it is your current working directory.", :yellow) 
-
-          puts "You have successfully deleted service '#{service_module_id}'."
-          return response
+        opts = {:module_name => service_module_id}
+        if version
+          opts.merge!(:version => version)
+        else
+          opts.merge!(:delete_all_versions => true)
         end
-
-        FileUtils.rm_rf("#{module_location}") if (File.directory?(module_location) && ("#{modules_path}/" != module_location))
-        
-        unless options.version?
-          module_versions = Dir.entries(modules_path).select{|a| a.match(/^#{service_module_id}-\d.\d.\d$/)}
-          module_versions.each do |version|
-            FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
-          end
-        end
+        purge_clone_aux(:service_module,opts)
       end
 
       puts "You have successfully deleted service '#{service_module_id}'."
-      return response
+      response
     end
 
     desc "delete-remote REMOTE-SERVICE-NAME [-y]", "Delete remote service module"

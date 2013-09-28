@@ -129,14 +129,14 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete MODULE-IDENTIFIER [-v VERSION] [-y] [-p]", "Delete component module or component module version and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete MODULE [-v VERSION] [-y] [-p]", "Delete component module or component module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
       module_location, modules_path = nil, nil
       component_module_id, force_delete = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
-      version = options["version"]
+      version = options['version']
 
       unless (options.force? || force_delete)
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
@@ -164,30 +164,17 @@ module DTK::Client
 
       # delete local module directory
       if options.purge?
-        modules_path        = OsUtil.module_clone_location()
-        module_location     = "#{modules_path}/#{component_module_id}" unless component_module_id.nil?
-        module_location     = module_location + "-#{version}" if options.version?
-        pwd                 = Dir.getwd()
-
-        if ((pwd == module_location) || (pwd.include?("#{module_location}/")))
-          DTK::Client::OsUtil.print("Local directory '#{module_location}' is not deleted because it is your current working directory.", :yellow) 
-          
-          puts "You have successfully deleted component module '#{component_module_id}'."
-          return response
+        opts = {:module_name => component_module_id}
+        if version
+          opts.merge!(:version => version)
+        else
+          opts.merge!(:delete_all_versions => true)
         end
-
-        FileUtils.rm_rf("#{module_location}") if (File.directory?(module_location) && ("#{modules_path}/" != module_location))
-        
-        unless options.version?
-          module_versions = Dir.entries(modules_path).select{|a| a.match(/^#{component_module_id}-\d.\d.\d$/)}
-          module_versions.each do |version|
-            FileUtils.rm_rf("#{modules_path}/#{version}") if File.directory?("#{modules_path}/#{version}")
-          end
-        end
+        purge_clone_aux(:component_module,opts)
       end
 
       puts "You have successfully deleted component module '#{component_module_id}'."
-      return response
+      response
     end
 
 
