@@ -5,7 +5,8 @@ module DTK::Client
   module EditMixin
     include CloneMixin
     include PushCloneChangesMixin
-
+    include ReparseMixin
+    
     ##
     #
     # module_type: will be one of 
