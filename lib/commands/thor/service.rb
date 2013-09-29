@@ -372,7 +372,12 @@ module DTK::Client
     desc "SERVICE-NAME/ID create-version NEW-VERSION", "Snapshot current state of module as a new version"
     def create_version(context_params)
       service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
-      service_module_name = context_params.retrieve_arguments([:service_name],method_argument_names)
+      service_module_name = get_service_module_name(service_module_id)
+
+      module_location = OsUtil.module_location(:service_module,service_module_name,version)
+      if File.directory?(module_location)
+        raise DtkError, "Target service module directory for version #{version} (#{module_location}) exists already; it must be deleted and this comamnd retried"
+      end
 
       post_body = {
         :service_module_id => service_module_id,
@@ -382,16 +387,8 @@ module DTK::Client
       response = post rest_url("service_module/create_new_version"), post_body
       return response unless response.ok?
 
-      if service_module_name.to_s =~ /^[0-9]+$/
-        service_module_id   = service_module_name
-        service_module_name = get_service_module_name(service_module_id)
-      end
-
-      modules_path    = OsUtil.service_clone_location()
-      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
-
-      raise DTK::Client::DtkValidationError, "Trying to clone a service module '#{service_module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
-      clone_aux(:service_module,service_module_id,version,true)     
+      internal_trigger = omit_output = true
+      clone_aux(:service_module,service_module_name,version,internal_trigger,omit_output)
     end
 
     desc "SERVICE-NAME/ID set-module-version COMPONENT-MODULE-NAME VERSION", "Set the version of the component module to use in the service's assemblies"
@@ -478,16 +475,18 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete service-module #{version.nil? ? '' : 'version '}'#{service_module_name}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
       end
 
-      if options.purge?
-        opts = {:module_name => service_module_name}
-        if version then opts.merge!(:version => version)
-        else opts.merge!(:delete_all_versions => true)
+      response = 
+        if options.purge?
+          opts = {:module_name => service_module_name}
+          if version then opts.merge!(:version => version)
+          else opts.merge!(:delete_all_versions => true)
+          end
+          
+          purge_clone_aux(:service_module,opts)
+        else
+          Helper(:git_repo).unlink_local_clone?(:service_module,service_module_name,version)
         end
-
-        purge_clone_aux(:service_module,opts)
-      else
-        Helper(:git_repo).unlink_local_clone?(:service_module,service_module_name,version)
-      end
+      return response unless response.ok?
 
       post_body = {
         :service_module_id => service_module_id
@@ -503,8 +502,12 @@ module DTK::Client
       # when changing context send request for getting latest services instead of getting from cache
       @@invalidate_map << :service_module
 
-      puts "You have successfully deleted service '#{service_module_name}'."
-      response
+      msg = "Service module '#{service_module_name}' "
+      if version then msg << "version #{version} has been deleted"
+      else  msg << "has been deleted"; end
+      OsUtil.print(msg,:yellow)
+
+      Response::Ok.new()
     end
 
     desc "delete-remote REMOTE-SERVICE-NAME [-y]", "Delete remote service module"

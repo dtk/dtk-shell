@@ -77,7 +77,7 @@ module DTK
 
         def module_version_locations(module_type,module_name,version=nil,opts={})
           base_path = module_location_parts(module_type,module_name,version,opts).first
-          module_versions = Dir.entries(base_path).select{|a| a.match(/^#{module_location}-\d.\d.\d$/)}
+          module_versions = Dir.entries(base_path).select{|a| a.match(/^#{module_name}-\d.\d.\d$/)}
           module_versions.map{|version|"#{base_path}/#{version}"}
         end
 

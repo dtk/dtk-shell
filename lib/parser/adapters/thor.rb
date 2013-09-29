@@ -326,7 +326,7 @@ module DTK
         end
 
         def is_numeric_id?(possible_id)             
-          !possible_id.match(/^[0-9]+$/).nil?
+          !possible_id.to_s.match(/^[0-9]+$/).nil?
         end
 
         # User input prompt

@@ -499,18 +499,19 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
       assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      assembly_name = get_assembly_name(assembly_id)
 
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
         #used form "+'?' because ?" confused emacs ruby rendering
         what = "assembly"
-        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_id}' and its nodes"+'?')
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_name}' and its nodes"+'?')
       end
 
       #purge local clone
-      assembly_name = get_assembly_name(assembly_id)
       #call to purge_clone_aux means purging the assembly module's component modules
-      purge_clone_aux(:component_module,:assembly_module => {:assembly_name => assembly_name})
+      response = purge_clone_aux(:component_module,:assembly_module => {:assembly_name => assembly_name})
+      return response unless response.ok?
 
       post_body = {
         :assembly_id => assembly_id,

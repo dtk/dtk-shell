@@ -130,15 +130,17 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module #{version.nil? ? '' : 'version '}'#{component_module_name}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
       end
 
-      if options.purge?
-        opts = {:module_name => component_module_name}
-        if version then opts.merge!(:version => version)
-        else opts.merge!(:delete_all_versions => true)
+      response = 
+        if options.purge?
+          opts = {:module_name => component_module_name}
+          if version then opts.merge!(:version => version)
+          else opts.merge!(:delete_all_versions => true)
+          end
+          purge_clone_aux(:component_module,opts)
+        else
+          Helper(:git_repo).unlink_local_clone?(:component_module,component_module_name,version)
         end
-        purge_clone_aux(:component_module,opts)
-      else
-        Helper(:git_repo).unlink_local_clone?(:component_module,component_module_name,version)
-      end
+      return response unless response.ok?
 
       post_body = {
        :component_module_id => component_module_id
@@ -152,8 +154,12 @@ module DTK::Client
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :module_component
 
-      puts "You have successfully deleted component module '#{component_module_name}'."
-      response
+      msg = "Component module '#{component_module_name}' "
+      if version then msg << "version #{version} has been deleted"
+      else  msg << "has been deleted"; end
+      OsUtil.print(msg,:yellow)
+
+      Response::Ok.new()
     end
 
 
@@ -532,7 +538,12 @@ module DTK::Client
     desc "MODULE-NAME/ID create-version VERSION", "Snapshot current state of module as a new version"
     def create_version(context_params)
       component_module_id,version = context_params.retrieve_arguments([:module_id!,:option_1!],method_argument_names)
-      component_module_name = context_params.retrieve_arguments([:module_name],method_argument_names)
+      component_module_name = get_component_module_name(component_module_id)
+
+      module_location = OsUtil.module_location(:component_module,component_module_name,version)
+      if File.directory?(module_location)
+        raise DtkError, "Target component module directory for version #{version} (#{module_location}) exists already; it must be deleted and this comamnd retried"
+      end
 
       post_body = {
         :component_module_id => component_module_id,
@@ -542,16 +553,8 @@ module DTK::Client
       response = post rest_url("component_module/create_new_version"), post_body
       return response unless response.ok?
 
-      if component_module_name.to_s =~ /^[0-9]+$/
-        component_module_id = component_module_name
-        component_module_name = get_module_name(component_module_id)
-      end
-
-      modules_path    = OsUtil.module_clone_location()
-      module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
-
-      raise DTK::Client::DtkValidationError, "Trying to clone a module '#{component_module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
-      clone_aux(:component_module,component_module_id,version,true)
+      internal_trigger = omit_output = true
+      clone_aux(:component_module,component_module_id,version,internal_trigger,omit_output)
     end
 
     ##

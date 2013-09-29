@@ -107,11 +107,12 @@ module DTK; module Client; class CommandHelper
 
     #if local clone exists remove its .git directory
     def unlink_local_clone?(type,module_name,version=nil)
-      local_repo_dir = local_repo_dir(type,module_name,version)
-      git_dir = "#{local_repo_dir}/.git"
-      if File.directory?(git_dir)
-        FileUtils.rm_rf(git_dir)
-        true
+      Response.wrap_helper_actions() do
+        local_repo_dir = local_repo_dir(type,module_name,version)
+        git_dir = "#{local_repo_dir}/.git"
+        if File.directory?(git_dir)
+          FileUtils.rm_rf(git_dir)
+        end
       end
     end
 
@@ -124,7 +125,8 @@ module DTK; module Client; class CommandHelper
           raise ErrorUsage.new("The content for module (#{module_name}) should be put in directory (#{local_repo_dir})")
         end
         if File.directory?("#{local_repo_dir}/.git")
-          unless unlink_local_clone?(type,module_name,version)
+          response =  unlink_local_clone?(type,module_name,version)
+          unless response.ok?
             # in case delete went wrong, we raise usage error
             raise ErrorUsage.new("Directory (#{local_repo_dir} is set as a git repo; to continue it must be a non git repo; this can be handled by shell command 'rm -rf #{local_repo_dir}/.git'")
           end
