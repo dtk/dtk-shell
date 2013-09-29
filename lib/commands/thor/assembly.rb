@@ -509,8 +509,7 @@ TODO: will put in dot release and will rename to 'extend'
       end
 
       #purge local clone
-      #call to purge_clone_aux means purging the assembly module's component modules
-      response = purge_clone_aux(:component_module,:assembly_module => {:assembly_name => assembly_name})
+      response = purge_clone_aux(:all,:assembly_module => {:assembly_name => assembly_name})
       return response unless response.ok?
 
       post_body = {

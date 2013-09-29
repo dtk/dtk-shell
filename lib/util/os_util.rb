@@ -68,8 +68,13 @@ module DTK
           base_path = clone_base_path(opts[:assembly_module] ? :assembly_module : module_type)
           if assembly_module = opts[:assembly_module]
             assembly_name = opts[:assembly_module][:assembly_name]
-            type = clone_base_path(module_type).split('/').last
-            ["#{base_path}/#{assembly_name}/#{type}", module_name]
+            base_all_types = "#{base_path}/#{assembly_name}"
+            if module_type == :all
+              [base_all_types,nil]
+            else
+              type = clone_base_path(module_type).split('/').last
+              ["#{base_all_types}/#{type}", module_name]
+            end
           else
             [base_path, "#{module_name}#{version && "-#{version}"}"]
           end
