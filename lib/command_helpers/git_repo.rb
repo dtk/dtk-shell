@@ -111,10 +111,8 @@ module DTK; module Client; class CommandHelper
       git_dir = "#{local_repo_dir}/.git"
       if File.directory?(git_dir)
         FileUtils.rm_rf(git_dir)
-        return true
+        true
       end
-
-      return false
     end
 
     def check_local_dir_exists_with_content(type,module_name,version=nil)

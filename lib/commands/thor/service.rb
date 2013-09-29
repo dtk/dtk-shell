@@ -471,14 +471,23 @@ module DTK::Client
       module_location, modules_path = nil, nil
       service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       version = options.version
+      service_module_name = get_service_module_name(service_module_id)
 
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete service-module #{version.nil? ? '' : 'version '}'#{service_module_id}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
+        return unless Console.confirmation_prompt("Are you sure you want to delete service-module #{version.nil? ? '' : 'version '}'#{service_module_name}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
       end
 
-      #get service module name if service module id is provided on input - to be able to delete service module from local filesystem later
-      service_module_id = get_service_module_name(service_module_id) if service_module_id.to_s =~ /^[0-9]+$/
+      if options.purge?
+        opts = {:module_name => service_module_name}
+        if version then opts.merge!(:version => version)
+        else opts.merge!(:delete_all_versions => true)
+        end
+
+        purge_clone_aux(:service_module,opts)
+      else
+        Helper(:git_repo).unlink_local_clone?(:service_module,service_module_name,version)
+      end
 
       post_body = {
         :service_module_id => service_module_id
@@ -494,17 +503,7 @@ module DTK::Client
       # when changing context send request for getting latest services instead of getting from cache
       @@invalidate_map << :service_module
 
-      if options.purge?
-        opts = {:module_name => service_module_id}
-        if version
-          opts.merge!(:version => version)
-        else
-          opts.merge!(:delete_all_versions => true)
-        end
-        purge_clone_aux(:service_module,opts)
-      end
-
-      puts "You have successfully deleted service '#{service_module_id}'."
+      puts "You have successfully deleted service '#{service_module_name}'."
       response
     end
 

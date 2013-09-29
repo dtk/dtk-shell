@@ -122,44 +122,37 @@ module DTK::Client
     def delete(context_params)
       module_location, modules_path = nil, nil
       component_module_id, force_delete = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
-      version = options['version']
+      version = options.version
+      component_module_name = get_module_name(component_module_id)
 
       unless (options.force? || force_delete)
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete component-module #{version.nil? ? '' : 'version '}'#{component_module_id}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
+        return unless Console.confirmation_prompt("Are you sure you want to delete component-module #{version.nil? ? '' : 'version '}'#{component_module_name}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
       end
 
-      #get component module name if component module id is provided on input - to be able to delete component module from local filesystem later
-      component_module_id = get_module_name(component_module_id) if component_module_id.to_s =~ /^[0-9]+$/
+      if options.purge?
+        opts = {:module_name => component_module_name}
+        if version then opts.merge!(:version => version)
+        else opts.merge!(:delete_all_versions => true)
+        end
+        purge_clone_aux(:component_module,opts)
+      else
+        Helper(:git_repo).unlink_local_clone?(:component_module,component_module_name,version)
+      end
 
       post_body = {
        :component_module_id => component_module_id
       }
-
-      action = (options.version? ? "delete_version" : "delete")
-      post_body[:version] = options.version if options.version?
+      action = (version ? "delete_version" : "delete")
+      post_body[:version] = version if version
       
       response = post(rest_url("component_module/#{action}"), post_body)
       return response unless response.ok?
       
-      module_name = response.data(:module_name)
-      Helper(:git_repo).unlink_local_clone?(:component_module,module_name,version)
-      
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :module_component
 
-      # delete local module directory
-      if options.purge?
-        opts = {:module_name => component_module_id}
-        if version
-          opts.merge!(:version => version)
-        else
-          opts.merge!(:delete_all_versions => true)
-        end
-        purge_clone_aux(:component_module,opts)
-      end
-
-      puts "You have successfully deleted component module '#{component_module_id}'."
+      puts "You have successfully deleted component module '#{component_module_name}'."
       response
     end
 
