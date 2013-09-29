@@ -72,7 +72,7 @@ module DTK::Client
       include ServiceImporter
 
       def get_module_name(module_id)
-        get_name_from_id_helper(*self.class.whoami())
+        get_name_from_id_helper(module_id)
       end
 
       def module_info_about(context_params, about, data_type)

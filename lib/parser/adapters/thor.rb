@@ -117,23 +117,6 @@ module DTK
         end
       end
 
-      #TODO: can make more efficient by having rest call that returns name from id, rather than using 'list path'
-      #entity_id can be a name as well as an id
-      def self.get_name_from_id_helper(entity_type, entity_id, list_command_path, subtype=nil)
-        return entity_id unless entity_id  =~ /^[0-9]+$/
-
-        entity_id = entity_id.to_i
-        match = nil
-        response = get_cached_response(entity_type,list_command_path,subtype)
-        if response.ok? and response['data']
-          match = response['data'].find{|entity|entity_id == entity['id']}
-        end
-        unless match
-          raise DTK::Client::DtkError, "Not able to resolve entity name, please provide #{entity_type} name." 
-        end
-        match['display_name']
-      end
-
       def self.create_context_arguments(params)
         context_params = DTK::Shell::ContextParams.new
         params.each do |k,v|
@@ -321,8 +304,29 @@ module DTK
           return usage.split(name.gsub(/_/,'-')).last.split(' ')
         end 
 
+        #TODO: can make more efficient by having rest call that returns name from id, rather than using 'list path'
+        #entity_id can be a name as well as an id
+        def get_name_from_id_helper(entity_id, entity_type=nil,list_command_path=nil, subtype=nil)
+          return entity_id unless is_numeric_id?(entity_id)
+
+          entity_id = entity_id.to_i
+          if entity_type.nil?
+            entity_type,list_command_path,subtype = self.class.whoami()
+          end
+
+          match = nil
+          response = self.class.get_cached_response(entity_type,list_command_path,subtype)
+          if response.ok? and response['data']
+            match = response['data'].find{|entity|entity_id == entity['id']}
+          end
+          unless match
+            raise DTK::Client::DtkError, "Not able to resolve entity name, please provide #{entity_type} name." 
+          end
+          match['display_name']
+        end
+
         def is_numeric_id?(possible_id)             
-          return !possible_id.match(/^[0-9]+$/).nil?
+          !possible_id.match(/^[0-9]+$/).nil?
         end
 
         # User input prompt

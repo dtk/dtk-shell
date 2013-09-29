@@ -30,7 +30,7 @@ module DTK::Client
       include PurgeCloneMixin
 
       def get_service_module_name(service_module_id)
-        get_name_from_id_helper(*self.class.whoami())
+        get_name_from_id_helper(service_module_id)
       end
     end
 

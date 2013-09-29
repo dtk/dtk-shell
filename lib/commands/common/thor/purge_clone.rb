@@ -17,9 +17,7 @@ module DTK::Client
       if opts[:delete_all_versions]
         OsUtil.module_version_locations(module_type,module_name,version,opts).each |path|
           FileUtils.rm_rf(path) if File.directory?(path)
-        end
       end
     end
   end
-end
 end

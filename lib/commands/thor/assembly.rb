@@ -23,8 +23,12 @@ module DTK::Client
       include EditMixin
       include PurgeCloneMixin
       def get_assembly_name(assembly_id)
-        get_name_from_id_helper(:assembly, "assembly/list", {:subtype  => 'instance'})
+        get_name_from_id_helper(assembly_id)
       end
+    end
+
+    def self.whoami()
+      return :assembly, "assembly/list", {:subtype  => 'instance'}
     end
 
     def self.pretty_print_cols()
