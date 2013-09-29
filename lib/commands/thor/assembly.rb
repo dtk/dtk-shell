@@ -7,6 +7,7 @@ dtk_require_from_base("command_helper")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 dtk_require_common_commands('thor/edit')
+dtk_require_common_commands('thor/purge_clone')
 LOG_SLEEP_TIME   = DTK::Configuration.get(:tail_log_frequency)
 DEBUG_SLEEP_TIME = DTK::Configuration.get(:debug_task_frequency)
 
@@ -20,6 +21,10 @@ module DTK::Client
       include TaskStatusMixin
       include SetRequiredParamsMixin
       include EditMixin
+      include PurgeCloneMixin
+      def get_assembly_name(assembly_id)
+        get_name_from_id_helper(:assembly, "assembly/list", {:subtype  => 'instance'})
+      end
     end
 
     def self.pretty_print_cols()
@@ -498,6 +503,11 @@ TODO: will put in dot release and will rename to 'extend'
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_id}' and its nodes"+'?')
       end
 
+      #purge local clone
+      assembly_name = get_assembly_name(assembly_id)
+      #call to purge_clone_aux means purging the assembly module's component modules
+      purge_clone_aux(:component_module,:assembly_module => {:assembly_name => assembly_name})
+
       post_body = {
         :assembly_id => assembly_id,
         :subtype => :instance
@@ -507,14 +517,6 @@ TODO: will put in dot release and will rename to 'extend'
          
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
-      #purge local clone
-      assembly_name = response.data(:assembly_name)
-      opts = {
-        :assembly_module => {
-          :assembly_name => assembly_name
-        }
-      }
-      purge_clone_aux(:component_module,opts)
       response
     end
 

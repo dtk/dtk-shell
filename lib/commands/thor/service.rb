@@ -13,6 +13,7 @@ dtk_require_from_base("util/os_util")
 dtk_require_from_base("commands/thor/assembly_template")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
+dtk_require_common_commands('thor/purge_clone')
 dtk_require_dtk_common('grit_adapter')
 
 module DTK::Client
@@ -26,25 +27,10 @@ module DTK::Client
       include EditMixin
       include ReparseMixin
       include ServiceImporter
+      include PurgeCloneMixin
 
       def get_service_module_name(service_module_id)
-        service_module_name = nil
-        # TODO: See with Rich if there is better way to resolve this
-        response = DTK::Client::CommandBaseThor.get_cached_response(:module, "service_module/list")
-
-        if response.ok?
-          unless response['data'].nil?
-            response['data'].each do |module_item|
-              if service_module_id.to_i == (module_item['id'])
-                service_module_name = module_item['display_name']
-                break
-              end
-            end
-          end
-        end
-
-        raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if service_module_name.nil?
-        return service_module_name
+        get_name_from_id_helper(*self.class.whoami())
       end
     end
 
@@ -477,7 +463,7 @@ module DTK::Client
       push_clone_changes_aux(:service_module,service_module_id,version,nil,internal_trigger)
     end
 
-    desc "delete SERVICE-IDENTIFIER [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete SERVICE-MODULE [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false

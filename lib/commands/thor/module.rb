@@ -7,6 +7,7 @@ dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/reparse')
+dtk_require_common_commands('thor/purge_clone')
 dtk_require_from_base('configurator')
 dtk_require_from_base('command_helpers/service_importer')
 
@@ -66,27 +67,12 @@ module DTK::Client
       include PushCloneChangesMixin
       include EditMixin
       include ReparseMixin
+      include PurgeCloneMixin
       include ListDiffsMixin
       include ServiceImporter
 
       def get_module_name(module_id)
-        module_name = nil
-        # TODO: See with Rich if there is better way to resolve this
-        response = DTK::Client::CommandBaseThor.get_cached_response(:module, "component_module/list")
-        
-        if response.ok?
-          unless response['data'].nil?
-            response['data'].each do |module_item|
-              if module_id.to_i == (module_item['id'])
-                module_name = module_item['display_name']
-                break
-              end
-            end
-          end
-        end
-
-        raise DTK::Client::DtkError, "Not able to resolve module name, please provide module name." if module_name.nil?
-        return module_name
+        get_name_from_id_helper(*self.class.whoami())
       end
 
       def module_info_about(context_params, about, data_type)

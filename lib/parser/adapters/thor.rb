@@ -62,7 +62,7 @@ module DTK
         actions = validation_response.validation_actions
 
         actions.each_with_index do |action, i|
-          if Console.confirmation_prompt("Pre-action '#{action['action']}' needed, execute?")
+          if Console.confirmation_prompt("Pre-action '#{action['action']}' needed, execute"+"?")
             # we have hash map with values { :assembly_id => 2123123123, :option_1 => true }
             # we translate to array of values, with action as first element
 
@@ -115,6 +115,23 @@ module DTK
         else
           return nil
         end
+      end
+
+      #TODO: can make more efficient by having rest call that returns name from id, rather than using 'list path'
+      #entity_id can be a name as well as an id
+      def self.get_name_from_id_helper(entity_type, entity_id, list_command_path, subtype=nil)
+        return entity_id unless entity_id  =~ /^[0-9]+$/
+
+        entity_id = entity_id.to_i
+        match = nil
+        response = get_cached_response(entity_type,list_command_path,subtype)
+        if response.ok? and response['data']
+          match = response['data'].find{|entity|entity_id == entity['id']}
+        end
+        unless match
+          raise DTK::Client::DtkError, "Not able to resolve entity name, please provide #{entity_type} name." 
+        end
+        match['display_name']
       end
 
       def self.create_context_arguments(params)
