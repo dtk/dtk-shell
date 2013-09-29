@@ -372,8 +372,17 @@ module DTK::Client
     desc "SERVICE-NAME/ID create-version NEW-VERSION", "Snapshot current state of module as a new version"
     def create_version(context_params)
       service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
-      service_module_name = get_service_module_name(service_module_id)
+      post_body = {
+        :service_module_id => service_module_id
+      }
+      response = post rest_url("service_module/versions"), post_body
+      return response unless response.ok?
+      versions = (response.data.first && response.data.first['versions'])||Array.new
+      if versions.include?(version)
+        return Response::Error::Usage.new("Version #{version} exists already")
+      end
 
+      service_module_name = get_service_module_name(service_module_id)
       module_location = OsUtil.module_location(:service_module,service_module_name,version)
       if File.directory?(module_location)
         raise DtkError, "Target service module directory for version #{version} (#{module_location}) exists already; it must be deleted and this comamnd retried"

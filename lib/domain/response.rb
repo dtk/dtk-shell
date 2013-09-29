@@ -124,7 +124,8 @@ module DTK
         end
         
         class Usage < self
-          def initialize(hash={})
+          def initialize(hash_or_string={})
+            hash = (hash_or_string.kind_of?(String) ? {'message' => hash_or_string} : hash_or_string)
             super({"code" => "error"}.merge(hash))
           end
         end

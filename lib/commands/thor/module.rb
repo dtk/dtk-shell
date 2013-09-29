@@ -538,18 +538,26 @@ module DTK::Client
     desc "MODULE-NAME/ID create-version VERSION", "Snapshot current state of module as a new version"
     def create_version(context_params)
       component_module_id,version = context_params.retrieve_arguments([:module_id!,:option_1!],method_argument_names)
-      component_module_name = get_component_module_name(component_module_id)
+      post_body = {
+        :component_module_id => component_module_id
+      }
+      response = post rest_url("component_module/versions"), post_body
+      return response unless response.ok?
+      versions = (response.data.first && response.data.first['versions'])||Array.new
+      if versions.include?(version)
+        return Response::Error::Usage.new("Version #{version} exists already")
+      end
 
+      component_module_name = get_module_name(component_module_id)
       module_location = OsUtil.module_location(:component_module,component_module_name,version)
       if File.directory?(module_location)
-        raise DtkError, "Target component module directory for version #{version} (#{module_location}) exists already; it must be deleted and this comamnd retried"
+        return Response::Error::Usage.new("Target component module directory for version #{version} (#{module_location}) exists already; it must be deleted and this comamnd retried")
       end
 
       post_body = {
         :component_module_id => component_module_id,
         :version => version
       }
-
       response = post rest_url("component_module/create_new_version"), post_body
       return response unless response.ok?
 
