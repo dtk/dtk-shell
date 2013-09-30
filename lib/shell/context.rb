@@ -224,7 +224,8 @@ module DTK
         error_message = nil
         invalid_context = ""
 
-        if clazz.nil?
+        # if command class did not found or if command ends with '-'
+        if (clazz.nil? || command.match(/-$/))
           error_message = "Context for '#{command}' could not be loaded.";
           invalid_context = command
         end
