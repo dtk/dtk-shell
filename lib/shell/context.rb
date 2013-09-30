@@ -582,8 +582,8 @@ module DTK
             type = Context.get_option_type(options, e) unless options.nil?
             if type.nil?
               options_param_args = nil
-              break
-              # raise DTK::Client::DtkValidationError, "Option '#{e}' is not valid for current command!"
+              # break
+              raise DTK::Client::DtkValidationError, "Option '#{e}' is not valid for current command!"
             else
               options_param_args << e
               options_param_args << args[i+1] unless type == :boolean
