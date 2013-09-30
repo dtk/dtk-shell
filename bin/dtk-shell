@@ -3,6 +3,8 @@ require File.expand_path('../lib/shell', File.dirname(__FILE__))
 require File.expand_path('../lib/commands/thor/account', File.dirname(__FILE__))
 require File.expand_path('../lib/command_helpers/ssh_processing', File.dirname(__FILE__))
 
+trap("INT", "SIG_IGN")
+
 ::DTK::Client::Configurator.check_config_exists
 ::DTK::Client::Configurator.check_git
 ::DTK::Client::Configurator.create_missing_clone_dirs
