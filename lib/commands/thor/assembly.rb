@@ -605,9 +605,9 @@ TODO: will put in dot release and will rename to 'extend'
       post rest_url("assembly/add_assembly_template"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID create-node ASSEMBLY-NODES-NAME [NODE-TEMPLATE]", "Add (stage) a new node to the assembly"
+    desc "ASSEMBLY-NAME/ID create-node ASSEMBLY-NODES-NAME NODE-TEMPLATE", "Add (stage) a new node to the assembly or workspace"
     def create_node(context_params)
-      assembly_id,assembly_node_name,node_template_identifier = context_params.retrieve_arguments([:assembly_id,:option_1!,:option_2],method_argument_names)
+      assembly_id,assembly_node_name,node_template_identifier = context_params.retrieve_arguments([:assembly_id,:option_1!,:option_2!],method_argument_names)
       post_body = {
         :assembly_id => assembly_id,
         :assembly_node_name => assembly_node_name
