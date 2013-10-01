@@ -123,12 +123,18 @@ module DTK::Client
       end
     end
 
-    desc "delete TARGET-IDENTIFIER","Deletes target or target template"
+    desc "delete TARGET-IDENTIFIER [-y]","Deletes target or target template"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
       target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post_body = {
         :target_id => target_id
       }
+
+      unless options.force?
+        # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
+        return unless Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' and all items contained in it"+'?')
+      end
 
       return post rest_url("target/delete"), post_body
     end
