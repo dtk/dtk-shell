@@ -239,7 +239,7 @@ module DTK::Client
         return Response::Error.new()
       end
       module_name,branch = response.data(:module_name,:workspace_branch)
-      response = Helper(:git_repo).pull_changes?(:service_module,module_name,:local_branch => branch)
+      response = Helper(:git_repo).pull_changes?(:component_module,module_name,:local_branch => branch)
       return response unless response.ok?()
       Response::Ok.new()
     end
