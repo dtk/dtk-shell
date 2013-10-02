@@ -71,6 +71,7 @@ module DTK
       # SYM_LINKS methods is used to calculate aliases that will be used for certain entities
       # one of those approaches will be as such
       def self.check_for_sym_link(entries)
+        
         if (entries.size == 1)
           SYM_LINKS.each do |sym_link|
             if entries.first.downcase.to_sym.eql?(sym_link[:alias])
@@ -173,7 +174,8 @@ module DTK
         entries = args.first.split(/\//)
 
         # transform alias to full path
-        entries = Context.check_for_sym_link(entries)
+        entries = Context.check_for_sym_link(entries) if root?
+
 
         # if only '/' or just cc skip validation
         return active_context_copy if entries.empty?
@@ -281,8 +283,7 @@ module DTK
         @context_commands = @current
 
         # we load thor command class identifiers for autocomplete context list
-        # shadowed entity does not have identifiers
-        command_context =  ActiveContext.is_shadowed_entity?(command_name) ? nil : get_command_identifiers(command_name)
+        command_context = get_command_identifiers(command_name)
 
         command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
         @context_commands.concat(command_name_list) if current_command?
@@ -437,10 +438,7 @@ module DTK
 
       end
 
-      def get_ac_candidates_for_context(context, active_context_copy)
-        # shadowed entities do not have identifiers or valid children
-        return [] if active_context_copy.is_shadowed_entity?
-        
+      def get_ac_candidates_for_context(context, active_context_copy)        
         # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
         if context
           if context.is_command?

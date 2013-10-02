@@ -58,7 +58,7 @@ def top_level_execute(entity_name, method_name, context_params=nil,options_args=
   rescue DTK::Client::DtkValidationError => e
     validation_message = e.message
     
-    if entity_class && method_name
+    if !e.skip_usage_info && entity_class && method_name
       usage_info = entity_class.get_usage_info(entity_name, method_name)
       validation_message += ", usage: #{usage_info}"
     end

@@ -25,6 +25,13 @@ module DTK
     end
 
     class DtkValidationError < Error
+
+      attr_accessor :skip_usage_info
+
+      def initialize(msg, skip_usage_info = false)
+        @skip_usage_info = skip_usage_info
+        super(msg)
+      end
     end
 
     # raise by developers to signal wrong usage of components

@@ -26,13 +26,9 @@ module DTK
       @@invalidate_map  = []
       TIME_DIFF         = 60   #second(s)
       EXTENDED_TIMEOUT  = 360  #second(s)
-
-
-      attr_accessor :shadow_entity
       
       def initialize(args, opts, config)
         @conn = config[:conn]
-        @shadow_entity = false
         super
       end
 
@@ -126,7 +122,6 @@ module DTK
       end
 
       def self.list_method_supported?
-        # shadow entites do not support list
         return (respond_to?(:validation_list) || respond_to?(:whoami))
       end
 
