@@ -232,6 +232,15 @@ module DTK::Client
       }
       response = post(rest_url("assembly/promote_module_updates"),post_body)
       return response unless response.ok?
+      return Response::Ok.new() unless response.data(:any_updates)
+      if dsl_parsing_errors = response.data(:dsl_parsing_errors)
+        error_message = "Module '#{component_module_name}' imported with errors:\n#{dsl_parsing_errors}\nYou can fix errors and import module again.\n"
+        OsUtil.print(dsl_parsed_message, :red) 
+        return Response::Error.new()
+      end
+      module_name,branch = response.data(:module_name,:workspace_branch)
+      response = Helper(:git_repo).pull_changes?(:service_module,module_name,:local_branch => branch)
+      return response unless response.ok?()
       Response::Ok.new()
     end
 

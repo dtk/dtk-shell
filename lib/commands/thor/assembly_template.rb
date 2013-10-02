@@ -261,7 +261,9 @@ module DTK::Client
       @@invalidate_map << :assembly_template
       return response unless response.ok?
       module_name,branch = response.data(:module_name,:workspace_branch)
-      Helper(:git_repo).pull_changes?(:service_module,module_name,:local_branch => branch)
+      response = Helper(:git_repo).pull_changes?(:service_module,module_name,:local_branch => branch)
+      return response unless response.ok?()
+      Response::Ok.new()
     end
   end
 end
