@@ -300,8 +300,6 @@ module DTK::Client
       # we push clone changes anyway, user can change and push again
       context_params.add_context_to_params("module", "module", module_id)
       push_clone_changes(context_params, true)
-
-      response
     end
 
     desc "MODULE-NAME/ID reparse [-v VERSION]", "Check module for syntax errors in json/yaml files."
@@ -530,6 +528,7 @@ module DTK::Client
       module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
 
       push_clone_changes_aux(:component_module,component_module_id,version,nil,true) if File.directory?(module_location)
+      Response::Ok.new()
     end
 
     #### end: commands to interact with remote repo ###
@@ -629,6 +628,7 @@ module DTK::Client
 
       reparse_aux(module_location)
       push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
+      Response::Ok.new()
     end
 
     desc "MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"
