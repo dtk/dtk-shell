@@ -111,6 +111,15 @@ def execute_shell_command(line, prompt)
 
     # support command alias (ls for list etc.)
     cmd = preprocess_commands(cmd)
+
+    # DEV only reload shell
+    if ::DTK::Configuration.get(:development_mode)
+      if ('restart' == cmd)
+        puts "DEV Reloading shell ..."
+        ::DTK::Client::OsUtil.dev_reload_shell()
+        return prom
+      end
+    end
     
     if ('cc' == cmd)
       # in case there is no params we just reload command

@@ -177,6 +177,12 @@ module DTK
           return nil
         end
 
+        def dev_reload_shell()
+          require File.expand_path('../../lib/shell', File.dirname(__FILE__))
+          require File.expand_path('../../lib/commands/thor/account', File.dirname(__FILE__))
+          require File.expand_path('../../lib/command_helpers/ssh_processing', File.dirname(__FILE__))
+        end
+
         private
         
         def seperator
