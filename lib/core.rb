@@ -192,6 +192,7 @@ module DTK
 
       CONFIG_FILE = ::DTK::Client::Configurator.CONFIG_FILE
       CRED_FILE = ::DTK::Client::Configurator.CRED_FILE
+      
       REQUIRED_KEYS = [:server_host]
 
       def self.[](k)

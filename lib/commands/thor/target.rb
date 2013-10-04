@@ -10,7 +10,7 @@ module DTK::Client
     end
 
     def self.alternate_identifiers()
-      return ['provider']
+      return ['PROVIDER']
     end
 
 
@@ -69,24 +69,25 @@ module DTK::Client
     end
 
 
-    desc "create-target PROVIDER-ID/NAME --region REGION", "Create target"
+    desc "PROVIDER-ID/NAME create-target --region REGION", "Create target"
     method_option :region, :type => :string
     def create_target(context_params)
-      not_implemented()
-      composed_provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      # we use :target_id but that will retunr provider_id (another name for target template ID)
+      composed_provider_id, composed_provider_name = context_params.retrieve_arguments([:target_id!,:target_name!],method_argument_names)
+      region = context_params.retrieve_thor_options([:region!], options)
 
-      provider_type, provider_name = decompose_provider_type_and_name(composed_provider_name)
-      access_key, secret_key, keypair = context_params.retrieve_thor_options([:access_key!, :secret_key!, :keypair!], options)
+      DTK::Shell::InteractiveWizard.validate_region(region)
 
       post_body = {
-        :iaas_properties => {
-          :key    => access_key,
-          :secret => secret_key,
-        },
-          :target_name => provider_name,
-          :target_type => provider_type
+        # take only last part of the name, e.g. provider::DemoABH
+        :target_name => composed_provider_name.split('::').last,
+        :target_template_id => composed_provider_id,
+        :region => region
       }
 
+      # DEBUG SNIPPET >>>> REMOVE <<<<
+      require 'ap'
+      ap post_body
 
       response = post rest_url("target/create"), post_body
       @@invalidate_map << :target

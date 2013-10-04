@@ -11,6 +11,7 @@ module DTK
       # client commands
       #CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs']
       CLIENT_COMMANDS       = ['cc','exit','clear']
+      DEV_COMMANDS          = ['restart']
       DTK_ROOT_PROMPT       = "dtk:/>"
       COMMAND_HISTORY_LIMIT = 200
       HISTORY_LOCATION      = DTK::Client::OsUtil.dtk_local_folder + "shell_history"
@@ -55,11 +56,7 @@ module DTK
       end
 
       def self.get_command_class(command_name)
-        begin
-          Object.const_get('DTK').const_get('Client').const_get(cap_form(command_name))
-        rescue Exception => e
-          return nil
-        end
+        ::DTK::Client::OsUtil.get_dtk_class(command_name)
       end
 
       def self.require_command_class(command_name)
@@ -276,8 +273,12 @@ module DTK
 
         # if there is no new context (current) we use old one
         @current = current_context_task_names() || @current
+
+        client_commands = CLIENT_COMMANDS
+        client_commands.concat(DEV_COMMANDS) if DTK::Configuration.get(:development_mode)
+
         # we add client commands
-        @current.concat(CLIENT_COMMANDS).sort!
+        @current.concat(client_commands).sort!
 
         # holder for commands to be used since we do not want to remember all of them
         @context_commands = @current
@@ -334,6 +335,10 @@ module DTK
 
       def current_identifier?
         return @active_context.current_identifier?
+      end
+
+      def current_alt_identifier?
+        return @active_context.current_alt_identifier?
       end
 
       # returns list of tasks for given command name

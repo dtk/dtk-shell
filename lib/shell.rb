@@ -117,9 +117,10 @@ def execute_shell_command(line, prompt)
       if ('restart' == cmd)
         puts "DEV Reloading shell ..."
         ::DTK::Client::OsUtil.dev_reload_shell()
-        return prom
+        return prompt
       end
     end
+
     
     if ('cc' == cmd)
       # in case there is no params we just reload command

@@ -141,6 +141,10 @@ module DTK
       attr_accessor   :entity
       attr_accessor   :name
       attr_accessor   :identifier
+      attr_accessor   :alt_identifier
+
+      ALT_IDENTIFIER_SEPARATOR = '::'
+      SHELL_SEPARATOR = '/'
 
       def self.create_context(context_name, entity_name, context_value=nil)
         if context_value
@@ -154,12 +158,20 @@ module DTK
         return !@identifier.nil?
       end
 
+      def is_alt_identifier?
+        return !@alt_identifier.nil?
+      end
+
       def is_command?
         return @identifier.nil?
       end
 
       def get_identifier(type)
         return (type == 'id' ? self.identifier : self.name)
+      end
+
+      def transform_alt_identifier_name()
+        @name.gsub(ALT_IDENTIFIER_SEPARATOR, SHELL_SEPARATOR)
       end
 
       private
@@ -172,8 +184,10 @@ module DTK
       end
 
       def self.create_identifier(name, entity_name, value)
-        instance            = self.create_command(name,entity_name)
-        instance.identifier = value
+        instance                = self.create_command(name,entity_name)
+        instance.identifier     = value
+        alt_identifier_name = name.split(ALT_IDENTIFIER_SEPARATOR)
+        instance.alt_identifier = alt_identifier_name.size > 1 ? alt_identifier_name.first : nil
         return instance
       end
     end
@@ -216,7 +230,7 @@ module DTK
       end
 
       def name_list()
-        @context_list.collect { |e| e.name }
+        @context_list.collect { |e|  e.is_alt_identifier? ? e.transform_alt_identifier_name : e.name }
       end
 
       # returns list of entities that have identifier
@@ -235,11 +249,15 @@ module DTK
       def get_task_cache_id()
         identifier = command_list().join('_')
         return 'dtk' if identifier.empty?
+        if current_alt_identifier?
+          return "#{identifier}_#{current_alt_identifier_name()}".to_sym()
+        end
+
         return current_identifier? ? "#{identifier}_wid".to_sym : identifier.to_sym
       end
 
       def full_path()
-        path = name_list.join('/')
+        path = name_list().join('/')
         path = Context.enchance_path_with_alias(path)
 
         return "/#{path}"
@@ -263,6 +281,14 @@ module DTK
 
       def current_identifier?
         return @context_list.empty? ? false : @context_list.last.is_identifier?
+      end
+
+      def current_alt_identifier?
+        return @context_list.empty? ? false : @context_list.last.is_alt_identifier?
+      end
+
+      def current_alt_identifier_name
+        @context_list.last.alt_identifier
       end
 
       def first_command_name()
