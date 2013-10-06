@@ -34,6 +34,29 @@ module DTK
         @method_arguments[id] = value
       end
 
+      # can be class methods but no need, since we have this instance available in each method
+      def retrieve_thor_options(mapping, options)
+        results = []
+        errors  = []
+
+        mapping.each do |key|
+          required = key.to_s.match(/.+!$/)
+          thor_key = key.to_s.gsub('!','')
+
+          results << element = options[thor_key]
+
+          if required && element.nil?
+            errors << thor_key
+          end
+        end
+
+        unless errors.empty?
+          raise DTK::Client::DtkValidationError, "Missing required option#{errors.size > 1 ? 's' : ''}: #{errors.join(', ')}"
+        end
+
+        return ((results.size == 1) ? results.first : results)
+      end
+
       def retrieve_arguments(mapping, method_info = nil)
         results = []
         errors  = []
@@ -118,6 +141,10 @@ module DTK
       attr_accessor   :entity
       attr_accessor   :name
       attr_accessor   :identifier
+      attr_accessor   :alt_identifier
+
+      ALT_IDENTIFIER_SEPARATOR = '::'
+      SHELL_SEPARATOR = '/'
 
       def self.create_context(context_name, entity_name, context_value=nil)
         if context_value
@@ -131,12 +158,20 @@ module DTK
         return !@identifier.nil?
       end
 
+      def is_alt_identifier?
+        return !@alt_identifier.nil?
+      end
+
       def is_command?
         return @identifier.nil?
       end
 
       def get_identifier(type)
         return (type == 'id' ? self.identifier : self.name)
+      end
+
+      def transform_alt_identifier_name()
+        @name.gsub(ALT_IDENTIFIER_SEPARATOR, SHELL_SEPARATOR)
       end
 
       private
@@ -149,8 +184,10 @@ module DTK
       end
 
       def self.create_identifier(name, entity_name, value)
-        instance            = self.create_command(name,entity_name)
-        instance.identifier = value
+        instance                = self.create_command(name,entity_name)
+        instance.identifier     = value
+        alt_identifier_name = name.split(ALT_IDENTIFIER_SEPARATOR)
+        instance.alt_identifier = alt_identifier_name.size > 1 ? alt_identifier_name.first : nil
         return instance
       end
     end
@@ -161,17 +198,8 @@ module DTK
       # using it as such
       NO_IDENTIFIER_PROVIDED = -1
 
-
-      # list of cases where we want entity to behave differently 
-      SHADOWING_ENTITIES = { :workspace => :assembly }
-
       # TODO: Remove accessor for debug purpose only
       attr_accessor :context_list
-
-
-      def self.is_shadowed_entity?(entity_name)
-        !!SHADOWING_ENTITIES[(entity_name||"NONE_FOUND").to_sym]
-      end
 
       def clone_me()
         inst = ActiveContext.new
@@ -202,11 +230,11 @@ module DTK
       end
 
       def name_list()
-        @context_list.collect { |e| e.name }
+        @context_list.collect { |e|  e.is_alt_identifier? ? e.transform_alt_identifier_name : e.name }
       end
 
       # returns list of entities that have identifier
-      def commands_with_identifiers()
+      def commands_that_have_identifiers()
         filtered_entities = @context_list.select { |e| e.is_identifier? }
         return filtered_entities.collect { |e| e.entity.to_s }
       end
@@ -221,11 +249,15 @@ module DTK
       def get_task_cache_id()
         identifier = command_list().join('_')
         return 'dtk' if identifier.empty?
+        if current_alt_identifier?
+          return "#{identifier}_#{current_alt_identifier_name()}".to_sym()
+        end
+
         return current_identifier? ? "#{identifier}_wid".to_sym : identifier.to_sym
       end
 
       def full_path()
-        path = name_list.join('/')
+        path = name_list().join('/')
         path = Context.enchance_path_with_alias(path)
 
         return "/#{path}"
@@ -251,17 +283,12 @@ module DTK
         return @context_list.empty? ? false : @context_list.last.is_identifier?
       end
 
-      # includes shadowed entities in their search
-      def first_command_name_with_shadow()
-        @context_list.each do |e|
-          if e.is_command?
-            shadowed_entity = SHADOWING_ENTITIES[e.name.to_sym]
+      def current_alt_identifier?
+        return @context_list.empty? ? false : @context_list.last.is_alt_identifier?
+      end
 
-            return shadowed_entity ? shadowed_entity.to_s : e.name
-          end
-        end
-
-        return nil
+      def current_alt_identifier_name
+        @context_list.last.alt_identifier
       end
 
       def first_command_name()
@@ -270,15 +297,6 @@ module DTK
         end
 
         return nil
-      end
-
-      def is_shadowed_entity?
-        first_command = first_command_name()
-        !!SHADOWING_ENTITIES[(first_command||"NONE_FOUND").to_sym]
-      end
-
-      def is_there_indetifier_for_first_context_or_shadowed?
-        is_there_identifier_for_first_context? || is_shadowed_entity?
       end
 
       def is_there_identifier_for_first_context?

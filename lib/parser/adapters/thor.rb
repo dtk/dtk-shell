@@ -26,13 +26,9 @@ module DTK
       @@invalidate_map  = []
       TIME_DIFF         = 60   #second(s)
       EXTENDED_TIMEOUT  = 360  #second(s)
-
-
-      attr_accessor :shadow_entity
       
       def initialize(args, opts, config)
         @conn = config[:conn]
-        @shadow_entity = false
         super
       end
 
@@ -126,7 +122,6 @@ module DTK
       end
 
       def self.list_method_supported?
-        # shadow entites do not support list
         return (respond_to?(:validation_list) || respond_to?(:whoami))
       end
 
@@ -174,54 +169,73 @@ module DTK
           # e.g. ASSEMBLY-NAME/ID list ...   => MATCH
           # e.g. [ASSEMBLY-NAME/ID] list ... => MATCH
           matched_data = task[1].usage.match(/\[?#{command}.?(NAME\/ID|ID\/NAME)\]?/)
+          matched_alt_identifiers_data = nil
 
-          if matched_data.nil?
-            # no match it means it is tier 1 task, tier 1 => dtk:\assembly>
-            cached_tasks[command_sym] << task_name
-          else
-            # match means it is tier 2 taks, tier 2 => dtk:\assembly\231312345>
-            cached_tasks[command_id_sym] << task_name
-            # if there are '[' it means it is optinal identifiers so it is tier 1 and tier 2 task
-            cached_tasks[command_sym] << task_name if matched_data[0].include?('[')
+          # we chance alternate providers
+          if respond_to?(:alternate_identifiers)
+            alternate_identifiers = self.alternate_identifiers()
+
+            alternate_identifiers.each do |a_provider|
+              if matched_alt_identifiers_data = task[1].usage.match(/\[?#{a_provider}.?(NAME\/ID|ID\/NAME)\]?/)
+                command_alt_sym = "#{command}_#{a_provider}".downcase.to_sym
+                cached_tasks[command_alt_sym] = cached_tasks.fetch(command_alt_sym,[]) 
+                cached_tasks[command_alt_sym] << task_name
+                # when found break
+                break
+              end
+            end
           end
 
-          # n-level matching 
-          if all_children
-            current_children = []
-            all_children.each do |child|
-              current_children << child.to_s
+          # only if not matched alt data found continue with caching of task
+          unless matched_alt_identifiers_data
+            if matched_data.nil?
+              # no match it means it is tier 1 task, tier 1 => dtk:\assembly>
+              cached_tasks[command_sym] << task_name
+            else
+              # match means it is tier 2 taks, tier 2 => dtk:\assembly\231312345>
+              cached_tasks[command_id_sym] << task_name
+              # if there are '[' it means it is optinal identifiers so it is tier 1 and tier 2 task
+              cached_tasks[command_sym] << task_name if matched_data[0].include?('[')
+            end
 
-              # create entry e.g. assembly_node_id
-              child_id_sym = (command.downcase + '_' + current_children.join('_') + '_wid').to_sym
+            # n-level matching 
+            if all_children
+              current_children = []
+              all_children.each do |child|
+                current_children << child.to_s
 
-              # n-context matching
-              matched_data = task[1].usage.match(/\[?#{child.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
-              if matched_data
-                cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << task_name 
-              end
+                # create entry e.g. assembly_node_id
+                child_id_sym = (command.downcase + '_' + current_children.join('_') + '_wid').to_sym
 
-              # override method list, we add these methods only once
-              if override_task_obj && !override_task_obj.is_completed?(child)
-                command_o_tasks, identifier_o_tasks = override_task_obj.get_all_tasks(child)
-                child_sym    = (command.downcase + '_' + current_children.join('_')).to_sym
-
-                command_o_tasks.each do |o_task|
-                  cached_tasks[child_sym] = cached_tasks.fetch(child_sym,[]) << o_task[0]
+                # n-context matching
+                matched_data = task[1].usage.match(/\[?#{child.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
+                if matched_data
+                  cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << task_name 
                 end
 
-                identifier_o_tasks.each do |o_task|
-                  cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << o_task[0]
+                # override method list, we add these methods only once
+                if override_task_obj && !override_task_obj.is_completed?(child)
+                  command_o_tasks, identifier_o_tasks = override_task_obj.get_all_tasks(child)
+                  child_sym    = (command.downcase + '_' + current_children.join('_')).to_sym
+
+                  command_o_tasks.each do |o_task|
+                    cached_tasks[child_sym] = cached_tasks.fetch(child_sym,[]) << o_task[0]
+                  end
+
+                  identifier_o_tasks.each do |o_task|
+                    cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << o_task[0]
+                  end
+
+                  override_task_obj.add_to_completed(child)
                 end
-
-                override_task_obj.add_to_completed(child)
               end
-
             end
           end
         end
 
         # there is always help, and in all cases this is exception to the rule
         cached_tasks[command_id_sym] << 'help'
+
         return cached_tasks
       end
 

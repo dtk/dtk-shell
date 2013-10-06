@@ -11,6 +11,7 @@ module DTK
       # client commands
       #CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs']
       CLIENT_COMMANDS       = ['cc','exit','clear']
+      DEV_COMMANDS          = ['restart']
       DTK_ROOT_PROMPT       = "dtk:/>"
       COMMAND_HISTORY_LIMIT = 200
       HISTORY_LOCATION      = DTK::Client::OsUtil.dtk_local_folder + "shell_history"
@@ -55,11 +56,7 @@ module DTK
       end
 
       def self.get_command_class(command_name)
-        begin
-          Object.const_get('DTK').const_get('Client').const_get(cap_form(command_name))
-        rescue Exception => e
-          return nil
-        end
+        ::DTK::Client::OsUtil.get_dtk_class(command_name)
       end
 
       def self.require_command_class(command_name)
@@ -71,6 +68,7 @@ module DTK
       # SYM_LINKS methods is used to calculate aliases that will be used for certain entities
       # one of those approaches will be as such
       def self.check_for_sym_link(entries)
+        
         if (entries.size == 1)
           SYM_LINKS.each do |sym_link|
             if entries.first.downcase.to_sym.eql?(sym_link[:alias])
@@ -173,7 +171,8 @@ module DTK
         entries = args.first.split(/\//)
 
         # transform alias to full path
-        entries = Context.check_for_sym_link(entries)
+        entries = Context.check_for_sym_link(entries) if root?
+
 
         # if only '/' or just cc skip validation
         return active_context_copy if entries.empty?
@@ -274,15 +273,18 @@ module DTK
 
         # if there is no new context (current) we use old one
         @current = current_context_task_names() || @current
+
+        client_commands = CLIENT_COMMANDS
+        client_commands.concat(DEV_COMMANDS) if DTK::Configuration.get(:development_mode)
+
         # we add client commands
-        @current.concat(CLIENT_COMMANDS).sort!
+        @current.concat(client_commands).sort!
 
         # holder for commands to be used since we do not want to remember all of them
         @context_commands = @current
 
         # we load thor command class identifiers for autocomplete context list
-        # shadowed entity does not have identifiers
-        command_context =  ActiveContext.is_shadowed_entity?(command_name) ? nil : get_command_identifiers(command_name)
+        command_context = get_command_identifiers(command_name)
 
         command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
         @context_commands.concat(command_name_list) if current_command?
@@ -333,6 +335,10 @@ module DTK
 
       def current_identifier?
         return @active_context.current_identifier?
+      end
+
+      def current_alt_identifier?
+        return @active_context.current_alt_identifier?
       end
 
       # returns list of tasks for given command name
@@ -437,10 +443,7 @@ module DTK
 
       end
 
-      def get_ac_candidates_for_context(context, active_context_copy)
-        # shadowed entities do not have identifiers or valid children
-        return [] if active_context_copy.is_shadowed_entity?
-        
+      def get_ac_candidates_for_context(context, active_context_copy)        
         # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
         if context
           if context.is_command?

@@ -29,6 +29,10 @@ module DTK
     def self.get(name, default=nil)
       Configuration.instance.get(name, default)
     end
+
+    def self.[](k)
+      Configuration.instance.get(k)
+    end
     
     def initialize
       # default configuration

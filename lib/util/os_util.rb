@@ -1,8 +1,15 @@
 dtk_require_from_base('domain/response')
+dtk_require_from_base('auxiliary')
 
 module DTK
   module Client
+
+   
+
     module OsUtil
+
+      extend Auxiliary
+
       class << self
         def is_mac?
           RUBY_PLATFORM.downcase.include?('darwin')
@@ -31,6 +38,15 @@ module DTK
 
         def dtk_home_dir
           return "#{home_dir}"
+        end
+
+        # This will return class object from DTK::Client namespace
+        def get_dtk_class(command_name)
+          begin
+            Object.const_get('DTK').const_get('Client').const_get(cap_form(command_name))
+          rescue Exception => e
+            return nil
+          end
         end
 
         # for Windows app folder is already under OS username
@@ -99,6 +115,7 @@ module DTK
         end
 
         def clone_base_path(module_type)
+
           path = 
             case module_type
               when :service_module then Config[:service_location]
@@ -106,7 +123,9 @@ module DTK
               when :assembly_module then Config[:assembly_module_base_location]
               else raise Client::DtkError, "Unexpected module_type (#{module_type})"
             end
-          path.start_with?('/') ? path : "#{dtk_local_folder}#{path}"
+
+
+          path && path.start_with?('/') ? path : "#{dtk_local_folder}#{path}"
         end
         private :clone_base_path
         #
@@ -175,6 +194,18 @@ module DTK
             }
           end
           return nil
+        end
+
+        def dev_reload_shell()
+          suspend_output do
+            load File.expand_path('../../lib/util/os_util.rb', File.dirname(__FILE__))
+            load File.expand_path('../../lib/shell/help_monkey_patch.rb', File.dirname(__FILE__))
+            load File.expand_path('../../lib/shell/domain.rb', File.dirname(__FILE__))
+            path = File.expand_path('../../lib/commands/thor/*.rb', File.dirname(__FILE__))
+            Dir[path].each do |thor_class_file|
+              load thor_class_file
+            end
+          end
         end
 
         private

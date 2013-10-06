@@ -17,6 +17,12 @@ module DTK
       def initialize
       end
 
+      def self.validate_region(region)
+        unless EC2_REGIONS.include? region
+          raise ::DTK::Client::DtkValidationError.new("Region '#{region}' is not EC2 region, use one of: #{EC2_REGIONS.join(',')}", true) 
+        end
+      end
+
       # Generic wizard which will return hash map based on metadata input
       def self.interactive_user_input(wizard_dsl, recursion_call = false)
         results = {}

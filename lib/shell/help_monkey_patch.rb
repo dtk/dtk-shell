@@ -19,6 +19,18 @@ class Thor
       return help_item
     end
 
+    # Method returns alternative providers
+    def get_alternative_identifiers(command_name)
+      # we check for alternate identifiers
+      command_clazz = ::DTK::Client::OsUtil.get_dtk_class(command_name)
+
+      if (command_clazz && command_clazz.respond_to?(:alternate_identifiers))
+        return command_clazz.alternate_identifiers()
+      end
+
+      return []
+    end
+
     # Monkey path of printable task methods to include name as well
     # Returns tasks ready to be printed.
     def printable_tasks(all = true, subcommand = false)
@@ -50,10 +62,19 @@ class Thor
       # monkey patching here => START
       if @@shell_context
         unless @@shell_context.root?
-          command             = @@shell_context.active_context.first_command_name_with_shadow.upcase
-          is_there_identifier = @@shell_context.active_context.is_there_indetifier_for_first_context_or_shadowed?
-          is_shadowed         = @@shell_context.active_context.is_shadowed_entity?
 
+          # first command we are using:
+          # e.g. dtk:\assembly\assembly1\node\node123> => command would be :assembly
+          command             = @@shell_context.active_context.first_command_name.upcase
+
+          # is there identifier for given commands (first)
+          # e.g. dtk:\assembly\assembly1\node\node123> => identifier here would be 'assembly1'
+          is_there_identifier = @@shell_context.active_context.is_there_identifier_for_first_context?
+
+          # alternative providers
+          alt_identifiers = get_alternative_identifiers(command)
+
+          
           filtered_list = []
 
           # case when we are not on first level and it is not identifier we skip help 
@@ -61,14 +82,31 @@ class Thor
           # e.g. assembly/bootstrap1/node> ... HELP IS EMPTY FOR THIS
 
 
-          # override goes here
+          # override objects are special cases defined in Thor classes
+          # base on level there will be included in help context, help content is calculated by:
+          #
+          # 1) Matching help items with Regex (see bellow)
+          # 2) Adding help items from override_methods
+          #
+          #
           override_tasks_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
 
-          unless (@@shell_context.active_context.is_n_context? && @@shell_context.active_context.current_command?)
-            list.each do |help_item|
-              # matches identifiers for ID/NAME
-              matched_data          = help_item.first.match(/^\s\[?#{command}.?(NAME\/ID|ID\/NAME)\]?\s/)
+          # N-LEVEL-CONTEXT - context that has at least 2 commands and 1 or more identifiers
+          # e.g. dtk:\assembly\assembly1\node>         THIS IS     N-LEVEL CONTEXT
+          # e.g. dtk:\assembly\assembly1\node\node123> THIS IS     N-LEVEL CONTEXT
+          # e.g. dtk:\assembly\assembly1>              THIS IS NOT N-LEVEL CONTEXT
+          #
+          if (!@@shell_context.active_context.is_n_context? || @@shell_context.active_context.current_identifier?)
 
+            list.each do |help_item|
+              
+              # this will match entity_name (command) and alternative identifiers  
+              identifers = [command] + alt_identifiers
+
+              # matches identifiers for ID/NAME
+              matched_data          = help_item.first.match(/^\s\[?(#{identifers.join('|')}).?(NAME\/ID|ID\/NAME)\]?\s/)
+              alt_matched_data      = help_item.first.match(/^\s\[?(#{alt_identifiers.join('|')}).?(NAME\/ID|ID\/NAME)\]?\s/)
+        
               if matched_data.nil?
                 # not found and tier 1 we add it to help list
                 filtered_list << overriden_help(override_tasks_obj, help_item, true) if @@shell_context.current_command?
@@ -82,17 +120,27 @@ class Thor
                     filtered_list << overriden_help(override_tasks_obj, help_item, true)
                   end
                 else
-                  # found and tier 2 we add it to list and remove ID/NAME part of desc
-                  help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
-                  filtered_list << overriden_help(override_tasks_obj, help_item, false)
+                  # Adding alt identifiers here
+                  if alt_matched_data
+                    if @@shell_context.active_context.current_alt_identifier?
+                      help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
+                      filtered_list << overriden_help(override_tasks_obj, help_item, false)
+                    end
+                  else
+                    unless @@shell_context.active_context.current_alt_identifier?
+                      help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
+                      filtered_list << overriden_help(override_tasks_obj, help_item, false)
+                    end
+                  end
                 end
               end
             end
           end
 
-          commands_with_identifiers =  @@shell_context.active_context.commands_with_identifiers()
-          #is_n_level_context        = (commands_with_identifiers && commands_with_identifiers.size > 1)
-          is_n_level_context        = @@shell_context.active_context.command_list.size > 1
+          # This will return commands that have identifiers
+          # e.g. dtk:\assembly\assembly1\node\node123> => ['assembly','node']
+          commands_that_have_identifiers =  @@shell_context.active_context.commands_that_have_identifiers()
+          is_n_level_context             = @@shell_context.active_context.command_list.size > 1
 
           # first one does not count
           if is_n_level_context
@@ -101,12 +149,12 @@ class Thor
             # we do not need first one, since above code takes care of that one
             filtered_list = filtered_list.select do |filtered_help_item|
               #next unless filtered_help_item
-              commands_with_identifiers[1..-1].each_with_index do |entity,i|                 
+              commands_that_have_identifiers[1..-1].each_with_index do |entity,i|                 
                 matched = match_help_item_changes(filtered_help_item, entity)
                 filtered_help_item = replace_if_matched!(filtered_help_item, matched)
 
                 # if it is last command, and there were changes                 
-                if (i == (commands_with_identifiers.size - 2) && matched)
+                if (i == (commands_that_have_identifiers.size - 2) && matched)
                   n_filter_list << filtered_help_item
                 end
               end

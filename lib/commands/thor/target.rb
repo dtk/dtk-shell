@@ -6,8 +6,17 @@ module DTK::Client
     end
 
     def self.whoami()
-      return :target, "target/list", nil
+      return :target, "target/full_list", nil
     end
+
+    def self.alternate_identifiers()
+      return ['PROVIDER']
+    end
+
+
+    #def self.validation_list(context_params)
+    #  get_cached_response(:target, "target/list", { :subtype => :template }).data
+    #end
 
     def self.override_allowed_methods()
       return DTK::Shell::OverrideTasks.new({
@@ -22,8 +31,68 @@ module DTK::Client
             ["list-nodes","list-nodes","# List node instances in given targets."],
             ["list-assemblies","list-assemblies","# List assembly instances in given targets."]
           ]
+        },
+        :identifier_provider => {
+          :self      => [
+            ["create-target","create-target","# WORKSS!!!!!!!!!!!!!."]
+          ]
         }
       })
+    end
+
+    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME --access-key ACCESS_KEY --secret-key SECRET_KEY --keypair KEYPAIR [--no-bootstrap]", "Create target template"
+    method_option :keypair,    :type => :string
+    method_option :access_key, :type => :string
+    method_option :secret_key, :type => :string
+    method_option :no_bootstrap, :type => :boolean, :default => false
+    def create_provider(context_params)
+      composed_provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+
+      provider_type, provider_name = decompose_provider_type_and_name(composed_provider_name)
+      access_key, secret_key, keypair = context_params.retrieve_thor_options([:access_key!, :secret_key!, :keypair!], options)
+
+      post_body = {
+        :iaas_properties => {
+          :key     => access_key,
+          :secret  => secret_key,
+          :keypair_name => keypair
+        },
+          :target_name => provider_name,
+          :iaas_type => provider_type.downcase,
+          :no_bootstrap => options.no_bootstrap?
+      }
+
+      response = post rest_url("target/create"), post_body
+      @@invalidate_map << :target
+
+      return response
+    end
+
+
+    desc "PROVIDER-ID/NAME create-target --region REGION", "Create target"
+    method_option :region, :type => :string
+    def create_target(context_params)
+      # we use :target_id but that will retunr provider_id (another name for target template ID)
+      composed_provider_id, composed_provider_name = context_params.retrieve_arguments([:target_id!,:target_name!],method_argument_names)
+      region = context_params.retrieve_thor_options([:region!], options)
+
+      DTK::Shell::InteractiveWizard.validate_region(region)
+
+      post_body = {
+        # take only last part of the name, e.g. provider::DemoABH
+        :target_name => composed_provider_name.split('::').last,
+        :target_template_id => composed_provider_id,
+        :region => region
+      }
+
+      # DEBUG SNIPPET >>>> REMOVE <<<<
+      require 'ap'
+      ap post_body
+
+      response = post rest_url("target/create"), post_body
+      @@invalidate_map << :target
+
+      return response
     end
 
     desc "create","Wizard that will guide you trough creation of target and target-template"
@@ -68,6 +137,7 @@ module DTK::Client
 
       # in case user chose target ID
       post_body.merge!(:target_template_id => target_template_id) if target_template_id
+
 
       response = post rest_url("target/create"), post_body
        # when changing context send request for getting latest targets instead of getting from cache
@@ -123,18 +193,12 @@ module DTK::Client
       end
     end
 
-    desc "delete TARGET-IDENTIFIER [-y]","Deletes target or target template"
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    desc "delete TARGET-IDENTIFIER","Deletes target or target template"
     def delete(context_params)
       target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post_body = {
         :target_id => target_id
       }
-
-      unless options.force?
-        # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' and all items contained in it"+'?')
-      end
 
       return post rest_url("target/delete"), post_body
     end
@@ -157,7 +221,20 @@ module DTK::Client
     def converge(context_params)
       not_implemented()
     end
+
+    no_tasks do
+      
+      def decompose_provider_type_and_name(composed_name)
+        provider_type, provider_name = composed_name.split(':')
+
+        if (provider_type.nil? || provider_name.nil? || provider_type.empty? || provider_name.empty?)
+          raise ::DTK::Client::DtkValidationError.new("Provider name and type are required parameters and should be provided in format PROVIDER-TYPE:PROVIDER-NAME")
+        end
+
+        return [provider_type, provider_name]
+      end
+
+    end
     
   end
 end
-

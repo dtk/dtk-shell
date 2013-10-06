@@ -326,6 +326,7 @@ module DTK::Client
       # server repo needs to be sync with local clone, so we will use push-clone-changes when pull changes from remote to local
       # to automatically sync local with server repo
       push_clone_changes_aux(:service_module,service_module_id,version,nil,true) if File.directory?(module_location)
+      Response::Ok.new()
     end
 
     ##
@@ -467,6 +468,7 @@ module DTK::Client
 
       reparse_aux(module_location) unless internal_trigger
       push_clone_changes_aux(:service_module,service_module_id,version,nil,internal_trigger)
+      Response::Ok.new()
     end
 
     desc "delete SERVICE-MODULE [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
@@ -576,8 +578,7 @@ module DTK::Client
       internal_trigger = true
       push_clone_changes_aux(:service_module, service_module_id, version, commit_msg, internal_trigger)
       @@invalidate_map << :assembly_template
-
-      return response
+      Response::Ok.new()
     end
 =begin
     desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
