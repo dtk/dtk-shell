@@ -26,6 +26,9 @@ module DTK
       @@invalidate_map  = []
       TIME_DIFF         = 60   #second(s)
       EXTENDED_TIMEOUT  = 360  #second(s)
+
+      # thor command specific constants
+      ALT_IDENTIFIER_SEPARATOR = ':::'
       
       def initialize(args, opts, config)
         @conn = config[:conn]

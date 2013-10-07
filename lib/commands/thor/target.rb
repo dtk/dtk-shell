@@ -80,21 +80,17 @@ module DTK::Client
 
       post_body = {
         # take only last part of the name, e.g. provider::DemoABH
-        :target_name => composed_provider_name.split('::').last,
+        :target_name => composed_provider_name.split(CommandBaseThor::ALT_IDENTIFIER_SEPARATOR).last,
         :target_template_id => composed_provider_id,
         :region => region
       }
-
-      # DEBUG SNIPPET >>>> REMOVE <<<<
-      require 'ap'
-      ap post_body
 
       response = post rest_url("target/create"), post_body
       @@invalidate_map << :target
 
       return response
     end
-
+=begin
     desc "create","Wizard that will guide you trough creation of target and target-template"
     def create(context_params)
       
@@ -145,7 +141,7 @@ module DTK::Client
 
       return response
     end
-
+=end
     desc "TARGET-NAME/ID list-nodes","List node instances in given targets or target templates."
     def list_nodes(context_params)
       context_params.method_arguments = ["nodes"]

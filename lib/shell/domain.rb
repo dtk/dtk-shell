@@ -143,7 +143,6 @@ module DTK
       attr_accessor   :identifier
       attr_accessor   :alt_identifier
 
-      ALT_IDENTIFIER_SEPARATOR = '::'
       SHELL_SEPARATOR = '/'
 
       def self.create_context(context_name, entity_name, context_value=nil)
@@ -171,7 +170,7 @@ module DTK
       end
 
       def transform_alt_identifier_name()
-        @name.gsub(ALT_IDENTIFIER_SEPARATOR, SHELL_SEPARATOR)
+        @name.gsub(Client::CommandBaseThor::ALT_IDENTIFIER_SEPARATOR, SHELL_SEPARATOR)
       end
 
       private
@@ -186,7 +185,7 @@ module DTK
       def self.create_identifier(name, entity_name, value)
         instance                = self.create_command(name,entity_name)
         instance.identifier     = value
-        alt_identifier_name = name.split(ALT_IDENTIFIER_SEPARATOR)
+        alt_identifier_name = name.split(Client::CommandBaseThor::ALT_IDENTIFIER_SEPARATOR)
         instance.alt_identifier = alt_identifier_name.size > 1 ? alt_identifier_name.first : nil
         return instance
       end
