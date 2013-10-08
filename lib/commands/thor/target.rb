@@ -187,10 +187,17 @@ module DTK::Client
 
     desc "delete TARGET-IDENTIFIER/PROVIDER-IDENTIFIER","Deletes target or provider"
     def delete(context_params)
-      target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      target_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      is_provider = target_id.include?(CommandBaseThor::ALT_IDENTIFIER_SEPARATOR)
 
       # little hacky, if we have PROVIDE delimiter split it. But if there is seprator it will take name.
       target_id = target_id.split(CommandBaseThor::ALT_IDENTIFIER_SEPARATOR).last
+
+      if is_provider
+        return unless Console.confirmation_prompt("Are you sure you want to delete provider '#{target_id}'"+'?')
+      else
+        return unless Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies that belong to this target will be deleted as well)'"+'?')
+      end
 
       post_body = {
         :target_id => target_id
