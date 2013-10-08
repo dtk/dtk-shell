@@ -118,10 +118,10 @@ module DTK
 
           path = 
             case module_type
-              when :service_module then DTK::Configuration[:service_location]
-              when :component_module then DTK::Configuration[:module_location]
-              when :assembly_module then DTK::Configuration[:assembly_module_base_location]
-              else raise DTK::Client::DtkError, "Unexpected module_type (#{module_type})"
+              when :service_module then Config[:service_location]
+              when :component_module then Config[:module_location]
+              when :assembly_module then Config[:assembly_module_base_location]
+              else raise Client::DtkError, "Unexpected module_type (#{module_type})"
             end
 
 
