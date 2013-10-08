@@ -16,15 +16,42 @@
 #
 require 'singleton'
 
+dtk_require_from_base('configurator')
 dtk_require_from_base('util/os_util')
 
 module DTK
-  class Configuration
+  module ParseFile
+    def parse_key_value_file(file)
+      #adapted from mcollective config
+      ret = Hash.new
+      raise DTK::Client::DtkError,"Config file (#{file}) does not exists" unless File.exists?(file)
+      File.open(file).each do |line|
+        # strip blank spaces, tabs etc off the end of all lines
+        line.gsub!(/\s*$/, "")
+        unless line =~ /^#|^$/
+          if (line =~ /(.+?)\s*=\s*(.+)/)
+            key = $1
+            val = $2
+            ret[key.to_sym] = val
+          end
+        end
+      end
+      ret
+    end
+  end
+
+  class Configuration < Hash
     include Singleton
+    include ParseFile    
 
     EXTERNAL_APP_CONF = "client.conf"
     DEVELOPMENT_CONF  = 'local.conf'
     DEFAULT_CONF      = 'default.conf'
+
+    CONFIG_FILE = ::DTK::Client::Configurator.CONFIG_FILE
+    CRED_FILE = ::DTK::Client::Configurator.CRED_FILE
+    
+    REQUIRED_KEYS = [:server_host]
 
     def self.get(name, default=nil)
       Configuration.instance.get(name, default)
@@ -56,6 +83,9 @@ module DTK
         @cache.merge!(external_configuration)
       end
 
+      set_defaults()
+      load_config_file()
+      validate()
     end
 
     def get(name, default=nil)
@@ -77,8 +107,23 @@ module DTK
             configuration[k] = v.to_f
         end
       end
-
     end
 
+    def set_defaults()
+      self[:server_port] = 80
+      self[:assembly_module_base_location] = 'assemblies'
+      self[:secure_connection] = true
+      self[:secure_connection_server_port] = 443
+    end
+
+    def load_config_file()
+      parse_key_value_file(CONFIG_FILE).each{|k,v|self[k]=v}           
+    end
+    
+    def validate
+      #TODO: need to check for legal values
+      missing_keys = REQUIRED_KEYS - keys
+      raise DTK::Client::DtkError,"Missing config keys (#{missing_keys.join(",")}). Please check your configuration file #{CONFIG_FILE} for required keys!" unless missing_keys.empty?
+    end
   end
 end
