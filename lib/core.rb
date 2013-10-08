@@ -73,7 +73,7 @@ def top_level_execute(entity_name, method_name, context_params=nil,options_args=
 end
 
 def load_command(command_name)
-  parser_adapter = DTK::Client::Config[:cli_parser] || "thor"
+  parser_adapter = DTK::Configuration[:cli_parser] || "thor"
 
   dtk_nested_require("parser/adapters",parser_adapter)
   dtk_nested_require("commands/#{parser_adapter}",command_name)
@@ -130,7 +130,7 @@ module DTK
             if error_code == "unauthorized"
               raise DTK::Client::DtkError, "[UNAUTHORIZED] Your session has been suspended, please log in again."
             elsif error_code == "broken"
-              raise DTK::Client::DtkError, "[BROKEN] Unable to connect to the DTK server at host: #{Config[:server_host]}"
+              raise DTK::Client::DtkError, "[BROKEN] Unable to connect to the DTK server at host: #{DTK::Configuration[:server_host]}"
             elsif error_code == "forbidden"
               raise DTK::Client::DtkError, "[FORBIDDEN] Access not granted, please log in again."
             elsif error_code == "timeout"
@@ -164,64 +164,6 @@ module DTK
         pp "error: #{msg}"
       end
     end
-
-    module ParseFile
-
-      def parse_key_value_file(file)
-        #adapted from mcollective config
-        ret = Hash.new
-        raise DTK::Client::DtkError,"Config file (#{file}) does not exists" unless File.exists?(file)
-        File.open(file).each do |line|
-          # strip blank spaces, tabs etc off the end of all lines
-          line.gsub!(/\s*$/, "")
-          unless line =~ /^#|^$/
-            if (line =~ /(.+?)\s*=\s*(.+)/)
-              key = $1
-              val = $2
-              ret[key.to_sym] = val
-            end
-          end
-        end
-        ret
-      end
-    end
-    class Config < Hash
-      include Singleton
-      include ParseFile
-      dtk_require_from_base('configurator')
-
-      CONFIG_FILE = ::DTK::Client::Configurator.CONFIG_FILE
-      CRED_FILE = ::DTK::Client::Configurator.CRED_FILE
-      
-      REQUIRED_KEYS = [:server_host]
-
-      def self.[](k)
-        Config.instance[k]
-      end
-     private
-      def initialize()
-        set_defaults()
-        load_config_file()
-        validate()
-      end
-      def set_defaults()
-        self[:server_port] = 80
-        self[:assembly_module_base_location] = 'assemblies'
-        self[:secure_connection] = true
-        self[:secure_connection_server_port] = 443
-      end
-
-      def load_config_file()
-        parse_key_value_file(CONFIG_FILE).each{|k,v|self[k]=v}           
-      end
-      
-      def validate
-        #TODO: need to check for legal values
-        missing_keys = REQUIRED_KEYS - keys
-        raise DTK::Client::DtkError,"Missing config keys (#{missing_keys.join(",")}). Please check your configuration file #{CONFIG_FILE} for required keys!" unless missing_keys.empty?
-      end
-    end
-
 
     ##
     # Session Singleton we will use to hold connection instance, just a singleton wrapper.
@@ -271,10 +213,10 @@ module DTK
                
 
       def rest_url(route=nil)
-        protocol, port = "http", Config[:server_port].to_s
-        protocol, port = "https", Config[:secure_connection_server_port].to_s if Config[:secure_connection] == "true"
+        protocol, port = "http", DTK::Configuration[:server_port].to_s
+        protocol, port = "https", DTK::Configuration[:secure_connection_server_port].to_s if DTK::Configuration[:secure_connection] == "true"
         
-        "#{protocol}://#{Config[:server_host]}:#{port}/rest/#{route}"
+        "#{protocol}://#{DTK::Configuration[:server_host]}:#{port}/rest/#{route}"
       end
 
       def get(command_class,url)
@@ -348,7 +290,7 @@ module DTK
       end
 
       def get_credentials()
-        cred_file = Config::CRED_FILE
+        cred_file = DTK::Configuration::CRED_FILE
         raise DTK::Client::DtkError,"Authorization configuration file (#{cred_file}) does not exist" unless File.exists?(cred_file)
         ret = parse_key_value_file(cred_file)
         [:username,:password].each{|k|raise DTK::Client::DtkError,"cannot find #{k}" unless ret[k]}
