@@ -22,8 +22,8 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :command_only => {
           :self => [
-            ["list"," list","# List targets."],
-            ["list-templates"," list-templates","# List target templates."]
+            ["list-targets"," list-targets","# List targets."],
+            ["list-providers"," list-providers","# List target providers."]
           ]
         },
         :identifier_only => {
@@ -31,31 +31,28 @@ module DTK::Client
             ["list-nodes","list-nodes","# List node instances in given targets."],
             ["list-assemblies","list-assemblies","# List assembly instances in given targets."]
           ]
-        },
-        :identifier_provider => {
-          :self      => [
-            ["create-target","create-target","# WORKSS!!!!!!!!!!!!!."]
-          ]
         }
       })
     end
 
-    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME --access-key ACCESS_KEY --secret-key SECRET_KEY --keypair KEYPAIR [--no-bootstrap]", "Create target template"
+    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME --access-key ACCESS_KEY --secret-key SECRET_KEY --keypair KEYPAIR --security-group SECURITY-GROUP [--no-bootstrap]", "Create provider"
     method_option :keypair,    :type => :string
     method_option :access_key, :type => :string
     method_option :secret_key, :type => :string
+    method_option :security_group, :type => :string
     method_option :no_bootstrap, :type => :boolean, :default => false
     def create_provider(context_params)
       composed_provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       provider_type, provider_name = decompose_provider_type_and_name(composed_provider_name)
-      access_key, secret_key, keypair = context_params.retrieve_thor_options([:access_key!, :secret_key!, :keypair!], options)
+      access_key, secret_key, keypair, security_group = context_params.retrieve_thor_options([:access_key!, :secret_key!, :keypair!, :security_group!], options)
 
       post_body = {
         :iaas_properties => {
           :key     => access_key,
           :secret  => secret_key,
-          :keypair_name => keypair
+          :keypair_name => keypair,
+          :security_group => security_group
         },
           :target_name => provider_name,
           :iaas_type => provider_type.downcase,
@@ -67,7 +64,6 @@ module DTK::Client
 
       return response
     end
-
 
     desc "PROVIDER-ID/NAME create-target --region REGION", "Create target"
     method_option :region, :type => :string
@@ -142,26 +138,26 @@ module DTK::Client
       return response
     end
 =end
-    desc "TARGET-NAME/ID list-nodes","List node instances in given targets or target templates."
+    desc "TARGET-NAME/ID list-nodes","Lists node instances in given targets."
     def list_nodes(context_params)
       context_params.method_arguments = ["nodes"]
-      list(context_params)
+      list_targets(context_params)
     end
 
-    desc "TARGET-NAME/ID list-assemblies","List assembly instances in given targets or target templates."
+    desc "TARGET-NAME/ID list-assemblies","Lists assembly instances in given targets."
     def list_assemblies(context_params)
       context_params.method_arguments = ["assemblies"]
-      list(context_params)
+      list_targets(context_params)
     end
 
-    desc "list-templates","List target templates."
-    def list_templates(context_params)
+    desc "list-providers","Lists available providers."
+    def list_providers(context_params)
       context_params.method_arguments = ["templates"]
-      list(context_params)
+      list_targets(context_params)
     end
 
-    desc "list","List targets."
-    def list(context_params)
+    desc "list-targets","Lists available targets."
+    def list_targets(context_params)
       target_id, about = context_params.retrieve_arguments([:target_id, :option_1],method_argument_names||="")
       if target_id.nil?
         post_body = (about||'').include?("template") ?  { :subtype => :template } : {}
@@ -189,16 +185,23 @@ module DTK::Client
       end
     end
 
-    desc "delete TARGET-IDENTIFIER","Deletes target or target template"
+    desc "delete TARGET-IDENTIFIER/PROVIDER-IDENTIFIER","Deletes target or provider"
     def delete(context_params)
       target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+
+      # little hacky, if we have PROVIDE delimiter split it. But if there is seprator it will take name.
+      target_id = target_id.split(CommandBaseThor::ALT_IDENTIFIER_SEPARATOR).last
+
       post_body = {
         :target_id => target_id
       }
 
+      @@invalidate_map << :target
+
       return post rest_url("target/delete"), post_body
     end
-    
+
+=begin
     desc "create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create assembly template from nodes in target" 
     def create_assembly(context_params)
       service_module_name, assembly_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
@@ -217,6 +220,7 @@ module DTK::Client
     def converge(context_params)
       not_implemented()
     end
+=end
 
     no_tasks do
       
