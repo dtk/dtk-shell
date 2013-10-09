@@ -233,6 +233,33 @@ module DTK::Client
       edit_aux(:component_module,component_module_id,component_module_name,version,edit_opts)
     end
 
+    desc "ASSEMBLY-NAME/ID edit-workflow", "Edit assembly's workflow."
+    def edit_workflow(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :module_type => 'service_module',
+        :modification_type => 'workflow'
+      }
+      response = post rest_url("assembly/prepare_for_edit_module"), post_body
+      return response unless response.ok?
+      assembly_name,service_module_id,service_module_name,version,repo_url,branch = response.data(:assembly_name,:module_id,:module_name,:version,:repo_url,:workspace_branch)
+      edit_opts = {
+        :automatically_clone => true,
+        :assembly_module => {
+          :assembly_name => assembly_name,
+          :version => version
+        },
+        :workspace_branch_info => {
+          :repo_url => repo_url,
+          :branch => branch,
+          :module_name => service_module_name
+        }
+      }
+      version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
+      edit_aux(:service_module,service_module_id,service_module_name,version,edit_opts)
+    end
+
     desc "ASSEMBLY-NAME/ID promote-module-updates COMPONENT-MODULE-NAME", "Promotes changes made to component module in assembly to shared template"
     def promote_module_updates(context_params)
       assembly_id, component_module_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
