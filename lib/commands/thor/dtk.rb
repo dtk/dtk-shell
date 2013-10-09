@@ -33,10 +33,10 @@ module DTK::Client
     #  # API descriptor
     #end
 
-    desc "library", "Commands to list and query libraries."
-    def library
-      # API descriptor
-    end
+    # desc "library", "Commands to list and query libraries."
+    # def library
+    #   # API descriptor
+    # end
 
     desc "module", "Commands to create, query, import and export component modules."
     def module
@@ -48,10 +48,10 @@ module DTK::Client
       # API descriptor
     end    
 
-    desc "node-group", "Add/Destroy/List available groups of nodes."
-    def node_group
-      # API descriptor
-    end
+    # desc "node-group", "Add/Destroy/List available groups of nodes."
+    # def node_group
+    #   # API descriptor
+    # end
 
     desc "node-template", "Commands to list and query node templates."
     def node_template
@@ -96,9 +96,11 @@ module DTK::Client
       # API descriptor
     end
 
-    desc "developer", "DEV tools only available to developers."
-    def developer
-      # API descriptor
+    if ::DTK::Configuration.get(:development_mode)
+      desc "developer", "DEV tools only available to developers."
+      def developer
+        # API descriptor
+      end
     end
     
     # we do not need help here

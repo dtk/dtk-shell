@@ -167,10 +167,10 @@ module DTK::Client
       response.render_table(:module_version)
     end
 
-    desc "import-r8n REMOTE-SERVICE-NAME [-y]", "Import remote service module into local environment. -y will automatically clone component modules"
+    desc "import-dtkn REMOTE-SERVICE-NAME [-y]", "Import remote service module into local environment. -y will automatically clone component modules"
     version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def import_r8n(context_params)
+    def import_dtkn(context_params)
       create_missing_clone_dirs()
       check_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)

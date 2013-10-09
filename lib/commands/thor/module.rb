@@ -324,12 +324,12 @@ module DTK::Client
     # TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     # if multiple items and failire; stops on first failure
-    desc "import-r8n NAMESPACE/REMOTE-MODULE-NAME [-r DTK-REPO-MANAGER]","Import remote component module into local environment"
+    desc "import-dtkn NAMESPACE/REMOTE-MODULE-NAME [-r DTK-REPO-MANAGER]","Import remote component module into local environment"
     method_option "repo-manager",:aliases => "-r" ,
       :type => :string, 
       :banner => "REPO-MANAGER",
       :desc => "DTK Repo Manager from which to resolve requested module."
-    def import_r8n(context_params)
+    def import_dtkn(context_params)
       create_missing_clone_dirs()
       check_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
