@@ -21,7 +21,7 @@ dtk_require_from_base('util/os_util')
 module DTK
   class Configuration
     include Singleton
-
+  
     EXTERNAL_APP_CONF = "client.conf"
     DEVELOPMENT_CONF  = 'local.conf'
     DEFAULT_CONF      = 'default.conf'
@@ -55,7 +55,6 @@ module DTK
         external_configuration = load_configuration_to_hash(external_file_location)
         @cache.merge!(external_configuration)
       end
-
     end
 
     def get(name, default=nil)
@@ -77,8 +76,6 @@ module DTK
             configuration[k] = v.to_f
         end
       end
-
     end
-
   end
 end
