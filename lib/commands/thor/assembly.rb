@@ -319,11 +319,7 @@ TODO: will put in dot release and will rename to 'extend'
           end
         end
       end
-
-      # DEBUG SNIPPET >>>> REMOVE <<<<
-      require 'ap'
-      ap response
-                        
+     
       response
     end
 
