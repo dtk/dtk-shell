@@ -30,11 +30,7 @@ $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2
 # check if .add_direct_access file exists, if not then add direct access and create .add_direct_access file
 check_direct_access(::DTK::Client::Configurator.check_direct_access)
 
-temp_dev_flag = ::DTK::Configuration.get(:development_mode)
 argv 					= 'dtk' if ARGV.empty?
-user_input    = (temp_dev_flag ? 'dtk-input > ' + (argv||ARGV.join(' ')) : 'Processing...')
-puts user_input
-
 entity_name = ARGV.shift if ARGV.size > 0
 
 # special case for when no params are provided use help method
