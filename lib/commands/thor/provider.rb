@@ -66,7 +66,7 @@ module DTK::Client
     end
 
 
-    desc "PROVIDER-ID/NAME create-target --region REGION", "Create target"
+    desc "PROVIDER-ID/NAME create-target --region REGION", "Create target based on given provider"
     method_option :region, :type => :string
     def create_target(context_params)
       # we use :target_id but that will retunr provider_id (another name for target template ID)
