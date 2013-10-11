@@ -27,12 +27,12 @@ module DTK::Client
     end
 
     def self.validation_list(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id])
+      assembly_id, workspace_id = context_params.retrieve_arguments([:assembly_id, :workspace_id])
       
-      if assembly_id
+      if (assembly_id || workspace_id)
         # if assebmly_id is present we're loading nodes filtered by assembly_id
         post_body = {
-          :assembly_id => assembly_id,
+          :assembly_id => assembly_id||workspace_id,
           :subtype     => 'instance',
           :about       => 'nodes',
           :filter      => nil
