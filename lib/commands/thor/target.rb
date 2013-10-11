@@ -82,9 +82,9 @@ module DTK::Client
       end
     end
 
-    desc "delete TARGET-IDENTIFIER","Deletes target or provider"
+    desc "delete-target TARGET-IDENTIFIER","Deletes target or provider"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete(context_params)
+    def delete_target(context_params)
       target_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       # No -y options since risk is too great

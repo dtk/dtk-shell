@@ -17,7 +17,7 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :command_only => {
           :target => [
-            ['delete',"delete TARGET-IDENTIFIER","# Deletes target"],
+            ['delete-target',"delete-target TARGET-IDENTIFIER","# Deletes target"],
             ['list-targets',"list-targets","# Lists available targets."]
 
           ]
@@ -104,9 +104,9 @@ module DTK::Client
       response.render_table(:target)
     end
 
-    desc "delete PROVIDER-IDENTIFIER [-y]","Deletes targets provider"
+    desc "delete-provider PROVIDER-IDENTIFIER [-y]","Deletes targets provider"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete(context_params)
+    def delete_provider(context_params)
       provider_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       unless options.force?
