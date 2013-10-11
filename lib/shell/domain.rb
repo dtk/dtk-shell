@@ -232,6 +232,11 @@ module DTK
         @context_list.collect { |e|  e.is_alt_identifier? ? e.transform_alt_identifier_name : e.name }
       end
 
+      def name_list_simple()
+        @context_list.collect { |e|  e.name }
+      end
+
+
       # returns list of entities that have identifier
       def commands_that_have_identifiers()
         filtered_entities = @context_list.select { |e| e.is_identifier? }

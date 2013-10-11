@@ -129,7 +129,7 @@ module DTK
       end
 
       # returns all task names for given thor class with use friendly names (with '-' instead '_')
-      def self.task_names     
+      def self.task_names
         all_tasks().map(&:first).collect { |item| item.gsub('_','-')}
       end
 
