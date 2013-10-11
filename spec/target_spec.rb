@@ -7,25 +7,11 @@ include SpecThor
 describe DTK::Client::Target do
   $about     = ['nodes', 'assemblies']
   $target_id = nil
-
-  #list all targets and take one target_id
-  context '#list-targets' do
-    $target_list = run_from_dtk_shell('target list-targets')
-
-    it "should have target listing" do
-      $target_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
-    end
-
-    unless $target_list.nil?
-      unless $target_list['data'].nil?
-        $target_id = $target_list['data'].first['id'] unless $target_list['data'].empty?
-      end
-    end
-  end
+  $provider_id = nil
 
   #list all providers and take one provider_id
   context '#list-providers' do
-    $provider_list = run_from_dtk_shell('target list-providers')
+    $provider_list = run_from_dtk_shell('provider list')
 
     it "should have provider listing" do
       $provider_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
@@ -38,11 +24,28 @@ describe DTK::Client::Target do
     end
   end
 
+  #list all targets for particular provider and take one target_id
+  context '#list-targets' do
+    unless $provider_id.nil?
+      $target_list = run_from_dtk_shell("provider #{$provider_id} list-targets")
+
+      it "should have target listing" do
+        $target_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
+      end
+
+      unless $target_list.nil?
+        unless $target_list['data'].nil?
+          $target_id = $target_list['data'].first['id'] unless $target_list['data'].empty?
+        end
+      end
+    end
+  end
+
   #list nodes and assemblies for particular target_id
   context "#list/command" do
     unless $target_id.nil?
       $about.each do |type|
-        output = run_from_dtk_shell("target #{$target_id} list-#{type}")
+        output = run_from_dtk_shell("provider #{$provider_id} target #{$target_id} list-#{type}")
 
         it "should list all #{type} for target with id #{$target_id}" do
           output.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
@@ -52,4 +55,3 @@ describe DTK::Client::Target do
   end
 
 end
-
