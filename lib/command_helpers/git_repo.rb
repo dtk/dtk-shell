@@ -6,6 +6,10 @@ require 'fileutils'
 module DTK; module Client; class CommandHelper
   class GitRepo < self; class << self
 
+    def create(repo_dir,branch=nil,opts={})
+      adapter_class().new(repo_dir,branch,opts)
+    end
+
     def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil, opts={})
       Response.wrap_helper_actions do 
         modules_dir = modules_dir(type,module_name,version,opts)
@@ -86,7 +90,7 @@ module DTK; module Client; class CommandHelper
     # { :diffs => , :commit_sha => }
     def pull_changes(type,module_name,opts={})
       Response.wrap_helper_actions() do
-        repo_dir = local_repo_dir(type,module_name,opts[:version])
+        repo_dir = local_repo_dir(type,module_name,opts[:version],opts)
         repo = create(repo_dir,opts[:local_branch])
         response = pull_repo_changes_aux(repo,opts)
         response
@@ -312,10 +316,6 @@ module DTK; module Client; class CommandHelper
     end
     def remote_branch_ref(local_branch,opts={})
       "#{remote(opts[:remote_repo])}/#{opts[:remote_branch]||local_branch}"
-    end
-
-    def create(repo_dir,branch=nil,opts={})
-      adapter_class().new(repo_dir,branch,opts)
     end
 
     def modules_dir(type,module_name,version=nil,opts={})

@@ -1,12 +1,14 @@
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/push_clone_changes')
+dtk_require_common_commands('thor/pull_clone_changes')
 dtk_require_common_commands('thor/reparse')
 module DTK::Client
   module EditMixin
     include CloneMixin
     include PushCloneChangesMixin
+    include PullCloneChangesMixin
     include ReparseMixin
-    
+
     ##
     #
     # module_type: will be one of 
@@ -15,6 +17,7 @@ module DTK::Client
     def edit_aux(module_type,module_id,module_name,version,opts={})
       module_location  = OsUtil.module_location(module_type,module_name,version,opts)
 
+      pull_if_needed = opts[:pull_if_needed]
       # check if there is repository cloned 
       unless File.directory?(module_location)
         if opts[:automatically_clone] or Console.confirmation_prompt("Edit not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
@@ -22,19 +25,22 @@ module DTK::Client
           omit_output = true
           response = clone_aux(module_type,module_id,version,internal_trigger,omit_output,opts)
           # if error return
-          unless response.ok?
-            return response
-          end
+          return response unless response.ok?
+          pull_if_needed = false
         else
           # user choose not to clone needed module
           return
         end
       end
-
       # here we should have desired module cloned
-      Console.unix_shell(module_location, module_id, module_type, version)
-      grit_adapter = ::DTK::Common::GritAdapter::FileAccess.new(module_location)
 
+      if pull_if_needed
+        response = pull_clone_changes?(module_type,module_id,version,opts)
+        return response unless response.ok?
+      end
+
+      Console.unix_shell(module_location, module_id, module_type, version)
+      grit_adapter = Helper(:git_repo).create(module_location)
       if grit_adapter.changed?
         grit_adapter.print_status
 
