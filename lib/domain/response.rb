@@ -70,8 +70,10 @@ module DTK
             end
 
             # sending raw data from response
-            ViewProcessor.render(@command_class, data, @render_view, @render_data_type, nil, @print_error_table)
+            rendered_data = ViewProcessor.render(@command_class, data, @render_view, @render_data_type, nil, @print_error_table)
             
+            puts "\n" unless rendered_data
+            return rendered_data
           else
             hash_part()
           end

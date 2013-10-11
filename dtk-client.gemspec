@@ -13,7 +13,7 @@ Gem::Specification.new do |gem|
   gem.authors       = ["Rich PELAVIN"]
   gem.email         = ["rich@reactor8.com"]
   gem.description   = %q{Dtk client is CLI tool used for communication with Reactor8.}
-  gem.summary       = %q{DTK CLI client for R8 server interaction.}
+  gem.summary       = %q{DTK CLI client for DTK server interaction.}
   gem.homepage      = "https://github.com/rich-reactor8/dtk-client"
 
   gem.files = %w(README.md Gemfile Gemfile.lock Gemfile_dev Gemfile_dev.lock dtk-client.gemspec)

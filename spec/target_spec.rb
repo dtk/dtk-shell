@@ -8,9 +8,9 @@ describe DTK::Client::Target do
   $about     = ['nodes', 'assemblies']
   $target_id = nil
 
-  #list all assemblies and take one assembly_id
-  context '#list' do
-    $target_list = run_from_dtk_shell('target list')
+  #list all targets and take one target_id
+  context '#list-targets' do
+    $target_list = run_from_dtk_shell('target list-targets')
 
     it "should have target listing" do
       $target_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
@@ -23,11 +23,26 @@ describe DTK::Client::Target do
     end
   end
 
+  #list all providers and take one provider_id
+  context '#list-providers' do
+    $provider_list = run_from_dtk_shell('target list-providers')
 
+    it "should have provider listing" do
+      $provider_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
+    end
+
+    unless $provider_list.nil?
+      unless $provider_list['data'].nil?
+        $provider_id = $provider_list['data'].first['id'] unless $provider_list['data'].empty?
+      end
+    end
+  end
+
+  #list nodes and assemblies for particular target_id
   context "#list/command" do
     unless $target_id.nil?
       $about.each do |type|
-        output = run_from_dtk_shell("target #{$target_id} list #{type}")
+        output = run_from_dtk_shell("target #{$target_id} list-#{type}")
 
         it "should list all #{type} for target with id #{$target_id}" do
           output.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
