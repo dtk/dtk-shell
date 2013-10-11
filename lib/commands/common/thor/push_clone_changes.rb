@@ -18,6 +18,7 @@ module DTK::Client
       repo_obj = response.data(:repo_obj)
       json_diffs = JSON.generate(response.data(:diffs))
       post_body = get_workspace_branch_info_post_body(module_type,module_id,version,opts).merge(:json_diffs => json_diffs, :commit_sha => commit_sha)
+      post_body.merge!(:modification_type => opts[:modification_type]) if opts[:modification_type]
       response = post(rest_url("#{module_type}/update_model_from_clone"),post_body)
       return response unless response.ok?
       

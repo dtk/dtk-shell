@@ -254,7 +254,8 @@ module DTK::Client
           :repo_url => repo_url,
           :branch => branch,
           :module_name => service_module_name
-        }
+        },
+        :modification_type => :workflow
       }
       version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
       edit_aux(:service_module,service_module_id,service_module_name,version,edit_opts)
