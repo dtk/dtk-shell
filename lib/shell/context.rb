@@ -16,7 +16,7 @@ module DTK
       COMMAND_HISTORY_LIMIT = 200
       HISTORY_LOCATION      = DTK::Client::OsUtil.dtk_local_folder + "shell_history"
       ROOT_TASKS            = DTK::Client::Dtk.task_names
-      ALL_COMMANDS          = ROOT_TASKS + ['component','attribute']
+      ALL_COMMANDS          = ROOT_TASKS + DTK::Client::Dtk.additional_entities
 
 
       SYM_LINKS = [

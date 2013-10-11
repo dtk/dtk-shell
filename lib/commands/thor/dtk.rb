@@ -4,6 +4,11 @@ module DTK::Client
   # Following are descriptions of available commands 
   class Dtk < CommandBaseThor
 
+    # entities that are not available on root but later in n-context
+    def self.additional_entities()
+      ['target','component','attribute']
+    end
+
     desc "workspace","Manipulate provided workspace"
     def workspace
       # API descriptor, SYM_LINK!
@@ -80,16 +85,11 @@ module DTK::Client
       # API descriptor
     end
 
-    #TODO: not supported yet
-    #desc "state-change",  "Commands to query what has been changed."
-    #def state_change
-    #  # API descriptor
-    #end
-
-    desc "target", "Commands to list and query targets."
-    def target
-      # API descriptor
-    end
+    # TODO: not supported yet
+    # desc "state-change",  "Commands to query what has been changed."
+    # def state_change
+    #   # API descriptor
+    # end
 
     desc "task", "Commands to list and view current and past tasks."
     def task
@@ -103,6 +103,12 @@ module DTK::Client
       end
     end
     
+
+    desc "provider", "DTK providers"
+    def provider
+      # API descriptor
+    end
+
     # we do not need help here
     remove_task(:help,{:undefine => false})
 
