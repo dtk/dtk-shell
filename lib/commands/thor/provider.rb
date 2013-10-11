@@ -17,8 +17,7 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :command_only => {
           :target => [
-            ['delete',"delete TARGET-IDENTIFIER","# Deletes target or provider"],
-            ['create-target',"create-target --region REGION", "# Create target"],
+            ['delete',"delete TARGET-IDENTIFIER","# Deletes target"],
             ['list-targets',"list-targets","# Lists available targets."]
 
           ]
@@ -66,6 +65,30 @@ module DTK::Client
       return response
     end
 
+
+    desc "PROVIDER-ID/NAME create-target --region REGION", "Create target"
+    method_option :region, :type => :string
+    def create_target(context_params)
+      # we use :target_id but that will retunr provider_id (another name for target template ID)
+      composed_provider_id, composed_provider_name = context_params.retrieve_arguments([:provider_id!,:provider_name!],method_argument_names)
+      region = context_params.retrieve_thor_options([:region!], options)
+
+      DTK::Shell::InteractiveWizard.validate_region(region)
+
+      post_body = {
+        # take only last part of the name, e.g. provider::DemoABH
+        :target_name => composed_provider_name,
+        :target_template_id => composed_provider_id,
+        :region => region
+      }
+
+      response = post rest_url("target/create"), post_body
+      @@invalidate_map << :target
+
+      return response
+    end
+
+
     desc "list","Lists available providers."
     def list(context_params)
       response  = post rest_url("target/list"), { :subtype => :template }
@@ -79,6 +102,27 @@ module DTK::Client
       response  = post rest_url("target/list"), { :subtype => :instance, :parent_id => provider_id }
 
       response.render_table(:target)
+    end
+
+    desc "delete PROVIDER-IDENTIFIER [-y]","Deletes targets provider"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def delete(context_params)
+      provider_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
+
+      unless options.force?
+        return unless Console.confirmation_prompt("Are you sure you want to delete provider with identifier '#{provider_id}'"+'?')
+      end
+      
+      # this goes to provider
+      # Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies that belong to this target will be deleted as well)'"+'?')
+      
+      post_body = {
+        :target_id => provider_id
+      }
+
+      @@invalidate_map << :provider
+
+      return post rest_url("target/delete"), post_body
     end
 
     no_tasks do

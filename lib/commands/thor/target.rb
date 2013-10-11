@@ -10,15 +10,15 @@ module DTK::Client
     end
 
     desc "TARGET-NAME/ID list-nodes","Lists node instances in given targets."
-    def list_targets(context_params)
+    def list_nodes(context_params)
       context_params.method_arguments = ["nodes"]
-      list(context_params)
+      list_targets(context_params)
     end
 
     desc "TARGET-NAME/ID list-assemblies","Lists assembly instances in given targets."
-    def list_targets(context_params)
+    def list_assemblies(context_params)
       context_params.method_arguments = ["assemblies"]
-      list(context_params)
+      list_targets(context_params)
     end
 
 
@@ -51,7 +51,7 @@ module DTK::Client
 
     desc "list-targets","Lists available targets."
     def list_targets(context_params)
-      provider_id, target_id = context_params.retrieve_arguments([:provider_id, :target_id],method_argument_names||="")
+      provider_id, target_id, about = context_params.retrieve_arguments([:provider_id, :target_id, :option_1],method_argument_names||="")
 
       if target_id.nil?
         post_body = { 
@@ -83,14 +83,13 @@ module DTK::Client
     end
 
     desc "delete TARGET-IDENTIFIER","Deletes target or provider"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
       target_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
-      Console.confirmation_prompt("Are you sure you want to delete target with ID '#{target_id}'"+'?')
-      
-      # this goes to provider
-      # Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies that belong to this target will be deleted as well)'"+'?')
-      
+      # No -y options since risk is too great
+      return unless Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies/nodes that belong to this target will be deleted as well)'"+'?')
+     
       post_body = {
         :target_id => target_id
       }
@@ -98,28 +97,6 @@ module DTK::Client
       @@invalidate_map << :target
 
       return post rest_url("target/delete"), post_body
-    end
-
-    desc "create-target --region REGION", "Create target"
-    method_option :region, :type => :string
-    def create_target(context_params)
-      # we use :target_id but that will retunr provider_id (another name for target template ID)
-      composed_provider_id, composed_provider_name = context_params.retrieve_arguments([:provider_id!,:provider_name!],method_argument_names)
-      region = context_params.retrieve_thor_options([:region!], options)
-
-      DTK::Shell::InteractiveWizard.validate_region(region)
-
-      post_body = {
-        # take only last part of the name, e.g. provider::DemoABH
-        :target_name => composed_provider_name,
-        :target_template_id => composed_provider_id,
-        :region => region
-      }
-
-      response = post rest_url("target/create"), post_body
-      @@invalidate_map << :target
-
-      return response
     end
 
 =begin
