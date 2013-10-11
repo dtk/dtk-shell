@@ -5,162 +5,59 @@ module DTK::Client
       PPColumns.get(:target)
     end
 
-    def self.whoami()
-      return :target, "target/full_list", nil
-    end
-
     def self.alternate_identifiers()
       return ['PROVIDER']
     end
 
-
-    #def self.validation_list(context_params)
-    #  get_cached_response(:target, "target/list", { :subtype => :template }).data
-    #end
-
-    def self.override_allowed_methods()
-      return DTK::Shell::OverrideTasks.new({
-        :command_only => {
-          :self => [
-            ["list-targets"," list-targets","# List targets."],
-            ["list-providers"," list-providers","# List target providers."]
-          ]
-        },
-        :identifier_only => {
-          :self      => [
-            ["list-nodes","list-nodes","# List node instances in given targets."],
-            ["list-assemblies","list-assemblies","# List assembly instances in given targets."]
-          ]
-        }
-      })
-    end
-
-    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME --access-key ACCESS_KEY --secret-key SECRET_KEY --keypair KEYPAIR --security-group SECURITY-GROUP [--no-bootstrap]", "Create provider"
-    method_option :keypair,    :type => :string
-    method_option :access_key, :type => :string
-    method_option :secret_key, :type => :string
-    method_option :security_group, :type => :string
-    method_option :no_bootstrap, :type => :boolean, :default => false
-    def create_provider(context_params)
-      composed_provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
-
-      provider_type, provider_name = decompose_provider_type_and_name(composed_provider_name)
-      access_key, secret_key, keypair, security_group = context_params.retrieve_thor_options([:access_key!, :secret_key!, :keypair!, :security_group!], options)
-
-      post_body = {
-        :iaas_properties => {
-          :key     => access_key,
-          :secret  => secret_key,
-          :keypair_name => keypair,
-          :security_group => security_group
-        },
-          :target_name => provider_name,
-          :iaas_type => provider_type.downcase,
-          :no_bootstrap => options.no_bootstrap?
-      }
-
-      response = post rest_url("target/create"), post_body
-      @@invalidate_map << :target
-
-      return response
-    end
-
-    desc "PROVIDER-ID/NAME create-target --region REGION", "Create target"
-    method_option :region, :type => :string
-    def create_target(context_params)
-      # we use :target_id but that will retunr provider_id (another name for target template ID)
-      composed_provider_id, composed_provider_name = context_params.retrieve_arguments([:target_id!,:target_name!],method_argument_names)
-      region = context_params.retrieve_thor_options([:region!], options)
-
-      DTK::Shell::InteractiveWizard.validate_region(region)
-
-      post_body = {
-        # take only last part of the name, e.g. provider::DemoABH
-        :target_name => composed_provider_name.split(CommandBaseThor::ALT_IDENTIFIER_SEPARATOR).last,
-        :target_template_id => composed_provider_id,
-        :region => region
-      }
-
-      response = post rest_url("target/create"), post_body
-      @@invalidate_map << :target
-
-      return response
-    end
-=begin
-    desc "create","Wizard that will guide you trough creation of target and target-template"
-    def create(context_params)
-      
-      # we get existing templates
-      target_templates = post rest_url("target/list"), { :subtype => :template }
-
-      # ask user to select target template
-      wizard_params = [{:target_template => { :type => :selection, :options => target_templates['data'], :display_field => 'display_name', :skip_option => true }}]
-      target_template_selected = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
-      target_template_id = (target_template_selected[:target_template]||{})['id']
-
-      wizard_params = [
-        {:target_name     => {}},
-        {:description      => {:optional => true }}
-      ]
-
-      if target_template_id.nil?
-        # in case user has not selected template id we will needed information to create target
-        wizard_params.concat([
-          {:iaas_type       => { :type => :selection, :options => [:ec2] }},
-          {:aws_install     => { :type => :question, 
-                                 :question => "Do we have your permission to add necessery 'key-pair' and 'security-group' to your EC2 account?", 
-                                 :options => ["yes","no"], 
-                                 :required_options => ["yes"],
-                                 :explanation => "This permission is necessary for creation of a custom target."
-                                }},
-          {:iaas_properties => { :type => :group, :options => [
-              {:key    => {}},
-              {:secret => {}},
-              {:region => {:type => :selection, :options => DTK::Shell::InteractiveWizard::EC2_REGIONS}},
-          ]}},
-        ])
-      end
-
-      post_body = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
-      post_body ||= {}
-
-      # this means that user has not given permission so we skip request
-      return unless (target_template_id || post_body[:aws_install])
-
-      # in case user chose target ID
-      post_body.merge!(:target_template_id => target_template_id) if target_template_id
-
-
-      response = post rest_url("target/create"), post_body
-       # when changing context send request for getting latest targets instead of getting from cache
-      @@invalidate_map << :target
-
-      return response
-    end
-=end
     desc "TARGET-NAME/ID list-nodes","Lists node instances in given targets."
-    def list_nodes(context_params)
+    def list_targets(context_params)
       context_params.method_arguments = ["nodes"]
-      list_targets(context_params)
+      list(context_params)
     end
 
     desc "TARGET-NAME/ID list-assemblies","Lists assembly instances in given targets."
-    def list_assemblies(context_params)
+    def list_targets(context_params)
       context_params.method_arguments = ["assemblies"]
-      list_targets(context_params)
+      list(context_params)
     end
 
+
+    def self.validation_list(context_params)
+      provider_id = context_params.retrieve_arguments([:provider_id])
+
+      if provider_id
+        # if assembly_id is present we're loading nodes filtered by assembly_id
+        post_body = {
+          :subtype   => :instance,
+          :parent_id => provider_id
+        }
+
+        response = get_cached_response(:provider_target, "target/list", post_body)
+      else
+        # otherwise, load all nodes
+        response = get_cached_response(:target, "target/list", { :subtype => :instance })
+      end
+
+      return response
+    end
+
+=begin
     desc "list-providers","Lists available providers."
     def list_providers(context_params)
       context_params.method_arguments = ["templates"]
       list_targets(context_params)
     end
+=end
 
     desc "list-targets","Lists available targets."
     def list_targets(context_params)
-      target_id, about = context_params.retrieve_arguments([:target_id, :option_1],method_argument_names||="")
+      provider_id, target_id = context_params.retrieve_arguments([:provider_id, :target_id],method_argument_names||="")
+
       if target_id.nil?
-        post_body = (about||'').include?("template") ?  { :subtype => :template } : {}
+        post_body = { 
+          :subtype   => :instance,
+          :parent_id => provider_id
+        }
         response  = post rest_url("target/list"), post_body
            
         response.render_table(:target)
@@ -185,13 +82,15 @@ module DTK::Client
       end
     end
 
-    desc "delete TARGET-IDENTIFIER/PROVIDER-IDENTIFIER","Deletes target or provider"
+    desc "delete TARGET-IDENTIFIER","Deletes target or provider"
     def delete(context_params)
-      target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      target_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
-      # little hacky, if we have PROVIDE delimiter split it. But if there is seprator it will take name.
-      target_id = target_id.split(CommandBaseThor::ALT_IDENTIFIER_SEPARATOR).last
-
+      Console.confirmation_prompt("Are you sure you want to delete target with ID '#{target_id}'"+'?')
+      
+      # this goes to provider
+      # Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies that belong to this target will be deleted as well)'"+'?')
+      
       post_body = {
         :target_id => target_id
       }
@@ -199,6 +98,28 @@ module DTK::Client
       @@invalidate_map << :target
 
       return post rest_url("target/delete"), post_body
+    end
+
+    desc "create-target --region REGION", "Create target"
+    method_option :region, :type => :string
+    def create_target(context_params)
+      # we use :target_id but that will retunr provider_id (another name for target template ID)
+      composed_provider_id, composed_provider_name = context_params.retrieve_arguments([:provider_id!,:provider_name!],method_argument_names)
+      region = context_params.retrieve_thor_options([:region!], options)
+
+      DTK::Shell::InteractiveWizard.validate_region(region)
+
+      post_body = {
+        # take only last part of the name, e.g. provider::DemoABH
+        :target_name => composed_provider_name,
+        :target_template_id => composed_provider_id,
+        :region => region
+      }
+
+      response = post rest_url("target/create"), post_body
+      @@invalidate_map << :target
+
+      return response
     end
 
 =begin
@@ -222,19 +143,6 @@ module DTK::Client
     end
 =end
 
-    no_tasks do
-      
-      def decompose_provider_type_and_name(composed_name)
-        provider_type, provider_name = composed_name.split(':')
 
-        if (provider_type.nil? || provider_name.nil? || provider_type.empty? || provider_name.empty?)
-          raise ::DTK::Client::DtkValidationError.new("Provider name and type are required parameters and should be provided in format PROVIDER-TYPE:PROVIDER-NAME")
-        end
-
-        return [provider_type, provider_name]
-      end
-
-    end
-    
   end
 end

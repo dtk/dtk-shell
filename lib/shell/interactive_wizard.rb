@@ -175,3 +175,59 @@ module DTK
     end
   end
 end
+
+## EXAMPLE OF USAGE
+
+# Example 1. Creating target via wizard
+=begin
+    desc "create","Wizard that will guide you trough creation of target and target-template"
+    def create(context_params)
+      
+      # we get existing templates
+      target_templates = post rest_url("target/list"), { :subtype => :template }
+
+      # ask user to select target template
+      wizard_params = [{:target_template => { :type => :selection, :options => target_templates['data'], :display_field => 'display_name', :skip_option => true }}]
+      target_template_selected = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
+      target_template_id = (target_template_selected[:target_template]||{})['id']
+
+      wizard_params = [
+        {:target_name     => {}},
+        {:description      => {:optional => true }}
+      ]
+
+      if target_template_id.nil?
+        # in case user has not selected template id we will needed information to create target
+        wizard_params.concat([
+          {:iaas_type       => { :type => :selection, :options => [:ec2] }},
+          {:aws_install     => { :type => :question, 
+                                 :question => "Do we have your permission to add necessery 'key-pair' and 'security-group' to your EC2 account?", 
+                                 :options => ["yes","no"], 
+                                 :required_options => ["yes"],
+                                 :explanation => "This permission is necessary for creation of a custom target."
+                                }},
+          {:iaas_properties => { :type => :group, :options => [
+              {:key    => {}},
+              {:secret => {}},
+              {:region => {:type => :selection, :options => DTK::Shell::InteractiveWizard::EC2_REGIONS}},
+          ]}},
+        ])
+      end
+
+      post_body = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
+      post_body ||= {}
+
+      # this means that user has not given permission so we skip request
+      return unless (target_template_id || post_body[:aws_install])
+
+      # in case user chose target ID
+      post_body.merge!(:target_template_id => target_template_id) if target_template_id
+
+
+      response = post rest_url("target/create"), post_body
+       # when changing context send request for getting latest targets instead of getting from cache
+      @@invalidate_map << :target
+
+      return response
+    end
+=end
