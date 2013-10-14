@@ -139,6 +139,15 @@ module DTK::Client
       cancel_task_aux(task_id)
     end
 
+    desc "ASSEMBLY-NAME/ID clear-tasks", "Clears teh tasks that have been run already."
+    def clear_tasks(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      post rest_url("assembly/clear_tasks"), post_body
+    end
+
     desc "ASSEMBLY-NAME/ID promote-to-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Creates a new assembly template or updates existing one from assembly instance" 
     def promote_to_template(context_params)        
       assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!],method_argument_names)
