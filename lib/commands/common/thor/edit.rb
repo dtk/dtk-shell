@@ -38,39 +38,52 @@ module DTK::Client
         response = pull_clone_changes?(module_type,module_id,version,opts)
         return response unless response.ok?
       end
-
-      Console.unix_shell(module_location, module_id, module_type, version)
       grit_adapter = Helper(:git_repo).create(module_location)
-      if grit_adapter.changed?
-        grit_adapter.print_status
-
-        # check to see if auto commit flag
-        auto_commit  = ::DTK::Configuration.get(:auto_commit_changes)
-        confirmed_ok = false
-
-        # if there is no auto commit ask for confirmation
-        unless auto_commit
-          confirmed_ok = Console.confirmation_prompt("Would you like to commit and push following changes (keep in mind this will commit ALL above changes)?") 
-        end
-
-        if (auto_commit || confirmed_ok)
-          if auto_commit 
-            puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
-          end
-          commit_msg = user_input("Commit message")
-          internal_trigger=true
-          reparse_aux(module_location)
-          response = push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger,opts)
-          # if error return
-          return response unless response.ok?
-        end
-
-        #TODO: temporary took out; wil put back in        
-        #puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
+      if file_to_edit = opts[:edit_file]
+        OsUtil.edit("#{module_location}/#{file_to_edit}")
       else
-        puts "No changes to repository"
+        Console.unix_shell(module_location, module_id, module_type, version)
       end
-      return
+
+      unless grit_adapter.changed?
+        puts "No changes to repository"
+        return Response::Ok.new()
+      end
+
+      unless  file_to_edit
+        grit_adapter.print_status
+      end
+
+      # check to see if auto commit flag
+      auto_commit  = ::DTK::Configuration.get(:auto_commit_changes)
+      confirmed_ok = false
+
+      # if there is no auto commit ask for confirmation
+      unless auto_commit
+        confirm_msg = 
+          if file_to_edit
+            "Would you like to commit changes to the file?"
+          else
+            "Would you like to commit and push ALL the changes?"
+          end
+        confirmed_ok = Console.confirmation_prompt(confirm_msg)
+      end
+
+      if (auto_commit || confirmed_ok)
+        if auto_commit 
+          puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
+        end
+        commit_msg = user_input("Commit message")
+        internal_trigger=true
+        reparse_aux(module_location)
+        response = push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger,opts)
+        # if error return
+        return response unless response.ok?
+      end
+
+      #TODO: temporary took out; wil put back in        
+      #puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
+      Response::Ok.new()
     end
   end
 end

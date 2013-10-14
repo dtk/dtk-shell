@@ -73,6 +73,13 @@ module DTK
         def genv(name)
           return ENV[name.to_s.upcase].gsub(/\\/,'/')
         end
+
+        def edit(file)
+          unless editor = ENV['EDITOR']
+            raise Client::DtkError, "Environment variable EDITOR needs to be set/"
+          end
+          system("#{editor} #{file}")
+        end
         
         def module_location(module_type,module_name,version=nil,opts={})
           #compact used because module_name can be nil

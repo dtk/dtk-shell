@@ -243,7 +243,7 @@ module DTK::Client
       }
       response = post rest_url("assembly/prepare_for_edit_module"), post_body
       return response unless response.ok?
-      assembly_name,service_module_id,service_module_name,version,repo_url,branch,branch_head_sha = response.data(:assembly_name,:module_id,:module_name,:version,:repo_url,:workspace_branch,:branch_head_sha)
+      assembly_name,service_module_id,service_module_name,version,repo_url,branch,branch_head_sha,edit_file = response.data(:assembly_name,:module_id,:module_name,:version,:repo_url,:workspace_branch,:branch_head_sha,:edit_file)
       edit_opts = {
         :automatically_clone => true,
         :assembly_module => {
@@ -257,7 +257,8 @@ module DTK::Client
         },
         :commit_sha => branch_head_sha,
         :pull_if_needed => true,
-        :modification_type => :workflow
+        :modification_type => :workflow,
+        :edit_file => edit_file
       }
       version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
       edit_aux(:service_module,service_module_id,service_module_name,version,edit_opts)

@@ -72,7 +72,7 @@ module DTK::Client
         dtk_shell_ac_append_char = Readline.completion_append_character
 
         if OsUtil.is_windows?
-          puts "[NOTICE] Unix shell interaction is currenly not supported on Windows."
+          puts "[NOTICE] Shell interaction is currenly not supported on Windows."
           return
         end
         
