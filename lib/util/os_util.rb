@@ -76,7 +76,7 @@ module DTK
 
         def edit(file)
           unless editor = ENV['EDITOR']
-            raise Client::DtkError, "Environment variable EDITOR needs to be set/"
+            raise Client::DtkError, "Environment variable EDITOR needs to be set; exit dtk-shell, set varibale and log back into dtk-shell."
           end
           system("#{editor} #{file}")
         end
