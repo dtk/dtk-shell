@@ -185,7 +185,7 @@ module DTK
       def self.create_identifier(name, entity_name, value)
         instance                = self.create_command(name,entity_name)
         instance.identifier     = value
-        alt_identifier_name = name.split(Client::CommandBaseThor::ALT_IDENTIFIER_SEPARATOR)
+        alt_identifier_name = name.to_s.split(Client::CommandBaseThor::ALT_IDENTIFIER_SEPARATOR)
         instance.alt_identifier = alt_identifier_name.size > 1 ? alt_identifier_name.first : nil
         return instance
       end

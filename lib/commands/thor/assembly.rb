@@ -685,6 +685,10 @@ TODO: will put in dot release and will rename to 'extend'
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy all nodes in the workspace"+'?')
       end
 
+      #purge local clone
+      response = purge_clone_aux(:all,:assembly_module => {:assembly_name => 'workspace'})
+      return response unless response.ok?
+
       post_body = {
         :assembly_id => assembly_id
       }
