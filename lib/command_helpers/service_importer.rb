@@ -3,7 +3,7 @@ module DTK::Client
   #
   # Main purpose of this module is to recognize which local modules are missing based on 
   # name, namespace, version and for those missing component module module will call
-  # module#clone and module#import_r8n method to get missing component modules 
+  # module#clone and module#import_dtkn method to get missing component modules 
   #
   module ServiceImporter
     def create_missing_clone_dirs()
@@ -24,7 +24,7 @@ module DTK::Client
         new_context_params.override_method_argument!('option_2', m_module['version'])
         new_context_params.forward_options( { "skip_cloning" => true}).merge!(opts)
 
-        response = ContextRouter.routeTask("module", "import_r8n", new_context_params, @conn)
+        response = ContextRouter.routeTask("module", "import_dtkn", new_context_params, @conn)
         puts(response.data(:does_not_exist) ? response.data(:does_not_exist) : "Done.")
         raise DTK::Client::DtkError, response.error_message unless response.ok?        
       end
