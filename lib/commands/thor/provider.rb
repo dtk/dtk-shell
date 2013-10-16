@@ -92,7 +92,7 @@ module DTK::Client
     desc "list","Lists available providers."
     def list(context_params)
       response  = post rest_url("target/list"), { :subtype => :template }
-      response.render_table(:target)
+      response.render_table(:provider)
     end
 
     desc "PROVIDER-ID/NAME list-targets", "List targets"
