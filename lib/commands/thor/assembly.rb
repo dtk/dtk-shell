@@ -674,7 +674,10 @@ TODO: will put in dot release and will rename to 'extend'
       }
       post_body.merge!(:node_template_identifier => node_template_identifier) if node_template_identifier
 
-      post rest_url("assembly/add_node"), post_body
+      response = post rest_url("assembly/add_node"), post_body
+      @@invalidate_map << :node
+      
+      response
     end
 
     desc "ASSEMBLY-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
