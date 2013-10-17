@@ -43,7 +43,7 @@ module DTK::Client
     # e.g. we are in assembly/apache context and want to add-component we will use extended context to add 
     # component-templates to autocomplete
     def self.extended_context()
-      {:add_component => "component_template", :create_node => "node_template"}
+      {:add_component => "component_template", :create_node => "node_template", :create_component_dependency => "component_template"}
     end
 
     # this includes children of children
@@ -213,6 +213,19 @@ module DTK::Client
       # execute task
       task_id = response.data(:task_id)
       post rest_url("task/execute"), "task_id" => task_id
+    end
+
+    desc "ASSEMBLY-NAME/ID create-component-dependency CMP-TEMPLATE-NAME/ID ANTECEDENT-CMP-TEMPLATE-NAME/ID", "Create dependency between component templates."
+    def create_component_dependency(context_params)
+      assembly_id,cmp_template_id,antec_cmp_template_id = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :component_template_id => cmp_template_id,
+        :antecedent_component_template_id => antec_cmp_template_id
+      }
+
+      post rest_url("assembly/create_component_dependency"), post_body
     end
 
     desc "ASSEMBLY-NAME/ID edit-module COMPONENT-MODULE-NAME", "Edit component module used by the assembly"
@@ -699,7 +712,8 @@ TODO: will put in dot release and will rename to 'extend'
       response = post(rest_url("assembly/purge"),post_body)
     end
 
-    desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]", "Add component template to assembly node. Without order index default order location is on the end."
+#    desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]", "Add component template to assembly node. Without order index default order location is on the end."
+    desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node."
     def add_component(context_params)
     
       # If method is invoked from 'assembly/node' level retrieve node_id argument 
