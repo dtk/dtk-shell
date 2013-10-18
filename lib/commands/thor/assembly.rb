@@ -676,6 +676,7 @@ TODO: will put in dot release and will rename to 'extend'
 
       response = post rest_url("assembly/add_node"), post_body
       @@invalidate_map << :node
+      @@invalidate_map << :assembly_node
       
       response
     end
