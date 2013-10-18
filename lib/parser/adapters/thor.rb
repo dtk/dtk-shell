@@ -86,6 +86,14 @@ module DTK
         return self.execute_from_cli(conn,method_name, context_params,thor_options,shell_execution)
       end
 
+      def self.invalidate_entities(*array_of_entites)
+        #  we handle to cases here
+        # n-context invalidation, whole structure
+        @@invalidate_map << array_of_entites.join('_').to_sym
+
+        # last entity
+        @@invalidate_map << array_of_entites.last.to_sym
+      end
 
       # we take current timestamp and compare it to timestamp stored in @@cached_response
       # if difference is greater than TIME_DIFF we send request again, if not we use

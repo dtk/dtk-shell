@@ -675,9 +675,9 @@ TODO: will put in dot release and will rename to 'extend'
       post_body.merge!(:node_template_identifier => node_template_identifier) if node_template_identifier
 
       response = post rest_url("assembly/add_node"), post_body
-      @@invalidate_map << :node
-      @@invalidate_map << :assembly_node
-      
+
+      self.class.invalidate_entities(:assembly, :node)
+
       response
     end
 
