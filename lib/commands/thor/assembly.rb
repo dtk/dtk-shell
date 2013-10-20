@@ -81,7 +81,10 @@ module DTK::Client
             ['list-service-links',"list-service-links","# List service links for component."],
             ['create-service-link',"create-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
             ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."],
+=begin
+TODO: overlaps with different meaning
             ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
+=end
             ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."]
           ]
         },
@@ -497,7 +500,8 @@ TODO: will put in dot release and will rename to 'extend'
       post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
       post rest_url("assembly/list_attribute_mappings"), post_body
     end
-
+=begin
+TODO: overlaps with different meaning
     desc "ASSEMBLY-NAME/ID create-attribute SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to a service link"
     def create_attribute(context_params)
       post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
@@ -505,7 +509,7 @@ TODO: will put in dot release and will rename to 'extend'
       post_body.merge!(:attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}") #TODO: probably change to be hash
       post rest_url("assembly/add_ad_hoc_attribute_mapping"), post_body
     end
-
+=end
     desc "ASSEMBLY-NAME/ID delete-service-link SERVICE-LINK-ID", "Delete a service link"
     def delete_service_link(context_params)
       post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
