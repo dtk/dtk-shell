@@ -68,13 +68,13 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :all => {
           :node      => [
-            # ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
-            ['list',"list [FILTER] [--list] ","# List nodes"],
-            ['list-components',"list-components [FILTER] [--list] ","# List components associated with workspace's node."],
-            ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with workspace's node."]
+            ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
+            # ['list',"list [FILTER] [--list] ","# List nodes"],
+            ['list-components',"list-components ","# List components associated with workspace's node."],
+            ['list-attributes',"list-attributes ","# List attributes associated with workspace's node."]
           ],
           :component => [
-            ['list',"list [FILTER] [--list] ","# List components."],
+            # ['list',"list [FILTER] [--list] ","# List components."],
             ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."],
             ['list-service-links',"list-service-links","# List service links for component."],
             ['create-service-link',"create-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
@@ -86,14 +86,20 @@ module DTK::Client
         :command_only => {
           :attribute => [
             ['list',"list [attributes] [FILTER] [--list] ","# List attributess."]
+          ],
+          :node => [
+            ['delete',"delete NAME/ID [-y] ","# Delete node, terminating it if the node has been spun up."],
+            ['list-nodes',"list-nodes ","# List nodes."]
           ]
         },
         :identifier_only => {
           :node      => [
-            # ['add-component',"add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]","# Return info about node instance belonging to given workspace."],
+            ['add-component',"add-component COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]","# Add component to node. Default workflow order position is at the end."],
+            # ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly node."],
             ['info',"info","# Return info about node instance belonging to given workspace."],
             ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context workspace."],
-            ['get-ps', "get-ps [--filter PATTERN]", "# Returns a list of running processes for a given node instance belonging to context workspace."]
+            ['get-ps', "get-ps [--filter PATTERN]", "# Returns a list of running processes for a given node instance belonging to context workspace."],
+            ['link-attribute-to', "link-attribute-to TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
@@ -293,98 +299,119 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID list-nodes","List nodes associated with workspace."
     def list_nodes(context_params)
       context_params.method_arguments = ["nodes"]
-      # list(context_params)
-      list_assemblies(context_params)
+      list_aux(context_params)
+      # list_assemblies(context_params)
     end
 
     desc "WORKSPACE-NAME/ID list-components","List components associated with workspace."
     def list_components(context_params)
       context_params.method_arguments = ["components"]
-      # list(context_params)
-      list_assemblies(context_params)
+      list_aux(context_params)
+      # list_assemblies(context_params)
     end
 
     desc "WORKSPACE-NAME/ID list-attributes","List attributes associated with workspace."
     def list_attributes(context_params)
       context_params.method_arguments = ["attributes"]
-      # list(context_params)
-      list_assemblies(context_params)
+      list_aux(context_params)
+      # list_assemblies(context_params)
     end
 
     desc "WORKSPACE-NAME/ID list-tasks","List tasks associated with workspace."
     def list_tasks(context_params)
       context_params.method_arguments = ["tasks"]
-      # list(context_params)
-      list_assemblies(context_params)
+      list_aux(context_params)
+      # list_assemblies(context_params)
     end
 
     desc "WORKSPACE-NAME/ID list-assemblies","List assemblies for current workspace."
     def list_assemblies(context_params)
-      workspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([:workspace_id,:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
-      detail_to_include = nil
-
-      if about
-        case about
-          when "nodes"
-            data_type = :node
-          when "components"
-            data_type = :component
-            detail_to_include = [:component_dependencies]
-          when "attributes"
-            data_type = :attribute
-            detail_to_include = [:attribute_links]
-          when "tasks"
-            data_type = :task
-          else
-            raise_validation_error_method_usage('list')
-        end 
-      end
-
-      post_body = {
-        :assembly_id => workspace_id,
-        :node_id => node_id,
-        :component_id => component_id,
-        :subtype     => 'instance'
-      }
-      post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
-      rest_endpoint = "assembly/info_about"
-
-      if context_params.is_last_command_eql_to?(:attribute)        
-        raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
-        about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
-      elsif context_params.is_last_command_eql_to?(:component)
-        if component_id
-          about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
-        else
-          about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
-        end
-      elsif context_params.is_last_command_eql_to?(:node)
-        if node_id
-          about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
-        else
-          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
-        end
-      else
-        if workspace_id
-          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
-        else
-          data_type = :assembly
-          post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
-          rest_endpoint = "assembly/list"
-        end  
-      end
-
-      post_body[:about] = about
+      data_type = :assembly
+      post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
+      rest_endpoint = "assembly/list"
       response = post rest_url(rest_endpoint), post_body
 
-      # set render view to be used
       response.render_table(data_type)
-
       return response
     end
 
-    desc "WORKSPACE-NAME/ID set-attribute-relation TARGET-ATTR-TERM SOURCE-ATTR-TERM", "Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM"
-    def set_attribute_relation(context_params)
+    # desc "WORKSPACE-NAME/ID list-assemblies","List assemblies for current workspace."
+    # def list_assemblies(context_params)
+    #   workspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([:workspace_id,:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
+    #   detail_to_include = nil
+
+    #   if about
+    #     case about
+    #       when "nodes"
+    #         data_type = :node
+    #       when "components"
+    #         data_type = :component
+    #         detail_to_include = [:component_dependencies]
+    #       when "attributes"
+    #         data_type = :attribute
+    #         detail_to_include = [:attribute_links]
+    #       when "tasks"
+    #         data_type = :task
+    #       else
+    #         raise_validation_error_method_usage('list')
+    #     end 
+    #   end
+
+    #   post_body = {
+    #     :assembly_id => workspace_id,
+    #     :node_id => node_id,
+    #     :component_id => component_id,
+    #     :subtype     => 'instance'
+    #   }
+    #   post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
+    #   rest_endpoint = "assembly/info_about"
+
+    #   if context_params.is_last_command_eql_to?(:attribute)        
+    #     raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
+    #     about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
+    #   elsif context_params.is_last_command_eql_to?(:component)
+    #     if component_id
+    #       about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
+    #     else
+    #       about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
+    #     end
+    #   elsif context_params.is_last_command_eql_to?(:node)
+    #     if node_id
+    #       about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
+    #       data_type = :workspace_attribute
+    #     else
+    #       about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
+    #     end
+    #   else
+    #     if workspace_id
+    #       about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
+    #     else
+    #       data_type = :assembly
+    #       post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
+    #       rest_endpoint = "assembly/list"
+    #     end  
+    #   end
+
+    #   post_body[:about] = about
+    #   response = post rest_url(rest_endpoint), post_body
+
+    #   if (data_type.to_s.eql?("workspace_attribute") && response["data"])
+    #     response["data"].each do |data|
+    #       unless(data["linked_to_display_form"].to_s.empty?)
+    #         data_type = :workspace_attribute_w_link
+    #         break
+    #       end
+    #     end
+    #   end
+
+    #   # set render view to be used
+    #   response.render_table(data_type)
+
+    #   return response
+    # end
+
+    desc "WORKSPACE-NAME/ID link-attribute-to TARGET-ATTR-TERM SOURCE-ATTR-TERM", "Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM"
+    def link_attribute_to(context_params)
       workspace_id, target_attr_term, source_attr_term = context_params.retrieve_arguments([:workspace_id!,:option_1!,:option_2!],method_argument_names)
       post_body = {
         :assembly_id => workspace_id,
@@ -481,6 +508,7 @@ module DTK::Client
         :subtype     => :instance
       }
       resp = post rest_url("assembly/info"), post_body
+      resp.render_workspace_data()
     end
 
     desc "WORKSPACE-NAME/ID delete-and-destroy [-y]", "Delete workspace instance, terminating any nodes that have been spun up."
@@ -614,7 +642,7 @@ module DTK::Client
       response = post(rest_url("assembly/purge"),post_body)
     end
 
-    desc "add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]", "Add component template to assembly node. Without order index default order location is on the end."
+    desc "add-component COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]", "Add component to node. Default workflow order position is at the end."
     def add_component(context_params)
     
       # If method is invoked from 'assembly/node' level retrieve node_id argument 
@@ -635,10 +663,19 @@ module DTK::Client
         :order_index => order_index
       }
 
-      post rest_url("assembly/add_component"), post_body
+      response = post(rest_url("assembly/add_component"), post_body)
+      return response unless response.ok?
+
+      puts "Successfully added component to node."
     end
 
-    desc "WORKSPACE-NAME/ID delete-node [-y] NODE-NAME/ID","Delete node, terminating it if the node has been spun up"
+    desc "delete NAME/ID [-y]","Delete node, terminating it if the node has been spun up"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def delete(context_params)
+      delete_node(context_params)
+    end
+
+    desc "WORKSPACE-NAME/ID delete-node NAME/ID [-y]","Delete node, terminating it if the node has been spun up"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       workspace_id, node_id = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names)
@@ -654,17 +691,17 @@ module DTK::Client
       response = post(rest_url("assembly/delete_node"),post_body)
     end
 
-    # desc "WORKSPACE-NAME/ID delete-component COMPONENT-ID","Delete component from assembly"
-    # def delete_component(context_params)
-    #   workspace_id, node_id, component_id = context_params.retrieve_arguments([:workspace_id!,:node_id,:option_1!],method_argument_names)
+    desc "delete-component COMPONENT-ID","Delete component from assembly"
+    def delete_component(context_params)
+      workspace_id, node_id, component_id = context_params.retrieve_arguments([:workspace_id!,:node_id,:option_1!],method_argument_names)
 
-    #   post_body = {
-    #     :assembly_id => workspace_id,
-    #     :node_id => node_id,
-    #     :component_id => component_id
-    #   }
-    #   response = post(rest_url("assembly/delete_component"),post_body)
-    # end
+      post_body = {
+        :assembly_id => workspace_id,
+        :node_id => node_id,
+        :component_id => component_id
+      }
+      response = post(rest_url("assembly/delete_component"),post_body)
+    end
 
     desc "COMPONENT-NAME/ID edit","Edit component module related to given component."
     def edit(context_params)
@@ -992,6 +1029,8 @@ module DTK::Client
     end
 
     no_tasks do
+
+
       def assembly_start(workspace_id, node_pattern_filter)             
         post_body = {
           :assembly_id  => workspace_id,
@@ -1018,6 +1057,80 @@ module DTK::Client
         return response
       end
 
+
+      def list_aux(context_params)
+      workspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([:workspace_id,:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
+      detail_to_include = nil
+
+      if about
+        case about
+          when "nodes"
+            data_type = :node
+          when "components"
+            data_type = :component
+            detail_to_include = [:component_dependencies]
+          when "attributes"
+            data_type = :attribute
+            detail_to_include = [:attribute_links]
+          when "tasks"
+            data_type = :task
+          else
+            raise_validation_error_method_usage('list')
+        end 
+      end
+
+      post_body = {
+        :assembly_id => workspace_id,
+        :node_id => node_id,
+        :component_id => component_id,
+        :subtype     => 'instance'
+      }
+      post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
+      rest_endpoint = "assembly/info_about"
+
+      if context_params.is_last_command_eql_to?(:attribute)        
+        raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
+        about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
+      elsif context_params.is_last_command_eql_to?(:component)
+        if component_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
+        else
+          about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
+        end
+      elsif context_params.is_last_command_eql_to?(:node)
+        if node_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
+          data_type = :workspace_attribute
+        else
+          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
+        end
+      else
+        if workspace_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
+        else
+          data_type = :assembly
+          post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
+          rest_endpoint = "assembly/list"
+        end  
+      end
+
+      post_body[:about] = about
+      response = post rest_url(rest_endpoint), post_body
+
+      if (data_type.to_s.eql?("workspace_attribute") && response["data"])
+        response["data"].each do |data|
+          unless(data["linked_to_display_form"].to_s.empty?)
+            data_type = :workspace_attribute_w_link
+            break
+          end
+        end
+      end
+
+      # set render view to be used
+      response.render_table(data_type)
+
+      return response
+    end
 
 
     end
