@@ -64,7 +64,8 @@ module DTK
     private
 
     def load_configuration_to_hash(path_to_file)
-      configuration = Hash[*File.read(path_to_file).gsub(/#.+/,'').strip().gsub(/( |\t)+$/,'').split(/[=\n]+/)]
+      file_conf_pairs = *File.read(path_to_file).gsub(/#.+/,'').strip().gsub(/( |\t)+$/,'').split(/[=\n]+/)
+      configuration = Hash[file_conf_pairs]
       # check for types
       return configuration.each do |k,v|
         case v
