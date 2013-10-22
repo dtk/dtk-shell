@@ -54,15 +54,21 @@ module DTK
       end
 
       # used just for printing workspace node info
-      def render_workspace_data(print_error_table=false)
-        info_list = ["node_name","os_type","op_status","size","target"]
+      def render_workspace_node_info(type)
+        info_list = ""
+        if type.eql?("component")
+          info_list = ["component_name","component_id","basic_type","description"]
+        else
+          info_list = ["node_name","os_type","op_status","size","target"]
+        end
+
         puts "--- \n"
         if data.kind_of?(String)
           data.each_line do |l|
-            b = "#{l.gsub(/\s+\-*\s+/,'')}"
-
+            print = "#{l.gsub(/\s+\-*\s+/,'')}"
+            print.gsub!(/-\s+/,"")
             info_list.each do |i|
-              STDOUT << " #{b}" if b.to_s.include?(i)  
+              STDOUT << " #{print}" if print.to_s.include?(i)  
             end
           end
         end

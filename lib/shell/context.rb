@@ -381,6 +381,7 @@ module DTK
           else
             context_params = get_command_parameters(thor_command_name, [], active_context_copy)[2]
           end
+          
           tmp = command_clazz.valid_id?(value, @conn, context_params)
           return tmp
         end

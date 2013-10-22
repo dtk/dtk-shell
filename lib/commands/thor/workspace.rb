@@ -70,26 +70,29 @@ module DTK::Client
           :node      => [
             ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
             # ['list',"list [FILTER] [--list] ","# List nodes"],
-            ['list-components',"list-components ","# List components associated with workspace's node."],
-            ['list-attributes',"list-attributes ","# List attributes associated with workspace's node."]
+            ['list-components',"list-components","# List components associated with workspace's node."],
+            ['list-attributes',"list-attributes","# List attributes associated with workspace's node."]
           ],
           :component => [
             # ['list',"list [FILTER] [--list] ","# List components."],
-            ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."],
-            ['list-service-links',"list-service-links","# List service links for component."],
-            ['create-service-link',"create-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
-            ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."],
-            ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
-            ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."]
+            ['list-attributes',"list-attributes","# List attributes associated with given component."]
+            # ['list-service-links',"list-service-links","# List service links for component."],
+            # ['create-service-link',"create-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
+            # ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."],
+            # ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
+            # ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."]
           ]
         },
         :command_only => {
           :attribute => [
-            ['list',"list [attributes] [FILTER] [--list] ","# List attributess."]
+            ['list',"list [attributes]","# List attributess."]
           ],
           :node => [
             ['delete',"delete NAME/ID [-y] ","# Delete node, terminating it if the node has been spun up."],
             ['list-nodes',"list-nodes ","# List nodes."]
+          ],
+          :component => [
+            ['delete',"delete NAME/ID [-y] ","# Delete node, terminating it if the node has been spun up."]
           ]
         },
         :identifier_only => {
@@ -103,6 +106,11 @@ module DTK::Client
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
+            ['list-service-links',"list-service-links","# List service links for component."],
+            ['create-service-link',"create-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
+            ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."],
+            ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
+            ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."],
             ['edit',"edit","# Edit component module related to given component."]
           ],
           :attribute => [
@@ -507,8 +515,15 @@ module DTK::Client
         :attribute_id => attribute_id,
         :subtype     => :instance
       }
+
       resp = post rest_url("assembly/info"), post_body
-      resp.render_workspace_data()
+      if (component_id.nil? && !node_id.nil?)
+        resp.render_workspace_node_info("node")
+      elsif (component_id && node_id)
+        resp.render_workspace_node_info("component") 
+      else
+        return resp
+      end
     end
 
     desc "WORKSPACE-NAME/ID delete-and-destroy [-y]", "Delete workspace instance, terminating any nodes that have been spun up."
@@ -672,7 +687,8 @@ module DTK::Client
     desc "delete NAME/ID [-y]","Delete node, terminating it if the node has been spun up"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
-      delete_node(context_params)
+    delete_node(context_params) if context_params.is_last_command_eql_to?(:node)   
+    delete_component(context_params) if context_params.is_last_command_eql_to?(:component)
     end
 
     desc "WORKSPACE-NAME/ID delete-node NAME/ID [-y]","Delete node, terminating it if the node has been spun up"

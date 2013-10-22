@@ -61,12 +61,16 @@ module DTK
         results = []
         errors  = []
 
-        mapping.each do |key|
+        mapping.each do |key_mapping|
 
-          required = key.to_s.match(/.+!$/)
+          is_array = key_mapping.is_a?(Array)
+
+          selected_key = is_array ? key_mapping.first : key_mapping
+
+          required = selected_key.to_s.match(/.+!$/)
 
           element = nil
-          matched = key.to_s.match(/option_([0-9]+)/)
+          matched = selected_key.to_s.match(/option_([0-9]+)/)
           if matched
             id = matched[1].to_i - 1
             element = @method_arguments[id]
@@ -80,14 +84,15 @@ module DTK
           else
             # More complex split regex for extracting entitiy name from mapping due to complex context names
             # i.e. assembly-template will have assembly_template_id mapping
-            split_info = key.to_s.split(/_([a-z]+!?$)/)
-            entity_name = split_info[0].gsub(/_/,'-')  # makes sure we are using entity names with '_'
-            id_type     = split_info[1].gsub(/!/,'')   # for required elements we remove '!' required marker
-            context_identifier = @current_context.find_identifier(entity_name)
-            if context_identifier
-              element = context_identifier.get_identifier(id_type)
-            else
-              element = nil
+            element = check_context_for_element(selected_key)
+
+            # if we are dealing with array we need to check rest of the keys since it is OR
+            # approach if first element not found take second
+            if element.nil? && is_array
+              key_mapping[1..-1].each do |alternative_key|
+                element = check_context_for_element(alternative_key)
+                break if element
+              end
             end
 
             unless element
@@ -134,6 +139,20 @@ module DTK
       def match_argument_id(identifier)
         matched = identifier.to_s.match(/option_([0-9]+)/)
         (matched ? matched[1].to_i - 1 : nil)
+      end
+
+      # based on map key binding e.g. assembly_id, assembly_name we will extrace value 
+      # from our ActiveContext
+      def check_context_for_element(key_mapping)
+        split_info =  key_mapping.to_s.split(/_([a-z]+!?$)/)
+        entity_name = split_info[0].gsub(/_/,'-')  # makes sure we are using entity names with '_'
+        id_type     = split_info[1].gsub(/!/,'')   # for required elements we remove '!' required marker
+        context_identifier = @current_context.find_identifier(entity_name)
+        if context_identifier
+          return context_identifier.get_identifier(id_type)
+        else
+          return nil
+        end
       end
     end
 
