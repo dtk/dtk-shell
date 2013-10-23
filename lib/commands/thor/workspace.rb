@@ -705,6 +705,8 @@ module DTK::Client
         :node_id => node_id
       }
       response = post(rest_url("assembly/delete_node"),post_body)
+      @@invalidate_map << :assembly_node
+      response
     end
 
     desc "delete-component COMPONENT-ID","Delete component from assembly"
@@ -717,6 +719,8 @@ module DTK::Client
         :component_id => component_id
       }
       response = post(rest_url("assembly/delete_component"),post_body)
+      @@invalidate_map << :assembly_node_component
+      response
     end
 
     desc "COMPONENT-NAME/ID edit","Edit component module related to given component."
@@ -1116,10 +1120,8 @@ module DTK::Client
       elsif context_params.is_last_command_eql_to?(:node)
         if node_id
           about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
-          data_type = :workspace_attribute
         else
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
-          data_type = :workspace_attribute
         end
       else
         if workspace_id
@@ -1134,9 +1136,10 @@ module DTK::Client
       post_body[:about] = about
       response = post rest_url(rest_endpoint), post_body
 
-      if (data_type.to_s.eql?("workspace_attribute") && response["data"])
+      if (data_type.to_s.eql?("attribute") && response["data"])
+        data_type = :workspace_attribute
         response["data"].each do |data|
-          unless(data["linked_to_display_form"].to_s.empty?)
+          unless (data["linked_to_display_form"].to_s.empty?)
             data_type = :workspace_attribute_w_link
             break
           end
