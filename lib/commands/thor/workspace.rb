@@ -1119,6 +1119,7 @@ module DTK::Client
           data_type = :workspace_attribute
         else
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
+          data_type = :workspace_attribute
         end
       else
         if workspace_id
