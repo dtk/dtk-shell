@@ -92,7 +92,7 @@ module DTK::Client
             ['list-nodes',"list-nodes ","# List nodes."]
           ],
           :component => [
-            ['delete',"delete NAME/ID [-y] ","# Delete node, terminating it if the node has been spun up."]
+            ['delete',"delete NAME/ID [-y] ","# Delete component from workspace."]
           ]
         },
         :identifier_only => {
@@ -684,7 +684,7 @@ module DTK::Client
       puts "Successfully added component to node."
     end
 
-    desc "delete NAME/ID [-y]","Delete node, terminating it if the node has been spun up"
+    desc "delete NAME/ID [-y]", ""
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
     delete_node(context_params) if context_params.is_last_command_eql_to?(:node)   
@@ -709,7 +709,7 @@ module DTK::Client
       response
     end
 
-    desc "delete-component COMPONENT-ID","Delete component from assembly"
+    desc "delete-component COMPONENT-ID","Delete component from workspace"
     def delete_component(context_params)
       workspace_id, node_id, component_id = context_params.retrieve_arguments([:workspace_id!,:node_id,:option_1!],method_argument_names)
 
