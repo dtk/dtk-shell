@@ -332,16 +332,16 @@ module DTK::Client
       # list_assemblies(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-assemblies","List assemblies for current workspace."
-    def list_assemblies(context_params)
-      data_type = :assembly
-      post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
-      rest_endpoint = "assembly/list"
-      response = post rest_url(rest_endpoint), post_body
+    # desc "WORKSPACE-NAME/ID list-assemblies","List assemblies for current workspace."
+    # def list_assemblies(context_params)
+    #   data_type = :assembly
+    #   post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
+    #   rest_endpoint = "assembly/list"
+    #   response = post rest_url(rest_endpoint), post_body
 
-      response.render_table(data_type)
-      return response
-    end
+    #   response.render_table(data_type)
+    #   return response
+    # end
 
     # desc "WORKSPACE-NAME/ID list-assemblies","List assemblies for current workspace."
     # def list_assemblies(context_params)
@@ -526,34 +526,34 @@ module DTK::Client
       end
     end
 
-    desc "WORKSPACE-NAME/ID delete-and-destroy [-y]", "Delete workspace instance, terminating any nodes that have been spun up."
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete_and_destroy(context_params)
-      workspace_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      assembly_name = get_workspace_name(workspace_id)
+    # desc "WORKSPACE-NAME/ID delete-and-destroy [-y]", "Delete workspace instance, terminating any nodes that have been spun up."
+    # method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    # def delete_and_destroy(context_params)
+    #   workspace_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+    #   assembly_name = get_workspace_name(workspace_id)
 
-      unless options.force?
-        # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
-        #used form "+'?' because ?" confused emacs ruby rendering
-        what = "assembly"
-        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_name}' and its nodes"+'?')
-      end
+    #   unless options.force?
+    #     # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
+    #     #used form "+'?' because ?" confused emacs ruby rendering
+    #     what = "assembly"
+    #     return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_name}' and its nodes"+'?')
+    #   end
 
-      #purge local clone
-      response = purge_clone_aux(:all,:assembly_module => {:assembly_name => assembly_name})
-      return response unless response.ok?
+    #   #purge local clone
+    #   response = purge_clone_aux(:all,:assembly_module => {:assembly_name => assembly_name})
+    #   return response unless response.ok?
 
-      post_body = {
-        :assembly_id => workspace_id,
-        :subtype => :instance
-      }
+    #   post_body = {
+    #     :assembly_id => workspace_id,
+    #     :subtype => :instance
+    #   }
 
-      response = post rest_url("assembly/delete"), post_body
+    #   response = post rest_url("assembly/delete"), post_body
          
-      # when changing context send request for getting latest assemblies instead of getting from cache
-      @@invalidate_map << :assembly
-      response
-    end
+    #   # when changing context send request for getting latest assemblies instead of getting from cache
+    #   @@invalidate_map << :assembly
+    #   response
+    # end
 
     desc "WORKSPACE-NAME/ID set-attribute ATTRIBUTE-NAME/ID VALUE [-u] [-r]", "Set workspace attribute value(s). -u will unset attribute. -r will set only required attributes"
     method_option :unset, :aliases => '-u', :type => :boolean, :default => false
