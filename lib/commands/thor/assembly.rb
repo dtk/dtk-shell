@@ -43,7 +43,7 @@ module DTK::Client
     # e.g. we are in assembly/apache context and want to add-component we will use extended context to add 
     # component-templates to autocomplete
     def self.extended_context()
-      {:add_component => "component_template", :create_node => "node_template"}
+      {:add_component => "component_template", :create_node => "node_template", :create_component_dependency => "component_template"}
     end
 
     # this includes children of children
@@ -81,7 +81,10 @@ module DTK::Client
             ['list-service-links',"list-service-links","# List service links for component."],
             ['create-service-link',"create-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
             ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."],
+=begin
+TODO: overlaps with different meaning
             ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
+=end
             ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."]
           ]
         },
@@ -215,6 +218,19 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
+    desc "ASSEMBLY-NAME/ID create-component-dependency CMP-TEMPLATE-NAME/ID ANTECEDENT-CMP-TEMPLATE-NAME/ID", "Create dependency between component templates."
+    def create_component_dependency(context_params)
+      assembly_id,cmp_template_id,antec_cmp_template_id = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :component_template_id => cmp_template_id,
+        :antecedent_component_template_id => antec_cmp_template_id
+      }
+
+      post rest_url("assembly/create_component_dependency"), post_body
+    end
+
     desc "ASSEMBLY-NAME/ID edit-module COMPONENT-MODULE-NAME", "Edit component module used by the assembly"
     def edit_module(context_params)
       assembly_id, component_module_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
@@ -225,9 +241,10 @@ module DTK::Client
       }
       response = post rest_url("assembly/prepare_for_edit_module"), post_body
       return response unless response.ok?
-      assembly_name,component_module_id,version,repo_url,branch = response.data(:assembly_name,:module_id,:version,:repo_url,:workspace_branch)
+      assembly_name,component_module_id,version,repo_url,branch,commit_sha = response.data(:assembly_name,:module_id,:version,:repo_url,:workspace_branch,:branch_head_sha)
       edit_opts = {
         :automatically_clone => true,
+        :pull_if_needed => true,
         :assembly_module => {
           :assembly_name => assembly_name,
           :version => version
@@ -235,7 +252,8 @@ module DTK::Client
         :workspace_branch_info => {
           :repo_url => repo_url,
           :branch => branch,
-          :module_name => component_module_name
+          :module_name => component_module_name,
+          :commit_sha => commit_sha
         }
       }
       version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
@@ -484,7 +502,8 @@ TODO: will put in dot release and will rename to 'extend'
       post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
       post rest_url("assembly/list_attribute_mappings"), post_body
     end
-
+=begin
+TODO: overlaps with different meaning
     desc "ASSEMBLY-NAME/ID create-attribute SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to a service link"
     def create_attribute(context_params)
       post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
@@ -492,7 +511,7 @@ TODO: will put in dot release and will rename to 'extend'
       post_body.merge!(:attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}") #TODO: probably change to be hash
       post rest_url("assembly/add_ad_hoc_attribute_mapping"), post_body
     end
-
+=end
     desc "ASSEMBLY-NAME/ID delete-service-link SERVICE-LINK-ID", "Delete a service link"
     def delete_service_link(context_params)
       post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
@@ -699,7 +718,8 @@ TODO: will put in dot release and will rename to 'extend'
       response = post(rest_url("assembly/purge"),post_body)
     end
 
-    desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]", "Add component template to assembly node. Without order index default order location is on the end."
+#    desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]", "Add component template to assembly node. Without order index default order location is on the end."
+    desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node."
     def add_component(context_params)
     
       # If method is invoked from 'assembly/node' level retrieve node_id argument 
