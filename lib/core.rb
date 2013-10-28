@@ -93,9 +93,14 @@ def check_direct_access(params)
   return if params[:file_exists]
 
   puts "Adding direct access for current user..."
-  response = DTK::Client::Account.add_access(params[:ssh_key_path])
-  DTK::Client::OsUtil.print("We were not able to add direct access for current user. In order to properly use dtk-shell you will have to add access manually ('dtk account add-direct-access').\n", :yellow) unless response.ok?
+  # response = DTK::Client::Account.add_access(params[:ssh_key_path])
+  response = DTK::Client::Account.add_key(params[:ssh_key_path])
   
+  unless response.ok?
+    DTK::Client::OsUtil.print("We were not able to add direct access for current user. In order to properly use dtk-shell you will have to add access manually ('dtk account add-direct-access').\n", :yellow) 
+    return
+  end
+
   FileUtils.touch(params[:file_path])
 end
 
