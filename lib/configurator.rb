@@ -75,6 +75,15 @@ module DTK
 				end
 			end
 
+			def self.regenerate_conf_file(file_path, properties, header)
+				File.open(file_path, 'w') do |f|
+					f.puts(header)
+					properties.each do |prop|
+						f.puts("#{prop[0]}=#{prop[1]}")
+					end
+				end
+			end
+
 			def self.create_missing_clone_dirs
 				FileUtils.mkdir(OsUtil.module_clone_location) unless File.directory?(OsUtil.module_clone_location)
 				FileUtils.mkdir(OsUtil.service_clone_location) unless File.directory?(OsUtil.service_clone_location)

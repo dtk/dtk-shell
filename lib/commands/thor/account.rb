@@ -64,7 +64,9 @@ module DTK::Client
     desc "set-password", "Change password for your dtk user account"
     def set_password(context_params)
       old_pass_prompt, old_pass, new_pass_prompt, confirm_pass_prompt = nil
-      old_pass = parse_key_value_file(::DTK::Client::Configurator.CRED_FILE)[:password]
+      cred_file = ::DTK::Client::Configurator.CRED_FILE
+      old_pass = parse_key_value_file(cred_file)[:password]
+      username = parse_key_value_file(cred_file)[:username]
 
       if old_pass.nil?
         OsUtil.print("Unable to retrieve your current password!", :yellow)
@@ -86,6 +88,10 @@ module DTK::Client
       if new_pass_prompt.eql?(confirm_pass_prompt)
         post_body = {:new_password => new_pass_prompt}
         response = post rest_url("account/set_password"), post_body
+        return response unless response.ok?
+
+        ::DTK::Client::Configurator.regenerate_conf_file(cred_file, [['username', "#{username.to_s}"], ['password', "#{new_pass_prompt.to_s}"]], '')
+        OsUtil.print("Password changed successfully!", :yellow)
       else
         OsUtil.print("Entered passwords don't match!", :yellow)
         return
