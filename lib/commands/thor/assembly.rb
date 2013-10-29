@@ -56,7 +56,7 @@ module DTK::Client
     end
 
     def self.validation_list(context_params)
-      get_cached_response(:assembly, "assembly/list_with_workspace", {})
+      get_cached_response(:assembly, "assembly/list", {})
     end
 
     # TODO: Hack which is necessery for the specific problem (DTK-541), something to reconsider down the line
