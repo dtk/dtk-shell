@@ -71,14 +71,15 @@ module DTK
         # remove empty strings from array
         entries.reject! { |e| e.empty? }
 
-        if (entries.size == 1)
+        if (entries.size > 0)
           SYM_LINKS.each do |sym_link|
             if entries.first.downcase.to_sym.eql?(sym_link[:alias])
-              return sym_link[:path].split('/')
+              entries[0] = sym_link[:path].split('/')
+              entries.flatten!
             end
           end
         end
-
+        
         entries
       end
 
@@ -202,7 +203,7 @@ module DTK
         ac_size = context_name_list.size
         
         invalid_context = ""
-
+        
         # check each par for command / value
         (0..(entries.size-1)).step(2) do |i|
           command       = entries[i]
