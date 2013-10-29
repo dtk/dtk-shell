@@ -639,8 +639,10 @@ module DTK::Client
         :assembly_node_name => assembly_node_name
       }
       post_body.merge!(:node_template_identifier => node_template_identifier) if node_template_identifier
+      response = post rest_url("assembly/add_node"), post_body
 
-      post rest_url("assembly/add_node"), post_body
+      @@invalidate_map << :assembly_node
+      return response
     end
 
     desc "WORKSPACE-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
