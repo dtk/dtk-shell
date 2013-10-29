@@ -36,6 +36,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'erubis','~> 2.7.0'
   gem.add_dependency 'rest-client','~> 1.6.7'
   gem.add_dependency 'grit','~> 2.5.0'
+  gem.add_dependency 'mime-types','~> 1.25'
   gem.add_dependency 'dtk-common','~> 0.1.10'
   gem.add_dependency 'colorize','~> 0.5.8'
   gem.add_dependency 'diff-lcs','1.1.3'
