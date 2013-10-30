@@ -616,20 +616,20 @@ module DTK::Client
     #   post rest_url("assembly/set_attributes"), post_body
     # end
 
-    desc "WORKSPACE-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID", "Add (stage) an assembly template to become part of this workspace instance"
-    method_option "auto-complete",:aliases => "-a" ,
-      :type => :boolean, 
-      :default=> false,
-      :desc => "Automatically add in connections"
-    def add_assembly(context_params)
-      workspace_id,assembly_template_id = context_params.retrieve_arguments([:workspace_id,:option_1!],method_argument_names)
-      post_body = {
-        :assembly_id => workspace_id,
-        :assembly_template_id => assembly_template_id
-      }
-      post_body.merge!(:auto_add_connections => true) if options.auto_complete?
-      post rest_url("assembly/add_assembly_template"), post_body
-    end
+    # desc "WORKSPACE-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID", "Add (stage) an assembly template to become part of this workspace instance"
+    # method_option "auto-complete",:aliases => "-a" ,
+    #   :type => :boolean, 
+    #   :default=> false,
+    #   :desc => "Automatically add in connections"
+    # def add_assembly(context_params)
+    #   workspace_id,assembly_template_id = context_params.retrieve_arguments([:workspace_id,:option_1!],method_argument_names)
+    #   post_body = {
+    #     :assembly_id => workspace_id,
+    #     :assembly_template_id => assembly_template_id
+    #   }
+    #   post_body.merge!(:auto_add_connections => true) if options.auto_complete?
+    #   post rest_url("assembly/add_assembly_template"), post_body
+    # end
 
     desc "WORKSPACE-NAME/ID create-node ASSEMBLY-NODES-NAME NODE-TEMPLATE", "Add (stage) a new node to workspace"
     def create_node(context_params)
