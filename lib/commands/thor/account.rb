@@ -117,7 +117,7 @@ module DTK::Client
       access_granted
     end
 
-    desc "remove-ssh-key NAME [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
+    desc "remove-ssh-key NAME ","Removes user and direct access to modules."
     def remove_ssh_key(context_params)
       name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post_body = {:username => name.chomp}
