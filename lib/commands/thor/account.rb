@@ -32,6 +32,7 @@ module DTK::Client
     end
 
     def self.add_key(path_to_key, name=nil)
+      match = nil
       unless File.file?(path_to_key)
         raise DTK::Client::DtkError,"No ssh key file found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
       end
@@ -45,16 +46,23 @@ module DTK::Client
 
       response, key_exists_already = Account.internal_add_user_access("service_module/add_user_direct_access", post_body, 'service module')
       return response unless (response.ok? || key_exists_already)
-      proper_response = response if response.ok?
+      if response.ok?
+        proper_response = response
+        match = response.data['match']
+      end
 
       response, key_exists_already = Account.internal_add_user_access("component_module/add_user_direct_access", post_body, 'component module')
       return response unless (response.ok? || key_exists_already)
       proper_response = response if response.ok?
       
       # if either of request passed we will add to known hosts
-      if proper_response
+      if match
+        OsUtil.print("Provided rsa public key already exists!", :yellow) 
+      elsif proper_response
         repo_manager_fingerprint,repo_manager_dns = proper_response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
         SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
+        OsUtil.print("Ssh key added successfully!", :yellow)
+
         return proper_response
       else
         nil
@@ -114,7 +122,6 @@ module DTK::Client
       access_granted = Account.add_key(path_to_key, name)
 
       FileUtils.touch(DTK::Client::Configurator::DIRECT_ACCESS) if access_granted
-      access_granted
     end
 
     desc "remove-ssh-key NAME ","Removes user and direct access to modules."
@@ -126,7 +133,9 @@ module DTK::Client
       return response unless response.ok?
 
       response = post rest_url("service_module/remove_user_direct_access"), post_body
-      return response
+      return response unless response.ok?
+
+      OsUtil.print("Ssh key removed successfully!", :yellow)
     end
 
 
