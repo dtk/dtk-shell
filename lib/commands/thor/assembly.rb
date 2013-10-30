@@ -648,7 +648,6 @@ TODO: overlaps with different meaning
       }
       post_body.merge!(:value => value) if value
 
-      #TODO: have this return format like assembly show attributes with subset of rows that gt changed
       post rest_url("assembly/set_attributes"), post_body
     end
 
@@ -665,7 +664,6 @@ TODO: overlaps with different meaning
         :pattern => pattern,
         :value => nil
       }
-      #TODO: have this return format like assembly show attributes with subset of rows that gt changed
       post rest_url("assembly/set_attributes"), post_body
     end
 
