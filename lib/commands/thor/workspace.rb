@@ -9,7 +9,7 @@ dtk_require_common_commands('thor/set_required_params')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/assembly_workspace')
-LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
+# LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
 
 module DTK::Client
   class Workspace < CommandBaseThor
