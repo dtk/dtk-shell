@@ -573,6 +573,11 @@ module DTK::Client
     def delete_component_aux(context_params)
       assembly_or_worspace_id, node_id, component_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:node_id,:option_1!],method_argument_names)
 
+      unless options.force?
+        what = "component"
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{component_id}'"+'?')
+      end
+
       post_body = {
         :assembly_id => assembly_or_worspace_id,
         :node_id => node_id,
@@ -583,7 +588,7 @@ module DTK::Client
       response
     end
 
-    def edit_aux(context_params)
+    def component_edit_aux(context_params)
       assembly_or_worspace_id, component_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!], :component_id!], method_argument_names)
 
       post_body = {
@@ -597,7 +602,7 @@ module DTK::Client
       version             = response['data']['version']
       
       context_params_for_service = DTK::Shell::ContextParams.new
-      context_params_for_service.add_context_to_params("module", "module", component_module['id']) unless component_module.nil?
+      context_params_for_service.add_context_to_params(component_module['display_name'], "module", component_module['id']) unless component_module.nil?
       context_params_for_service.override_method_argument!('option_1', version)
         
       response = DTK::Client::ContextRouter.routeTask("module", "edit", context_params_for_service, @conn)

@@ -68,7 +68,7 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :all => {
           :node      => [
-            ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
+            ['delete-component',"delete-component COMPONENT-ID [-y]","# Delete component from assembly's node"],
             ['list-components',"list-components","# List components associated with workspace's node."],
             ['list-attributes',"list-attributes","# List attributes associated with workspace's node."]
           ],
@@ -169,6 +169,7 @@ module DTK::Client
     end
 
     desc "delete-component COMPONENT-ID","Delete component from workspace"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
       response = delete_component_aux(context_params)
       return response unless response.ok?
@@ -194,7 +195,7 @@ module DTK::Client
 
     desc "COMPONENT-NAME/ID edit","Edit component module related to given component."
     def edit(context_params)
-      edit_aux(context_params)
+      component_edit_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID edit-module COMPONENT-MODULE-NAME", "Edit component module used by the workspace"
@@ -226,12 +227,16 @@ module DTK::Client
 
     desc "WORKSPACE-NAME/ID link-attribute-to TARGET-ATTR-TERM SOURCE-ATTR-TERM", "Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM"
     def link_attribute_to(context_params)
-      ink_attribute_to_aux(context_params)
+      link_attribute_to_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID list","List nodes for current workspace."
     def list(context_params)
-      list_nodes_aux(context_params)
+      if context_params.is_last_command_eql_to?(:attribute)
+        list_attributes_aux(context_params) 
+      elsif(context_params.is_last_command_eql_to?(:node) || context_params.is_last_command_eql_to?(:workspace))
+        list_nodes_aux(context_params) 
+      end
     end
 
     desc "WORKSPACE-NAME/ID list-attributes","List attributes associated with workspace."
