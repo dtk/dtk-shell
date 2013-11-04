@@ -136,7 +136,11 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME [-p]", "Creates a new assembly template or updates existing one from workspace instance. -p will purge workspace" 
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def create_assembly(context_params)
-      create_assembly_aux(context_params)
+      response = create_assembly_aux(context_params)
+      return response unless response.ok?
+      @@invalidate_map << :assembly_template
+
+      return response
     end
 
     desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE]", "Create attribute and optionally assign it a value"
@@ -146,7 +150,11 @@ module DTK::Client
 
     desc "WORKSPACE-NAME/ID create-node ASSEMBLY-NODES-NAME NODE-TEMPLATE", "Add (stage) a new node to workspace"
     def create_node(context_params)
-      create_node_aux(context_params)
+      response = create_node_aux(context_params)
+      return response unless response.ok?
+      @@invalidate_map << :assembly_node
+
+      return response
     end
 
     desc "WORKSPACE-NAME/ID create-service-link SERVICE-TYPE BASE-CMP-NAME/ID DEPENDENT-CMP-NAME/ID", "Add a service link between two components"
@@ -162,13 +170,21 @@ module DTK::Client
 
     desc "delete-component COMPONENT-ID","Delete component from workspace"
     def delete_component(context_params)
-      delete_component_aux(context_params)
+      response = delete_component_aux(context_params)
+      return response unless response.ok?
+      @@invalidate_map << :assembly_node_component
+
+      return response
     end
 
     desc "WORKSPACE-NAME/ID delete-node NAME/ID [-y]","Delete node, terminating it if the node has been spun up"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
-      delete_node_aux(context_params)
+      response = delete_node_aux(context_params)
+      return response unless response.ok?
+      @@invalidate_map << :assembly_node
+
+      return response
     end
 
     desc "WORKSPACE-NAME/ID delete-service-link SERVICE-LINK-ID", "Delete a service link"

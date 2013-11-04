@@ -53,7 +53,7 @@ module DTK::Client
       }
       response = post rest_url("assembly/promote_to_template"), post_body
       # when changing context send request for getting latest assembly_templates instead of getting from cache
-      @@invalidate_map << :assembly_template
+      # @@invalidate_map << :assembly_template
 
       return response unless response.ok?()
       #synchronize_clone will load new assembly template into service clone on workspace (if it exists)
@@ -426,7 +426,7 @@ module DTK::Client
       response = post rest_url("assembly/delete"), post_body
          
       # when changing context send request for getting latest assemblies instead of getting from cache
-      @@invalidate_map << :assembly
+      # @@invalidate_map << :assembly
       response
     end
 
@@ -507,7 +507,7 @@ module DTK::Client
       post_body.merge!(:node_template_identifier => node_template_identifier) if node_template_identifier
       response = post rest_url("assembly/add_node"), post_body
 
-      @@invalidate_map << :assembly_node
+      # @@invalidate_map << :assembly_node
       return response
     end
 
@@ -566,7 +566,7 @@ module DTK::Client
         :node_id => node_id
       }
       response = post(rest_url("assembly/delete_node"),post_body)
-      @@invalidate_map << :assembly_node
+      # @@invalidate_map << :assembly_node
       response
     end
 
@@ -579,7 +579,7 @@ module DTK::Client
         :component_id => component_id
       }
       response = post(rest_url("assembly/delete_component"),post_body)
-      @@invalidate_map << :assembly_node_component
+      # @@invalidate_map << :assembly_node_component
       response
     end
 
