@@ -633,7 +633,9 @@ TODO: overlaps with different meaning
       post rest_url("assembly/set_attributes"), post_body
     end
 
-    desc "ASSEMBLY-NAME/ID create_attribute ATTRIBUTE-NAME [VALUE]", "Create attribute and optionally assign it a value"
+    desc "ASSEMBLY-NAME/ID create_attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create attribute and optionally assign it a value"
+    method_option :required, :type => :boolean, :default => false
+    method_option :dynamic, :type => :boolean, :default => false
     def create_attribute(context_params)
       if context_params.is_there_identifier?(:attribute)
         mapping = [:assembly_id!,:attribute_id!, :option_1]
@@ -647,6 +649,8 @@ TODO: overlaps with different meaning
         :create => true,
       }
       post_body.merge!(:value => value) if value
+      post_body.merge!(:required => true) if options.required?
+      post_body.merge!(:dynamic => true) if options.dynamic?
 
       post rest_url("assembly/set_attributes"), post_body
     end
