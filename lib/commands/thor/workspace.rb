@@ -229,7 +229,7 @@ module DTK::Client
       ink_attribute_to_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list","List assemblies for current workspace."
+    desc "WORKSPACE-NAME/ID list","List nodes for current workspace."
     def list(context_params)
       list_nodes_aux(context_params)
     end
