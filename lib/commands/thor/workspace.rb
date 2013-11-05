@@ -137,7 +137,6 @@ module DTK::Client
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def create_assembly(context_params)
       response = create_assembly_aux(context_params)
-      return response unless response.ok?
       @@invalidate_map << :assembly_template
 
       return response
@@ -151,7 +150,6 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID create-node ASSEMBLY-NODES-NAME NODE-TEMPLATE", "Add (stage) a new node to workspace"
     def create_node(context_params)
       response = create_node_aux(context_params)
-      return response unless response.ok?
       @@invalidate_map << :assembly_node
 
       return response
@@ -182,7 +180,6 @@ module DTK::Client
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       response = delete_node_aux(context_params)
-      return response unless response.ok?
       @@invalidate_map << :assembly_node
 
       return response

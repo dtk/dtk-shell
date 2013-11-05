@@ -61,8 +61,9 @@ module DTK::Client
       Helper(:git_repo).synchronize_clone(:service_module,service_module_name,commit_sha,:local_branch=>workspace_branch)
 
       if options.purge?
-        purge(context_params)
+        purge_aux(context_params)
       end
+      return response
     end
     
     def list_violations_aux(context_params)
