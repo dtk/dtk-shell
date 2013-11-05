@@ -78,7 +78,7 @@ module DTK::Client
         },
         :command_only => {
           :attribute => [
-            ['list-attributes',"list-attributes","# List attributess."]
+            ['list-attributes',"list-attributes","# List attributes."]
           ],
           :node => [
             ['delete',"delete NAME/ID [-y] ","# Delete node, terminating it if the node has been spun up."],
