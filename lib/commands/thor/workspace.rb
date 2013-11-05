@@ -302,7 +302,7 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID task-status [--wait]", "Task status of running or last workspace task"
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
-      task_status_aux(context_params)
+      task_status_aw_aux(context_params)
     end
 
   end

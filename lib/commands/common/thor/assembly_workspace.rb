@@ -166,7 +166,7 @@ module DTK::Client
       response
     end
 
-    def task_status_aux(context_params)
+    def task_status_aw_aux(context_params)
       assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
       response = task_status_aux(assembly_or_worspace_id,:assembly,options.wait?)
 
