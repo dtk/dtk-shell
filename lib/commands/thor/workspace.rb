@@ -78,7 +78,7 @@ module DTK::Client
         },
         :command_only => {
           :attribute => [
-            ['list',"list [attributes]","# List attributess."]
+            ['list-attributes',"list-attributes","# List attributes."]
           ],
           :node => [
             ['delete',"delete NAME/ID [-y] ","# Delete node, terminating it if the node has been spun up."],
@@ -227,15 +227,6 @@ module DTK::Client
       link_attribute_to_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list","List nodes for current workspace."
-    def list(context_params)
-      if context_params.is_last_command_eql_to?(:attribute)
-        list_attributes_aux(context_params) 
-      elsif(context_params.is_last_command_eql_to?(:node) || context_params.is_last_command_eql_to?(:workspace))
-        list_nodes_aux(context_params) 
-      end
-    end
-
     desc "WORKSPACE-NAME/ID list-attributes","List attributes associated with workspace."
     def list_attributes(context_params)
       list_attributes_aux(context_params)
@@ -308,7 +299,7 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID task-status [--wait]", "Task status of running or last workspace task"
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
-      task_status_aux(context_params)
+      task_status_aw_aux(context_params)
     end
 
   end

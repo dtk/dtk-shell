@@ -167,7 +167,7 @@ module DTK::Client
       response
     end
 
-    def task_status_aux(context_params)
+    def task_status_aw_aux(context_params)
       assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
       response = task_status_aux(assembly_or_worspace_id,:assembly,options.wait?)
 
@@ -551,8 +551,11 @@ module DTK::Client
     end
 
     def delete_aux(context_params)
-    delete_node_aux(context_params) if context_params.is_last_command_eql_to?(:node)   
-    delete_component_aux(context_params) if context_params.is_last_command_eql_to?(:component)
+      if context_params.is_last_command_eql_to?(:node)
+        delete_node_aux(context_params) 
+      elsif context_params.is_last_command_eql_to?(:component)
+        delete_component_aux(context_params)
+      end
     end
 
     def delete_node_aux(context_params)
@@ -930,8 +933,6 @@ module DTK::Client
     end
 
     def list_aux(context_params)
-      # assembly_or_worspace_id, node_id, node_name = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!], :node_id!, :node_name!])
-
       assembly_or_worspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([[:assembly_id, :workspace_id],:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
       detail_to_include = nil
       
