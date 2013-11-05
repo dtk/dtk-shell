@@ -85,6 +85,7 @@ module DTK::Client
             ['list-nodes',"list-nodes ","# List nodes."]
           ],
           :component => [
+            ['list-components',"list-components","# List components."],
             ['delete',"delete NAME/ID [-y] ","# Delete component from workspace."]
           ]
         },
