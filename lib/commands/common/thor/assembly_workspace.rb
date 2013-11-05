@@ -550,8 +550,11 @@ module DTK::Client
     end
 
     def delete_aux(context_params)
-    delete_node_aux(context_params) if context_params.is_last_command_eql_to?(:node)   
-    delete_component_aux(context_params) if context_params.is_last_command_eql_to?(:component)
+      if context_params.is_last_command_eql_to?(:node)
+        delete_node_aux(context_params) 
+      elsif context_params.is_last_command_eql_to?(:component)
+        delete_component_aux(context_params)
+      end
     end
 
     def delete_node_aux(context_params)
