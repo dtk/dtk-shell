@@ -78,7 +78,7 @@ module DTK::Client
         },
         :command_only => {
           :attribute => [
-            ['list',"list [attributes]","# List attributess."]
+            ['list-attributes',"list-attributes","# List attributess."]
           ],
           :node => [
             ['delete',"delete NAME/ID [-y] ","# Delete node, terminating it if the node has been spun up."],
@@ -228,15 +228,6 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID link-attribute-to TARGET-ATTR-TERM SOURCE-ATTR-TERM", "Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM"
     def link_attribute_to(context_params)
       link_attribute_to_aux(context_params)
-    end
-
-    desc "WORKSPACE-NAME/ID list","List nodes for current workspace."
-    def list(context_params)
-      if context_params.is_last_command_eql_to?(:attribute)
-        list_attributes_aux(context_params) 
-      elsif(context_params.is_last_command_eql_to?(:node) || context_params.is_last_command_eql_to?(:workspace))
-        list_nodes_aux(context_params) 
-      end
     end
 
     desc "WORKSPACE-NAME/ID list-attributes","List attributes associated with workspace."

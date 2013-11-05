@@ -929,8 +929,6 @@ module DTK::Client
     end
 
     def list_aux(context_params)
-      # assembly_or_worspace_id, node_id, node_name = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!], :node_id!, :node_name!])
-
       assembly_or_worspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([[:assembly_id, :workspace_id],:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
       detail_to_include = nil
       
