@@ -284,6 +284,12 @@ module DTK; module Client; class CommandHelper
       local_branch = repo.branch 
       remote_branch_ref = remote_branch_ref(local_branch,opts)
 
+      if opts[:hard_reset]
+        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+        repo.merge_theirs(remote_branch_ref)
+        return({:diffs => diffs, :commit_sha => repo.head_commit_sha()})
+      end
+
       #check if merge needed
       merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch_ref)
       if merge_rel == :equal
