@@ -291,7 +291,8 @@ TODO: overlaps with different meaning
       edit_aux(:service_module,service_module_id,service_module_name,version,edit_opts)
     end
 
-    desc "ASSEMBLY-NAME/ID promote-module-updates COMPONENT-MODULE-NAME", "Promotes changes made to component module in assembly to shared template"
+    desc "ASSEMBLY-NAME/ID promote-module-updates COMPONENT-MODULE-NAME [--force]", "Promotes changes made to component module in assembly to shared template"
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def promote_module_updates(context_params)
       assembly_id, component_module_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
       post_body = {
@@ -299,16 +300,21 @@ TODO: overlaps with different meaning
         :module_name => component_module_name,
         :module_type => 'component_module'
       }
+      post_body.merge!(:force => true) if options.force?
       response = post(rest_url("assembly/promote_module_updates"),post_body)
       return response unless response.ok?
       return Response::Ok.new() unless response.data(:any_updates)
       if dsl_parsing_errors = response.data(:dsl_parsing_errors)
-        error_message = "Module '#{component_module_name}' imported with errors:\n#{dsl_parsing_errors}\nYou can fix errors and import module again.\n"
+        #TODO: not sure if this should be reached
+        error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors and invoke promote-module-updates again.\n"
         OsUtil.print(dsl_parsed_message, :red) 
         return Response::Error.new()
       end
-      module_name,branch = response.data(:module_name,:workspace_branch)
-      response = Helper(:git_repo).pull_changes?(:component_module,module_name,:local_branch => branch)
+      module_name,branch,ff_change = response.data(:module_name,:workspace_branch,:fast_forward_change)
+      ff_change ||= true
+      opts = {:local_branch => branch}
+      opts.merge!(:hard_reset => true) if !ff_change
+      response = Helper(:git_repo).pull_changes?(:component_module,module_name,opts)
       return response unless response.ok?()
       Response::Ok.new()
     end
