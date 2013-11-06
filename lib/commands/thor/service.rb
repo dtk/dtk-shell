@@ -167,14 +167,16 @@ module DTK::Client
       response.render_table(:module_version)
     end
 
-    desc "import-dtkn REMOTE-SERVICE-NAME [-y]", "Import remote service module into local environment. -y will automatically clone component modules"
+    desc "import-dtkn REMOTE-SERVICE-NAME [-y] [-i]", "Import remote service module into local environment. -y will automatically clone component modules. -i will ignore component import error."
     version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    method_option :ignore, :aliases => '-i', :type => :boolean, :default => false
     def import_dtkn(context_params)
       create_missing_clone_dirs()
       check_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
-
+      ignore_component_error = options.ignore?
+      
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
 
       version = options["version"]
@@ -192,6 +194,7 @@ module DTK::Client
       # case when we need to import additional components
       if (response.ok? && (missing_components = response.data(:missing_module_components)))
         opts = {:do_not_raise=>true}
+        opts.merge!(:ignore_component_error => true) if ignore_component_error
         trigger_module_component_import(missing_components,opts)
         puts "Resuming DTK network import for service '#{remote_module_name}' ..."
         # repeat import call for service

@@ -336,6 +336,7 @@ module DTK::Client
       # in case of auto-import via service import, we skip cloning to speed up a process
       skip_cloning = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
       do_not_raise = context_params.get_forwarded_options()[:do_not_raise] if context_params.get_forwarded_options()
+      ignore_component_error = context_params.get_forwarded_options()[:ignore_component_error] if context_params.get_forwarded_options()
 
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name,version)
@@ -346,6 +347,8 @@ module DTK::Client
         :local_module_name => local_module_name
       }
       post_body.merge!(:do_not_raise => do_not_raise) if do_not_raise
+      post_body.merge!(:ignore_component_error => ignore_component_error) if ignore_component_error
+      
       response = post rest_url("component_module/import"), post_body
       return response unless response.ok?
 
