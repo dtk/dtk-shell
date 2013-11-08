@@ -38,10 +38,10 @@ module DTK::Client
     end
 
     # using extended_context when we want to use autocomplete from other context
-    # e.g. we are in assembly/apache context and want to add-component we will use extended context to add 
+    # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
     # component-templates to autocomplete
     def self.extended_context()
-      {:add_component => "component_template", :create_node => "node_template"}
+      {:create_component => "component_template", :create_node => "node_template"}
     end
 
     # this includes children of children
@@ -102,7 +102,7 @@ module DTK::Client
         },
         :identifier_only => {
           :node      => [
-            ['add-component',"add-component COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]","# Add component to node. Default workflow order position is at the end."],
+            ['create-component',"create-component COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]","# Add component to node. Default workflow order position is at the end."],
             ['info',"info","# Return info about node instance belonging to given workspace."],
             ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context workspace."],
             ['tail',"tail LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."],
@@ -125,12 +125,6 @@ module DTK::Client
       })
     end
 
-    
-
-    desc "add-component COMPONENT-TEMPLATE-NAME/ID", "Add component to node."
-    def add_component(context_params)
-      add_component_aux(context_params)
-    end
 
     desc "WORKSPACE-NAME/ID cancel-task TASK_ID", "Cancels task."
     def cancel_task(context_params)

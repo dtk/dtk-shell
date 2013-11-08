@@ -156,7 +156,7 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    def list_task_info_aux(context_params)
+    def workflow_info_aux(context_params)
       assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
       #TODO: deprecate this method: list_task_info_aux("assembly", workspace_id)
       post_body = {
@@ -305,7 +305,7 @@ module DTK::Client
     #   return response
     # end
 
-    def link_attribute_to_aux(context_params)
+    def link_attribute_aux(context_params)
       assembly_or_worspace_id, target_attr_term, source_attr_term = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:option_1!,:option_2!],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_worspace_id,
@@ -321,18 +321,52 @@ module DTK::Client
     end
 
     def create_attribute_aux(context_params)
-      post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
-      base_attr,arrow,dep_attr = context_params.retrieve_arguments([:option_2!,:option_3!,:option_4!],method_argument_names)
-      post_body.merge!(:attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}") #TODO: probably change to be hash
-      post rest_url("assembly/add_ad_hoc_attribute_mapping"), post_body
+      if context_params.is_there_identifier?(:attribute)
+        mapping = [:assembly_id!,:attribute_id!, :option_1]
+      else
+        mapping = [:assembly_id!,:option_1!,:option_2]
+      end
+      assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :pattern => pattern,
+        :create => true,
+      }
+      post_body.merge!(:value => value) if value
+      post_body.merge!(:required => true) if options.required?
+      post_body.merge!(:dynamic => true) if options.dynamic?
+
+      post rest_url("assembly/set_attributes"), post_body
     end
 
-    def delete_service_link_aux(context_params)
+    def create_component_aux(context_params)
+      # If method is invoked from 'assembly/node' level retrieve node_id argument 
+      # directly from active context
+      if context_params.is_there_identifier?(:node)
+        mapping = [:assembly_id!,:node_id!,:option_1!,:option_2]
+      else
+        # otherwise retrieve node_id from command options
+        mapping = [:assembly_id!,:option_1!,:option_2!,:option_3]
+      end
+
+      assembly_id,node_id,component_template_id,order_index = context_params.retrieve_arguments(mapping,method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :node_id => node_id,
+        :component_template_id => component_template_id,
+        :order_index => order_index
+      }
+
+      post rest_url("assembly/add_component"), post_body
+    end
+
+    def unlink_components_aux(context_params)
       post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
       post rest_url("assembly/delete_service_link"), post_body
     end
 
-    def create_service_link_aux(context_params)
+    def link_components_aux(context_params)
       if context_params.is_last_command_eql_to?(:component)
         assembly_or_worspace_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:option_1!,:component_id!,:option_2!],method_argument_names)
       else
