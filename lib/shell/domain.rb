@@ -96,7 +96,7 @@ module DTK
             end
 
             unless element
-              errors << "#{entity_name.upcase} ID/NAME" if required
+              errors << "#{entity_name(key_mapping).upcase} ID/NAME" if required
             end
           end
 
@@ -144,8 +144,8 @@ module DTK
       # based on map key binding e.g. assembly_id, assembly_name we will extrace value 
       # from our ActiveContext
       def check_context_for_element(key_mapping)
-        split_info =  key_mapping.to_s.split(/_([a-z]+!?$)/)
-        entity_name = split_info[0].gsub(/_/,'-')  # makes sure we are using entity names with '_'
+        split_info  =  split_info(key_mapping)
+        entity_name =  entity_name(key_mapping,split_info)
         id_type     = split_info[1].gsub(/!/,'')   # for required elements we remove '!' required marker
         context_identifier = @current_context.find_identifier(entity_name)
         if context_identifier
@@ -154,6 +154,16 @@ module DTK
           return nil
         end
       end
+
+      def entity_name(key_mapping,split_info=nil)
+        split_info ||= split_info(key_mapping)
+        split_info[0].gsub(/_/,'-')  # makes sure we are using entity names with '_'
+      end
+
+      def split_info(key_mapping)
+        key_mapping.to_s.split(/_([a-z]+!?$)/)
+      end
+
     end
 
     class ContextEntity

@@ -272,8 +272,8 @@ module DTK::Client
     end
 
     desc "WORKSPACE-NAME/ID workflow-info", "Provides the structure of the assembly's workflow"
-    def workfow_info(context_params)
-      workfow_info_aux(context_params)
+    def workflow_info(context_params)
+      workflow_info_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID list-violations", "Finds violations in workspace that will prevent a converge operation"

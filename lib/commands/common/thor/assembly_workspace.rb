@@ -12,16 +12,16 @@ LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
 
 module DTK::Client
   module AssemblyWorkspaceMixin
-
+    REQ_ASSEMBLY_OR_WS_ID = [:assembly_id!, :workspace_id!]
     def get_name(assembly_id)
       get_name_from_id_helper(assembly_id)
     end
 
     def start_aux(context_params)
       if context_params.is_there_identifier?(:node)
-        mapping = [[:assembly_id!, :workspace_id!],:node_id]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:node_id]
       else
-        mapping = [[:assembly_id!, :workspace_id!],:option_1]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1]
       end
 
       assembly_or_worspace_id, node_pattern = context_params.retrieve_arguments(mapping,method_argument_names)      
@@ -30,9 +30,9 @@ module DTK::Client
 
     def stop_aux(context_params)
       if context_params.is_there_identifier?(:node)
-        mapping = [[:assembly_id!, :workspace_id!],:node_id]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:node_id]
       else
-        mapping = [[:assembly_id!, :workspace_id!],:option_1]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1]
       end
 
       assembly_or_worspace_id, node_pattern = context_params.retrieve_arguments(mapping,method_argument_names)
@@ -45,7 +45,7 @@ module DTK::Client
     end
 
     def create_assembly_aux(context_params)
-      assembly_or_worspace_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:option_1!,:option_2!],method_argument_names)
+      assembly_or_worspace_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_worspace_id,
         :service_module_name => service_module_name,
@@ -67,13 +67,13 @@ module DTK::Client
     end
     
     def list_violations_aux(context_params)
-      assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
+      assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       response = post rest_url("assembly/find_violations"),:assembly_id => assembly_or_worspace_id
       response.render_table(:violation)
     end
      
     def converge_aux(context_params)
-      assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
+      assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
 
       post_body = {
         :assembly_id => assembly_or_worspace_id
@@ -110,7 +110,7 @@ module DTK::Client
     end
 
     def edit_module_aux(context_params)
-      assembly_or_worspace_id, component_module_name = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:option_1!],method_argument_names)
+      assembly_or_worspace_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_worspace_id,
         :module_name => component_module_name,
@@ -136,7 +136,7 @@ module DTK::Client
     end
 
     def promote_module_updates_aux(context_params)
-      assembly_or_worspace_id, component_module_name = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:option_1!],method_argument_names)
+      assembly_or_worspace_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_worspace_id,
         :module_name => component_module_name,
@@ -157,8 +157,7 @@ module DTK::Client
     end
 
     def workflow_info_aux(context_params)
-      assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
-      #TODO: deprecate this method: list_task_info_aux("assembly", workspace_id)
+      assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_worspace_id,
         :subtype     => 'instance'
@@ -168,7 +167,7 @@ module DTK::Client
     end
 
     def task_status_aw_aux(context_params)
-      assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
+      assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       response = task_status_aux(assembly_or_worspace_id,:assembly,options.wait?)
 
       # TODO: Hack which is necessery for the specific problem (DTK-725), we don't get proper error message when there is a timeout doing converge
@@ -182,6 +181,16 @@ module DTK::Client
       end
      
       response
+    end
+
+    def link_attributes_aux(context_params)
+      assembly_id, target_attr_term, source_attr_term = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id,
+        :target_attribute_term => target_attr_term,
+        :source_attribute_term => source_attr_term
+      }
+      post rest_url("assembly/add_ad_hoc_attribute_links"), post_body
     end
 
     def list_nodes_aux(context_params)
@@ -306,7 +315,7 @@ module DTK::Client
     # end
 
     def link_attribute_aux(context_params)
-      assembly_or_worspace_id, target_attr_term, source_attr_term = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:option_1!,:option_2!],method_argument_names)
+      assembly_or_worspace_id, target_attr_term, source_attr_term = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_worspace_id,
         :target_attribute_term => target_attr_term,
@@ -343,10 +352,10 @@ module DTK::Client
       # If method is invoked from 'assembly/node' level retrieve node_id argument 
       # directly from active context
       if context_params.is_there_identifier?(:node)
-        mapping = [:assembly_id!,:node_id!,:option_1!]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:node_id!,:option_1!]
       else
         # otherwise retrieve node_id from command options
-        mapping = [:assembly_id!,:option_1!,:option_2!]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!]
       end
 
       assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
@@ -367,9 +376,9 @@ module DTK::Client
 
     def link_components_aux(context_params)
       if context_params.is_last_command_eql_to?(:component)
-        assembly_or_worspace_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:option_1!,:component_id!,:option_2!],method_argument_names)
+        assembly_or_worspace_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:component_id!,:option_2!],method_argument_names)
       else
-        assembly_or_worspace_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:option_1!,:option_2!,:option_3!],method_argument_names)
+        assembly_or_worspace_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!,:option_3!],method_argument_names)
       end
 
       post_body = {
@@ -382,7 +391,7 @@ module DTK::Client
     end
 
     def list_service_links_aux(context_params)
-      assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
+      assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_worspace_id
       }
@@ -397,7 +406,7 @@ module DTK::Client
     end
 
     def list_connections_aux(context_params)
-      assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
+      assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
 
       post_body = {
         :assembly_id => assembly_or_worspace_id,
@@ -408,7 +417,7 @@ module DTK::Client
     end
 
     def list_smoketests(context_params)
-      assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
+      assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
 
       post_body = {
         :assembly_id => assembly_or_worspace_id
@@ -417,7 +426,7 @@ module DTK::Client
     end
 
     def info_aux(context_params)
-      assembly_or_worspace_id, node_id, component_id, attribute_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!], :node_id, :component_id, :attribute_id],method_argument_names)
+      assembly_or_worspace_id, node_id, component_id, attribute_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :node_id, :component_id, :attribute_id],method_argument_names)
  
       post_body = {
         :assembly_id => assembly_or_worspace_id,
@@ -466,14 +475,14 @@ module DTK::Client
 
     def  set_attribute_aux(context_params)
       if options.required?
-        assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
+        assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
         return set_required_params_aux(assembly_or_worspace_id,:assembly,:instance)
       end
 
       if context_params.is_there_identifier?(:attribute)
-        mapping = (options.unset? ? [[:assembly_id!, :workspace_id!],:attribute_id!] : [[:assembly_id!, :workspace_id!],:attribute_id!,:option_1!])
+        mapping = (options.unset? ? [REQ_ASSEMBLY_OR_WS_ID,:attribute_id!] : [REQ_ASSEMBLY_OR_WS_ID,:attribute_id!,:option_1!])
       else
-        mapping = (options.unset? ? [[:assembly_id!, :workspace_id!],:option_1!] : [[:assembly_id!, :workspace_id!],:option_1!,:option_2!])
+        mapping = (options.unset? ? [REQ_ASSEMBLY_OR_WS_ID,:option_1!] : [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!])
       end
       
       assembly_or_worspace_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
@@ -488,9 +497,9 @@ module DTK::Client
 
     def create_attribute_aux(context_params)
       if context_params.is_there_identifier?(:attribute)
-        mapping = [[:assembly_id!, :workspace_id!],:attribute_id!, :option_1]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:attribute_id!, :option_1]
       else
-        mapping = [[:assembly_id!, :workspace_id!],:option_1!,:option_2]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2]
       end
       assembly_or_worspace_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
       post_body = {
@@ -546,7 +555,7 @@ module DTK::Client
     end
 
     def purge_aux(context_params)
-      assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
+      assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       unless options.force?
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy all nodes in the workspace"+'?')
       end
@@ -566,7 +575,7 @@ module DTK::Client
     end
 
     def delete_node_aux(context_params)
-      assembly_or_worspace_id, node_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:option_1!],method_argument_names)
+      assembly_or_worspace_id, node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
       unless options.force?
         what = "node"
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{node_id}'"+'?')
@@ -582,7 +591,7 @@ module DTK::Client
     end
 
     def delete_component_aux(context_params)
-      assembly_or_worspace_id, node_id, component_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:node_id,:option_1!],method_argument_names)
+      assembly_or_worspace_id, node_id, component_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id,:option_1!],method_argument_names)
 
       unless options.force?
         what = "component"
@@ -600,7 +609,7 @@ module DTK::Client
     end
 
     def component_edit_aux(context_params)
-      assembly_or_worspace_id, component_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!], :component_id!], method_argument_names)
+      assembly_or_worspace_id, component_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :component_id!], method_argument_names)
 
       post_body = {
         :assembly_id => assembly_or_worspace_id,
@@ -623,7 +632,7 @@ module DTK::Client
       netstat_tries = 6
       netstat_sleep = 0.5
 
-      assembly_or_worspace_id,node_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:node_id],method_argument_names)
+      assembly_or_worspace_id,node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id],method_argument_names)
 
       post_body = {
         :assembly_id => assembly_or_worspace_id,
@@ -665,7 +674,7 @@ module DTK::Client
       get_ps_tries = 6
       get_ps_sleep = 0.5
 
-      assembly_or_worspace_id,node_id,filter_pattern = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!],:node_id, :option_1],method_argument_names)
+      assembly_or_worspace_id,node_id,filter_pattern = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id, :option_1],method_argument_names)
 
       post_body = {
         :assembly_id => assembly_or_worspace_id,
@@ -726,15 +735,15 @@ module DTK::Client
     end
 
     def set_required_params(context_params)
-      assembly_or_worspace_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!]],method_argument_names)
+      assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       set_required_params_aux(assembly_or_worspace_id,:assembly,:instance)
     end
 
     def tail_aux(context_params)
       if context_params.is_there_identifier?(:node)
-        mapping = [[:assembly_id!, :workspace_id!],:node_id!,:option_1!,:option_2]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:node_id!,:option_1!,:option_2]
       else
-        mapping = [[:assembly_id!, :workspace_id!],:option_1!,:option_2!,:option_3]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!,:option_3]
       end
       
       assembly_or_worspace_id,node_identifier,log_path,grep_option = context_params.retrieve_arguments(mapping,method_argument_names)
@@ -841,9 +850,9 @@ module DTK::Client
 
     def grep_aux(context_params) 
       if context_params.is_there_identifier?(:node)
-        mapping = [[:assembly_id!, :workspace_id!],:option_1!,:node_id!,:option_2!]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:node_id!,:option_2!]
       else
-        mapping = [[:assembly_id!, :workspace_id!],:option_1!,:option_2!,:option_3!]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!,:option_3!]
       end
 
       assembly_or_worspace_id,log_path,node_pattern,grep_pattern = context_params.retrieve_arguments(mapping,method_argument_names)
@@ -996,16 +1005,6 @@ module DTK::Client
 
       post_body[:about] = about
       response = post rest_url(rest_endpoint), post_body
-
-      if (data_type.to_s.eql?("attribute") && response["data"])
-        data_type = :workspace_attribute
-        response["data"].each do |data|
-          unless (data["linked_to_display_form"].to_s.empty?)
-            data_type = :workspace_attribute_w_link
-            break
-          end
-        end
-      end
 
       # set render view to be used
       response.render_table(data_type)
