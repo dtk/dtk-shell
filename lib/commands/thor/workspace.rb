@@ -34,7 +34,7 @@ module DTK::Client
     end
 
     def self.valid_children()
-      [:node]
+      [:node, :utils]
     end
 
     # using extended_context when we want to use autocomplete from other context
@@ -47,6 +47,11 @@ module DTK::Client
     # this includes children of children
     def self.all_children()
       [:node, :component, :attribute]
+      # [:utils]
+    end
+
+    def self.utils_subcontext()
+      [:utils]
     end
 
     def self.valid_child?(name_of_sub_context)
@@ -74,6 +79,12 @@ module DTK::Client
           ],
           :component => [
             ['list-attributes',"list-attributes","# List attributes associated with given component."]
+          ],
+          :utils => [
+            ['get-netstats',"get-netstats","# Get netstats."],
+            ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
+            ['tail',"tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."],
+            ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."]
           ]
         },
         :command_only => {
@@ -122,7 +133,7 @@ module DTK::Client
 
     desc "WORKSPACE-NAME/ID cancel-task TASK_ID", "Cancels task."
     def cancel_task(context_params)
-      cancel_task_aux(context_params)
+      cancel_aw_task_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID converge [-m COMMIT-MSG]", "Converges workspace instance. Optionally, puppet version can be forwarded."
@@ -201,18 +212,18 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID get-netstats", "Get netstats"
+    desc "[UTILS-NAME/ID] get-netstats [-y]", "Get netstats"
     def get_netstats(context_params)
       get_netstats_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID get-ps [--filter PATTERN]", "Get ps"
+    desc "[UTILS-NAME/ID] get-ps [--filter PATTERN]", "Get ps"
     method_option :filter, :type => :boolean, :default => false, :aliases => '-f'
     def get_ps(context_params)
       get_ps_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","Grep log from multiple nodes. --first option returns first match (latest log entry)."
+    desc "[UTILS-NAME/ID] grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","Grep log from multiple nodes. --first option returns first match (latest log entry)."
     method_option :first, :type => :boolean, :default => false
     def grep(context_params) 
       grep_aux(context_params)
@@ -291,7 +302,7 @@ module DTK::Client
       stop_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
+    desc "[UTILS-NAME/ID] tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
     method_option :more, :type => :boolean, :default => false
     def tail(context_params)
       tail_aux(context_params)

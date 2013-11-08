@@ -39,7 +39,7 @@ module DTK::Client
       assembly_stop(assembly_or_worspace_id, node_pattern)
     end
 
-    def cancel_task_aux(context_params)
+    def cancel_aw_task_aux(context_params)
       task_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       cancel_task_aux(task_id)
     end
