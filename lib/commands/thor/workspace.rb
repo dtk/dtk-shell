@@ -102,7 +102,7 @@ module DTK::Client
         },
         :identifier_only => {
           :node      => [
-            ['create-component',"create-component COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]","# Add component to node. Default workflow order position is at the end."],
+            ['create-component',"create-component COMPONENT-TEMPLATE-NAME/ID","# Add component to node. Default workflow order position is at the end."],
             ['info',"info","# Return info about node instance belonging to given workspace."],
             ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context workspace."],
             ['tail',"tail LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."],
@@ -149,14 +149,14 @@ module DTK::Client
       return response
     end
 
-    desc "WORKSPACE-NAME/ID create_attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create attribute and optionally assign it a value"
+    desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create attribute and optionally assign it a value"
     method_option :required, :type => :boolean, :default => false
     method_option :dynamic, :type => :boolean, :default => false
     def create_attribute(context_params)
       create_attribute_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID create-component NODE-ID COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node."
+    desc "create-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node."
     def create_component(context_params)
       create_component_aux(context_params)
     end

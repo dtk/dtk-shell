@@ -343,19 +343,18 @@ module DTK::Client
       # If method is invoked from 'assembly/node' level retrieve node_id argument 
       # directly from active context
       if context_params.is_there_identifier?(:node)
-        mapping = [:assembly_id!,:node_id!,:option_1!,:option_2]
+        mapping = [:assembly_id!,:node_id!,:option_1!]
       else
         # otherwise retrieve node_id from command options
-        mapping = [:assembly_id!,:option_1!,:option_2!,:option_3]
+        mapping = [:assembly_id!,:option_1!,:option_2!]
       end
 
-      assembly_id,node_id,component_template_id,order_index = context_params.retrieve_arguments(mapping,method_argument_names)
+      assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
 
       post_body = {
         :assembly_id => assembly_id,
         :node_id => node_id,
-        :component_template_id => component_template_id,
-        :order_index => order_index
+        :component_template_id => component_template_id
       }
 
       post rest_url("assembly/add_component"), post_body
@@ -556,32 +555,6 @@ module DTK::Client
         :assembly_id => assembly_or_worspace_id
       }
       response = post(rest_url("assembly/purge"),post_body)
-    end
-
-    def add_component_aux(context_params)
-    
-      # If method is invoked from 'assembly/node' level retrieve node_id argument 
-      # directly from active context
-      if context_params.is_there_identifier?(:node)
-        mapping = [[:assembly_id!, :workspace_id!],:node_id!,:option_1!,:option_2]
-      else
-        # otherwise retrieve node_id from command options
-        mapping = [[:assembly_id!, :workspace_id!],:option_1!,:option_2!,:option_3]
-      end
-
-      assembly_or_worspace_id,node_id,component_template_id,order_index = context_params.retrieve_arguments(mapping,method_argument_names)
-
-      post_body = {
-        :assembly_id => assembly_or_worspace_id,
-        :node_id => node_id,
-        :component_template_id => component_template_id,
-        :order_index => order_index
-      }
-
-      response = post(rest_url("assembly/add_component"), post_body)
-      return response unless response.ok?
-
-      puts "Successfully added component to node."
     end
 
     def delete_aux(context_params)

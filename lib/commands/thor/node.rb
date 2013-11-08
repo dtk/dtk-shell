@@ -16,10 +16,10 @@ module DTK::Client
     end
 
     # using extended_context when we want to use autocomplete from other context
-    # e.g. we are in assembly/apache context and want to add-component we will use extended context to add 
+    # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
     # component-templates to autocomplete
     def self.extended_context()
-      {:add_component => "component_template"}
+      {:create_component => "component_template"}
     end
 
     def self.valid_child?(name_of_sub_context)
@@ -121,9 +121,9 @@ module DTK::Client
       set_required_params_aux(node_id,:node)
     end
 
-    desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID [-v VERSION]", "Add component template to node"
+    desc "NODE-NAME/ID create-component COMPONENT-TEMPLATE-NAME/ID [-v VERSION]", "Add component template to node"
     version_method_option
-    def add_component(context_params)
+    def create_component(context_params)
       node_id,component_template_id = context_params.retrieve_arguments([:node_id!, :option_1!],method_argument_names)
       post_body = {
         :node_id => node_id,

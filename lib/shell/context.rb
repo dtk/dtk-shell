@@ -143,7 +143,7 @@ module DTK
         active_context_copy, error_message, invalid_context = prepare_context_change([readline_input], active_context_copy) unless (readline_input.empty? || readline_input == "/")
         
         # using extended_context when we want to use autocomplete from other context
-        # e.g. we are in assembly/apache context and want to add-component we will use extended context to add 
+        # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
         # component-templates to autocomplete
         extended_candidates, new_context = {}, nil
         line_buffer = nil if line_buffer.empty?

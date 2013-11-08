@@ -10,7 +10,7 @@ module DTK::Client
     end
 
     def self.extended_context()
-      {:add_component => "component_template"}
+      {:create_component => "component_template"}
     end
 =begin
   #Not implemented yet
