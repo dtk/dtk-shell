@@ -6,7 +6,7 @@ module DTK::Client
 
     # entities that are not available on root but later in n-context
     def self.additional_entities()
-      ['target','component','attribute']
+      ['target','component','attribute','utils']
     end
 
     desc "workspace","Manipulate provided workspace"

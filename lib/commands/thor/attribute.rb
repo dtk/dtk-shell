@@ -5,10 +5,10 @@ module DTK::Client
     no_tasks do
 
       def self.assembly_validation_list(context_params)
-        assembly_id, node_id, component_id = context_params.retrieve_arguments([:assembly_id!, :node_id!, :component_id!])
+        assembly_or_worspace_id, node_id, component_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!], :node_id!, :component_id!])
 
         post_body = {
-          :assembly_id  => assembly_id,
+          :assembly_id  => assembly_or_worspace_id,
           :node_id      => node_id,
           :component_id => component_id,
           :subtype      => 'instance',
@@ -47,6 +47,8 @@ module DTK::Client
 
       case command_name
       when 'assembly'
+        return assembly_validation_list(context_params)
+      when 'workspace'
         return assembly_validation_list(context_params)
       when 'module'
         return module_validation_list(context_params)

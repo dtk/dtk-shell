@@ -167,7 +167,13 @@ module DTK
         cached_tasks.store(command_id_sym, [])
 
         # n-context children
-        all_children = self.respond_to?(:all_children) ? self.all_children() : nil
+        all_children = []
+        children = self.respond_to?(:all_children) ? self.all_children() : nil
+        all_children << children unless children.nil?
+
+        # some commands have utils subcontext which needs to be added to n-level
+        utils_subcontext = self.respond_to?(:utils_subcontext) ? self.utils_subcontext() : nil
+        all_children << utils_subcontext unless utils_subcontext.nil?
 
         # n-context-override task, special case which
         override_task_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
@@ -208,25 +214,26 @@ module DTK
               # if there are '[' it means it is optinal identifiers so it is tier 1 and tier 2 task
               cached_tasks[command_sym] << task_name if matched_data[0].include?('[')
             end
-
-            # n-level matching 
-            if all_children
+            
+            # n-level matching
+            all_children.each do |child|
               current_children = []
-              all_children.each do |child|
-                current_children << child.to_s
+
+              child.each do |c|
+                current_children << c.to_s
 
                 # create entry e.g. assembly_node_id
                 child_id_sym = (command.downcase + '_' + current_children.join('_') + '_wid').to_sym
 
                 # n-context matching
-                matched_data = task[1].usage.match(/\[?#{child.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
+                matched_data = task[1].usage.match(/\[?#{c.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
                 if matched_data
                   cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << task_name 
                 end
 
                 # override method list, we add these methods only once
-                if override_task_obj && !override_task_obj.is_completed?(child)
-                  command_o_tasks, identifier_o_tasks = override_task_obj.get_all_tasks(child)
+                if override_task_obj && !override_task_obj.is_completed?(c)
+                  command_o_tasks, identifier_o_tasks = override_task_obj.get_all_tasks(c)
                   child_sym    = (command.downcase + '_' + current_children.join('_')).to_sym
 
                   command_o_tasks.each do |o_task|
@@ -237,13 +244,47 @@ module DTK
                     cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << o_task[0]
                   end
 
-                  override_task_obj.add_to_completed(child)
+                  override_task_obj.add_to_completed(c)
                 end
               end
             end
+
+            # will leave this commented for now until we check if new code works properly
+            # if children
+            #   current_children = []
+            #   children.each do |child|
+            #     current_children << child.to_s
+
+            #     # create entry e.g. assembly_node_id
+            #     child_id_sym = (command.downcase + '_' + current_children.join('_') + '_wid').to_sym
+
+            #     # n-context matching
+            #     matched_data = task[1].usage.match(/\[?#{child.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
+            #     if matched_data
+            #       cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << task_name 
+            #     end
+
+            #     # override method list, we add these methods only once
+            #     if override_task_obj && !override_task_obj.is_completed?(child)
+            #       command_o_tasks, identifier_o_tasks = override_task_obj.get_all_tasks(child)
+            #       child_sym    = (command.downcase + '_' + current_children.join('_')).to_sym
+
+            #       command_o_tasks.each do |o_task|
+            #         cached_tasks[child_sym] = cached_tasks.fetch(child_sym,[]) << o_task[0]
+            #       end
+
+            #       identifier_o_tasks.each do |o_task|
+            #         cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << o_task[0]
+            #       end
+
+            #       override_task_obj.add_to_completed(child)
+            #     end
+            #   end
+            # end
+
           end
         end
-
+        
         # there is always help, and in all cases this is exception to the rule
         cached_tasks[command_id_sym] << 'help'
 

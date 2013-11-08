@@ -20,7 +20,7 @@ module DTK
 
 
       SYM_LINKS = [
-        { :alias => :workspace, :path => 'assembly/workspace' }
+        { :alias => :workspace, :path => 'workspace/workspace' }
       ]
 
       # current holds context (list of commands) for active context e.g. dtk:\library>
@@ -68,15 +68,18 @@ module DTK
       # SYM_LINKS methods is used to calculate aliases that will be used for certain entities
       # one of those approaches will be as such
       def self.check_for_sym_link(entries)
-        
-        if (entries.size == 1)
+        # remove empty strings from array
+        entries.reject! { |e| e.empty? }
+
+        if (entries.size > 0)
           SYM_LINKS.each do |sym_link|
             if entries.first.downcase.to_sym.eql?(sym_link[:alias])
-              return sym_link[:path].split('/')
+              entries[0] = sym_link[:path].split('/')
+              entries.flatten!
             end
           end
         end
-
+        
         entries
       end
 
@@ -173,7 +176,6 @@ module DTK
         # transform alias to full path
         entries = Context.check_for_sym_link(entries) if root?
 
-
         # if only '/' or just cc skip validation
         return active_context_copy if entries.empty?
 
@@ -182,10 +184,17 @@ module DTK
 
         # we remove '..' from our entries 
         entries = entries.select { |e| !(e.empty? || DTK::Shell::ContextAux.is_double_dot?(e)) }
-
+        
         # we go back in context based on '..'
         active_context_copy.pop_context(double_dots_count)
 
+        # special case when using workspace context
+        # if do cd .. from workspace/workspace identifier go directly to root not to workspace
+        if active_context_copy.name_list.include?("workspace")
+          count_workspaces = active_context_copy.name_list.inject(Hash.new(0)) {|h,i| h[i] += 1; h }
+          active_context_copy.pop_context(1) if count_workspaces['workspace']==1
+        end
+        
         # we add active commands array to begining, using dup to avoid change by ref.
         context_name_list = active_context_copy.name_list
         entries = context_name_list + entries
@@ -194,7 +203,7 @@ module DTK
         ac_size = context_name_list.size
         
         invalid_context = ""
-
+        
         # check each par for command / value
         (0..(entries.size-1)).step(2) do |i|
           command       = entries[i]
@@ -373,6 +382,7 @@ module DTK
           else
             context_params = get_command_parameters(thor_command_name, [], active_context_copy)[2]
           end
+          
           tmp = command_clazz.valid_id?(value, @conn, context_params)
           return tmp
         end

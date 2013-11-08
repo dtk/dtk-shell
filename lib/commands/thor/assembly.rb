@@ -40,10 +40,10 @@ module DTK::Client
     end
 
     # using extended_context when we want to use autocomplete from other context
-    # e.g. we are in assembly/apache context and want to add-component we will use extended context to add 
+    # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
     # component-templates to autocomplete
     def self.extended_context()
-      {:add_component => "component_template", :create_node => "node_template", :create_component_dependency => "component_template"}
+      {:create_component => "component_template", :create_node => "node_template", :create_component_dependency => "component_template"}
     end
 
     # this includes children of children
@@ -56,7 +56,7 @@ module DTK::Client
     end
 
     def self.validation_list(context_params)
-      get_cached_response(:assembly, "assembly/list_with_workspace", {})
+      get_cached_response(:assembly, "assembly/list", {})
     end
 
     # TODO: Hack which is necessery for the specific problem (DTK-541), something to reconsider down the line
@@ -726,9 +726,9 @@ TODO: overlaps with different meaning
       response = post(rest_url("assembly/purge"),post_body)
     end
 
-#    desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]", "Add component template to assembly node. Without order index default order location is on the end."
-    desc "ASSEMBLY-NAME/ID add-component NODE-ID COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node."
-    def add_component(context_params)
+#    desc "ASSEMBLY-NAME/ID create-component NODE-ID COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]", "Add component template to assembly node. Without order index default order location is on the end."
+    desc "ASSEMBLY-NAME/ID create-component NODE-ID COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node."
+    def create_component(context_params)
     
       # If method is invoked from 'assembly/node' level retrieve node_id argument 
       # directly from active context
