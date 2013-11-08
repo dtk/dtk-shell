@@ -105,6 +105,7 @@ module DTK::Client
             ['add-component',"add-component COMPONENT-TEMPLATE-NAME/ID [DEPENDENCY-ORDER-INDEX]","# Add component to node. Default workflow order position is at the end."],
             ['info',"info","# Return info about node instance belonging to given workspace."],
             ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context workspace."],
+            ['tail',"tail LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."],
             ['get-ps', "get-ps [--filter PATTERN]", "# Returns a list of running processes for a given node instance belonging to context workspace."],
             ['link-attribute-to', "link-attribute-to TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."]
           ],
