@@ -329,25 +329,6 @@ module DTK::Client
       post rest_url("assembly/list_attribute_mappings"), post_body
     end
 
-    def create_attribute_aux(context_params)
-      if context_params.is_there_identifier?(:attribute)
-        mapping = [:assembly_id!,:attribute_id!, :option_1]
-      else
-        mapping = [:assembly_id!,:option_1!,:option_2]
-      end
-      assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id,
-        :pattern => pattern,
-        :create => true,
-      }
-      post_body.merge!(:value => value) if value
-      post_body.merge!(:required => true) if options.required?
-      post_body.merge!(:dynamic => true) if options.dynamic?
-
-      post rest_url("assembly/set_attributes"), post_body
-    end
-
     def create_component_aux(context_params)
       # If method is invoked from 'assembly/node' level retrieve node_id argument 
       # directly from active context
@@ -501,15 +482,16 @@ module DTK::Client
       else
         mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2]
       end
-      assembly_or_worspace_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
+      assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
       post_body = {
-        :assembly_id => assembly_or_worspace_id,
+        :assembly_id => assembly_id,
         :pattern => pattern,
         :create => true,
       }
       post_body.merge!(:value => value) if value
+      post_body.merge!(:required => true) if options.required?
+      post_body.merge!(:dynamic => true) if options.dynamic?
 
-      #TODO: have this return format like assembly show attributes with subset of rows that gt changed
       post rest_url("assembly/set_attributes"), post_body
     end
 
