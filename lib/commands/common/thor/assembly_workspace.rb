@@ -118,9 +118,12 @@ module DTK::Client
       }
       response = post rest_url("assembly/prepare_for_edit_module"), post_body
       return response unless response.ok?
-      assembly_name,component_module_id,version,repo_url,branch = response.data(:assembly_name,:module_id,:version,:repo_url,:workspace_branch)
+
+
+      assembly_name,component_module_id,version,repo_url,branch,commit_sha = response.data(:assembly_name,:module_id,:version,:repo_url,:workspace_branch,:branch_head_sha)
       edit_opts = {
         :automatically_clone => true,
+        :pull_if_needed => true,
         :assembly_module => {
           :assembly_name => assembly_name,
           :version => version
@@ -128,7 +131,8 @@ module DTK::Client
         :workspace_branch_info => {
           :repo_url => repo_url,
           :branch => branch,
-          :module_name => component_module_name
+          :module_name => component_module_name,
+          :commit_sha => commit_sha
         }
       }
       version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
