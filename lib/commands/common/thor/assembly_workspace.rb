@@ -392,17 +392,17 @@ module DTK::Client
 
     def link_components_aux(context_params)
       if context_params.is_last_command_eql_to?(:component)
-        assembly_or_worspace_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:component_id!,:option_2!],method_argument_names)
+        assembly_or_worspace_id,dep_cmp,antec_cmp,dependency_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:component_id!,:option_1!,:option_2],method_argument_names)
       else
-        assembly_or_worspace_id,service_type,base_cmp,dep_cmp = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!,:option_3!],method_argument_names)
+        assembly_or_worspace_id,dep_cmp,antec_cmp,dependency_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!,:option_3],method_argument_names)
       end
 
       post_body = {
         :assembly_id => assembly_or_worspace_id,
-        :service_type => service_type,
-        :input_component_id => base_cmp, 
-        :output_component_id => dep_cmp
+        :input_component_id => dep_cmp, 
+        :output_component_id => antec_cmp
       }
+      post_body.merge!(:service_type => dependency_name) if dependency_name
       post rest_url("assembly/add_service_link"), post_body
     end
 

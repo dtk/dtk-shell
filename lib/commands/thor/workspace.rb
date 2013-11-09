@@ -112,7 +112,7 @@ module DTK::Client
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
             ['list-service-links',"list-service-links","# List service links for component."],
-            ['link-components',"link-components SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
+            ['link-components',"link-components ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."],
             ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."],
             ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
             ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."],
@@ -175,7 +175,7 @@ module DTK::Client
       return response
     end
 
-    desc "WORKSPACE-NAME/ID link-components SERVICE-TYPE BASE-CMP-NAME/ID DEPENDENT-CMP-NAME/ID", "Add a service link between two components"
+    desc "WORKSPACE-NAME/ID link-components DEPENDENT-CMP-NAME ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."
     def link_components(context_params)
       link_components_aux(context_params)
     end
