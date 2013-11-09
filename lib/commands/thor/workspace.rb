@@ -140,6 +140,12 @@ module DTK::Client
       converge_aux(context_params)
     end
 
+    desc "WORKSPACE-NAME/ID promote-module-updates COMPONENT-MODULE-NAME [--force]", "Promotes changes made to component module in assembly to base component module"
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    def promote_module_updates(context_params)
+      promote_module_updates_aux(context_params)
+    end
+
     desc "WORKSPACE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME [-p]", "Creates a new assembly template or updates existing one from workspace instance. -p will purge workspace after templaet creation" 
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def create_assembly(context_params)
