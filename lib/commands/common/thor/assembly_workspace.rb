@@ -402,7 +402,7 @@ module DTK::Client
         :input_component_id => dep_cmp, 
         :output_component_id => antec_cmp
       }
-      post_body.merge!(:service_type => dependency_name) if dependency_name
+      post_body.merge!(:dependency_name => dependency_name) if dependency_name
       post rest_url("assembly/add_service_link"), post_body
     end
 
