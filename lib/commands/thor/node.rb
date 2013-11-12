@@ -12,7 +12,7 @@ module DTK::Client
     end
 
     def self.valid_children()
-      [:component]
+      [:component, :utils]
     end
 
     # using extended_context when we want to use autocomplete from other context

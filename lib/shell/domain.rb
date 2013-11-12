@@ -365,6 +365,7 @@ module DTK
     class OverrideTasks < Hash
 
       attr_accessor :completed_tasks
+      attr_accessor :always_load_list
 
 
       # help_item (Thor printable task), structure:
@@ -377,10 +378,11 @@ module DTK
       # [1] => task defintion
       # [2] => task description
 
-
-      def initialize(hash=nil)
-        super
+      # using 'always load listed' to skip adding task to completed tasks e.g load utils for workspace and workspace_node
+      def initialize(hash=nil, always_load_listed=[])
+        super(hash)
         @completed_tasks = []
+        @always_load_list = always_load_listed
         self.merge!(hash)
       end
 
@@ -413,6 +415,8 @@ module DTK
       end
 
       def is_completed?(child_name)
+        # do not add task to completed if explicitly said to always load that task
+        return false if @always_load_list.include?(child_name)
         @completed_tasks.include?(child_name)
       end
 

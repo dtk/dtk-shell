@@ -171,9 +171,15 @@ module DTK
         children = self.respond_to?(:all_children) ? self.all_children() : nil
         all_children << children unless children.nil?
 
-        # some commands have utils subcontext which needs to be added to n-level
-        utils_subcontext = self.respond_to?(:utils_subcontext) ? self.utils_subcontext() : nil
-        all_children << utils_subcontext unless utils_subcontext.nil?
+        # some commands have multiple n-level contexts
+        # e.g. workspace_node_component, workspace_utils and workspace_node_utils
+        # we go through all of them and load them to 'all_children'
+        multi_context_children = self.respond_to?(:multi_context_children) ? self.multi_context_children() : nil
+        if multi_context_children
+          multi_context_children.each do |mc|
+            all_children << (mc.is_a?(Array) ? mc : multi_context_children)
+          end
+        end
 
         # n-context-override task, special case which
         override_task_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil

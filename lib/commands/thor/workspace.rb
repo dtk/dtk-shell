@@ -50,8 +50,8 @@ module DTK::Client
       # [:utils]
     end
 
-    def self.utils_subcontext()
-      [:utils]
+    def self.multi_context_children()
+      [[:utils],[:node, :utils]]
     end
 
     def self.valid_child?(name_of_sub_context)
@@ -79,12 +79,6 @@ module DTK::Client
           ],
           :component => [
             ['list-attributes',"list-attributes","# List attributes associated with given component."]
-          ],
-          :utils => [
-            ['get-netstats',"get-netstats","# Get netstats."],
-            ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
-            ['tail',"tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."],
-            ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."]
           ]
         },
         :command_only => {
@@ -98,15 +92,18 @@ module DTK::Client
           :component => [
             ['list-components',"list-components","# List components."],
             ['delete',"delete NAME/ID [-y] ","# Delete component from workspace."]
+          ],
+          :utils => [
+            ['get-netstats',"get-netstats","# Get netstats."],
+            ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
+            ['tail',"tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."],
+            ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."]
           ]
         },
         :identifier_only => {
           :node      => [
             ['create-component',"create-component COMPONENT-TEMPLATE-NAME/ID","# Add component to node. Default workflow order position is at the end."],
             ['info',"info","# Return info about node instance belonging to given workspace."],
-            ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context workspace."],
-            ['tail',"tail LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."],
-            ['get-ps', "get-ps [--filter PATTERN]", "# Returns a list of running processes for a given node instance belonging to context workspace."],
             ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."]
           ],
           :component => [
@@ -122,7 +119,7 @@ module DTK::Client
             ['info',"info","# Return info about attribute instance belonging to given component."]
           ]
         }
-      })
+      }, [:utils])
     end
 
 
@@ -133,7 +130,7 @@ module DTK::Client
 
     desc "WORKSPACE-NAME/ID converge [-m COMMIT-MSG]", "Converges workspace instance."
     method_option "commit_msg",:aliases => "-m" ,
-      :type => :string, 
+      :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message" 
     def converge(context_params)
@@ -220,20 +217,20 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
-    desc "[UTILS-NAME/ID] get-netstats [-y]", "Get netstats"
+    desc "get-netstats [-y]", "Get netstats"
     def get_netstats(context_params)
       get_netstats_aux(context_params)
     end
 
-    desc "[UTILS-NAME/ID] get-ps [--filter PATTERN]", "Get ps"
+    desc "get-ps [--filter PATTERN]", "Get ps"
     method_option :filter, :type => :boolean, :default => false, :aliases => '-f'
     def get_ps(context_params)
       get_ps_aux(context_params)
     end
 
-    desc "[UTILS-NAME/ID] grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","Grep log from multiple nodes. --first option returns first match (latest log entry)."
+    desc "grep LOG-PATH NODES-ID-PATTERN GREP-PATTERN [--first]","Grep log from multiple nodes. --first option returns first match (latest log entry)."
     method_option :first, :type => :boolean, :default => false
-    def grep(context_params) 
+    def grep(context_params)
       grep_aux(context_params)
     end
     
@@ -310,7 +307,7 @@ module DTK::Client
       stop_aux(context_params)
     end
 
-    desc "[UTILS-NAME/ID] tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
+    desc "tail NODES-IDENTIFIER LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
     method_option :more, :type => :boolean, :default => false
     def tail(context_params)
       tail_aux(context_params)
