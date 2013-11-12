@@ -607,6 +607,7 @@ module DTK::Client
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       module_name         = context_params.retrieve_arguments([:module_name],method_argument_names)
       version             = options.version||context_params.retrieve_arguments([:option_1],method_argument_names)
+      edit_dsl            = context_params.get_forwarded_options()[:edit_dsl] if context_params.get_forwarded_options()
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
@@ -614,7 +615,11 @@ module DTK::Client
         module_name = get_module_name(component_module_id)
       end
 
-      edit_aux(:component_module,component_module_id,module_name,version)
+      opts = {}
+      file_name = "dtk_model.json"
+      opts.merge!(:edit_file => file_name) if edit_dsl
+
+      edit_aux(:component_module,component_module_id,module_name,version,opts)
     end
 
     desc "MODULE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of module to server"

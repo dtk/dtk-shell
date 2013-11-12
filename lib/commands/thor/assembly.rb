@@ -794,7 +794,7 @@ TODO: overlaps with different meaning
       version             = response['data']['version']
       
       context_params_for_service = DTK::Shell::ContextParams.new
-      context_params_for_service.add_context_to_params("module", "module", component_module['id']) unless component_module.nil?
+      context_params_for_service.add_context_to_params(component_module['display_name'], "module", component_module['id']) unless component_module.nil?
       context_params_for_service.override_method_argument!('option_1', version)
         
       response = DTK::Client::ContextRouter.routeTask("module", "edit", context_params_for_service, @conn)

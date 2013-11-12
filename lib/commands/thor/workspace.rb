@@ -113,7 +113,8 @@ module DTK::Client
             ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."],
             ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
             ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."],
-            ['edit',"edit","# Edit component module related to given component."]
+            ['edit',"edit","# Edit component module related to given component."],
+            ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."]
           ],
           :attribute => [
             ['info',"info","# Return info about attribute instance belonging to given component."]
@@ -209,6 +210,12 @@ module DTK::Client
 
     desc "COMPONENT-NAME/ID edit","Edit component module related to given component."
     def edit(context_params)
+      component_edit_aux(context_params)
+    end
+
+    desc "COMPONENT-NAME/ID edit-dsl","Edit component module related to given component."
+    def edit_dsl(context_params)
+      context_params.forward_options( { :edit_dsl => true})
       component_edit_aux(context_params)
     end
 

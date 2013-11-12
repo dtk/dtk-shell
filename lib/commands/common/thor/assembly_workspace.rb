@@ -627,7 +627,8 @@ module DTK::Client
 
     def component_edit_aux(context_params)
       assembly_or_worspace_id, component_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :component_id!], method_argument_names)
-
+      edit_dsl = context_params.get_forwarded_options()[:edit_dsl] if context_params.get_forwarded_options()
+      
       post_body = {
         :assembly_id => assembly_or_worspace_id,
         :component_id => component_id
@@ -641,6 +642,7 @@ module DTK::Client
       context_params_for_service = DTK::Shell::ContextParams.new
       context_params_for_service.add_context_to_params(component_module['display_name'], "module", component_module['id']) unless component_module.nil?
       context_params_for_service.override_method_argument!('option_1', version)
+      context_params_for_service.forward_options( { :edit_dsl => true}) if edit_dsl
         
       response = DTK::Client::ContextRouter.routeTask("module", "edit", context_params_for_service, @conn)
     end
