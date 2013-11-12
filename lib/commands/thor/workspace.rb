@@ -111,7 +111,7 @@ module DTK::Client
             ['list-service-links',"list-service-links","# List service links for component."],
             ['link-components',"link-components ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."],
             ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."],
-            ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
+            # ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
             ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."],
             ['edit',"edit","# Edit component module related to given component."],
             ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."]
@@ -153,12 +153,13 @@ module DTK::Client
       return response
     end
 
-    desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create attribute and optionally assign it a value"
-    method_option :required, :type => :boolean, :default => false
-    method_option :dynamic, :type => :boolean, :default => false
-    def create_attribute(context_params)
-      create_attribute_aux(context_params)
-    end
+    # will leave this commented for now, need to check with Rich if we need this
+    # desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create attribute and optionally assign it a value"
+    # method_option :required, :type => :boolean, :default => false
+    # method_option :dynamic, :type => :boolean, :default => false
+    # def create_attribute(context_params)
+    #   create_attribute_aux(context_params)
+    # end
 
     desc "create-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node."
     def create_component(context_params)
