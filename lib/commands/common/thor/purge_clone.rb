@@ -15,7 +15,6 @@ module DTK::Client
         if File.directory?(dir)
           if ((pwd == dir) || (pwd.include?("#{dir}/")))
             OsUtil.print("Local directory '#{dir}' is not deleted because it is your current working directory.", :yellow) 
-            response = Response::Error.new()
           else
             FileUtils.rm_rf(dir)
           end
