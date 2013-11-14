@@ -40,6 +40,7 @@ module DTK::Client
       end
       grit_adapter = Helper(:git_repo).create(module_location)
       if file_to_edit = opts[:edit_file]
+        file_to_edit = (File.exists?("#{module_location}/#{file_to_edit}.yaml") ? "#{file_to_edit}.yaml" : "#{file_to_edit}.json")
         OsUtil.edit("#{module_location}/#{file_to_edit}")
       else
         Console.unix_shell(module_location, module_id, module_type, version)

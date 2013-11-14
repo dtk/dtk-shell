@@ -616,7 +616,7 @@ module DTK::Client
       end
 
       opts = {}
-      file_name = "dtk.model.json"
+      file_name = "dtk.model"
       opts.merge!(:edit_file => file_name) if edit_dsl
 
       edit_aux(:component_module,component_module_id,module_name,version,opts)
