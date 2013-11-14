@@ -306,7 +306,7 @@ TODO: overlaps with different meaning
       return Response::Ok.new() unless response.data(:any_updates)
       if dsl_parsing_errors = response.data(:dsl_parsing_errors)
         #TODO: not sure if this should be reached
-        error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors and invoke promote-module-updates again.\n"
+        error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors using 'edit' command from module context and invoke promote-module-updates again.\n"
         OsUtil.print(dsl_parsed_message, :red) 
         return Response::Error.new()
       end

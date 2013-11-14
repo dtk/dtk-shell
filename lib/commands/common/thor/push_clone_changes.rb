@@ -1,4 +1,6 @@
 dtk_require_common_commands('thor/common')
+dtk_require_from_base('command_helpers/service_importer')
+
 module DTK::Client
   module PushCloneChangesMixin
     include CommonMixin
@@ -23,7 +25,7 @@ module DTK::Client
       return response unless response.ok?
       
       if (!response.data.empty? && response.data(:dsl_parsed_info))
-        dsl_parsed_message = "Module '#{module_name}' imported with errors:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
+        dsl_parsed_message = ServiceImporter.import_error_message(module_name, response.data(:dsl_parsed_info).to_s, "import")
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
       

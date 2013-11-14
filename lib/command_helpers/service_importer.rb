@@ -10,6 +10,10 @@ module DTK::Client
       ::DTK::Client::Configurator.create_missing_clone_dirs
     end
 
+    def self.import_error_message(name, errors, action)
+      "Module '#{name}' imported with errors:\n#{errors}\nYou can fix errors using 'edit' command from module context and invoke '#{action}' again.\n"
+    end
+
     ##
     # Method will trigger import for each missing module component
     #

@@ -66,31 +66,31 @@ module DTK::Client
       return response
     end
 
-    def promote_module_updates_aux(context_params)
-      assembly_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id,
-        :module_name => component_module_name,
-        :module_type => 'component_module'
-      }
-      post_body.merge!(:force => true) if options.force?
-      response = post(rest_url("assembly/promote_module_updates"),post_body)
-      return response unless response.ok?
-      return Response::Ok.new() unless response.data(:any_updates)
-      if dsl_parsing_errors = response.data(:dsl_parsing_errors)
-        #TODO: not sure if this should be reached
-        error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors and invoke promote-module-updates again.\n"
-        OsUtil.print(dsl_parsed_message, :red) 
-        return Response::Error.new()
-      end
-      module_name,branch,ff_change = response.data(:module_name,:workspace_branch,:fast_forward_change)
-      ff_change ||= true
-      opts = {:local_branch => branch}
-      opts.merge!(:hard_reset => true) if !ff_change
-      response = Helper(:git_repo).pull_changes?(:component_module,module_name,opts)
-      return response unless response.ok?()
-      Response::Ok.new()
-    end
+    # def promote_module_updates_aux(context_params)
+    #   assembly_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
+    #   post_body = {
+    #     :assembly_id => assembly_id,
+    #     :module_name => component_module_name,
+    #     :module_type => 'component_module'
+    #   }
+    #   post_body.merge!(:force => true) if options.force?
+    #   response = post(rest_url("assembly/promote_module_updates"),post_body)
+    #   return response unless response.ok?
+    #   return Response::Ok.new() unless response.data(:any_updates)
+    #   if dsl_parsing_errors = response.data(:dsl_parsing_errors)
+    #     #TODO: not sure if this should be reached
+    #     error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors with 'edit' command from module context and invoke promote-module-updates again.\n"
+    #     OsUtil.print(dsl_parsed_message, :red) 
+    #     return Response::Error.new()
+    #   end
+    #   module_name,branch,ff_change = response.data(:module_name,:workspace_branch,:fast_forward_change)
+    #   ff_change ||= true
+    #   opts = {:local_branch => branch}
+    #   opts.merge!(:hard_reset => true) if !ff_change
+    #   response = Helper(:git_repo).pull_changes?(:component_module,module_name,opts)
+    #   return response unless response.ok?()
+    #   Response::Ok.new()
+    # end
     
     def list_violations_aux(context_params)
       assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
@@ -178,7 +178,7 @@ module DTK::Client
       return Response::Ok.new() unless response.data(:any_updates)
       if dsl_parsing_errors = response.data(:dsl_parsing_errors)
         #TODO: not sure if this should be reached
-        error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors and invoke promote-module-updates again.\n"
+        error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors using 'edit' command from module context and invoke promote-module-updates again.\n"
         OsUtil.print(dsl_parsed_message, :red) 
         return Response::Error.new()
       end

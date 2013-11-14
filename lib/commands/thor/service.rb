@@ -203,11 +203,10 @@ module DTK::Client
       end
       
       return response unless response.ok?
-
       @@invalidate_map << :service_module
 
-      if response.data(:dsl_parsed_info)
-        dsl_parsed_message = "Module '#{remote_module_name}' imported with errors:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
+      if error = response.data(:dsl_parsed_info)
+        dsl_parsed_message = ServiceImporter.import_error_message(remote_module_name, error.to_s, "import")
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
@@ -250,8 +249,8 @@ module DTK::Client
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
 
-      if response.data(:dsl_parsed_info)
-        dsl_parsed_message = "Module '#{module_name}-#{version}' imported with errors:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
+      if error = response.data(:dsl_parsed_info)
+        dsl_parsed_message = ServiceImporter.import_error_message("#{module_name}-#{version}", error.to_s, "import")
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
@@ -434,8 +433,8 @@ module DTK::Client
       return response unless response.ok?
       @@invalidate_map << :service_module
       
-      if response.data(:dsl_parsed_info)
-        dsl_parsed_message = "Module '#{module_name}' imported with errors:\n#{response.data(:dsl_parsed_info)}\nYou can fix errors and import module again.\n"
+      if error = response.data(:dsl_parsed_info)
+        dsl_parsed_message = ServiceImporter.import_error_message(module_name, error.to_s, "import")
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
@@ -471,7 +470,6 @@ module DTK::Client
 
       reparse_aux(module_location) unless internal_trigger
       push_clone_changes_aux(:service_module,service_module_id,version,nil,internal_trigger)
-      Response::Ok.new()
     end
 
     desc "delete SERVICE-MODULE [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
