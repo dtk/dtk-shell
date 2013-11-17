@@ -206,7 +206,7 @@ module DTK::Client
       @@invalidate_map << :service_module
 
       if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.import_error_message(remote_module_name, error.to_s, "import")
+        dsl_parsed_message = ServiceImporter.error_message(remote_module_name, error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
@@ -250,7 +250,7 @@ module DTK::Client
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
 
       if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.import_error_message("#{module_name}-#{version}", error.to_s, "import")
+        dsl_parsed_message = ServiceImporter.error_message("#{module_name}-#{version}", error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
@@ -434,7 +434,7 @@ module DTK::Client
       @@invalidate_map << :service_module
       
       if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.import_error_message(module_name, error.to_s, "import")
+        dsl_parsed_message = ServiceImporter.error_message(module_name, error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 

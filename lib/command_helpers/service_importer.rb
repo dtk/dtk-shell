@@ -10,8 +10,8 @@ module DTK::Client
       ::DTK::Client::Configurator.create_missing_clone_dirs
     end
 
-    def self.import_error_message(name, errors, action)
-      "Module '#{name}' imported with errors:\n#{errors}\nYou can fix errors using 'edit' command from module context and invoke '#{action}' again.\n"
+    def self.error_message(name, errors)
+      "Module '#{name}' has errors:\n  #{errors.to_s}\nYou can fix errors using 'edit' command.\n"
     end
 
     ##

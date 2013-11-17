@@ -25,8 +25,9 @@ module DTK::Client
       return response unless response.ok?
       
       if (!response.data.empty? && response.data(:dsl_parsed_info))
-        dsl_parsed_message = ServiceImporter.import_error_message(module_name, response.data(:dsl_parsed_info).to_s, "import")
+        dsl_parsed_message = ServiceImporter.error_message(module_name, response.data(:dsl_parsed_info))
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+        return Response::NoOp.new() #NoOp fine because error reported by section above
       end
       
       if module_type == :component_module
@@ -36,7 +37,7 @@ module DTK::Client
           return Helper(:git_repo).add_file(repo_obj,dsl_created_info["path"],dsl_created_info["content"],msg)
         end
       end
-      Response::Ok.new(:json_diffs => json_diffs,:commit_sha => commit_sha)
+      Response::Ok.new()
     end
   end
 end
