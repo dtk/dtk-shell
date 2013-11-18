@@ -141,10 +141,10 @@ TODO: overlaps with different meaning
       assembly_stop(assembly_id, node_pattern)
     end
 
-    desc "ASSEMBLY-NAME/ID cancel-task TASK_ID", "Cancels task."
+
+    desc "ASSEMBLY-NAME/ID cancel-task [TASK_ID]", "Cancels an executing task.  If task id is omitted, this command cancels the most recent executing task."
     def cancel_task(context_params)
-      task_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      cancel_task_aux(task_id)
+      cancel_task_aux(context_params)
     end
 
     desc "ASSEMBLY-NAME/ID clear-tasks", "Clears teh tasks that have been run already."

@@ -39,9 +39,13 @@ module DTK::Client
       assembly_stop(assembly_or_worspace_id, node_pattern)
     end
 
-    def cancel_aw_task_aux(context_params)
-      task_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      cancel_task_aux(task_id)
+    def cancel_task_aux(context_params)
+      assembly_or_workspace_id, task_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_or_workspace_id
+      }
+      post_body.merge!(:task_id => task_id) if task_id
+      post rest_url("assembly/cancel_task"), post_body
     end
 
     def create_assembly_aux(context_params)
@@ -195,7 +199,7 @@ module DTK::Client
       edit_aux(:service_module,service_module_id,service_module_name,version,edit_opts)
     end
 
-    def promote_module_updates_aux(context_params)
+    def push_module_updates_aux(context_params)
       assembly_or_worspace_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_worspace_id,
@@ -279,7 +283,6 @@ module DTK::Client
     def list_tasks_aux(context_params)
       context_params.method_arguments = ["tasks"]
       list_aux(context_params)
-      # list_assemblies(context_params)
     end
 
     # desc "WORKSPACE-NAME/ID list-assemblies","List assemblies for current workspace."

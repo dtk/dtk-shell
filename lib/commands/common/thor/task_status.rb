@@ -63,11 +63,6 @@ module DTK::Client
         end
       end
 
-      def cancel_task_aux(task_id)
-        response = post rest_url("task/cancel_task"), { :task_id => task_id }
-        return response
-      end
-
       def list_task_info_aux(type, id)
         id_sym = "#{type}_id".to_sym
         post_body = {
