@@ -97,7 +97,9 @@ TODO: overlaps with different meaning
           :node      => [
             ['info',"info","# Return info about node instance belonging to given assembly."],
             ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context assembly."],
-            ['get-ps', "get-ps [--filter PATTERN]", "# Returns a list of running processes for a given node instance belonging to context assembly."]
+            ['get-ps', "get-ps [--filter PATTERN]", "# Returns a list of running processes for a given node instance belonging to context assembly."],
+            ['start', "start", "# Start node instance."],
+            ['stop', "stop", "# Stop node instance."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],

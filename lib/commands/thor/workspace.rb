@@ -104,7 +104,9 @@ module DTK::Client
           :node      => [
             ['create-component',"create-component COMPONENT-TEMPLATE-NAME/ID","# Add component to node. Default workflow order position is at the end."],
             ['info',"info","# Return info about node instance belonging to given workspace."],
-            ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."]
+            ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
+            ['start', "start", "# Start node instance."],
+            ['stop', "stop", "# Stop node instance."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
