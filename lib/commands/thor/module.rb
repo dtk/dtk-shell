@@ -285,7 +285,7 @@ module DTK::Client
       return response unless response.ok?
 
       if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.import_error_message(module_name, error.to_s, "import")
+        dsl_parsed_message = ServiceImporter.error_message(module_name, error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
@@ -361,7 +361,7 @@ module DTK::Client
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
       
       if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.import_error_message(module_name, error.to_s, "import")
+        dsl_parsed_message = ServiceImporter.error_message(module_name, error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
@@ -440,7 +440,7 @@ module DTK::Client
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
 
       if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.import_error_message(module_name, error.to_s, "import")
+        dsl_parsed_message = ServiceImporter.error_message(module_name, error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
       end
 
@@ -615,10 +615,10 @@ module DTK::Client
         module_name = get_module_name(component_module_id)
       end
 
+      #TODO: cleanup so dont need :base_file_name and get edit_file from server
       opts = {}
-      file_name = "dtk.model"
-      opts.merge!(:edit_file => file_name) if edit_dsl
-
+      base_file_name = "dtk.model"
+      opts.merge!(:edit_file => {:base_file_name => base_file_name}) if edit_dsl
       edit_aux(:component_module,component_module_id,module_name,version,opts)
     end
 

@@ -227,6 +227,11 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
+    desc "WORKSPACE-NAME/ID edit-workflow", "Edit workflow"
+    def edit_worklow(context_params)
+      edit_workflow_aux(context_params)
+    end
+
     desc "get-netstats [-y]", "Get netstats"
     def get_netstats(context_params)
       get_netstats_aux(context_params)

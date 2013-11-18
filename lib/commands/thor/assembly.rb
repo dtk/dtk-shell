@@ -8,6 +8,7 @@ dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
+dtk_require_common_commands('thor/assembly_workspace')
 LOG_SLEEP_TIME   = DTK::Configuration.get(:tail_log_frequency)
 DEBUG_SLEEP_TIME = DTK::Configuration.get(:debug_task_frequency)
 
@@ -22,6 +23,8 @@ module DTK::Client
       include SetRequiredParamsMixin
       include EditMixin
       include PurgeCloneMixin
+      include AssemblyWorkspaceMixin
+
       def get_assembly_name(assembly_id)
         get_name_from_id_helper(assembly_id)
       end
@@ -264,33 +267,7 @@ TODO: overlaps with different meaning
 
     desc "ASSEMBLY-NAME/ID edit-workflow", "Edit assembly's workflow."
     def edit_workflow(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id,
-        :module_type => 'service_module',
-        :modification_type => 'workflow'
-      }
-      response = post rest_url("assembly/prepare_for_edit_module"), post_body
-      return response unless response.ok?
-      assembly_name,service_module_id,service_module_name,version,repo_url,branch,branch_head_sha,edit_file = response.data(:assembly_name,:module_id,:module_name,:version,:repo_url,:workspace_branch,:branch_head_sha,:edit_file)
-      edit_opts = {
-        :automatically_clone => true,
-        :assembly_module => {
-          :assembly_name => assembly_name,
-          :version => version
-        },
-        :workspace_branch_info => {
-          :repo_url => repo_url,
-          :branch => branch,
-          :module_name => service_module_name
-        },
-        :commit_sha => branch_head_sha,
-        :pull_if_needed => true,
-        :modification_type => :workflow,
-        :edit_file => edit_file
-      }
-      version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
-      edit_aux(:service_module,service_module_id,service_module_name,version,edit_opts)
+      edit_workflow_aux(context_params)
     end
 
     desc "ASSEMBLY-NAME/ID promote-module-updates COMPONENT-MODULE-NAME [--force]", "Promotes changes made to component module in assembly to shared template"

@@ -39,8 +39,15 @@ module DTK::Client
         return response unless response.ok?
       end
       grit_adapter = Helper(:git_repo).create(module_location)
-      if file_to_edit = opts[:edit_file]
-        file_to_edit = (File.exists?("#{module_location}/#{file_to_edit}.yaml") ? "#{file_to_edit}.yaml" : "#{file_to_edit}.json")
+      if edit_info = opts[:edit_file]
+        #TODO: cleanup so dont need :base_file_name
+        file_to_edit = 
+          if edit_info.kind_of?(String)
+            edit_info
+          else #edit_info.kind_of?(Hash) and has key :base_file_name
+            base_file = edit_info[:base_file_name]
+            (File.exists?("#{module_location}/#{base_file}.yaml") ? "#{base_file}.yaml" : "#{base_file}.json")
+          end
         OsUtil.edit("#{module_location}/#{file_to_edit}")
       else
         Console.unix_shell(module_location, module_id, module_type, version)

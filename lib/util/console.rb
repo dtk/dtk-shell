@@ -118,10 +118,7 @@ module DTK::Client
                 end
 
                 reparse_aux(path)
-                response = push_clone_changes_aux(module_type, module_id, version, commit_msg)
-                puts response["data"][:json_diffs]
-                puts "commit_sha: #{response["data"][:commit_sha]}"
-                puts "commit_msg: #{commit_msg}" unless commit_msg.nil?
+                push_clone_changes_aux(module_type, module_id, version, commit_msg)
               else
                 system(line)        
               end
