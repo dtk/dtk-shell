@@ -145,22 +145,42 @@ module DTK::Client
       push_module_updates_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME [-p]", "Creates a new assembly template or updates existing one from workspace instance. -p will purge workspace after templaet creation" 
-    method_option :purge, :aliases => '-p', :type => :boolean, :default => false
-    def create_assembly(context_params)
-      response = create_assembly_aux(context_params)
+    desc "WORKSPACE-NAME/ID push-assembly-updates SERVICE-NAME::ASSEMBLY-NAME", "Pushes workspace contents to the designated assembly."
+    def push_assembly_updates(context_params)
+      workspace_id, qualified_assembly_name = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names) 
+      if qualified_assembly_name =~ /(^[^:]*)::([^:]*$)/
+        service_module_name, assembly_template_name = [$1,$2]
+      else
+        raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-NAME::ASSEMBLY-NAME"
+      end
+      response = promote_assembly_aux(:push,workspace_id, service_module_name, assembly_template_name)
+      return response unless response.ok?
       @@invalidate_map << :assembly_template
-
-      return response
+      Response::Ok.new()
     end
 
-    # will leave this commented for now, need to check with Rich if we need this
-    # desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create attribute and optionally assign it a value"
-    # method_option :required, :type => :boolean, :default => false
-    # method_option :dynamic, :type => :boolean, :default => false
-    # def create_attribute(context_params)
-    #   create_attribute_aux(context_params)
-    # end
+    desc "WORKSPACE-NAME/ID create-assembly SERVICE-NAME ASSEMBLY-NAME [-p]", "Creates a new assembly from the workspace contents in the designated service module."
+   # The option -p will purge the workspace after assembly creation." 
+    method_option :purge, :aliases => '-p', :type => :boolean, :default => false
+    def create_assembly(context_params)
+      workspace_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:workspace_id!,:option_1!,:option_2!],method_argument_names)
+      response = promote_assembly_aux(:create,workspace_id,service_module_name,assembly_template_name)
+      return response unless response.ok?
+      if options.purge?
+        response = purge_aux(context_params)
+        return response unless response.ok?
+      end
+
+      @@invalidate_map << :assembly_template
+      Response::Ok.new()
+    end
+
+    desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create attribute and optionally assign it a value."
+    method_option :required, :type => :boolean, :default => false
+    method_option :dynamic, :type => :boolean, :default => false
+    def create_attribute(context_params)
+      create_attribute_aux(context_params)
+    end
 
     desc "create-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node."
     def create_component(context_params)

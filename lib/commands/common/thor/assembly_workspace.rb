@@ -48,12 +48,13 @@ module DTK::Client
       post rest_url("assembly/cancel_task"), post_body
     end
 
-    def create_assembly_aux(context_params)
-      assembly_or_worspace_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!],method_argument_names)
+    #mode will be :create or :push
+    def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name,assembly_template_name)
       post_body = {
-        :assembly_id => assembly_or_worspace_id,
+        :assembly_id => assembly_or_workspace_id,
         :service_module_name => service_module_name,
-        :assembly_template_name => assembly_template_name
+        :assembly_template_name => assembly_template_name,
+        :mode => mode.to_s
       }
       response = post rest_url("assembly/promote_to_template"), post_body
       # when changing context send request for getting latest assembly_templates instead of getting from cache
@@ -63,39 +64,8 @@ module DTK::Client
       #synchronize_clone will load new assembly template into service clone on workspace (if it exists)
       commit_sha,workspace_branch = response.data(:module_name,:workspace_branch)
       Helper(:git_repo).synchronize_clone(:service_module,service_module_name,commit_sha,:local_branch=>workspace_branch)
-
-      if options.purge?
-        purge_aux(context_params)
-      end
-      Response::Ok.new()
     end
 
-    # def promote_module_updates_aux(context_params)
-    #   assembly_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
-    #   post_body = {
-    #     :assembly_id => assembly_id,
-    #     :module_name => component_module_name,
-    #     :module_type => 'component_module'
-    #   }
-    #   post_body.merge!(:force => true) if options.force?
-    #   response = post(rest_url("assembly/promote_module_updates"),post_body)
-    #   return response unless response.ok?
-    #   return Response::Ok.new() unless response.data(:any_updates)
-    #   if dsl_parsing_errors = response.data(:dsl_parsing_errors)
-    #     #TODO: not sure if this should be reached
-    #     error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors with 'edit' command from module context and invoke promote-module-updates again.\n"
-    #     OsUtil.print(dsl_parsed_message, :red) 
-    #     return Response::Error.new()
-    #   end
-    #   module_name,branch,ff_change = response.data(:module_name,:workspace_branch,:fast_forward_change)
-    #   ff_change ||= true
-    #   opts = {:local_branch => branch}
-    #   opts.merge!(:hard_reset => true) if !ff_change
-    #   response = Helper(:git_repo).pull_changes?(:component_module,module_name,opts)
-    #   return response unless response.ok?()
-    #   Response::Ok.new()
-    # end
-    
     def list_violations_aux(context_params)
       assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       response = post rest_url("assembly/find_violations"),:assembly_id => assembly_or_worspace_id
