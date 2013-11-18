@@ -615,10 +615,10 @@ module DTK::Client
         module_name = get_module_name(component_module_id)
       end
 
+      #TODO: cleanup so dont need :base_file_name and get edit_file from server
       opts = {}
-      file_name = "dtk.model"
-      opts.merge!(:edit_file => file_name) if edit_dsl
-
+      base_file_name = "dtk.model"
+      opts.merge!(:edit_file => {:base_file_name => base_file_name}) if edit_dsl
       edit_aux(:component_module,component_module_id,module_name,version,opts)
     end
 
