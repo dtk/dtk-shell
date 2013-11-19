@@ -48,7 +48,7 @@ module DTK::Client
       post rest_url("assembly/cancel_task"), post_body
     end
 
-    #mode will be :create or :push
+    #mode will be :create or :update
     def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name,assembly_template_name)
       post_body = {
         :assembly_id => assembly_or_workspace_id,

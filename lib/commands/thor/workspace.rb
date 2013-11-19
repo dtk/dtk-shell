@@ -153,7 +153,7 @@ module DTK::Client
       else
         raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-NAME::ASSEMBLY-NAME"
       end
-      response = promote_assembly_aux(:push,workspace_id, service_module_name, assembly_template_name)
+      response = promote_assembly_aux(:update,workspace_id, service_module_name, assembly_template_name)
       return response unless response.ok?
       @@invalidate_map << :assembly_template
       Response::Ok.new()
