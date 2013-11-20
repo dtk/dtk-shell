@@ -142,7 +142,7 @@ module DTK::Client
       converge_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-module-updates MODULE-NAME [--force]", "Push changes made to acomponent module in the workspace to its base component module."
+    desc "WORKSPACE-NAME/ID push-module-updates MODULE-NAME [--force]", "Push changes made to a component module in the workspace to its base component module."
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def push_module_updates(context_params)
       push_module_updates_aux(context_params)
@@ -248,7 +248,7 @@ module DTK::Client
     end
 
     desc "WORKSPACE-NAME/ID edit-workflow", "Edit workflow"
-    def edit_worklow(context_params)
+    def edit_workflow(context_params)
       edit_workflow_aux(context_params)
     end
 
@@ -324,11 +324,11 @@ module DTK::Client
       list_violations_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID promote-module-updates COMPONENT-MODULE-NAME [--force]", "Promotes changes made to component module in assembly to base component module"
-    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-    def promote_module_updates(context_params)
-      promote_module_updates_aux(context_params)
-    end
+    # desc "WORKSPACE-NAME/ID promote-module-updates COMPONENT-MODULE-NAME [--force]", "Promotes changes made to component module in workspace to base component module"
+    # method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    # def promote_module_updates(context_params)
+    #   promote_module_updates_aux(context_params)
+    # end
 
     desc "WORKSPACE-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
@@ -364,16 +364,6 @@ module DTK::Client
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
       task_status_aw_aux(context_params)
-    end
-
-    desc "WORKSPACE-NAME/ID unlink-components SERVICE-LINK-ID", "Delete a service link"
-    def unlink_components(context_params)
-      unlink_components_aux(context_params)
-    end
-
-    desc "WORKSPACE-NAME/ID workflow-info", "Provides the structure of the assembly's workflow"
-    def workflow_info(context_params)
-      workflow_info_aux(context_params)
     end
 
   end

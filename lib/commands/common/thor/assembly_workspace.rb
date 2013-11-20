@@ -1028,5 +1028,13 @@ module DTK::Client
       return response
     end
 
+    def clear_tasks_aux(context_params)
+      assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_or_worspace_id
+      }
+      post rest_url("assembly/clear_tasks"), post_body
+    end
+
   end
 end
