@@ -110,11 +110,11 @@ module DTK::Client
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
-            ['list-service-links',"list-service-links","# List service links for component."],
+            ['list-component-links',"list-component-links","# List component's links to other components."],
             ['link-components',"link-components ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."],
             ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."],
             # ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
-            ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."],
+            #['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."],
             ['edit',"edit","# Edit component module related to given component."],
             ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."]
           ],
@@ -225,7 +225,7 @@ module DTK::Client
       return response
     end
 
-    desc "WORKSPACE-NAME/ID unlink-components SERVICE-LINK-ID", "Delete a service link"
+    desc "WORKSPACE-NAME/ID unlink-components COMPONENT-LINK-ID", "Delete a component link."
     def unlink_components(context_params)
       unlink_components_aux(context_params)
     end
@@ -298,9 +298,9 @@ module DTK::Client
       list_nodes_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-service-links","List service links"
-    def list_service_links(context_params)
-      list_service_links_aux(context_params)
+    desc "WORKSPACE-NAME/ID list-component-links","List component links."
+    def list_component_links(context_params)
+      list_component_links_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID list-tasks","List tasks associated with workspace."
@@ -308,12 +308,12 @@ module DTK::Client
       list_tasks_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID workflow-info", "Provides the structure of the assembly's workflow"
+    desc "WORKSPACE-NAME/ID workflow-info", "Provides the structure of the assembly's workflow."
     def workflow_info(context_params)
       workflow_info_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-violations", "Finds violations in workspace that will prevent a converge operation"
+    desc "WORKSPACE-NAME/ID list-violations", "Finds violations in workspace that will prevent a converge operation."
     def list_violations(context_params)
       list_violations_aux(context_params)
     end
@@ -330,12 +330,14 @@ module DTK::Client
       set_attribute_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID start [NODE-ID-PATTERN]", "Starts all workspace's nodes,  specific nodes can be selected via node id regex."
+#    desc "WORKSPACE-NAME/ID start [NODE-ID-PATTERN]", "Starts all workspace's nodes,  specific nodes can be selected via node id regex."
+    desc "WORKSPACE-NAME/ID start [NODE-NAME]", "Starts all the workspace's nodes. A single node can be selected."
     def start(context_params)
       start_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID stop [NODE-ID-PATTERN]", "Stops all workspace's nodes, specific nodes can be selected via node id regex."
+#    desc "WORKSPACE-NAME/ID stop [NODE-ID-PATTERN]", "Stops all workspace's nodes, specific nodes can be selected via node id regex."
+    desc "WORKSPACE-NAME/ID stop [NODE-ID-PATTERN]", "Stops all the workspace's nodes. A single node can be selected."
     def stop(context_params)
       stop_aux(context_params)
     end

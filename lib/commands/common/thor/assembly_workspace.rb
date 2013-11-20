@@ -409,7 +409,7 @@ module DTK::Client
       post rest_url("assembly/add_service_link"), post_body
     end
 
-    def list_service_links_aux(context_params)
+    def list_component_links_aux(context_params)
       assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_worspace_id
