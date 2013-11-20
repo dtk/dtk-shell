@@ -492,12 +492,7 @@ module DTK::Client
       response
     end
 
-    def  set_attribute_aux(context_params)
-      if options.required?
-        assembly_or_worspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
-        return set_required_params_aux(assembly_or_worspace_id,:assembly,:instance)
-      end
-
+    def set_attribute_aux(context_params)
       if context_params.is_there_identifier?(:attribute)
         mapping = (options.unset? ? [REQ_ASSEMBLY_OR_WS_ID,:attribute_id!] : [REQ_ASSEMBLY_OR_WS_ID,:attribute_id!,:option_1!])
       else
@@ -507,10 +502,9 @@ module DTK::Client
       assembly_or_worspace_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
       post_body = {
         :assembly_id => assembly_or_worspace_id,
-        :pattern => pattern,
-        :value => value
+        :pattern => pattern
       }
-      #TODO: have this return format like assembly show attributes with subset of rows that gt changed
+      post_body.merge!(:value => value) unless options.unset?
       post rest_url("assembly/set_attributes"), post_body
     end
 

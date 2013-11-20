@@ -182,12 +182,12 @@ module DTK::Client
       create_attribute_aux(context_params)
     end
 
-    desc "create-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to assembly node."
+    desc "create-component COMPONENT-TEMPLATE-NAME", "Add component template to assembly node."
     def create_component(context_params)
       create_component_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID create-node ASSEMBLY-NODES-NAME NODE-TEMPLATE", "Add (stage) a new node to workspace"
+    desc "WORKSPACE-NAME/ID create-node NODE-NAME NODE-TEMPLATE", "Add (stage) a new node to workspace"
     def create_node(context_params)
       response = create_node_aux(context_params)
       @@invalidate_map << :assembly_node
@@ -195,7 +195,7 @@ module DTK::Client
       return response
     end
 
-    desc "WORKSPACE-NAME/ID link-components DEPENDENT-CMP-NAME ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."
+    desc "WORKSPACE-NAME/ID link-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]","#Link the target component to the source component."
     def link_components(context_params)
       link_components_aux(context_params)
     end
@@ -216,7 +216,7 @@ module DTK::Client
       return response
     end
 
-    desc "WORKSPACE-NAME/ID delete-node NAME/ID [-y]","Delete node, terminating it if the node has been spun up"
+    desc "WORKSPACE-NAME/ID delete-node NODE-NAME [-y]","Delete node, terminating it if the node has been spun up"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       response = delete_node_aux(context_params)
@@ -273,7 +273,7 @@ module DTK::Client
       info_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM"
+    desc "WORKSPACE-NAME/ID link-attributes TARGET-ATTR SOURCE-ATTR", "Link the value of the target attribute to the source attribute."
     def link_attributes(context_params)
       link_attributes_aux(context_params)
     end
@@ -283,10 +283,10 @@ module DTK::Client
       list_attributes_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-attribute-mappings SERVICE-LINK-NAME/ID", "List attribute mappings associated with service link"
-    def list_attribute_mappings(context_params)
-      list_attribute_mappings_aux(context_params)
-    end
+    #desc "WORKSPACE-NAME/ID list-attribute-mappings SERVICE-LINK-NAME/ID", "List attribute mappings associated with service link"
+    #def list_attribute_mappings(context_params)
+    #  list_attribute_mappings_aux(context_params)
+    #end
 
     desc "WORKSPACE-NAME/ID list-components","List components associated with workspace."
     def list_components(context_params)
@@ -324,10 +324,9 @@ module DTK::Client
       purge_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID set-attribute ATTRIBUTE-NAME/ID VALUE [-u] [-r]", "Set workspace attribute value(s). -u will unset attribute. -r will set only required attributes"
+    desc "WORKSPACE-NAME/ID set-attribute ATTRIBUTE-NAME [VALUE] [-u]", "(Un)Set attribute value. The option -u will unset the attribute's value."
     method_option :unset, :aliases => '-u', :type => :boolean, :default => false
-    method_option :required, :aliases => '-r', :type => :boolean, :default => false
-    def  set_attribute(context_params)
+    def set_attribute(context_params)
       set_attribute_aux(context_params)
     end
 
