@@ -5,7 +5,6 @@ dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
 dtk_require_from_base("command_helper")
 dtk_require_common_commands('thor/task_status')
-dtk_require_common_commands('thor/set_required_params')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/assembly_workspace')
@@ -47,7 +46,6 @@ module DTK::Client
     # this includes children of children
     def self.all_children()
       [:node, :component, :attribute]
-      # [:utils]
     end
 
     def self.multi_context_children()
@@ -74,8 +72,8 @@ module DTK::Client
         :all => {
           :node      => [
             ['delete-component',"delete-component COMPONENT-ID [-y]","# Delete component from assembly's node"],
-            ['list-components',"list-components","# List components associated with workspace's node."],
-            ['list-attributes',"list-attributes","# List attributes associated with workspace's node."]
+            ['list-attributes',"list-attributes","# List attributes associated with workspace's node."],
+            ['list-components',"list-components","# List components associated with workspace's node."]
           ],
           :component => [
             ['list-attributes',"list-attributes","# List attributes associated with given component."]
@@ -86,23 +84,23 @@ module DTK::Client
             ['list-attributes',"list-attributes","# List attributes."]
           ],
           :node => [
-            ['delete',"delete NAME/ID [-y] ","# Delete node, terminating it if the node has been spun up."],
+            ['delete-node',"delete [-y] ","# Delete node, terminating it if the node has been spun up."],
             ['list-nodes',"list-nodes ","# List nodes."]
           ],
           :component => [
-            ['list-components',"list-components","# List components."],
-            ['delete',"delete NAME/ID [-y] ","# Delete component from workspace."]
+            ['delete',"delete NAME/ID [-y] ","# Delete component from workspace."],
+            ['list-components',"list-components","# List components."]
           ],
           :utils => [
             ['get-netstats',"get-netstats","# Get netstats."],
             ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
-            ['tail',"tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."],
-            ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."]
+            ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."],
+            ['tail',"tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."]
           ]
         },
         :identifier_only => {
           :node      => [
-            ['create-component',"create-component COMPONENT-TEMPLATE-NAME/ID","# Add component to node. Default workflow order position is at the end."],
+            ['create-component',"create-component COMPONENT","# Add a component to the node."],
             ['info',"info","# Return info about node instance belonging to given workspace."],
             ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
             ['start', "start", "# Start node instance."],
@@ -110,13 +108,13 @@ module DTK::Client
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
-            ['list-component-links',"list-component-links","# List component's links to other components."],
-            ['link-components',"link-components ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."],
-            ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."],
-            # ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
-            #['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."],
             ['edit',"edit","# Edit component module related to given component."],
-            ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."]
+            ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."],
+            ['link-components',"link-components ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."],
+            ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."],
+            ['list-component-links',"list-component-links","# List component's links to other components."],
+            ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."]
+            # ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
           ],
           :attribute => [
             ['info',"info","# Return info about attribute instance belonging to given component."]
@@ -125,9 +123,14 @@ module DTK::Client
       }, [:utils])
     end
 
-    desc "WORKSPACE-NAME/ID cancel-task [TASK-ID]", "Cancels an executing task. If task id is omitted, this command cancels the most recent executing task."
+    desc "WORKSPACE-NAME/ID cancel-task [TASK-ID]", "Cancel an executing task. If task id is omitted, the most recent executing task is canceled."
     def cancel_task(context_params)
       cancel_task_aux(context_params)
+    end
+
+    desc "WORKSPACE-NAME/ID clear-tasks", "Clears the tasks that have been run already."
+    def clear_tasks(context_params)
+      clear_tasks_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID converge [-m COMMIT-MSG]", "Converges workspace instance."
@@ -139,13 +142,13 @@ module DTK::Client
       converge_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-module-updates MODULE-NAME [--force]", "Pushes changes made to component module in assembly to base component module"
+    desc "WORKSPACE-NAME/ID push-module-updates MODULE-NAME [--force]", "Push changes made to acomponent module in the workspace to its base component module."
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def push_module_updates(context_params)
       push_module_updates_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-assembly-updates SERVICE-NAME::ASSEMBLY-NAME", "Pushes workspace contents to the designated assembly."
+    desc "WORKSPACE-NAME/ID push-assembly-updates SERVICE-NAME::ASSEMBLY-NAME", "Push workspace instance to the designated assembly."
     def push_assembly_updates(context_params)
       workspace_id, qualified_assembly_name = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names) 
       if qualified_assembly_name =~ /(^[^:]*)::([^:]*$)/
@@ -159,7 +162,7 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "WORKSPACE-NAME/ID create-assembly SERVICE-NAME ASSEMBLY-NAME [-p]", "Creates a new assembly from the workspace contents in the designated service module."
+    desc "WORKSPACE-NAME/ID create-assembly SERVICE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
    # The option -p will purge the workspace after assembly creation." 
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def create_assembly(context_params)
@@ -175,19 +178,20 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create attribute and optionally assign it a value."
+    desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create a new attribute and optionally assign it a value."
     method_option :required, :type => :boolean, :default => false
     method_option :dynamic, :type => :boolean, :default => false
     def create_attribute(context_params)
       create_attribute_aux(context_params)
     end
 
-    desc "create-component COMPONENT-TEMPLATE-NAME", "Add component template to assembly node."
+    #only supported at node-level
+    desc "create-component NODE-NAME COMPONENT", "Add a component to a workspace."
     def create_component(context_params)
       create_component_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID create-node NODE-NAME NODE-TEMPLATE", "Add (stage) a new node to workspace"
+    desc "WORKSPACE-NAME/ID create-node NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the workspace."
     def create_node(context_params)
       response = create_node_aux(context_params)
       @@invalidate_map << :assembly_node
@@ -195,7 +199,7 @@ module DTK::Client
       return response
     end
 
-    desc "WORKSPACE-NAME/ID link-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]","#Link the target component to the source component."
+    desc "WORKSPACE-NAME/ID link-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]","Link the target component to the source component."
     def link_components(context_params)
       link_components_aux(context_params)
     end
@@ -206,17 +210,18 @@ module DTK::Client
       delete_aux(context_params)
     end
 
-    desc "delete-component COMPONENT-ID","Delete component from workspace"
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    desc "delete-component COMPONENT","Delete component from the workspace."
+    #desc "delete-component COMPONENT-ID [-y]","Delete component from workspace"
+    #method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
       response = delete_component_aux(context_params)
       return response unless response.ok?
-      @@invalidate_map << :assembly_node_component
 
+      @@invalidate_map << :assembly_node_component
       return response
     end
 
-    desc "WORKSPACE-NAME/ID delete-node NODE-NAME [-y]","Delete node, terminating it if the node has been spun up"
+    desc "WORKSPACE-NAME/ID delete-node NODE-NAME [-y]","Delete node, terminating it if the node has been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       response = delete_node_aux(context_params)
@@ -230,18 +235,14 @@ module DTK::Client
       unlink_components_aux(context_params)
     end
 
-    desc "COMPONENT-NAME/ID edit","Edit component module related to given component."
-    def edit(context_params)
-      component_edit_aux(context_params)
-    end
 
-    desc "COMPONENT-NAME/ID edit-dsl","Edit component module related to given component."
-    def edit_dsl(context_params)
-      context_params.forward_options( { :edit_dsl => true})
-      component_edit_aux(context_params)
-    end
+   # desc "COMPONENT-NAME/ID edit-dsl","Edit component module related to given component."
+   # def edit_dsl(context_params)
+   #   context_params.forward_options( { :edit_dsl => true})
+   #   component_edit_aux(context_params)
+   # end
 
-    desc "WORKSPACE-NAME/ID edit-module COMPONENT-MODULE-NAME", "Edit component module used by the workspace"
+    desc "WORKSPACE-NAME/ID edit-module MODULE-NAME", "Edit a component module used in the workspace."
     def edit_module(context_params)
       edit_module_aux(context_params)
     end
@@ -251,7 +252,7 @@ module DTK::Client
       edit_workflow_aux(context_params)
     end
 
-    desc "get-netstats [-y]", "Get netstats"
+    desc "get-netstats", "Get netstats"
     def get_netstats(context_params)
       get_netstats_aux(context_params)
     end
@@ -268,7 +269,7 @@ module DTK::Client
       grep_aux(context_params)
     end
     
-    desc "WORKSPACE-NAME/ID info", "Return info about workspace instance identified by name/id"
+    desc "WORKSPACE-NAME/ID info", "Get info about content of the workspace."
     def info(context_params)
       info_aux(context_params)
     end
@@ -278,15 +279,20 @@ module DTK::Client
       link_attributes_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-attributes","List attributes associated with workspace."
-    def list_attributes(context_params)
-      list_attributes_aux(context_params)
+    desc "WORKSPACE-NAME/ID link-components DEPENDENT-CMP-NAME ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."
+    def link_components(context_params)
+      link_components_aux(context_params)
     end
 
     #desc "WORKSPACE-NAME/ID list-attribute-mappings SERVICE-LINK-NAME/ID", "List attribute mappings associated with service link"
     #def list_attribute_mappings(context_params)
     #  list_attribute_mappings_aux(context_params)
     #end
+
+    desc "WORKSPACE-NAME/ID list-attributes","List attributes associated with workspace."
+    def list_attributes(context_params)
+      list_attributes_aux(context_params)
+    end
 
     desc "WORKSPACE-NAME/ID list-components","List components associated with workspace."
     def list_components(context_params)
@@ -308,14 +314,20 @@ module DTK::Client
       list_tasks_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID workflow-info", "Provides the structure of the assembly's workflow."
+    desc "WORKSPACE-NAME/ID workflow-info", "Get the structure of the workflow associated with workspace."
     def workflow_info(context_params)
       workflow_info_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-violations", "Finds violations in workspace that will prevent a converge operation."
+    desc "WORKSPACE-NAME/ID list-violations", "Finds violations in the workspace that will prevent a converge operation."
     def list_violations(context_params)
       list_violations_aux(context_params)
+    end
+
+    desc "WORKSPACE-NAME/ID promote-module-updates COMPONENT-MODULE-NAME [--force]", "Promotes changes made to component module in assembly to base component module"
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    def promote_module_updates(context_params)
+      promote_module_updates_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
@@ -337,7 +349,7 @@ module DTK::Client
     end
 
 #    desc "WORKSPACE-NAME/ID stop [NODE-ID-PATTERN]", "Stops all workspace's nodes, specific nodes can be selected via node id regex."
-    desc "WORKSPACE-NAME/ID stop [NODE-ID-PATTERN]", "Stops all the workspace's nodes. A single node can be selected."
+    desc "WORKSPACE-NAME/ID stop [NODE-NAME]", "Stops all the workspace's nodes. A single node can be selected."
     def stop(context_params)
       stop_aux(context_params)
     end
@@ -348,10 +360,20 @@ module DTK::Client
       tail_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID task-status [--wait]", "Task status of running or last workspace task"
+    desc "WORKSPACE-NAME/ID task-status [--wait]", "Get the task status of the running or last running workspace task."
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
       task_status_aw_aux(context_params)
+    end
+
+    desc "WORKSPACE-NAME/ID unlink-components SERVICE-LINK-ID", "Delete a service link"
+    def unlink_components(context_params)
+      unlink_components_aux(context_params)
+    end
+
+    desc "WORKSPACE-NAME/ID workflow-info", "Provides the structure of the assembly's workflow"
+    def workflow_info(context_params)
+      workflow_info_aux(context_params)
     end
 
   end
