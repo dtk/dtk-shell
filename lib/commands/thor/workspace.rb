@@ -127,12 +127,12 @@ module DTK::Client
       cancel_task_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID clear-tasks", "Clears the tasks that have been run already."
-    def clear_tasks(context_params)
-      clear_tasks_aux(context_params)
-    end
+    #desc "WORKSPACE-NAME/ID clear-tasks", "Clears the tasks that have been run already."
+    #def clear_tasks(context_params)
+    #  clear_tasks_aux(context_params)
+    #end
 
-    desc "WORKSPACE-NAME/ID converge [-m COMMIT-MSG]", "Converges workspace instance."
+    desc "WORKSPACE-NAME/ID converge [-m COMMIT-MSG]", "Converge workspace instance."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",

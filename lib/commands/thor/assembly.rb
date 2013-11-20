@@ -147,49 +147,28 @@ TODO: overlaps with different meaning
       cancel_task_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID clear-tasks", "Clears teh tasks that have been run already."
-    def clear_tasks(context_params)
-      clear_tasks_aux(context_params)
-    end
+    #desc "ASSEMBLY-NAME/ID clear-tasks", "Clears the tasks that have been run already."
+    #def clear_tasks(context_params)
+    #  clear_tasks_aux(context_params)
+    #end
 
-    desc "ASSEMBLY-NAME/ID promote-to-template SERVICE-MODULE-NAME ASSEMBLY-TEMPLATE-NAME", "Creates a new assembly template or updates existing one from assembly instance" 
-    def promote_to_template(context_params)        
-      assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id,
-        :service_module_name => service_module_name,
-        :assembly_template_name => assembly_template_name
-      }
-      response = post rest_url("assembly/promote_to_template"), post_body
-      # when changing context send request for getting latest assembly_templates instead of getting from cache
+    desc "ASSEMBLY-NAME/ID create-assembly SERVICE-NAME ASSEMBLY-NAME", "Create a new assembly from this assembly instance in the designated service module."
+    def create_assembly(context_params)
+      workspace_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:workspace_id!,:option_1!,:option_2!],method_argument_names)
+      response = promote_assembly_aux(:create,workspace_id,service_module_name,assembly_template_name)
+      return response unless response.ok?
+
       @@invalidate_map << :assembly_template
-
-      return response unless response.ok?()
-      #synchronize_clone will load new assembly template into service clone on workspace (if it exists)
-      commit_sha,workspace_branch = response.data(:module_name,:workspace_branch)
-      Helper(:git_repo).synchronize_clone(:service_module,service_module_name,commit_sha,:local_branch=>workspace_branch)
+      Response::Ok.new()
     end
     
-    desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance."
+    desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converge assembly instance."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message" 
     def converge(context_params)
       converge_aux(context_params)
-    end
-
-    desc "ASSEMBLY-NAME/ID create-component-dependency CMP-TEMPLATE-NAME/ID ANTECEDENT-CMP-TEMPLATE-NAME/ID", "Create dependency between component templates."
-    def create_component_dependency(context_params)
-      assembly_id,cmp_template_id,antec_cmp_template_id = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!],method_argument_names)
-
-      post_body = {
-        :assembly_id => assembly_id,
-        :component_template_id => cmp_template_id,
-        :antecedent_component_template_id => antec_cmp_template_id
-      }
-
-      post rest_url("assembly/create_component_dependency"), post_body
     end
 
     desc "ASSEMBLY-NAME/ID push-module-updates MODULE-NAME [--force]", "Push changes made to a component module in the assembly to its base component module."
@@ -250,18 +229,6 @@ TODO: will put in dot release and will rename to 'extend'
       response.render_table(:service_add_on)
     end
 =end
-
-    desc "ASSEMBLY-NAME/ID list-task-info", "Task status details of running or last assembly task"
-    def list_task_info(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-      #TODO: deprecate this method: list_task_info_aux("assembly", assembly_id)
-      post_body = {
-        :assembly_id => assembly_id,
-        :subtype     => 'instance'
-      }
-      response = post(rest_url("assembly/info_about_task"),post_body)
-      response
-    end
 
     desc "ASSEMBLY-NAME/ID task-status [--wait]", "Get the task status of the running or last running assembly task."
     method_option :wait, :type => :boolean, :default => false
@@ -390,54 +357,16 @@ TODO: will put in dot release and will rename to 'extend'
     #   post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
     #   post rest_url("assembly/list_attribute_mappings"), post_body
     # end
-=begin
-TODO: overlaps with different meaning
-    desc "ASSEMBLY-NAME/ID create-attribute SERVICE-LINK-NAME/ID DEP-ATTR ARROW BASE-ATTR", "Add an attribute mapping to a service link"
-    def create_attribute(context_params)
-      post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
-      base_attr,arrow,dep_attr = context_params.retrieve_arguments([:option_2!,:option_3!,:option_4!],method_argument_names)
-      post_body.merge!(:attribute_mapping => "#{base_attr} #{arrow} #{dep_attr}") #TODO: probably change to be hash
-      post rest_url("assembly/add_ad_hoc_attribute_mapping"), post_body
-    end
-=end
 
-    desc "ASSEMBLY-NAME/ID list-service-links","List service links"
-    def list_service_links(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id
-      }
-      data_type = :service_link
-      if context_params.is_last_command_eql_to?(:component)
-        component_id = context_params.retrieve_arguments([:component_id!],method_argument_names)
-        post_body.merge!(:component_id => component_id, :context => "component")
-        data_type = :service_link_from_component
-      end
-      response = post rest_url("assembly/list_service_links"), post_body
-      response.render_table(data_type)
-    end
-
-    desc "ASSEMBLY-NAME/ID list-connections","List connections between services on asssembly"
-    def list_connections(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-
-      post_body = {
-        :assembly_id => assembly_id,
-        :find_possible => true
-      }
-      response = post rest_url("assembly/list_connections"), post_body
-      response.render_table(:possible_service_connection)
-    end
-
-    desc "ASSEMBLY-NAME/ID list-smoketests","List smoketests on asssembly"
-    def list_smoketests(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-
-      post_body = {
-        :assembly_id => assembly_id
-      }
-      post rest_url("assembly/list_smoketests"), post_body
-    end
+    #desc "ASSEMBLY-NAME/ID list-smoketests","List smoketests on asssembly"
+    #def list_smoketests(context_params)
+    #  assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+    #
+    #  post_body = {
+    #    :assembly_id => assembly_id
+    #  }
+    #  post rest_url("assembly/list_smoketests"), post_body
+    #end
 
     desc "ASSEMBLY-NAME/ID info", "Get info about content of the assembly."
     def info(context_params)
@@ -491,36 +420,20 @@ TODO: overlaps with different meaning
       create_attribute_aux(context_params)
     end
 
-    # desc "ASSEMBLY-NAME/ID unset ATTRIBUTE-NAME/ID", "Unset assembly attribute values(s)"
-    # def unset(context_params)
-    #   if context_params.is_there_identifier?(:attribute)
-    #     mapping = [:assembly_id!,:attribute_id!]
-    #   else
-    #     mapping = [:assembly_id!,:option_1!]
-    #   end
-    #   assembly_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
-    #   post_body = {
-    #     :assembly_id => assembly_id,
-    #     :pattern => pattern,
-    #     :value => nil
-    #   }
-    #   post rest_url("assembly/set_attributes"), post_body
-    # end
-
-    desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID", "Add (stage) an assembly template to become part of this assembly instance"
-    method_option "auto-complete",:aliases => "-a" ,
-      :type => :boolean, 
-      :default=> false,
-      :desc => "Automatically add in connections"
-    def add_assembly(context_params)
-      assembly_id,assembly_template_id = context_params.retrieve_arguments([:assembly_id,:option_1!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id,
-        :assembly_template_id => assembly_template_id
-      }
-      post_body.merge!(:auto_add_connections => true) if options.auto_complete?
-      post rest_url("assembly/add_assembly_template"), post_body
-    end
+  #  desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID", "Add (stage) an assembly template to become part of this assembly instance"
+  #  method_option "auto-complete",:aliases => "-a" ,
+  #    :type => :boolean, 
+  #    :default=> false,
+  #    :desc => "Automatically add in connections"
+  #  def add_assembly(context_params)
+  #    assembly_id,assembly_template_id = context_params.retrieve_arguments([:assembly_id,:option_1!],method_argument_names)
+  #    post_body = {
+  #      :assembly_id => assembly_id,
+  #      :assembly_template_id => assembly_template_id
+  #    }
+  #    post_body.merge!(:auto_add_connections => true) if options.auto_complete?
+  #    post rest_url("assembly/add_assembly_template"), post_body
+  #  end
 
     desc "ASSEMBLY-NAME/ID create-node NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the assembly."
     def create_node(context_params)
