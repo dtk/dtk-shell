@@ -39,7 +39,7 @@ module DTK::Client
     end
 
     def self.valid_children()
-      [:node]
+      [:node, :utils]
     end
 
     # using extended_context when we want to use autocomplete from other context
@@ -52,6 +52,10 @@ module DTK::Client
     # this includes children of children
     def self.all_children()
       [:node, :component, :attribute]
+    end
+
+    def self.multi_context_children()
+      [[:utils],[:node, :utils]]
     end
 
     def self.valid_child?(name_of_sub_context)
@@ -72,41 +76,53 @@ module DTK::Client
     def self.override_allowed_methods()
       return DTK::Shell::OverrideTasks.new({
         :all => {
-          :node      => [
+          :node => [
             ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
-            ['list',"list [FILTER] [--list] ","# List nodes"],
             ['list-components',"list-components [FILTER] [--list] ","# List components associated with assembly's node."],
             ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with assembly's node."]
           ],
           :component => [
-            ['list',"list [FILTER] [--list] ","# List components."],
-            ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."],
-            ['list-service-links',"list-service-links","# List service links for component."],
-            ['create-service-link',"create-service-link SERVICE-TYPE DEPENDENT-CMP-NAME/ID","# Add service link to component."],
-            ['delete-service-link',"delete-service-link SERVICE-TYPE","# Delete service link on component."],
+            ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."]
 =begin
 TODO: overlaps with different meaning
             ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
 =end
-            ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."]
           ]
         },
         :command_only => {
           :attribute => [
-            ['list',"list [attributes] [FILTER] [--list] ","# List attributess."]
+            ['list-attributes',"list-attributes","# List attributes."]
+          ],
+          :node => [
+            ['delete-node',"delete [-y] ","# Delete node, terminating it if the node has been spun up."],
+            ['list-nodes',"list-nodes ","# List nodes."]
+          ],
+          :component => [
+            ['delete',"delete NAME/ID [-y] ","# Delete component from workspace."],
+            ['list-components',"list-components","# List components."]
+          ],
+          :utils => [
+            ['get-netstats',"get-netstats","# Get netstats."],
+            ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
+            ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."],
+            ['tail',"tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."]
           ]
         },
         :identifier_only => {
           :node      => [
-            ['info',"info","# Return info about node instance belonging to given assembly."],
-            ['get-netstats',"get-netstats","# Returns getnetstats for given node instance belonging to context assembly."],
-            ['get-ps', "get-ps [--filter PATTERN]", "# Returns a list of running processes for a given node instance belonging to context assembly."],
+            ['create-component',"create-component COMPONENT","# Add a component to the node."],
+            ['info',"info","# Return info about node instance belonging to given workspace."],
+            ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
             ['start', "start", "# Start node instance."],
             ['stop', "stop", "# Stop node instance."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
-            ['edit',"edit","# Edit component module related to given component."]
+            ['edit',"edit","# Edit component module related to given component."],
+            ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."],
+            ['link-components',"link-components ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."],
+            ['list-component-links',"list-component-links","# List component's links to other components."],
+            ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."]
           ],
           :attribute => [
             ['info',"info","# Return info about attribute instance belonging to given component."]
@@ -618,77 +634,7 @@ TODO: overlaps with different meaning
       grep_aux(context_params)
     end
 
-    no_tasks do
-      def assembly_start(assembly_id, node_pattern_filter)             
-        post_body = {
-          :assembly_id  => assembly_id,
-          :node_pattern => node_pattern_filter
-        }
-
-        # we expect action result ID
-        response = post rest_url("assembly/start"), post_body
-        raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
-        
-        task_id = response.data(:task_id)
-        post rest_url("task/execute"), "task_id" => task_id
-      end
-
-      # Will leave this commented until we check if this method above works properly
-      # def assembly_start(assembly_id, node_pattern_filter)             
-      #   post_body = {
-      #     :assembly_id  => assembly_id,
-      #     :node_pattern => node_pattern_filter
-      #   }
-
-      #   # we expect action result ID
-      #   response = post rest_url("assembly/start"), post_body
-      #   raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
-      #   # return response  if response.data(:errors)
-
-      #   action_result_id = response.data(:action_results_id)
-
-      #   # bigger number here due to possibilty of multiple nodes
-      #   # taking too much time to be ready
-      #   18.times do
-      #     action_body = {
-      #       :action_results_id => action_result_id,
-      #       :using_simple_queue      => true
-      #     }
-      #     response = post(rest_url("assembly/get_action_results"),action_body)
-
-      #     if response['errors']
-      #       return response
-      #     end
-
-      #     break unless response.data(:result).nil?
-
-      #     puts "Waiting for nodes to be ready ..."
-      #     sleep(10)
-      #   end
-
-      #   if response.data(:result).nil?
-      #     raise DTK::Client::DtkError, "Server seems to be taking too long to start node(s)."
-      #   end
-
-      #   task_id = response.data(:result)['task_id']
-      #   post(rest_url("task/execute"), "task_id" => task_id)
-      # end
-
-      def assembly_stop(assembly_id, node_pattern_filter)
-        post_body = {
-          :assembly_id => assembly_id,
-          :node_pattern => node_pattern_filter
-        }
-
-        response = post rest_url("assembly/stop"), post_body
-        raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
-
-        return response
-      end
-
-
-
-    end
+    
   end
 end
 

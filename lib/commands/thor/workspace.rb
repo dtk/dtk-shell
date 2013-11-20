@@ -111,7 +111,6 @@ module DTK::Client
             ['edit',"edit","# Edit component module related to given component."],
             ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."],
             ['link-components',"link-components ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."],
-            ['list-attribute-mappings',"list-attribute-mappings SERVICE-TYPE","# List attribute mappings assocaited with service link."],
             ['list-component-links',"list-component-links","# List component's links to other components."],
             ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."]
             # ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
@@ -277,11 +276,6 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID link-attributes TARGET-ATTR SOURCE-ATTR", "Link the value of the target attribute to the source attribute."
     def link_attributes(context_params)
       link_attributes_aux(context_params)
-    end
-
-    desc "WORKSPACE-NAME/ID link-components DEPENDENT-CMP-NAME ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."
-    def link_components(context_params)
-      link_components_aux(context_params)
     end
 
     #desc "WORKSPACE-NAME/ID list-attribute-mappings SERVICE-LINK-NAME/ID", "List attribute mappings associated with service link"

@@ -13,8 +13,8 @@ LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
 module DTK::Client
   module AssemblyWorkspaceMixin
     REQ_ASSEMBLY_OR_WS_ID = [:assembly_id!, :workspace_id!]
-    def get_name(assembly_id)
-      get_name_from_id_helper(assembly_id)
+    def get_name(assembly_or_worspace_id)
+      get_name_from_id_helper(assembly_or_worspace_id)
     end
 
     def start_aux(context_params)
@@ -467,7 +467,7 @@ module DTK::Client
 
     def delete_and_destroy(context_params)
       assembly_or_worspace_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      assembly_name = get_assembly_name(assembly_or_worspace_id)
+      assembly_name = get_name(assembly_or_worspace_id)
 
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
