@@ -111,8 +111,8 @@ module DTK::Client
             ['edit',"edit","# Edit component module related to given component."],
             ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."],
             ['link-components',"link-components ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."],
-            ['list-component-links',"list-component-links","# List component's links to other components."],
-            ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."]
+            ['list-component-links',"list-component-links","# List component's links to other components."]
+            #['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."]
             # ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
           ],
           :attribute => [
