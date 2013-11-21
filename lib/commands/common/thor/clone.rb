@@ -32,7 +32,7 @@ module DTK::Client
 
     def create_context_for_module(module_name, module_type)
       context_params_for_module = DTK::Shell::ContextParams.new
-      context_params_for_module.add_context_to_params("#{module_type}", "#{module_type}", module_name)
+      context_params_for_module.add_context_to_params("#{module_name}", "#{module_type}", module_name)
       return context_params_for_module
     end
   end

@@ -299,7 +299,7 @@ module DTK::Client
       end
 
       # we push clone changes anyway, user can change and push again
-      context_params.add_context_to_params("module", "module", module_id)
+      context_params.add_context_to_params("#{module_name}", "module", module_id)
       push_clone_changes(context_params, true)
     end
 
