@@ -613,7 +613,7 @@ module DTK::Client
 
       unless options.force?
         what = "component"
-        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{component_id}'"+'?')
+        return unless Console.confirmation_prompt("Are you sure you want to delete #{what} '#{component_id}'"+'?')
       end
 
       post_body = {
