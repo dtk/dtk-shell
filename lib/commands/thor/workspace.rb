@@ -229,7 +229,7 @@ module DTK::Client
       return response
     end
 
-    desc "WORKSPACE-NAME/ID unlink-components COMPONENT-LINK-ID", "Delete a component link."
+    desc "WORKSPACE-NAME/ID unlink-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]", "Remove a component link."
     def unlink_components(context_params)
       unlink_components_aux(context_params)
     end

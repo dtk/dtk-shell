@@ -481,7 +481,7 @@ TODO: will put in dot release and will rename to 'extend'
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID unlink-components COMPONENT-LINK-ID", "Delete a component link."
+    desc "ASSEMBLY-NAME/ID unlink-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]", "Remove a component link."
     def unlink_components(context_params)
       unlink_components_aux(context_params)
     end
