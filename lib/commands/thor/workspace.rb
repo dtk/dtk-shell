@@ -185,7 +185,8 @@ module DTK::Client
     end
 
     #only supported at node-level
-    desc "create-component NODE-NAME COMPONENT", "Add a component to a workspace."
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
+    desc "HIDE_FROM_BASE create-component NODE-NAME COMPONENT", "Add a component to a workspace."
     def create_component(context_params)
       create_component_aux(context_params)
     end
@@ -209,7 +210,8 @@ module DTK::Client
       delete_aux(context_params)
     end
 
-    desc "delete-component COMPONENT","Delete component from the workspace."
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
+    desc "HIDE_FROM_BASE delete-component COMPONENT","Delete component from the workspace."
     #desc "delete-component COMPONENT-ID [-y]","Delete component from workspace"
     #method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
