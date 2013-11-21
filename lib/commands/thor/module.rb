@@ -119,13 +119,13 @@ module DTK::Client
     version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
-    def delete(context_params)
+    def delete(context_params,method_opts={})
       module_location, modules_path = nil, nil
-      component_module_id, force_delete = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
+      component_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       version = options.version
       component_module_name = get_module_name(component_module_id)
 
-      unless (options.force? || force_delete)
+      unless (options.force? || method_opts[:force_delete])
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module #{version.nil? ? '' : 'version '}'#{component_module_name}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
       end
@@ -154,11 +154,12 @@ module DTK::Client
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :module_component
 
-      msg = "Component module '#{component_module_name}' "
-      if version then msg << "version #{version} has been deleted"
-      else  msg << "has been deleted"; end
-      OsUtil.print(msg,:yellow)
-
+      unless method_opts[:no_error_msg]
+        msg = "Component module '#{component_module_name}' "
+        if version then msg << "version #{version} has been deleted"
+        else  msg << "has been deleted"; end
+        OsUtil.print(msg,:yellow)
+      end
       Response::Ok.new()
     end
 
@@ -394,17 +395,12 @@ module DTK::Client
       # Reuse module create method to create module from local component_module
       create_response = import(context_params)
 
-      # If server response is not ok, delete cloned module, invoke delete method and notify user about cleanup process.
+      # If server response is not ok, delete cloned module, invoke delete method
       unless create_response.ok?
         FileUtils.rm_rf("#{response['data']['module_directory']}")
-        context_params.method_arguments << "force_delete"
-        delete(context_params)
-        create_response['errors'][0]['message'] += "\nModule '#{module_name}' data is deleted."
+        delete(context_params,:force_delete => true, :no_error_msg => true)
       end
-
-
-
-      return create_response
+      create_response
     end
 
 =begin 
