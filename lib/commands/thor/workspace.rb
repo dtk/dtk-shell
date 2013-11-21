@@ -251,18 +251,21 @@ module DTK::Client
       edit_workflow_aux(context_params)
     end
 
-    desc "get-netstats", "Get netstats"
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
+    desc "HIDE_FROM_BASE get-netstats", "Get netstats"
     def get_netstats(context_params)
       get_netstats_aux(context_params)
     end
 
-    desc "get-ps [--filter PATTERN]", "Get ps"
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
+    desc "HIDE_FROM_BASE get-ps [--filter PATTERN]", "Get ps"
     method_option :filter, :type => :boolean, :default => false, :aliases => '-f'
     def get_ps(context_params)
       get_ps_aux(context_params)
     end
 
-    desc "grep LOG-PATH NODES-ID-PATTERN GREP-PATTERN [--first]","Grep log from multiple nodes. --first option returns first match (latest log entry)."
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
+    desc "HIDE_FROM_BASE grep LOG-PATH NODES-ID-PATTERN GREP-PATTERN [--first]","Grep log from multiple nodes. --first option returns first match (latest log entry)."
     method_option :first, :type => :boolean, :default => false
     def grep(context_params)
       grep_aux(context_params)
@@ -348,7 +351,8 @@ module DTK::Client
       stop_aux(context_params)
     end
 
-    desc "tail NODES-IDENTIFIER LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
+    desc "HIDE_FROM_BASE tail NODES-IDENTIFIER LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
     method_option :more, :type => :boolean, :default => false
     def tail(context_params)
       tail_aux(context_params)

@@ -26,6 +26,7 @@ module DTK
       @@invalidate_map  = []
       TIME_DIFF         = 60   #second(s)
       EXTENDED_TIMEOUT  = 360  #second(s)
+      HIDE_FROM_BASE_CONTEXT = "HIDE_FROM_BASE"
 
       # thor command specific constants
       ALT_IDENTIFIER_SEPARATOR = ':::'
@@ -188,6 +189,7 @@ module DTK
         all_tasks().each do |task|
           # noralize task name with '-' since it will be displayed to user that way
           task_name = task[0].gsub('_','-')
+          usage     = task[1].usage
           # we will match those commands that require identifiers (NAME/ID)
           # e.g. ASSEMBLY-NAME/ID list ...   => MATCH
           # e.g. [ASSEMBLY-NAME/ID] list ... => MATCH
@@ -213,7 +215,10 @@ module DTK
           unless matched_alt_identifiers_data
             if matched_data.nil?
               # no match it means it is tier 1 task, tier 1 => dtk:\assembly>
-              cached_tasks[command_sym] << task_name
+              # using HIDE_FROM_BASE_CONTEXT to hide command from base context (e.g from dtk:/assembly>) ...
+              # ... but to be able to use that command in other context
+              # (e.g get-netstats removed from dtk:/assembly> but used in dtk:/assembly/assembly_id/utils)
+              cached_tasks[command_sym] << task_name unless usage.include?(HIDE_FROM_BASE_CONTEXT)
             else
               # match means it is tier 2 taks, tier 2 => dtk:\assembly\231312345>
               cached_tasks[command_id_sym] << task_name

@@ -3,6 +3,7 @@ class Thor
     # NOTE: Class is loaded automaticly in dtk-shell
 
     @@shell_context = nil
+    HIDE_FROM_BASE_CONTEXT_HELP = "HIDE_FROM_BASE"
 
     def set_context(context)
       @@shell_context = context
@@ -35,7 +36,9 @@ class Thor
     # Returns tasks ready to be printed.
     def printable_tasks(all = true, subcommand = false)
       (all ? all_tasks : tasks).map do |_, task|
-        next if task.hidden?
+        # using HIDE_FROM_BASE to hide command from base context help (e.g from dtk:/assembly>help) ...
+        # but show that command in other context help (e.g in dtk:/assembly/assembly_id/utils>help)
+        next if (task.hidden? || task.usage.include?(HIDE_FROM_BASE_CONTEXT_HELP))
         item = []
         item << banner(task, false, subcommand)
         item << (task.description ? "# #{task.description.gsub(/\s+/m,' ')}" : "")
