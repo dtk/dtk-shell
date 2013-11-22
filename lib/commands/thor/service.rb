@@ -445,7 +445,7 @@ module DTK::Client
       return response unless response.ok?
       repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
 
-      context_params.add_context_to_params("#{module_name}", "service", module_id)
+      context_params.add_context_to_params(module_name, "service", module_id)
       push_clone_changes(context_params,true)
     end
 
