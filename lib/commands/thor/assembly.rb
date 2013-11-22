@@ -171,6 +171,20 @@ TODO: overlaps with different meaning
       converge_aux(context_params)
     end
 
+    desc "ASSEMBLY-NAME/ID push-assembly-updates SERVICE-NAME/ASSEMBLY-NAME", "Push workspace instance to the designated assembly."
+    def push_assembly_updates(context_params)
+      assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names) 
+      if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
+        service_module_name, assembly_template_name = [$1,$2]
+      else
+        raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-NAME/ASSEMBLY-NAME"
+      end
+      response = promote_assembly_aux(:update,assembly_id, service_module_name, assembly_template_name)
+      return response unless response.ok?
+      @@invalidate_map << :assembly_template
+      Response::Ok.new()
+    end
+
     desc "ASSEMBLY-NAME/ID push-module-updates MODULE-NAME [--force]", "Push changes made to a component module in the assembly to its base component module."
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def push_module_updates(context_params)
@@ -447,24 +461,6 @@ TODO: will put in dot release and will rename to 'extend'
     def link_components(context_params)
       link_components_aux(context_params)
     end
-
-    # desc "ASSEMBLY-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
-    # method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    # def purge(context_params)
-    #   assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-    #   unless options.force?
-    #     return unless Console.confirmation_prompt("Are you sure you want to delete and destroy all nodes in the workspace"+'?')
-    #   end
-
-    #   #purge local clone
-    #   response = purge_clone_aux(:all,:assembly_module => {:assembly_name => 'workspace'})
-    #   return response unless response.ok?
-
-    #   post_body = {
-    #     :assembly_id => assembly_id
-    #   }
-    #   response = post(rest_url("assembly/purge"),post_body)
-    # end
 
     # only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
