@@ -174,6 +174,7 @@ module DTK::Client
       end
 
       @@invalidate_map << :assembly_template
+      @@invalidate_map << :service_module
       Response::Ok.new()
     end
 
