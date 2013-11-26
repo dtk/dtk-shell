@@ -127,13 +127,22 @@ def execute_shell_command(line, prompt)
       args << "/" if args.empty?      
       prompt = @context.change_context(args)
     elsif ('popc' == cmd)
-        args = []
         @context.dirs.shift()
         args << (@context.dirs.first.nil? ? '/' : @context.dirs.first)
-        prompt = change_context(args)
+        prompt = @context.change_context(args)
     elsif ('pushc' == cmd)
-        args << (@context.dirs[1] if args.empty?)
-        prompt = change_context(args,true)
+      if args.empty?
+        args << (@context.dirs[1].nil? ? '/' : @context.dirs[1])
+        @context.dirs.unshift(args.first)
+        @context.dirs.uniq!
+        prompt = @context.change_context(args)
+      else
+        prompt = @context.change_context(args)
+        # using regex to remove dtk: and > from path returned by change_context
+        # e.g transform dtk:/assembly/node> to /assembly/node
+        full_path = prompt.match(/[dtk:](\/.*)[>]/)[1]
+        @context.dirs.unshift(full_path)
+      end
     elsif ('dirs' == cmd)
       puts @context.dirs.inspect
     else
