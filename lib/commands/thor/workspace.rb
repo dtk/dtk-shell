@@ -205,7 +205,7 @@ module DTK::Client
       link_components_aux(context_params)
     end
 
-    desc "delete NAME/ID [-y]", ""
+    desc "HIDE_FROM_BASE delete NAME/ID [-y]", ""
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
       delete_aux(context_params)
