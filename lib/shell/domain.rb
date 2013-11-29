@@ -61,6 +61,10 @@ module DTK
         results = []
         errors  = []
 
+        # using context_name when have array as key_mapping [:assembly_id, :workspace_id]
+        # to determine which context is used
+        context_name = method_info.first.split('-').first if method_info
+
         mapping.each do |key_mapping|
 
           is_array = key_mapping.is_a?(Array)
@@ -92,11 +96,17 @@ module DTK
               key_mapping[1..-1].each do |alternative_key|
                 element = check_context_for_element(alternative_key)
                 break if element
+                if context_name
+                  if alternative_key.to_s.include?(context_name.downcase!)
+                    required = alternative_key.to_s.match(/.+!$/) 
+                    selected_key = alternative_key
+                  end
+                end 
               end
             end
 
             unless element
-              errors << "#{entity_name(key_mapping).upcase} ID/NAME" if required
+              errors << "#{entity_name(selected_key).upcase} ID/NAME" if required
             end
           end
 

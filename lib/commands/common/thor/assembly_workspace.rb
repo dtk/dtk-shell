@@ -969,8 +969,12 @@ module DTK::Client
     end
 
     def list_aux(context_params)
-      assembly_or_workspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([[:assembly_id, :workspace_id],:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
+      assembly_or_workspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([[:assembly_id!, :workspace_id],:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
       detail_to_include = nil
+
+      # if list method is called outside of dtk-shell and called for workspace context (dtk workspace list-nodes)
+      # without workspace identifier, we will set 'workspace' as identifier (dtk workspace workspace list-nodes)
+      assembly_or_workspace_id = 'workspace' if (context_params.is_last_command_eql_to?(:workspace) && assembly_or_workspace_id.nil?)
       
       if about
         case about
