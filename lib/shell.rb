@@ -147,14 +147,27 @@ def execute_shell_command(line, prompt)
       puts @context.dirs.inspect
     else
 
+      # get all next-context-candidates (e.g. for assembly get all assembly_names)
+      context_candidates = @context.get_ac_candidates_for_context(@context.active_context.last_context(), @context.active_context())
+      
+      # this part of the code is used for calling of nested commands from base context (dtk:/>assembly/assembly_id converge)
+      # base_command is used to check if first command from n-level is valid e.g. 
+      # (dtk:/>assembly/assembly_id converge - chech if 'assembly' exists in context_candidates)
+      # revert_context is used to return to context which command is called from after command is executed
+      base_command = cmd.split('/').first
+      revert_context = false
+
+      if context_candidates.include?(base_command)
+        @context.change_context([cmd])
+        cmd = args.shift
+        revert_context = true
+      end
+      
       # send monkey patch class information about context
       Thor.set_context(@context)
       
       # we get command and hash params, will return Validation error if command is not valid
       entity_name, method_name, context_params, thor_options = @context.get_command_parameters(cmd,args)
-         
-      # get all next-context-candidates (e.g. for assembly get all assembly_names)
-      context_candidates = @context.get_ac_candidates_for_context(@context.active_context.last_context(), @context.active_context())
 
       # check if command is executed from parent context (e.g assembly_name list-nodes)
       if context_candidates.include?(method_name)
@@ -179,6 +192,10 @@ def execute_shell_command(line, prompt)
 
       # check execution status, prints status to sttout
       DTK::Shell::StatusMonitor.check_status()
+
+      # after nested command called from base context is executed successfully, return to context which command is executed from
+      # this is the same as 'cd -' command is executed
+      prompt = @context.change_context(["-"]) if revert_context
     end
   rescue DTK::Client::DSLParsing => e
     DTK::Client::OsUtil.print(e.message, :red)
