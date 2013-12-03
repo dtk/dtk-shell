@@ -162,7 +162,12 @@ def execute_shell_command(line, prompt)
         cmd = args.shift
         revert_context = true
       end
-      
+
+      if cmd.nil?
+        prompt = @context.change_context(["-"]) if revert_context
+        raise DTK::Client::DtkValidationError, "You have to provide command after context name. Usage: CONTEXT-TYPE/CONTEXT-NAME COMMAND [ARG1] .. [ARG2]." 
+      end
+
       # send monkey patch class information about context
       Thor.set_context(@context)
       
