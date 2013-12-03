@@ -23,9 +23,8 @@ module DTK::Client
     end
 
     def self.validation_list(context_params)
-
       if context_params.is_there_identifier?(:module)
-        component_module_id = context_params.retrieve_arguments([:module_id!], [])
+        component_module_id = context_params.retrieve_arguments([:module_id!])
         res = get_cached_response(:component_template, "component_module/info_about", { :component_module_id => component_module_id, :about => :components})
       else
         get_cached_response(:component_template, "component/list", {:subtype => 'template'})

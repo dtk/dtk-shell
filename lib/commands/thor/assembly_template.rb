@@ -53,7 +53,7 @@ module DTK::Client
     # List assembly templates for specific module
     def self.validation_list(context_params)
       if context_params.is_there_identifier?(:service)
-        service_module_id = context_params.retrieve_arguments([:service_id!], [])
+        service_module_id = context_params.retrieve_arguments([:service_id!])
         get_cached_response(:assembly_template, "service_module/list_assemblies", { :service_module_id => service_module_id })
       else
         get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template' })
