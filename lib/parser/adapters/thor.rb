@@ -404,7 +404,8 @@ module DTK
         # returns names of the arguments, after the method name
         def method_argument_names
           name, usage = current_method_info
-          return usage.split(name.gsub(/_/,'-')).last.split(' ')
+          results = usage.split(name.gsub(/_/,'-')).last || ""
+          return results.split(' ')
         end 
 
         #TODO: can make more efficient by having rest call that returns name from id, rather than using 'list path'

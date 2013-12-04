@@ -57,13 +57,13 @@ module DTK
         return ((results.size == 1) ? results.first : results)
       end
 
-      def retrieve_arguments(mapping, method_info = nil)
+      def retrieve_arguments(mapping, method_info = [])
         results = []
         errors  = []
 
         # using context_name when have array as key_mapping [:assembly_id, :workspace_id]
         # to determine which context is used
-        context_name = method_info.first.split('-').first if method_info
+        context_name = method_info.first.split('-').first unless method_info.empty?
 
         mapping.each do |key_mapping|
 
@@ -79,7 +79,7 @@ module DTK
             id = matched[1].to_i - 1
             element = @method_arguments[id]
 
-            if method_info
+            unless method_info.empty?
               unless element
                 errors << method_info[id] if required
               end
