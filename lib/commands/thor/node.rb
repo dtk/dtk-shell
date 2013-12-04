@@ -15,6 +15,10 @@ module DTK::Client
       [:component, :utils]
     end
 
+    def self.multi_context_children()
+      [:utils]
+    end
+
     # using extended_context when we want to use autocomplete from other context
     # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
     # component-templates to autocomplete
@@ -45,6 +49,17 @@ module DTK::Client
       end
 
       return response
+    end
+
+    def self.override_allowed_methods()
+      return DTK::Shell::OverrideTasks.new({
+        :command_only => {
+          :utils => [
+            ['get-netstats',"get-netstats","# Get netstats."],
+            ['get-ps',"get-ps [--filter PATTERN]","# Get ps."]
+          ]
+        }
+      })
     end
     
     desc "NODE-NAME/ID info","Info about node"
@@ -242,7 +257,7 @@ module DTK::Client
       node_stop(node_id)
     end
 
-    desc "NODE-NAME/ID get-netstats", "Get netstats"
+    desc "HIDE_FROM_BASE get-netstats", "Get netstats"
     def get_netstats(context_params)
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
 
@@ -282,7 +297,7 @@ module DTK::Client
     GETNETSTATSTRIES = 6
     GETNETSTATSSLEEP = 0.5
 
-    desc "NODE-NAME/ID get-ps [FILTER]", "Get ps"
+    desc "HIDE_FROM_BASE get-ps [FILTER]", "Get ps"
     def get_ps(context_params)
       node_id, filter_pattern = context_params.retrieve_arguments([:node_id!, :option_1],method_argument_names)
 
