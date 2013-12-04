@@ -2,6 +2,7 @@ require 'thor'
 require 'thor/group'
 require 'readline'
 require 'colorize'
+require 'digest/sha1'
 
 dtk_require("../../shell/interactive_wizard")
 dtk_require("../../util/os_util")
@@ -99,12 +100,19 @@ module DTK
       # we take current timestamp and compare it to timestamp stored in @@cached_response
       # if difference is greater than TIME_DIFF we send request again, if not we use
       # response from cache
-      def self.get_cached_response(entity_name, url, subtype=nil)
+      def self.get_cached_response(entity_name, url, subtype={})
+        subtype ||= {}
         current_ts = Time.now.to_i
+        cache_id = (subtype.empty? ? :response : generate_cached_id(subtype))
+      
         # if @@cache_response is empty return true if not than return time difference between
         # current_ts and ts stored in cache
-        time_difference = @@cached_response[entity_name].nil? ? true : ((current_ts - @@cached_response[entity_name][:ts]) > TIME_DIFF)         
+        time_difference = @@cached_response[entity_name].nil? ? true : ((current_ts - @@cached_response[entity_name][:ts]) > TIME_DIFF) 
 
+        if (@@cached_response[entity_name])
+          time_difference = true if @@cached_response[entity_name][cache_id].nil?
+        end
+        
         if (time_difference || @@invalidate_map.include?(entity_name))
           response = post rest_url(url), subtype
 
@@ -114,15 +122,33 @@ module DTK
             return response
           end
 
-          @@invalidate_map.delete(entity_name) if (@@invalidate_map.include?(entity_name) && response.ok?)                 
-          @@cached_response.store(entity_name, {:response => response, :ts => current_ts}) if response.ok?
+          if response.ok?
+            response_hash = {cache_id => response, :ts => current_ts}
+
+            @@invalidate_map.delete(entity_name) if @@invalidate_map.include?(entity_name)
+
+            if @@cached_response[entity_name]
+              @@cached_response[entity_name].merge!(response_hash)
+            else
+              @@cached_response.store(entity_name, response_hash)
+            end
+          end
         end
-        
+
         if @@cached_response[entity_name]
-          return @@cached_response[entity_name][:response]
+          return @@cached_response[entity_name][cache_id]
         else
           return nil
         end
+      end
+
+      def self.generate_cached_id(subtype)
+        values = ''
+        subtype.sort.map do |key,value|
+          values += value.to_s
+        end  
+        
+        Digest::SHA1.hexdigest(values)
       end
 
       def self.create_context_arguments(params)
