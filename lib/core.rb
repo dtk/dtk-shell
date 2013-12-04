@@ -373,10 +373,10 @@ module DTK
       end
 
       def get_raw(url)
-        RestClientWrapper.get_raw(url,DefaultRestOpts.merge(:cookies => @cookies))
+        RestClientWrapper.get_raw(url, {}, DefaultRestOpts.merge(:cookies => @cookies))
       end
       def post_raw(url,body,params={})
-        RestClientWrapper.post_raw(url,body,DefaultRestOpts.merge(:cookies => @cookies).merge(params))
+        RestClientWrapper.post_raw(url, body, DefaultRestOpts.merge(:cookies => @cookies).merge(params))
       end
 
       def json_parse_if_needed(item)
