@@ -75,7 +75,7 @@ module DTK::Client
     desc "list","List components that are on the node instance."
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
-      node_id, about = context_params.retrieve_arguments([:node_id,:option_1],method_argument_names||="")
+      node_id, about = context_params.retrieve_arguments([:node_id,:option_1],method_argument_names)
       
       if node_id.nil?
         response = post rest_url("node/list")
@@ -131,7 +131,11 @@ module DTK::Client
       }
       post_body.merge!(:version => options[:version]) if options[:version]
 
-      post rest_url("node/add_component"), post_body
+      response = post rest_url("node/add_component"), post_body
+      return response unless response.ok?
+
+      @@invalidate_map << :node
+      return response
     end
 
     desc "NODE-NAME/ID delete-component COMPONENT-ID", "Delete component from node"

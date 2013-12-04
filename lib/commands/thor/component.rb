@@ -11,9 +11,8 @@ module DTK::Client
     end
 
     def self.validation_list(context_params)
-
-      assembly_or_worspace_id, node_id, node_name = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!], :node_id!, :node_name!])
-
+      assembly_or_worspace_id, node_id, node_name = context_params.retrieve_arguments([[:assembly_id, :workspace_id], :node_id!, :node_name!])
+      
       post_body = {
         :assembly_id => assembly_or_worspace_id,
         :node_id     => node_id,
@@ -22,7 +21,11 @@ module DTK::Client
         :filter      => nil
       }
 
-      response = get_cached_response(:assembly_node_component, "assembly/info_about", post_body)
+      if assembly_or_worspace_id
+        response = get_cached_response(:assembly_node_component, "assembly/info_about", post_body)
+      else
+        response = get_cached_response(:node_component, "node/info_about", post_body)
+      end
       
       modified_response = response.clone_me()
       modified_response['data'].each { |e| e['display_name'] = e['display_name'].split('/').last }
