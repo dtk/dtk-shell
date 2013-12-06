@@ -201,8 +201,7 @@ module DTK::Client
         :assembly_id => assembly_or_workspace_id,
         :subtype     => 'instance'
       }
-      response = post(rest_url("assembly/info_about_task"),post_body)
-      response
+      post(rest_url("assembly/info_about_task"),post_body)
     end
 
     def task_status_aw_aux(context_params)
@@ -971,7 +970,8 @@ module DTK::Client
     def list_aux(context_params)
       assembly_or_workspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([[:assembly_id!, :workspace_id],:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
       detail_to_include = nil
-
+      format = nil
+      post_options = Hash.new
       # if list method is called outside of dtk-shell and called for workspace context (dtk workspace list-nodes)
       # without workspace identifier, we will set 'workspace' as identifier (dtk workspace workspace list-nodes)
       assembly_or_workspace_id = 'workspace' if (context_params.is_last_command_eql_to?(:workspace) && assembly_or_workspace_id.nil?)
@@ -985,7 +985,11 @@ module DTK::Client
             detail_to_include = [:component_dependencies]
           when "attributes"
             data_type = :attribute
-            detail_to_include = [:attribute_links]
+            if format = options.format
+              post_options.merge!(:format => format)
+            else
+              detail_to_include = [:attribute_links]
+            end
           when "tasks"
             data_type = :task
           else
@@ -998,7 +1002,7 @@ module DTK::Client
         :node_id => node_id,
         :component_id => component_id,
         :subtype     => 'instance'
-      }
+      }.merge(post_options)
       post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
       rest_endpoint = "assembly/info_about"
 
@@ -1031,9 +1035,10 @@ module DTK::Client
       response = post rest_url(rest_endpoint), post_body
 
       # set render view to be used
-      response.render_table(data_type)
-
-      return response
+      unless format
+        response.render_table(data_type)
+      end
+      response
     end
 
     def clear_tasks_aux(context_params)
