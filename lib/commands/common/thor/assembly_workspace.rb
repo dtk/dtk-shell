@@ -526,7 +526,9 @@ module DTK::Client
       post_body.merge!(:value => value) if value
       post_body.merge!(:required => true) if options.required?
       post_body.merge!(:dynamic => true) if options.dynamic?
-
+      if datatype = options.type
+        post_body.merge!(:datatype => datatype)
+      end
       post rest_url("assembly/set_attributes"), post_body
     end
 

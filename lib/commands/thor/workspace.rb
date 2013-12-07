@@ -178,9 +178,10 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create a new attribute and optionally assign it a value."
+    desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--type DATATYPE] [--required] [--dynamic]", "Create a new attribute and optionally assign it a value."
     method_option :required, :type => :boolean, :default => false
     method_option :dynamic, :type => :boolean, :default => false
+    method_option :type, :aliases => "-t"
     def create_attribute(context_params)
       create_attribute_aux(context_params)
     end
