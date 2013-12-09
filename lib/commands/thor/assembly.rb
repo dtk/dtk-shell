@@ -282,7 +282,8 @@ TODO: will put in dot release and will rename to 'extend'
       list_components_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-attributes","List attributes associated with assembly."
+    desc "ASSEMBLY-NAME/ID list-attributes [-f FORMAT]","List attributes associated with assembly."
+    method_option "format",:aliases => "-f" 
     def list_attributes(context_params)
       list_attributes_aux(context_params)
     end
@@ -428,9 +429,10 @@ TODO: will put in dot release and will rename to 'extend'
       set_attribute_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create a new attribute and optionally assign it a value."
+    desc "ASSEMBLY-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--type DATATYPE] [--required] [--dynamic]", "Create a new attribute and optionally assign it a value."
     method_option :required, :type => :boolean, :default => false
     method_option :dynamic, :type => :boolean, :default => false
+    method_option "type",:aliases => "-t"
     def create_attribute(context_params)
       create_attribute_aux(context_params)
     end

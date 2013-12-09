@@ -178,9 +178,10 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--required] [--dynamic]", "Create a new attribute and optionally assign it a value."
+    desc "WORKSPACE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--type DATATYPE] [--required] [--dynamic]", "Create a new attribute and optionally assign it a value."
     method_option :required, :type => :boolean, :default => false
     method_option :dynamic, :type => :boolean, :default => false
+    method_option :type, :aliases => "-t"
     def create_attribute(context_params)
       create_attribute_aux(context_params)
     end
@@ -289,7 +290,8 @@ module DTK::Client
     #  list_attribute_mappings_aux(context_params)
     #end
 
-    desc "WORKSPACE-NAME/ID list-attributes","List attributes associated with workspace."
+    desc "WORKSPACE-NAME/ID list-attributes [-f FORMAT]","List attributes associated with workspace."
+    method_option "format",:aliases => "-f" 
     def list_attributes(context_params)
       list_attributes_aux(context_params)
     end
