@@ -180,6 +180,7 @@ def execute_shell_command(line, prompt)
         method_name = context_params.method_arguments.shift if context_params.method_arguments.size > 0
       else        
         unless @context.method_valid?(method_name)
+          prompt = @context.change_context(["-"]) if revert_context
           raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
         end
       end
