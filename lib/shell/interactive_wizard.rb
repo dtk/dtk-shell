@@ -128,7 +128,7 @@ module DTK
                 "#{param_info['display_name']} (#{param_info['description']})"
               end
 
-            string_identifier = DTK::Client::OsUtil.colorize(description, :green) + DTK::Client::OsUtil.colorize(" [#{param_info['datatype'].upcase}]", :yellow)
+            string_identifier = DTK::Client::OsUtil.colorize(description, :green) + DTK::Client::OsUtil.colorize(" [#{param_info['name'].upcase}]", :yellow)
 
             puts "Please enter #{string_identifier}:"
             while line = Readline.readline(": ", true)
