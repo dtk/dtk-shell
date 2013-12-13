@@ -407,7 +407,7 @@ module DTK::Client
           match = response.data["match"]
           inconsistent = response.data["inconsistent"]
           possibly_missing = response.data["possibly_missing"]
-          DTK::Client::OsUtil.print("There are some incosistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
+          DTK::Client::OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
           DTK::Client::OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
         end
       else create_response.ok?

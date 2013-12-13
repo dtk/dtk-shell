@@ -78,8 +78,8 @@ module DTK::Client
         :all => {
           :node => [
             ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
-            ['list-components',"list-components [FILTER] [--list] ","# List components associated with assembly's node."],
-            ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with assembly's node."]
+            ['list-components',"list-components","# List components associated with assembly's node."],
+            ['list-attributes',"list-attributes","# List attributes associated with assembly's node."]
           ],
           :component => [
             ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."]
