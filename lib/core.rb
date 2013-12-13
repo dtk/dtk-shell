@@ -96,7 +96,7 @@ def check_direct_access(params)
   # response = DTK::Client::Account.add_access(params[:ssh_key_path])
   response = DTK::Client::Account.add_key(params[:ssh_key_path])
   
-  unless response.ok?
+  if response.nil? || !response.ok?
     DTK::Client::OsUtil.print("We were not able to add direct access for current user. In order to properly use dtk-shell you will have to add access manually ('dtk account add-ssh-key').\n", :yellow) 
     return
   end
