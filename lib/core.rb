@@ -329,7 +329,7 @@ module DTK
         printf "%15s %s\n", "REST endpoint:", rest_url
         creds = get_credentials
         printf "%15s %s\n", "Username:", "#{creds[:username]}"
-        printf "%15s %s\n", "Password:", "#{creds[:password]}"
+        printf "%15s %s\n", "Password:", "#{creds[:password] ? creds[:password].gsub(/./,'*') : 'No password set'}"
         puts   "==================================================================="
       end
 
