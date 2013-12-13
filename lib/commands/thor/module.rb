@@ -260,6 +260,7 @@ module DTK::Client
     desc "import MODULE-NAME", "Create new module from local clone"
     def import(context_params)
       module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      git_import = context_params.get_forwarded_options()[:git_import] if context_params.get_forwarded_options()
       
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
       response = Helper(:git_repo).check_local_dir_exists_with_content(:component_module,module_name)
@@ -300,7 +301,10 @@ module DTK::Client
 
       # we push clone changes anyway, user can change and push again
       context_params.add_context_to_params(module_name, "module", module_id)
-      push_clone_changes(context_params, true)
+      resp = push_clone_changes(context_params, true)
+      resp[:module_id] = module_id if git_import 
+
+      return resp
     end
 
     desc "MODULE-NAME/ID reparse [-v VERSION]", "Check module for syntax errors in json/yaml files."
@@ -392,11 +396,22 @@ module DTK::Client
       # Remove .git directory to rid of git pointing to user's github
       FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
       
+      context_params.forward_options({:git_import => true})
       # Reuse module create method to create module from local component_module
       create_response = import(context_params)
-
-      # If server response is not ok, delete cloned module, invoke delete method
-      unless create_response.ok?
+      
+      if create_response.ok?
+        module_id = create_response[:module_id]
+        response = post rest_url("component_module/update_from_git_modulefile"), {:component_module_id => module_id}
+        if response.ok?
+          match = response.data["match"]
+          inconsistent = response.data["inconsistent"]
+          possibly_missing = response.data["possibly_missing"]
+          DTK::Client::OsUtil.print("There are some incosistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
+          DTK::Client::OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
+        end
+      else create_response.ok?
+        # If server response is not ok, delete cloned module, invoke delete method
         FileUtils.rm_rf("#{response['data']['module_directory']}")
         delete(context_params,:force_delete => true, :no_error_msg => true)
       end
