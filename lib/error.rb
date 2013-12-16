@@ -46,6 +46,10 @@ module DTK
       end
       attr_reader :backtrace
     end
+
+    class DtkLoginRequiredError < Error
+    end
+
   end
 end
 

@@ -13,7 +13,18 @@ dtk_require_from_base('domain/response')
 dtk_require_from_base('util/os_util')
 dtk_require("config/configuration")
 
-def top_level_execute(entity_name, method_name, context_params=nil,options_args=nil,shell_execute=false)
+def top_level_execute(entity_name, method_name, context_params=nil, options_args=nil, shell_execute=false)
+  begin
+    top_level_execute_core(entity_name, method_name, context_params, options_args, shell_execute)
+  rescue DTK::Client::DtkLoginRequiredError
+    # re-loging user and repeating request
+    DTK::Client::OsUtil.print("Session expired, re-loging ...", :yellow)
+    DTK::Client::Session.re_initialize()
+    top_level_execute_core(entity_name, method_name, context_params, options_args, shell_execute)
+  end
+end
+
+def top_level_execute_core(entity_name, method_name, context_params=nil, options_args=nil, shell_execute=false)
   extend DTK::Client::OsUtil
 
   entity_class = nil
@@ -53,6 +64,9 @@ def top_level_execute(entity_name, method_name, context_params=nil,options_args=
         end
       end
     end
+  rescue DTK::Client::DtkLoginRequiredError => e
+    # this error is handled in method above
+    raise e
   rescue DTK::Client::DSLParsing => e
     DTK::Client::OsUtil.print(e.message, :red)
   rescue DTK::Client::DtkValidationError => e
@@ -134,10 +148,12 @@ module DTK
             # if error_internal.first == true
             if error_code == "unauthorized"
               raise DTK::Client::DtkError, "[UNAUTHORIZED] Your session has been suspended, please log in again."
+            elsif error_code == "session_timeout"
+              raise DTK::Client::DtkError, "[SESSION TIMEOUT] Your session has been suspended, please log in again."
             elsif error_code == "broken"
               raise DTK::Client::DtkError, "[BROKEN] Unable to connect to the DTK server at host: #{Config[:server_host]}"
             elsif error_code == "forbidden"
-              raise DTK::Client::DtkError, "[FORBIDDEN] Access not granted, please log in again."
+              raise DTK::Client::DtkLoginRequiredError, "[FORBIDDEN] Access not granted, please log in again."
             elsif error_code == "timeout"
               raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
             elsif error_code == "connection_refused"
@@ -235,7 +251,7 @@ module DTK
     class Session
       include Singleton
 
-      attr_reader :conn
+      attr_accessor :conn
 
       def initialize()
         @conn = DTK::Client::Conn.new()
@@ -243,6 +259,11 @@ module DTK
 
       def self.get_connection()
         Session.instance.conn
+      end
+
+      def self.re_initialize()
+        Session.instance.conn = nil
+        Session.instance.conn = DTK::Client::Conn.new()
       end
 
       def self.logout()
