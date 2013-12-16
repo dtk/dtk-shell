@@ -285,7 +285,7 @@ module DTK::Client
       }
       response = post(rest_url("component_module/update_from_initial_create"),post_body)
       return response unless response.ok?
-
+      external_dependencies = response.data(:external_dependencies)
       if error = response.data(:dsl_parsed_info)
         dsl_parsed_message = ServiceImporter.error_message(module_name, error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
@@ -301,10 +301,14 @@ module DTK::Client
 
       # we push clone changes anyway, user can change and push again
       context_params.add_context_to_params(module_name, "module", module_id)
-      resp = push_clone_changes(context_params, true)
-      resp[:module_id] = module_id if git_import 
-
-      return resp
+      response = push_clone_changes(context_params, true)
+      if git_import 
+        response[:module_id] = module_id
+      end
+      if external_dependencies
+        response.add_data_value!(:external_dependencies,external_dependencies)
+      end
+      response
     end
 
     desc "MODULE-NAME/ID reparse [-v VERSION]", "Check module for syntax errors in json/yaml files."
@@ -399,9 +403,8 @@ module DTK::Client
       context_params.forward_options({:git_import => true})
       # Reuse module create method to create module from local component_module
       create_response = import(context_params)
-      
       if create_response.ok?
-        if external_dependencies = response.data(:external_dependencies)
+        if external_dependencies = create_response.data(:external_dependencies)
           inconsistent = external_dependencies["inconsistent"]
           possibly_missing = external_dependencies["possibly_missing"]
           OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
