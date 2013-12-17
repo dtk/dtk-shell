@@ -59,7 +59,8 @@ module DTK::Client
 
         if is_install_dependencies
           needed_modules.each do |m|
-            print "Cloning component module '#{m['formated_name']}' from server ... "
+            formated_name = m['formated_name']
+            print "Cloning component module '#{formated_name}' from server ... "
             thor_options = {}
             thor_options["version"] = m['version']
             thor_options["skip_edit"] = true
