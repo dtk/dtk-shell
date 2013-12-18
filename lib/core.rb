@@ -17,8 +17,8 @@ def top_level_execute(entity_name, method_name, context_params=nil, options_args
   begin
     top_level_execute_core(entity_name, method_name, context_params, options_args, shell_execute)
   rescue DTK::Client::DtkLoginRequiredError
-    # re-loging user and repeating request
-    DTK::Client::OsUtil.print("Session expired, re-loging ...", :yellow)
+    # re-logging user and repeating request
+    DTK::Client::OsUtil.print("Session expired; re-establishing session", :yellow)
     DTK::Client::Session.re_initialize()
     top_level_execute_core(entity_name, method_name, context_params, options_args, shell_execute)
   end
