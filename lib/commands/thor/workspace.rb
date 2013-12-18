@@ -71,9 +71,9 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :all => {
           :node      => [
-            ['delete-component',"delete-component COMPONENT-ID [-y]","# Delete component from assembly's node"],
-            ['list-attributes',"list-attributes","# List attributes associated with workspace's node."],
-            ['list-components',"list-components","# List components associated with workspace's node."]
+            # ['delete-component',"delete-component COMPONENT-ID [-y]","# Delete component from assembly's node"],
+            # ['list-attributes',"list-attributes","# List attributes associated with workspace's node."],
+            # ['list-components',"list-components","# List components associated with workspace's node."]
           ],
           :component => [
             ['list-attributes',"list-attributes","# List attributes associated with given component."]
@@ -84,11 +84,12 @@ module DTK::Client
             ['list-attributes',"list-attributes","# List attributes."]
           ],
           :node => [
-            ['delete-node',"delete [-y] ","# Delete node, terminating it if the node has been spun up."],
-            ['list-nodes',"list-nodes ","# List nodes."]
+            # ['delete',"delete NAME/ID [-y] ","# Delete component from workspace."],
+            ['delete',"delete NODE-NAME/ID [-y] ","# Delete node, terminating it if the node has been spun up."],
+            ['list',"list","# List nodes."]
           ],
           :component => [
-            ['delete',"delete NAME/ID [-y] ","# Delete component from workspace."],
+            ['delete',"delete COMPONENT-NAME/ID [-y] ","# Delete component from workspace."],
             ['list-components',"list-components","# List components."]
           ],
           :utils => [
@@ -101,8 +102,11 @@ module DTK::Client
         :identifier_only => {
           :node      => [
             ['create-component',"create-component COMPONENT","# Add a component to the node."],
+            ['delete-component',"delete-component COMPONENT-ID [-y]","# Delete component from assembly's node"],
             ['info',"info","# Return info about node instance belonging to given workspace."],
-            ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
+            # ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
+            ['list-attributes',"list-attributes","# List attributes associated with workspace's node."],
+            ['list-components',"list-components","# List components associated with workspace's node."],
             ['start', "start", "# Start node instance."],
             ['stop', "stop", "# Stop node instance."]
           ],
@@ -193,7 +197,8 @@ module DTK::Client
       create_component_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID create-node NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the workspace."
+    # using ^^ before NODE-NAME to remove this command from workspace/node/node_id but show in workspace
+    desc "WORKSPACE-NAME/ID create-node ^^NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the workspace."
     def create_node(context_params)
       response = create_node_aux(context_params)
       @@invalidate_map << :assembly_node
@@ -206,10 +211,22 @@ module DTK::Client
       link_components_aux(context_params)
     end
 
-    desc "HIDE_FROM_BASE delete NAME/ID [-y]", ""
+    desc "delete NAME/ID [-y]", ""
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
-      delete_aux(context_params)
+      if context_params.is_last_command_eql_to?(:node)
+        response = delete_node_aux(context_params)
+        @@invalidate_map << :assembly_node
+
+        response
+      elsif context_params.is_last_command_eql_to?(:component)
+        response = delete_component_aux(context_params)
+        return response unless response.ok?
+        @@invalidate_map << :assembly_node_component
+        
+        response
+      end
+      # delete_aux(context_params)
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
@@ -224,7 +241,8 @@ module DTK::Client
       return response
     end
 
-    desc "WORKSPACE-NAME/ID delete-node NODE-NAME [-y]","Delete node, terminating it if the node has been spun up."
+    # using ^^ before NODE-NAME to remove this command from workspace/node/node_id but show in workspace
+    desc "WORKSPACE-NAME/ID delete-node ^^NODE-NAME [-y]","Delete node, terminating it if the node has been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       response = delete_node_aux(context_params)
@@ -289,6 +307,13 @@ module DTK::Client
     #def list_attribute_mappings(context_params)
     #  list_attribute_mappings_aux(context_params)
     #end
+
+    desc "list", ""
+    def list(context_params)
+      if context_params.is_last_command_eql_to?(:node)
+        list_nodes_aux(context_params)
+      end
+    end
 
     desc "WORKSPACE-NAME/ID list-attributes [-f FORMAT]","List attributes associated with workspace."
     method_option :format,:aliases => '-f' 

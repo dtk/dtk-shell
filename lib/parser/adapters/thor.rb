@@ -263,7 +263,7 @@ module DTK
                 child_id_sym = (command.downcase + '_' + current_children.join('_') + '_wid').to_sym
 
                 # n-context matching
-                matched_data = task[1].usage.match(/\[?#{c.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
+                matched_data = task[1].usage.match(/^\[?#{c.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
                 if matched_data
                   cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << task_name 
                 end
