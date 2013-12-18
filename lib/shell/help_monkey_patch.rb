@@ -10,7 +10,7 @@ class Thor
     end
 
     def match_help_item_changes(help_item, entity_name)
-      help_item.first.match(/\[?#{entity_name.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
+      help_item.first.match(/^\[?#{entity_name.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
     end
 
     def replace_if_matched!(help_item, matched)
@@ -38,7 +38,7 @@ class Thor
       (all ? all_tasks : tasks).map do |_, task|
         # using HIDE_FROM_BASE to hide command from base context help (e.g from dtk:/assembly>help) ...
         # but show that command in other context help (e.g in dtk:/assembly/assembly_id/utils>help)
-        next if (task.hidden? || task.usage.include?(HIDE_FROM_BASE_CONTEXT_HELP))
+        next if (task.hidden? || (task.usage.include?(HIDE_FROM_BASE_CONTEXT_HELP) && !@@shell_context.active_context.is_n_context? ))
         item = []
         item << banner(task, false, subcommand)
         item << (task.description ? "# #{task.description.gsub(/\s+/m,' ')}" : "")
@@ -102,6 +102,7 @@ class Thor
           if (!@@shell_context.active_context.is_n_context? || @@shell_context.active_context.current_identifier?)
 
             list.each do |help_item|
+              help_item.first.gsub!("^^", '') if help_item.first.include?("^^")
               
               # this will match entity_name (command) and alternative identifiers  
               identifers = [command] + alt_identifiers

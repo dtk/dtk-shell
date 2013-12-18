@@ -53,25 +53,52 @@ module DTK
         end
       end
 
+      def get_label_for_column_name(column, type)
+        mappings = {
+          "#{type}_id:" => "ID:", 
+          "#{type}_name:" => "NAME:", 
+          "node_type:" => "TYPE:", 
+          "instance_id:" => "INSTANCE ID:",
+          "size:" => "SIZE:",
+          "os_type:" => "OS:",
+          "op_status:" => "OP STATUS:",
+          "dns_name:" => "DNS NAME:"
+        }
+        if mappings[column]
+          mappings[column]
+        else
+          column.upcase
+        end
+      end
+
       # used just for printing workspace node info
       def render_workspace_node_info(type)
         info_list = ""
         if type.eql?("component")
           info_list = ["component_name","component_id","basic_type","description"]
         else
-          info_list = ["node_name","os_type","op_status","size","target"]
+          info_list = ["node_id", "node_name","os_type", "instance_id", "op_status", "size", "target", "dns_name"]
         end
 
+        columns = []
         puts "--- \n"
         if data.kind_of?(String)
           data.each_line do |l|
             print = "#{l.gsub(/\s+\-*\s+/,'')}"
             print.gsub!(/-\s+/,"")
             info_list.each do |i|
-              STDOUT << " #{print}" if print.to_s.include?(i)  
+              if match = print.to_s.match(/^(#{i}:)(.+)/)
+                label = get_label_for_column_name(match[1], type)
+                columns << " #{label}#{match[2]}\n"
+              end
             end
           end
         end
+
+        columns.sort!()
+        columns.each do |column|
+          STDOUT << column
+        end 
         puts "\n"
       end
       

@@ -363,6 +363,10 @@ module DTK
         return @context_list.empty? ? nil : @context_list.last.name
       end
 
+      def first_context_name()
+        return @context_list.empty? ? nil : @context_list.first.name
+      end
+
       def last_context()
         return @context_list.empty? ? nil : @context_list.last
       end

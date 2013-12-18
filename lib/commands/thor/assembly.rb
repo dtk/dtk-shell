@@ -76,13 +76,13 @@ module DTK::Client
     def self.override_allowed_methods()
       return DTK::Shell::OverrideTasks.new({
         :all => {
-          :node => [
-            ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
-            ['list-components',"list-components","# List components associated with assembly's node."],
-            ['list-attributes',"list-attributes","# List attributes associated with assembly's node."]
-          ],
+          # :node => [
+            # ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
+            # ['list-components',"list-components","# List components associated with assembly's node."],
+            # ['list-attributes',"list-attributes","# List attributes associated with assembly's node."]
+          # ],
           :component => [
-            ['list-attributes',"list-attributes [FILTER] [--list] ","# List attributes associated with given component."]
+            ['list-attributes',"list-attributes","# List attributes associated with given component."]
 =begin
 TODO: overlaps with different meaning
             ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
@@ -94,11 +94,11 @@ TODO: overlaps with different meaning
             ['list-attributes',"list-attributes","# List attributes."]
           ],
           :node => [
-            ['delete-node',"delete [-y] ","# Delete node, terminating it if the node has been spun up."],
-            ['list-nodes',"list-nodes ","# List nodes."]
+            ['delete',"delete NODE-NAME/ID [-y] ","# Delete node, terminating it if the node has been spun up."],
+            ['list',"list","# List nodes."]
           ],
           :component => [
-            ['delete',"delete NAME/ID [-y] ","# Delete component from workspace."],
+            ['delete',"delete COMPONENT-NAME/ID [-y] ","# Delete component from workspace."],
             ['list-components',"list-components","# List components."]
           ],
           :utils => [
@@ -111,8 +111,11 @@ TODO: overlaps with different meaning
         :identifier_only => {
           :node      => [
             ['create-component',"create-component COMPONENT","# Add a component to the node."],
+            ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
             ['info',"info","# Return info about node instance belonging to given workspace."],
-            ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
+            # ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
+            ['list-attributes',"list-attributes","# List attributes associated with assembly's node."],
+            ['list-components',"list-components","# List components associated with assembly's node."],
             ['start', "start", "# Start node instance."],
             ['stop', "stop", "# Stop node instance."]
           ],
@@ -452,7 +455,8 @@ TODO: will put in dot release and will rename to 'extend'
   #    post rest_url("assembly/add_assembly_template"), post_body
   #  end
 
-    desc "ASSEMBLY-NAME/ID create-node NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the assembly."
+    # using ^^ before NODE-NAME to remove this command from assembly/assembly_id/node/node_id but show in assembly/assembly_id
+    desc "ASSEMBLY-NAME/ID create-node ^^NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the assembly."
     def create_node(context_params)
       response = create_node_aux(context_params)
       @@invalidate_map << :assembly_node
@@ -472,13 +476,31 @@ TODO: will put in dot release and will rename to 'extend'
       create_component_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID delete-node NODE-NAME [-y]","Delete node, terminating it if the node has been spun up."
+    # using ^^ before NODE-NAME to remove this command from assembly/assembly_id/node/node_id but show in assembly/assembly_id
+    desc "ASSEMBLY-NAME/ID delete-node ^^NODE-NAME [-y]","Delete node, terminating it if the node has been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       response = delete_node_aux(context_params)
       @@invalidate_map << :assembly_node
 
       return response
+    end
+
+    desc "HIDE_FROM_BASE delete NAME/ID [-y]","Delete node, terminating it if the node has been spun up."
+    def delete(context_params)
+      if context_params.is_last_command_eql_to?(:node)
+        response = delete_node_aux(context_params)
+        return response unless response.ok?
+        @@invalidate_map << :assembly_node
+
+        response
+      elsif context_params.is_last_command_eql_to?(:component)
+        response = delete_component_aux(context_params)
+        return response unless response.ok?
+        @@invalidate_map << :assembly_node_component
+
+        response
+      end
     end
 
     desc "ASSEMBLY-NAME/ID unlink-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]", "Remove a component link."
@@ -493,9 +515,9 @@ TODO: will put in dot release and will rename to 'extend'
     def delete_component(context_params)
       response = delete_component_aux(context_params)
       return response unless response.ok?
-
       @@invalidate_map << :assembly_node_component
-      return response
+
+      response
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)

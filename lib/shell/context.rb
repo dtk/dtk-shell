@@ -112,9 +112,22 @@ module DTK
 
           # jump to root
           reset if args.join('').match(/^\//)
+          
+          # begin
+          # hack: used just to avoid entering assembly/id/node or workspace/node context (remove when include this contexts again)
+          first_c, warning_message = nil, nil
+          first_c = @active_context.context_list().first.name unless @active_context.context_list().empty?
+          restricted = is_restricted_context(first_c, args)
+
+          args = restricted[:args]
+          warning_message = restricted[:message]
+          node_specific = restricted[:node_specific]
+
+          DTK::Client::OsUtil.print(warning_message, :yellow) if warning_message
+          # end
 
           # Validate and change context
-          @active_context, error_message = prepare_context_change(args, @active_context)
+          @active_context, error_message = prepare_context_change(args, @active_context, node_specific)
 
           load_context(active_context.last_context_name)
 
@@ -169,7 +182,7 @@ module DTK
         return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root)
       end
 
-      def prepare_context_change(args, active_context_copy)
+      def prepare_context_change(args, active_context_copy, node_specific=nil)
         # split original cc command
         entries = args.first.split(/\//)
 
@@ -216,11 +229,16 @@ module DTK
           active_context_copy.push_new_context(command, command) if (i >= ac_size)
 
           current_context_clazz = clazz
-
           if value
             # context_hash_data is hash with :name, :identifier values
             context_hash_data, error_message, invalid_context = validate_value(command, value, active_context_copy)
-            break if error_message
+            if error_message
+              # hack: used just to avoid entering assembly/id/node or workspace/node context (remove when include this contexts again)
+              if ((@active_context.last_command_name.eql?("node") || node_specific) && !@active_context.first_context_name().eql?("node") )
+                active_context_copy.pop_context(1)
+              end
+              break
+            end
             active_context_copy.push_new_context(context_hash_data[:name], command, context_hash_data[:identifier]) if ((i+1) >= ac_size)
           end
         end
@@ -255,9 +273,51 @@ module DTK
         return error_message, invalid_context
       end
 
+
+      # hack: used just to avoid entering assembly/id/node or workspace/node context (remove when include this contexts again)
+      def is_restricted_context(first_c, args = [])
+        entries = args.first.split(/\//)
+        invalid_context = ["workspace/node", "assembly/node"]
+        double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
+        
+        last_from_current, message = nil, nil
+        unless (root? || double_dots_count==0)
+          test_c = @previous_context
+          test_c.pop_context(double_dots_count)
+          last_from_current = test_c.last_context_name
+        end
+        
+        unless args.empty?
+          first_c ||= entries.first
+          last_c = last_from_current||entries.last
+
+          invalid_context.each do |ac|
+            if ac.eql?("#{first_c}/#{last_c}")
+              unless last_from_current
+                last_1, last_2 = entries.last(2)
+                if last_1.eql?(last_2)
+                  args = entries.join('/')
+                  return {:args => [args], :node_specific => true}
+                end
+              end
+              invalid = entries.pop
+              message = "'#{last_c}' context is not valid."
+              args = (entries.size<=1 ? entries : entries.join('/'))
+              args = args.is_a?(Array) ? args : [args]
+              if args.empty?
+                raise DTK::Client::DtkValidationError, message
+              else
+                return {:args => args, :message => message, :node_specific => true}
+              end
+
+            end
+          end
+        end
+        
+        return {:args => args, :message => message}
+      end
+
       def validate_value(command, value, active_context_copy=nil)
-        
-        
         context_hash_data = nil
         invalid_context = ""
          # check value
@@ -279,10 +339,10 @@ module DTK
         # e.g. cc library/public, we are caching context under library_1, library_2
         # so getting context for 'public' will not work and we use than library
         command_name = root? ? 'dtk' : @active_context.last_command_name
-
+        
         # if there is no new context (current) we use old one
         @current = current_context_task_names() || @current
-
+        
         client_commands = CLIENT_COMMANDS
         client_commands.concat(DEV_COMMANDS) if DTK::Configuration.get(:development_mode)
 
@@ -294,7 +354,7 @@ module DTK
 
         # we load thor command class identifiers for autocomplete context list
         command_context = get_command_identifiers(command_name)
-
+        # puts ">>>>> #{command_context.inspect}"
         command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
         @context_commands.concat(command_name_list) if current_command?
 
