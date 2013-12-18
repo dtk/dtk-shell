@@ -16,6 +16,18 @@ module DTK; module Client
     def self.default_rsa_pub_key_path()
       "#{ssh_base_dir()}/id_rsa.pub" 
     end
+
+    def self.rsa_pub_key_content()
+      path_to_key = self.default_rsa_pub_key_path()
+      unless File.file?(path_to_key)
+        raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
+      end
+
+      content = File.open(path_to_key){ |f| f.read }
+      content.chomp
+    end
+
+
    private
     def self.ssh_base_dir()
       "#{ENV['HOME']}/.ssh" #TODO: very brittle

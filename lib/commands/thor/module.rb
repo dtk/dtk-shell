@@ -210,7 +210,7 @@ module DTK::Client
       end
 
       action           = (options.remote? ? "list_remote" : "list")
-      post_body        = (options.remote? ? {} : {:detail_to_include => ["remotes","versions"]})
+      post_body        = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
       post_body[:diff] = options.diff? ? options.diff : {}
       response         = post rest_url("component_module/#{action}"),post_body
       
@@ -353,7 +353,8 @@ module DTK::Client
       end
       post_body = {
         :remote_module_name => remote_module_name,
-        :local_module_name => local_module_name
+        :local_module_name => local_module_name,
+        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
       }
       post_body.merge!(:do_not_raise => do_not_raise) if do_not_raise
       post_body.merge!(:ignore_component_error => ignore_component_error) if ignore_component_error
@@ -472,7 +473,8 @@ module DTK::Client
 
       post_body = {
        :remote_module_name      => remote_name,
-       :remote_module_namespace => remote_namespace
+       :remote_module_namespace => remote_namespace,
+       :rsa_pub_key => SshProcessing.rsa_pub_key_content()
       }
       post rest_url("component_module/delete_remote"), post_body
     end
@@ -482,8 +484,9 @@ module DTK::Client
       component_module_id, input_remote_name = context_params.retrieve_arguments([:module_id!, :option_1],method_argument_names)
 
       post_body = {
-        :component_module_id     => component_module_id,
-        :remote_component_name      => input_remote_name
+        :component_module_id => component_module_id,
+        :remote_component_name => input_remote_name,
+        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
       }
 
       response = post rest_url("component_module/export"), post_body

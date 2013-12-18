@@ -124,7 +124,7 @@ module DTK::Client
       # If user is on service level, list task can't have about value set
       if (context_params.last_entity_name == :service) and about.nil?
         action    = options.remote? ? "list_remote" : "list"
-        post_body = (options.remote? ? {} : {:detail_to_include => ["remotes","versions"]})
+        post_body = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
         post_body[:diff] = options.diff? ? options.diff : {}
         
         response = post rest_url("service_module/#{action}"), post_body
@@ -186,7 +186,8 @@ module DTK::Client
 
       post_body = {
         :remote_module_name => remote_module_name,
-        :local_module_name => local_module_name
+        :local_module_name => local_module_name,
+        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
       }
       
       response = post rest_url("service_module/import"), post_body
@@ -263,8 +264,9 @@ module DTK::Client
       service_module_id, input_remote_name = context_params.retrieve_arguments([:service_id!, :option_1],method_argument_names)
 
       post_body = {
-       :service_module_id          => service_module_id,
-       :remote_component_name      => input_remote_name
+       :service_module_id => service_module_id,
+       :remote_component_name => input_remote_name,
+       :rsa_pub_key => SshProcessing.rsa_pub_key_content()
       }
 
       post rest_url("service_module/export"), post_body
@@ -533,7 +535,8 @@ module DTK::Client
       end
 
       post_body = {
-       :remote_service_name => remote_service_name
+       :remote_service_name => remote_service_name,
+       :rsa_pub_key => SshProcessing.rsa_pub_key_content()
       }
       response = post rest_url("service_module/delete_remote"), post_body
       @@invalidate_map << :module_service
