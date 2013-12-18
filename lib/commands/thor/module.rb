@@ -407,8 +407,10 @@ module DTK::Client
         if external_dependencies = create_response.data(:external_dependencies)
           inconsistent = external_dependencies["inconsistent"]
           possibly_missing = external_dependencies["possibly_missing"]
-          OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
-          OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
+          OsUtil.print("There are some inconsistent dependencies (#{inconsistent})", :red) unless inconsistent.empty?
+          unless possibly_missing.empty?
+            OsUtil.print("There are some needed dependencies (#{possibly_missing}) that cannot be automatically inserted into the dtk DSL meta file; if these modules have been loaded, put them under the 'includes' section; otherwise load them first and then add them to the includes section", :yellow) 
+          end
         end
       else 
         # If server response is not ok, delete cloned module, invoke delete method
