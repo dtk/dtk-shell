@@ -32,23 +32,26 @@ module DTK::Client
     end
 
     def self.add_key(path_to_key, name=nil)
-      match = nil
+      match, matched_username = nil, nil
+    
       unless File.file?(path_to_key)
         raise DTK::Client::DtkError,"No ssh key file found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
       end
+
       rsa_pub_key = File.open(path_to_key){|f|f.read}
-      post_body = {
-        :rsa_pub_key => rsa_pub_key.chomp
-      }
-      
+
+      post_body = { :rsa_pub_key => rsa_pub_key.chomp }
+            
       post_body.merge!(:username => name.chomp) if name
       proper_response = nil
-
       response, key_exists_already = Account.internal_add_user_access("service_module/add_user_direct_access", post_body, 'service module')
       return response unless (response.ok? || key_exists_already)
+
+
       if response.ok?
         proper_response = response
         match = response.data['match']
+        matched_username = response.data['matched_username']
       end
 
       response, key_exists_already = Account.internal_add_user_access("component_module/add_user_direct_access", post_body, 'component module')
@@ -57,7 +60,7 @@ module DTK::Client
       
       # if either of request passed we will add to known hosts
       if match
-        OsUtil.print("Provided rsa public key already exists!", :yellow) 
+        OsUtil.print("Provided RSA public key already exists, user creation aborted!", :yellow) 
       elsif proper_response
         repo_manager_fingerprint,repo_manager_dns = proper_response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
         SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)

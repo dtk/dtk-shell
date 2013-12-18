@@ -986,7 +986,7 @@ module DTK::Client
             data_type = :component
             detail_to_include = [:component_dependencies]
           when "attributes"
-            data_type = :attribute
+            data_type = (options.links? ? :workspace_attribute_w_link : :workspace_attribute)
             if format = options.format
               post_options.merge!(:format => format)
             else
@@ -1026,6 +1026,10 @@ module DTK::Client
       else
         if assembly_or_workspace_id
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
+          #TODO: need to cleanup that data_type set in multiple places
+          if about == "attributes"
+            data_type = (options.links? ? :workspace_attribute_w_link : :workspace_attribute)
+          end
         else
           data_type = :assembly
           post_body = { :subtype  => 'instance', :detail_level => 'nodes' }

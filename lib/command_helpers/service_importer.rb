@@ -11,7 +11,8 @@ module DTK::Client
     end
 
     def self.error_message(name, errors)
-      "Module '#{name}' has errors:\n  #{errors.to_s}\nYou can fix errors using 'edit' command.\n"
+      #TODO: it is contingent whether solution is to fix errors using 'edit' command
+      "Module '#{name}' has errors:\n  #{errors.to_s}\nYou can fix errors in the service DSL by invoking the 'edit' command in the service's context.\n"
     end
 
     ##
@@ -59,7 +60,8 @@ module DTK::Client
 
         if is_install_dependencies
           needed_modules.each do |m|
-            print "Cloning component module '#{m['formated_name']}' from server ... "
+            formated_name = m['formated_name']
+            print "Cloning component module '#{formated_name}' from server ... "
             thor_options = {}
             thor_options["version"] = m['version']
             thor_options["skip_edit"] = true

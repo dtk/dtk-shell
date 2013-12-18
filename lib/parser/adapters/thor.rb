@@ -398,6 +398,10 @@ module DTK
 
         # returns method name and usage
         def current_method_info
+          unless @_initializer[2][:current_task]
+            raise DTK::Client::DtkError, "You are using development mode, and you have newer version of Thor gem than specified by dtk-client"
+          end
+
           return @_initializer[2][:current_task].name, @_initializer[2][:current_task].usage
         end
 
