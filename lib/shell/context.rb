@@ -303,10 +303,16 @@ module DTK
                   return {:args => [args], :node_specific => true}
                 end
               end
-              
-              # if ../ to node context, add one more .. to go to previous context (assembly/id or workspace)
-              back_flag ? entries << ".." : entries.pop
               message = "'#{last_c}' context is not valid."
+
+              # if ../ to node context, add one more .. to go to previous context (assembly/id or workspace)
+              if back_flag
+                message = nil
+                entries << ".."
+              else
+                entries.pop
+              end
+
               args = (entries.size<=1 ? entries : entries.join('/'))
               args = args.is_a?(Array) ? args : [args]
               if args.empty?
