@@ -280,12 +280,14 @@ module DTK
         invalid_context = ["workspace/node", "assembly/node"]
         double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
         only_double_dots = entries.select{|e| e.to_s!=".."}||[]
-        
+        back_flag = false
+
         last_from_current, message = nil, nil
         unless (root? || double_dots_count==0 || !only_double_dots.empty?)
           test_c = @previous_context
           test_c.pop_context(double_dots_count)
           last_from_current = test_c.last_context_name
+          back_flag = true
         end
         
         unless args.empty?
@@ -302,7 +304,8 @@ module DTK
                 end
               end
               
-              invalid = entries.pop
+              # if ../ to node context, add one more .. to go to previous context (assembly/id or workspace)
+              back_flag ? entries << ".." : entries.pop
               message = "'#{last_c}' context is not valid."
               args = (entries.size<=1 ? entries : entries.join('/'))
               args = args.is_a?(Array) ? args : [args]
