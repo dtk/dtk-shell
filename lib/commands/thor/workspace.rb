@@ -102,7 +102,7 @@ module DTK::Client
         :identifier_only => {
           :node      => [
             ['create-component',"create-component COMPONENT","# Add a component to the node."],
-            ['delete-component',"delete-component COMPONENT-ID [-y]","# Delete component from assembly's node"],
+            ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from assembly's node"],
             ['info',"info","# Return info about node instance belonging to given workspace."],
             # ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
             ['list-attributes',"list-attributes","# List attributes associated with workspace's node."],
@@ -230,7 +230,7 @@ module DTK::Client
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
-    desc "HIDE_FROM_BASE delete-component COMPONENT","Delete component from the workspace."
+    desc "HIDE_FROM_BASE delete-component COMPONENT-NAME","Delete component from the workspace."
     #desc "delete-component COMPONENT-ID [-y]","Delete component from workspace"
     #method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
