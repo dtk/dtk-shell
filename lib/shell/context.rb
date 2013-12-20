@@ -234,7 +234,7 @@ module DTK
             context_hash_data, error_message, invalid_context = validate_value(command, value, active_context_copy)
             if error_message
               # hack: used just to avoid entering assembly/id/node or workspace/node context (remove when include this contexts again)
-              if ((@active_context.last_command_name.eql?("node") || node_specific) && !@active_context.first_context_name().eql?("node") )
+              if ((@active_context.last_context_name.eql?("node") || node_specific) && !@active_context.first_context_name().eql?("node") )
                 active_context_copy.pop_context(1)
               end
               break
@@ -279,12 +279,15 @@ module DTK
         entries = args.first.split(/\//)
         invalid_context = ["workspace/node", "assembly/node"]
         double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
-        
+        only_double_dots = entries.select{|e| e.to_s!=".."}||[]
+        back_flag = false
+
         last_from_current, message = nil, nil
-        unless (root? || double_dots_count==0)
+        unless (root? || double_dots_count==0 || !only_double_dots.empty?)
           test_c = @previous_context
           test_c.pop_context(double_dots_count)
           last_from_current = test_c.last_context_name
+          back_flag = true
         end
         
         unless args.empty?
@@ -300,8 +303,16 @@ module DTK
                   return {:args => [args], :node_specific => true}
                 end
               end
-              invalid = entries.pop
               message = "'#{last_c}' context is not valid."
+
+              # if ../ to node context, add one more .. to go to previous context (assembly/id or workspace)
+              if back_flag
+                message = nil
+                entries << ".."
+              else
+                entries.pop
+              end
+
               args = (entries.size<=1 ? entries : entries.join('/'))
               args = args.is_a?(Array) ? args : [args]
               if args.empty?

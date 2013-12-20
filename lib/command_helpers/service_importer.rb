@@ -12,7 +12,7 @@ module DTK::Client
 
     def self.error_message(name, errors)
       #TODO: it is contingent whether solution is to fix errors using 'edit' command
-      "Module '#{name}' has errors:\n  #{errors.to_s}\nYou can fix errors in the service DSL by invoking the 'edit' command in the service's context.\n"
+      "Module '#{name}' has errors:\n  #{errors.to_s}\nYou can fix errors in the DSL by invoking the 'edit' command.\n"
     end
 
     ##

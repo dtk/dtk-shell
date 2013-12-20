@@ -610,7 +610,7 @@ module DTK::Client
     end
 
     def delete_component_aux(context_params)
-      assembly_or_workspace_id, node_id, component_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id,:option_1!],method_argument_names)
+      assembly_or_workspace_id, node_id, node_name, component_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id, :node_name, :option_1!],method_argument_names)
 
       unless options.force?
         what = "component"
@@ -622,9 +622,10 @@ module DTK::Client
         :node_id => node_id,
         :component_id => component_id
       }
+
+      # delete component by name (e.g. delete-component dtk_java)
+      post_body.merge!(:cmp_full_name => "#{node_name}/#{component_id}") if (node_name && !(component_id.to_s =~ /^[0-9]+$/))
       response = post(rest_url("assembly/delete_component"),post_body)
-      # @@invalidate_map << :assembly_node_component
-      response
     end
 
     def component_edit_aux(context_params)
