@@ -132,7 +132,9 @@ module DTK
             end
 
 
-          path && path.start_with?('/') ? path : "#{dtk_local_folder}#{path}"
+          final_path = path && path.start_with?('/') ? path : "#{dtk_local_folder}#{path}"
+          # remove last slash if set in configuration by mistake
+          final_path.gsub(/\/$/,'')
         end
         private :clone_base_path
         #
