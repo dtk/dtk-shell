@@ -144,7 +144,11 @@ module DTK
 
       def self.generate_cached_id(subtype)
         values = ''
-        subtype.sort.map do |key,value|
+        # subtype.sort.map do |key,value|
+        # removed sort since subtype is hash where keys are symbols,
+        # sort method uses the <=> comparison operator to put things into order but
+        # symbols don't have a <=> comparison operator in ruby 1.8.7
+        subtype.map do |key,value|
           values += value.to_s
         end  
         
