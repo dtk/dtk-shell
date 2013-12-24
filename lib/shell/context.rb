@@ -365,7 +365,7 @@ module DTK
 
         # we load thor command class identifiers for autocomplete context list
         command_context = get_command_identifiers(command_name)
-        # puts ">>>>> #{command_context.inspect}"
+        
         command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
         @context_commands.concat(command_name_list) if current_command?
 
