@@ -160,7 +160,8 @@ module DTK::Client
       service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       post_body = {
         :service_module_id => service_module_id,
-        :detail_to_include => ["remotes"]
+        :detail_to_include => ["remotes"],
+        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
       }
       response = post rest_url("service_module/versions"), post_body
 
@@ -378,7 +379,8 @@ module DTK::Client
     def create_version(context_params)
       service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
       post_body = {
-        :service_module_id => service_module_id
+        :service_module_id => service_module_id,
+        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
       }
       response = post rest_url("service_module/versions"), post_body
       return response unless response.ok?
