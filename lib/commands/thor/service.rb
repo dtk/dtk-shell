@@ -66,7 +66,7 @@ module DTK::Client
         },
         :identifier_only => {
           :self      => [
-            ["list-assembly-templates","list-assembly-templates","# List assembly templates associated with service module."],
+            ["list-assemblies","list-assemblies","# List assembly templates associated with service module."],
             ["list-modules","list-modules","# List modules associated with service module."]
           ],
           :"assembly-template" => [
@@ -96,9 +96,9 @@ module DTK::Client
       end
     end
 
-    desc "SERVICE-NAME/ID list-assembly-templates","List assembly templates associated with service."
+    desc "SERVICE-NAME/ID list-assemblies","List assembly templates associated with service."
     method_option :remote, :type => :boolean, :default => false
-    def list_assembly_templates(context_params)
+    def list_assemblies(context_params)
       context_params.method_arguments = ["assembly-templates"]
       list(context_params)
     end
@@ -153,6 +153,17 @@ module DTK::Client
       response.render_table(data_type) unless response.nil?
 
       response
+    end
+
+    desc "SERVICE-NAME/ID list-instances","List all versions associated with this service."
+    def list_instances(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
+      post_body = {
+        :service_module_id => service_module_id,
+      }
+      response = post rest_url("service_module/list_instances"), post_body
+      
+      response.render_table(:assembly_template)
     end
 
     desc "SERVICE-NAME/ID list-versions","List all versions associated with this service."
@@ -218,9 +229,9 @@ module DTK::Client
       return response
     end
 
-    desc "SERVICE-NAME/ID reparse [-v VERSION]", "Check service for syntax errors in json/yaml files."
+    desc "SERVICE-NAME/ID validate-model [-v VERSION]", "Check the DSL Model for Errors"
     version_method_option
-    def reparse(context_params)
+    def validate_model(context_params)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
       version = options["version"]
 
@@ -259,8 +270,8 @@ module DTK::Client
       Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
     end
 
-    desc "SERVICE-NAME/ID export [[NAME-SPACE/]REMOTE-MODULE-NAME]","Export service module to remote repository"
-    def export(context_params)
+    desc "SERVICE-NAME/ID create-on-dtkn [[NAME-SPACE/]REMOTE-MODULE-NAME]","Export service module to remote repository"
+    def create_on_dtkn(context_params)
       service_module_id, input_remote_name = context_params.retrieve_arguments([:service_id!, :option_1],method_argument_names)
 
       post_body = {
@@ -310,9 +321,9 @@ module DTK::Client
       push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
     end
 
-    desc "SERVICE-NAME/ID pull-from-remote [-v VERSION]", "Update local service module from remote repository."
+    desc "SERVICE-NAME/ID pull-from-dtkn [-v VERSION]", "Update local service module from remote repository."
     version_method_option
-    def pull_from_remote(context_params)
+    def pull_from_dtkn(context_params)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!,:service_name],method_argument_names)
       version = options["version"]
 
@@ -338,7 +349,7 @@ module DTK::Client
     # internal_trigger: this flag means that other method (internal) has trigger this.
     #                   This will change behaviour of method
     #
-    desc "SERVICE-NAME/ID clone [-v VERSION] [-n]", "Clone into client the service module files. Use -n to skip edit prompt."
+    desc "SERVICE-NAME/ID clone [-v VERSION] [-n]", "Locally clone the service module files. Use -n to skip edit prompt"
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
     version_method_option
     def clone(context_params, internal_trigger=false)
@@ -448,17 +459,17 @@ module DTK::Client
       repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
 
       context_params.add_context_to_params(module_name, "service", module_id)
-      push_clone_changes(context_params,true)
+      push(context_params,true)
     end
 
 
-    desc "SERVICE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of service module to server"
+    desc "SERVICE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of service module to server"
     version_method_option
     method_option "message",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    def push_clone_changes(context_params, internal_trigger=false)
+    def push(context_params, internal_trigger=false)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
       version = options["version"]
 
@@ -524,9 +535,9 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "delete-remote REMOTE-SERVICE-NAME [-y]", "Delete remote service module"
+    desc "delete-from-dtkn REMOTE-SERVICE-NAME [-y]", "Delete remote service module"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete_remote(context_params)
+    def delete_from_dtkn(context_params)
       remote_service_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       
       unless options.force?
@@ -544,9 +555,9 @@ module DTK::Client
       return response
     end
 
-    desc "SERVICE-NAME/ID delete-assembly-template ASSEMBLY-TEMPLATE-ID [-y]", "Delete assembly template."
+    desc "SERVICE-NAME/ID delete-assembly ASSEMBLY-TEMPLATE-ID [-y]", "Delete assembly template."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete_assembly_template(context_params)
+    def delete_assembly(context_params)
       service_module_id,assembly_template_id = context_params.retrieve_arguments([:service_id!,:option_1!], method_argument_names)
       service_module_name = context_params.retrieve_arguments([:service_name],method_argument_names)
       assembly_template_name = (assembly_template_id.to_s =~ /^[0-9]+$/) ? DTK::Client::AssemblyTemplate.get_assembly_template_name_for_service(assembly_template_id, service_module_name) : assembly_template_id

@@ -164,9 +164,8 @@ module DTK::Client
     end
 
 
-    desc "MODULE-NAME/ID set ATTRIBUTE-ID VALUE", "Set value of module attributes"
-    def set(context_params)
-
+    desc "MODULE-NAME/ID set-attribute ATTRIBUTE-ID VALUE", "Set value of module attributes"
+    def set_attribute(context_params)
       if context_params.is_there_identifier?(:attribute)
         mapping = [:module_id!,:attribute_id!, :option_1]
       else
@@ -259,8 +258,9 @@ module DTK::Client
 
     desc "import MODULE-NAME", "Create new module from local clone"
     def import(context_params)
-      module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       git_import = context_params.get_forwarded_options()[:git_import] if context_params.get_forwarded_options()
+      name_option = git_import ? :option_2! : :option_1!
+      module_name = context_params.retrieve_arguments([name_option],method_argument_names)
       
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
       response = Helper(:git_repo).check_local_dir_exists_with_content(:component_module,module_name)
@@ -301,7 +301,7 @@ module DTK::Client
 
       # we push clone changes anyway, user can change and push again
       context_params.add_context_to_params(module_name, "module", module_id)
-      response = push_clone_changes(context_params, true)
+      response = push(context_params, true)
       if git_import 
         response[:module_id] = module_id
       end
@@ -311,9 +311,9 @@ module DTK::Client
       response
     end
 
-    desc "MODULE-NAME/ID reparse [-v VERSION]", "Check module for syntax errors in json/yaml files."
+    desc "MODULE-NAME/ID validate-model [-v VERSION]", "Check the DSL model for errors"
     version_method_option
-    def reparse(context_params)
+    def validate_model(context_params)
       module_id, module_name = context_params.retrieve_arguments([:module_id!, :module_name],method_argument_names)
       version = options["version"]
 
@@ -387,9 +387,9 @@ module DTK::Client
     #
     # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
     #
-    desc "import-git MODULE-NAME GIT-SSH-REPO-URL", "Create new local module by importing from provided git repo URL"
+    desc "import-git GIT-SSH-REPO-URL MODULE-NAME", "Create new local module by importing from provided git repo URL"
     def import_git(context_params)
-      module_name, git_repo_url = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
+      git_repo_url, module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
       
       # Create component module from user's input git repo
       response = Helper(:git_repo).create_clone_with_branch(:component_module, module_name, git_repo_url)
@@ -463,9 +463,9 @@ module DTK::Client
       Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
     end
     
-    desc "delete-remote [NAME-SPACE/]REMOTE-MODULE [-y]", "Delete remote component module"
+    desc "delete-from-dtkn [NAME-SPACE/]REMOTE-MODULE [-y]", "Delete the component module from the DTK Network catalog"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete_remote(context_params)
+    def delete_from_dtkn(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       remote_namespace, remote_name = get_namespace_and_name(remote_module_name)
 
@@ -482,8 +482,8 @@ module DTK::Client
       post rest_url("component_module/delete_remote"), post_body
     end
 
-    desc "MODULE-NAME/ID export [[NAME-SPACE/]REMOTE-MODULE-NAME]", "Export component module to remote repository."
-    def export(context_params)
+    desc "MODULE-NAME/ID create-on-dtkn [[NAME-SPACE/]REMOTE-MODULE-NAME]", "Export component module to remote repository."
+    def create_on_dtkn(context_params)
       component_module_id, input_remote_name = context_params.retrieve_arguments([:module_id!, :option_1],method_argument_names)
 
       post_body = {
@@ -497,13 +497,13 @@ module DTK::Client
       return response         
     end
 
-    desc "MODULE-NAME/ID push-to-remote [-n NAMESPACE] [-v VERSION]", "Push local copy of component module to remote repository."
+    desc "MODULE-NAME/ID push-to-dtkn [-n NAMESPACE] [-v VERSION]", "Push local copy of component module to remote repository."
     version_method_option
     method_option "namespace",:aliases => "-n",
         :type => :string, 
         :banner => "NAMESPACE",
         :desc => "Remote namespace"
-    def push_to_remote(context_params)
+    def push_to_dtkn(context_params)
       component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!, :module_name!],method_argument_names)
       version = options["version"]
 
@@ -535,9 +535,9 @@ module DTK::Client
       push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)
     end
 
-    desc "MODULE-NAME/ID pull-from-remote [-v VERSION]", "Update local component module from remote repository."
+    desc "MODULE-NAME/ID pull-from-dtkn [-v VERSION]", "Update local component module from remote repository."
     version_method_option
-    def pull_from_remote(context_params)     
+    def pull_from_dtkn(context_params)     
       component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!,:module_name],method_argument_names)
       version = options["version"]
 
@@ -595,7 +595,7 @@ module DTK::Client
     #                   This will change behaviour of method in such way that edit will not be 
     #                   triggered after it.
     #
-    desc "MODULE-NAME/ID clone [-v VERSION] [-n]", "Clone into client the component module files. Use -n to skip edit prompt."
+    desc "MODULE-NAME/ID clone [-v VERSION] [-n]", "Locally clone module and component files. Use -n to skip edit prompt"
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
     version_method_option
     def clone(context_params, internal_trigger=false)
@@ -639,13 +639,13 @@ module DTK::Client
       edit_aux(:component_module,component_module_id,module_name,version,opts)
     end
 
-    desc "MODULE-NAME/ID push-clone-changes [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of module to server"
+    desc "MODULE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of module to server"
     version_method_option
     method_option "message",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    def push_clone_changes(context_params, internal_trigger=false)
+    def push(context_params, internal_trigger=false)
       component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!, :module_name],method_argument_names)
       version = options["version"]
       if component_module_name.to_s =~ /^[0-9]+$/
