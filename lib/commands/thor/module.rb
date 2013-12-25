@@ -193,7 +193,8 @@ module DTK::Client
         :component_module_id => component_module_id
       }
 
-      post rest_url("component_module/info"), post_body
+      response = post rest_url("component_module/info"), post_body
+      response.render_custom_info("module")
     end
 
     desc "list [--remote] [--diff]", "List loaded or remote component modules. Use --diff to compare loaded and remote modules."

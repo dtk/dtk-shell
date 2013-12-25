@@ -9,7 +9,6 @@ module DTK
   module Client
     #TODO: should make higher level class be above whether it is 'rest'
     class Response < Common::Response
-
       # :render_view        => symbol specifing type of data to be rendered e.g. :assembly
       # :skip_render        => flag that specifies that render is not needed (default: false)
       # :print_error_table  => we use it if we want to print 'error legend' for given tables (default: false)
@@ -64,11 +63,8 @@ module DTK
           "op_status:" => "OP STATUS:",
           "dns_name:" => "DNS NAME:"
         }
-        if mappings[column]
-          mappings[column]
-        else
-          column.upcase
-        end
+        
+        mappings[column]
       end
 
       # used just for printing workspace node info
@@ -100,6 +96,39 @@ module DTK
           STDOUT << column
         end 
         puts "\n"
+      end
+
+      def render_custom_info(type)
+        puts "--- \n"     
+
+        unless data.empty?
+          data.each do |k,v|
+            label = get_custom_labels(k, type)
+            v = array_to_string(v) if v.is_a?(Array)
+            STDOUT << " #{label} #{v}\n" if label
+          end 
+        end
+
+        puts "\n"
+      end
+
+      def get_custom_labels(label, type)
+        mappings = {
+          "id" => "ID:",
+          "display_name" => "NAME:",
+          "remote_repos" => "LINKED REMOTE(S):",
+          "dsl_parsed" => "DSL PARSED:"
+        }
+        mappings[label]
+      end
+
+      def array_to_string(array_data)
+        info = ""
+        array_data.each do |a|
+          info << "#{a.values.first},"
+        end
+        
+        "'#{info.gsub!(/,$/,'')}'"
       end
       
 

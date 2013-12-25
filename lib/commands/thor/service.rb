@@ -94,6 +94,8 @@ module DTK::Client
 
         response = post rest_url('service_module/info'), post_body
       end
+      
+      response.render_custom_info("module")
     end
 
     desc "SERVICE-NAME/ID list-assemblies","List assembly templates associated with service."
