@@ -394,7 +394,10 @@ module DTK
       end
 
       def get_raw(url)
-        RestClientWrapper.get_raw(url, {}, DefaultRestOpts.merge(:cookies => @cookies))
+        # RestClientWrapper.get_raw(url, {}, DefaultRestOpts.merge(:cookies => @cookies))
+        # removed {} param because it caused some issues with ruby 1.8.7
+        # will revert if we experience any issues because of this
+        RestClientWrapper.get_raw(url, DefaultRestOpts.merge(:cookies => @cookies))
       end
       def post_raw(url,body,params={})
         RestClientWrapper.post_raw(url, body, DefaultRestOpts.merge(:cookies => @cookies).merge(params))
