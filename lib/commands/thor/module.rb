@@ -223,7 +223,8 @@ module DTK::Client
       component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
       post_body = {
         :component_module_id => component_module_id,
-        :detail_to_include => ["remotes"]
+        :detail_to_include => ["remotes"],
+        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
       }
       response = post rest_url("component_module/versions"), post_body
 
@@ -285,7 +286,7 @@ module DTK::Client
       }
       response = post(rest_url("component_module/update_from_initial_create"),post_body)
       return response unless response.ok?
-      external_dependencies = response.data(:external_dependencies)
+
       if error = response.data(:dsl_parsed_info)
         dsl_parsed_message = ServiceImporter.error_message(module_name, error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
@@ -301,14 +302,10 @@ module DTK::Client
 
       # we push clone changes anyway, user can change and push again
       context_params.add_context_to_params(module_name, "module", module_id)
-      response = push(context_params, true)
-      if git_import 
-        response[:module_id] = module_id
-      end
-      if external_dependencies
-        response.add_data_value!(:external_dependencies,external_dependencies)
-      end
-      response
+      resp = push(context_params, true) 
+      resp[:module_id] = module_id if git_import
+
+      return resp
     end
 
     desc "MODULE-NAME/ID validate-model [-v VERSION]", "Check the DSL model for errors"
@@ -404,22 +401,23 @@ module DTK::Client
       context_params.forward_options({:git_import => true})
       # Reuse module create method to create module from local component_module
       create_response = import(context_params)
+      
       if create_response.ok?
-        if external_dependencies = create_response.data(:external_dependencies)
-          inconsistent = external_dependencies["inconsistent"]
-          possibly_missing = external_dependencies["possibly_missing"]
-          OsUtil.print("There are some inconsistent dependencies (#{inconsistent})", :red) unless inconsistent.empty?
-          unless possibly_missing.empty?
-            OsUtil.print("There are some needed dependencies (#{possibly_missing}) that cannot be automatically inserted into the dtk DSL meta file; if these modules have been loaded, put them under the 'includes' section; otherwise load them first and then add them to the includes section", :yellow) 
-          end
+        module_id = create_response[:module_id]
+        response = post rest_url("component_module/update_from_git_modulefile"), {:component_module_id => module_id}
+        if response.ok?
+          match = response.data["match"]
+          inconsistent = response.data["inconsistent"]
+          possibly_missing = response.data["possibly_missing"]
+          DTK::Client::OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
+          DTK::Client::OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
         end
-      else 
+      else create_response.ok?
         # If server response is not ok, delete cloned module, invoke delete method
         FileUtils.rm_rf("#{response['data']['module_directory']}")
         delete(context_params,:force_delete => true, :no_error_msg => true)
-        return create_response
       end
-      Response::Ok.new()
+      create_response
     end
 
 =begin 
@@ -562,8 +560,10 @@ module DTK::Client
     desc "MODULE-NAME/ID create-version VERSION", "Snapshot current state of module as a new version"
     def create_version(context_params)
       component_module_id,version = context_params.retrieve_arguments([:module_id!,:option_1!],method_argument_names)
+
       post_body = {
-        :component_module_id => component_module_id
+        :component_module_id => component_module_id,
+        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
       }
       response = post rest_url("component_module/versions"), post_body
       return response unless response.ok?
