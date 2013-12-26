@@ -288,6 +288,8 @@ module DTK::Client
       response = post(rest_url("component_module/update_from_initial_create"),post_body)
       return response unless response.ok?
 
+      external_dependencies = response.data(:external_dependencies)
+
       if error = response.data(:dsl_parsed_info)
         dsl_parsed_message = ServiceImporter.error_message(module_name, error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
@@ -303,10 +305,11 @@ module DTK::Client
 
       # we push clone changes anyway, user can change and push again
       context_params.add_context_to_params(module_name, "module", module_id)
-      resp = push(context_params, true) 
-      resp[:module_id] = module_id if git_import
+      response = push(context_params, true)
+      response[:module_id] = module_id if git_import
+      response.add_data_value!(:external_dependencies,external_dependencies) if external_dependencies
 
-      return resp
+      return response
     end
 
     desc "MODULE-NAME/ID validate-model [-v VERSION]", "Check the DSL model for errors"
@@ -404,21 +407,20 @@ module DTK::Client
       create_response = import(context_params)
       
       if create_response.ok?
-        module_id = create_response[:module_id]
-        response = post rest_url("component_module/update_from_git_modulefile"), {:component_module_id => module_id}
-        if response.ok?
-          match = response.data["match"]
-          inconsistent = response.data["inconsistent"]
-          possibly_missing = response.data["possibly_missing"]
-          DTK::Client::OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
-          DTK::Client::OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
+        if external_dependencies = create_response.data(:external_dependencies)
+          inconsistent = external_dependencies["inconsistent"]
+          possibly_missing = external_dependencies["possibly_missing"]
+          OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
+          OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
         end
-      else create_response.ok?
+      else
         # If server response is not ok, delete cloned module, invoke delete method
         FileUtils.rm_rf("#{response['data']['module_directory']}")
         delete(context_params,:force_delete => true, :no_error_msg => true)
+        return create_response
       end
-      create_response
+      
+      Response::Ok.new()
     end
 
 =begin 
