@@ -116,6 +116,7 @@ module DTK
         mappings = {
           "id" => "ID:",
           "display_name" => "NAME:",
+          "versions" => "VERSION(S):",
           "remote_repos" => "LINKED REMOTE(S):",
           "dsl_parsed" => "DSL PARSED:"
         }
@@ -128,7 +129,7 @@ module DTK
           info << "#{a.values.first},"
         end
         
-        "'#{info.gsub!(/,$/,'')}'"
+        "#{info.gsub!(/,$/,'')}"
       end
       
 

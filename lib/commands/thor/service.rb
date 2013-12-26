@@ -286,13 +286,13 @@ module DTK::Client
       post rest_url("service_module/export"), post_body
     end
 
-    desc "SERVICE-NAME/ID push-to-remote [-n NAMESPACE] [-v VERSION]", "Push local copy of service module to remote repository."
+    desc "SERVICE-NAME/ID push-to-dtkn [-n NAMESPACE] [-v VERSION]", "Push local copy of service module to remote repository."
     version_method_option
         method_option "namespace",:aliases => "-n",
         :type => :string, 
         :banner => "NAMESPACE",
         :desc => "Remote namespace"
-    def push_to_remote(context_params)
+    def push_to_dtkn(context_params)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
       version = options["version"]
 
@@ -539,7 +539,7 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "delete-from-dtkn REMOTE-SERVICE-NAME [-y]", "Delete remote service module"
+    desc "delete-from-dtkn REMOTE-SERVICE-NAME [-y]", "Delete the service module from the DTK Network catalog"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_from_dtkn(context_params)
       remote_service_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
