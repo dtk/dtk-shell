@@ -239,7 +239,7 @@ module DTK::Client
 
     desc "MODULE-NAME/ID list-attributes", "List all attributes for given component module."
     def list_attributes(context_params)
-      module_info_about(context_params, :attributes, :attribute_w_version)
+      module_info_about(context_params, :attributes, :attribute_without_link)
     end
 
     desc "MODULE-NAME/ID list-instances", "List all instances for given component module."
