@@ -22,7 +22,7 @@ module DTK
       end
 
       def get_connection
-        @conn ||= DTK::Client::Session.get_connection()
+        DTK::Client::Session.get_connection()
       end
 
       def self.handle_argument_error(task, error) 
