@@ -217,12 +217,16 @@ module DTK
                 if clazz.respond_to?(:invisible_context)
                   if current_context.is_command?
                     node = entries[1]
-                    entries[1] = ["node", node]
-                    entries.flatten!
+                    if node
+                      entries[1] = ["node", node]
+                      entries.flatten!
+                    end
                   elsif current_context.is_identifier?
                     node = entries[0]
-                    entries[0] = ["node", node]
-                    entries.flatten!
+                    if node
+                      entries[0] = ["node", node]
+                      entries.flatten!
+                    end
                   end
                 end
               end
