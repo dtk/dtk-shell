@@ -91,15 +91,15 @@ module DTK
           end
         end
 
-        unless context_list.empty?
-          init_context = context_list.first.name
-          command_clazz = Context.get_command_class(init_context)
-          invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context() : {}
+        # unless context_list.empty?
+        #   init_context = context_list.first.name
+        #   command_clazz = Context.get_command_class(init_context)
+        #   invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context() : {}
           
-          invisible_context.each do |ic|
-            path = path.gsub(/\/#{ic}\//,'/')
-          end
-        end
+        #   invisible_context.each do |ic|
+        #     path = path.gsub(/\/#{ic}\//,'/')
+        #   end
+        # end
 
         path
       end
@@ -193,35 +193,35 @@ module DTK
       end
 
       # usgin this to hide 'node' context, use just node_identifier
-      def self.check_invisible_context(acc, entries, is_root)
-        entries.reject! { |e| e.empty? }
+      # def self.check_invisible_context(acc, entries, is_root)
+      #   entries.reject! { |e| e.empty? }
 
-        if is_root
-          if entries.size >= 3
-            node = entries[2]
-            entries[2] = ["node", node]
-            entries.flatten!
-          end
-        else
-          current_c_name = acc.last_command_name
-          current_context = acc.last_context
-          clazz = DTK::Shell::Context.get_command_class(current_c_name)
+      #   if is_root
+      #     if entries.size >= 3
+      #       node = entries[2]
+      #       entries[2] = ["node", node]
+      #       entries.flatten!
+      #     end
+      #   else
+      #     current_c_name = acc.last_command_name
+      #     current_context = acc.last_context
+      #     clazz = DTK::Shell::Context.get_command_class(current_c_name)
 
-          if clazz.respond_to?(:invisible_context)
-            if current_context.is_command?
-              node = entries[1]
-              entries[1] = ["node", node]
-              entries.flatten!
-            elsif current_context.is_identifier?
-              node = entries[0]
-              entries[0] = ["node", node]
-              entries.flatten!
-            end
-          end
-        end
+      #     if clazz.respond_to?(:invisible_context)
+      #       if current_context.is_command?
+      #         node = entries[1]
+      #         entries[1] = ["node", node]
+      #         entries.flatten!
+      #       elsif current_context.is_identifier?
+      #         node = entries[0]
+      #         entries[0] = ["node", node]
+      #         entries.flatten!
+      #       end
+      #     end
+      #   end
         
-        entries
-      end
+      #   entries
+      # end
 
       def prepare_context_change(args, active_context_copy, node_specific=nil)
         # split original cc command
@@ -229,7 +229,7 @@ module DTK
 
         # transform alias to full path
         entries = Context.check_for_sym_link(entries) if root?
-        entries = Context.check_invisible_context(active_context_copy, entries, root?)
+        # entries = Context.check_invisible_context(active_context_copy, entries, root?)
 
         # if only '/' or just cc skip validation
         return active_context_copy if entries.empty?
@@ -308,14 +308,14 @@ module DTK
               error_message = "'#{command}' context is not valid."
               invalid_context = command
               
-              if current_context_clazz.respond_to?(:invisible_context)
-                ic = current_context_clazz.invisible_context()
-                ic.each do |c|
-                  if c.to_s.include?(command)
-                    return nil, ""
-                  end
-                end
-              end
+              # if current_context_clazz.respond_to?(:invisible_context)
+              #   ic = current_context_clazz.invisible_context()
+              #   ic.each do |c|
+              #     if c.to_s.include?(command)
+              #       return nil, ""
+              #     end
+              #   end
+              # end
             end
           else
             error_message = "'#{command}' context is not valid."
@@ -586,15 +586,15 @@ module DTK
             command_clazz = Context.get_command_class(active_context_copy.last_command_name)
             n_level_ac_candidates = command_clazz.respond_to?(:valid_children) ? command_clazz.valid_children.map { |e| e.to_s } : []
 
-            invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context.map { |e| e.to_s } : []
-            unless invisible_context.empty?
-              node_ids = get_command_identifiers(invisible_context.first.to_s, active_context_copy)
-              node_names = node_ids ? node_ids.collect { |e| e[:name] } : []
+            # invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context.map { |e| e.to_s } : []
+            # unless invisible_context.empty?
+            #   node_ids = get_command_identifiers(invisible_context.first.to_s, active_context_copy)
+            #   node_names = node_ids ? node_ids.collect { |e| e[:name] } : []
               
-              n_level_ac_candidates.concat(node_names)
-            end
+            #   n_level_ac_candidates.concat(node_names)
+            # end
 
-            n_level_ac_candidates
+            # n_level_ac_candidates
           end
         else
           n_level_ac_candidates =  ROOT_TASKS
