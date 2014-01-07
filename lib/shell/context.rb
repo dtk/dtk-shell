@@ -403,7 +403,8 @@ module DTK
         if value
           context_hash_data = valid_id?(command, value, nil, active_context_copy)
           unless context_hash_data
-            error_message = "Identifier '#{value}' for context '#{command}' is not valid";
+            error_message = "Identifier '#{value}' is not valid."
+            # error_message = "Identifier '#{value}' for context '#{command}' is not valid";
             invalid_context = value
           end
         end
