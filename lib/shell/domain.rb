@@ -301,7 +301,7 @@ module DTK
 
       def full_path()
         path = name_list().join('/')
-        path = Context.enchance_path_with_alias(path)
+        path = Context.enchance_path_with_alias(path, @context_list)
 
         return "/#{path}"
       end
