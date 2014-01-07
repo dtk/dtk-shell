@@ -39,12 +39,12 @@ module DTK::Client
     end
 
     def self.valid_children()
-      [:node, :utils]
+      [:utils]
     end
 
-    # def self.invisible_context()
-    #   [:node]
-    # end
+    def self.invisible_context()
+      [:node]
+    end
 
     # using extended_context when we want to use autocomplete from other context
     # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
