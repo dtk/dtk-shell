@@ -193,8 +193,9 @@ module DTK
       end
 
       # usgin this to hide 'node' context, use just node_identifier
-      def self.check_invisible_context(acc, entries, is_root, line_buffer=[], args)
+      def self.check_invisible_context(acc, entries, is_root, line_buffer=[], args=[])
         entries.reject! { |e| e.empty? }
+
         unless line_buffer.empty?
           lb = line_buffer.split(' ')
           
@@ -227,6 +228,7 @@ module DTK
               end
             end
           end
+
         end
         
         entries
