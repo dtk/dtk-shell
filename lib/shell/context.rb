@@ -137,7 +137,7 @@ module DTK
           # end
 
           # Validate and change context
-          @active_context, error_message = prepare_context_change(args, @active_context, node_specific, cmd)
+          @active_context, error_message = prepare_context_change(args, @active_context, node_specific, cmd, true)
 
           load_context(active_context.last_context_name)
 
@@ -161,7 +161,7 @@ module DTK
         active_context_copy.clear if goes_from_root
         # Invalid context is user leftover to be matched; i.e. 'cc /assembly/te' - 'te' is leftover
         invalid_context = ""
-
+        
         # Validate and change context; skip step if user's input is empty or it is equal to '/'
         active_context_copy, error_message, invalid_context = prepare_context_change([readline_input], active_context_copy, nil, line_buffer) unless (readline_input.empty? || readline_input == "/")
         
@@ -192,44 +192,59 @@ module DTK
         return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root)
       end
 
-      # usgin this to hide 'node' context, use just node_identifier
+      # TODO: this is hack used this to hide 'node' context and use just node_identifier
+      # we should rethink the design of shell context if we are about to use different behaviors like this
       def self.check_invisible_context(acc, entries, is_root, line_buffer=[], args=[])
         entries.reject! { |e| e.empty? }
 
         unless line_buffer.empty?
-          lb = line_buffer.split(' ')
+          command = line_buffer.split(' ').first
+          current_c_name = acc.last_command_name
+          current_context = acc.last_context
+          clazz = DTK::Shell::Context.get_command_class(current_c_name)
+          command_from_args = nil
+
+          if args.first.include?('/')
+            command_from_args = args.first.split('/').first
+            clazz_from_args = DTK::Shell::Context.get_command_class(command_from_args) if command_from_args
+          end
           
-          if (lb.first.eql?('cd') || lb.first.eql?('cc') || lb.first.eql?('popc') || lb.first.eql?('pushc'))
+          if (command.eql?('cd') || command.eql?('cc') || command.eql?('popc') || command.eql?('pushc'))
             if is_root
               if entries.size >= 3
                 node = entries[2]
-                entries[2] = ["node", node]
-                entries.flatten!
+                if (node && clazz_from_args.respond_to?(:valid_child?))
+                  unless clazz_from_args.valid_children().first.to_s.include?(node)
+                    entries[2] = ["node", node]
+                    entries.flatten!
+                  end
+                end
               end
             else
               double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
               
               unless double_dots_count > 0
-                current_c_name = acc.last_command_name
-                current_context = acc.last_context
-                clazz = DTK::Shell::Context.get_command_class(current_c_name)
-
                 if clazz.respond_to?(:invisible_context)
                   if current_context.is_command?
                     node = entries[1]
-                    if node
-                      entries[1] = ["node", node]
-                      entries.flatten!
+                    if (node && clazz.respond_to?(:valid_child?))
+                      unless clazz.valid_children().first.to_s.include?(node)
+                        entries[1] = ["node", node]
+                        entries.flatten!
+                      end
                     end
                   elsif current_context.is_identifier?
                     node = entries[0]
-                    if node
-                      entries[0] = ["node", node]
-                      entries.flatten!
+                    if (node && clazz.respond_to?(:valid_child?))
+                      unless clazz.valid_children().first.to_s.include?(node)
+                        entries[0] = ["node", node]
+                        entries.flatten!
+                      end
                     end
                   end
                 end
               end
+
             end
           end
 
@@ -238,7 +253,7 @@ module DTK
         entries
       end
 
-      def prepare_context_change(args, active_context_copy, node_specific=nil, line_buffer=[])
+      def prepare_context_change(args, active_context_copy, node_specific=nil, line_buffer=[], on_complete=false)
         # split original cc command
         entries = args.first.split(/\//)
 
@@ -257,6 +272,11 @@ module DTK
         
         # we go back in context based on '..'
         active_context_copy.pop_context(double_dots_count)
+
+        # if cd .. back to node, skip node context and go to assembly/workspace context
+        if (active_context_copy.last_context && entries)
+          active_context_copy.pop_context(1) if (node_specific && active_context_copy.last_context.is_command? && active_context_copy.last_command_name.eql?("node") && on_complete)
+        end
 
         # special case when using workspace context
         # if do cd .. from workspace/workspace identifier go directly to root not to workspace
@@ -601,7 +621,7 @@ module DTK
           else
             command_clazz = Context.get_command_class(active_context_copy.last_command_name)
             n_level_ac_candidates = command_clazz.respond_to?(:valid_children) ? command_clazz.valid_children.map { |e| e.to_s } : []
-
+            
             invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context.map { |e| e.to_s } : []
             unless invisible_context.empty?
               node_ids = get_command_identifiers(invisible_context.first.to_s, active_context_copy)
