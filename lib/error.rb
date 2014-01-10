@@ -24,12 +24,22 @@ module DTK
       end
     end
 
+    # class DtkValidationError < Error
+
+    #   attr_accessor :skip_usage_info
+
+    #   def initialize(msg, skip_usage_info = false)
+    #     @skip_usage_info = skip_usage_info
+    #     super(msg)
+    #   end
+    # end
+
     class DtkValidationError < Error
 
-      attr_accessor :skip_usage_info
+      attr_accessor :display_usage_info
 
-      def initialize(msg, skip_usage_info = false)
-        @skip_usage_info = skip_usage_info
+      def initialize(msg, display_usage_info = false)
+        @display_usage_info = display_usage_info
         super(msg)
       end
     end
