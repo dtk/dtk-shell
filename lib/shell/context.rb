@@ -127,7 +127,8 @@ module DTK
           # hack: used just to avoid entering assembly/id/node or workspace/node context (remove when include this contexts again)
           first_c, warning_message = nil, nil
           first_c = @active_context.context_list().first.name unless @active_context.context_list().empty?
-          restricted = is_restricted_context(first_c, args)
+          tmp_active_context = @active_context.clone_me
+          restricted = is_restricted_context(first_c, args, tmp_active_context)
 
           args = restricted[:args]
           warning_message = restricted[:message]
@@ -152,7 +153,7 @@ module DTK
       end
 
       # this method is used to scan and provide context to be available Readline.complete_proc
-      def dynamic_autocomplete_context(readline_input, line_buffer)
+      def dynamic_autocomplete_context(readline_input, line_buffer=[])
         # special case indicator when user starts cc with '/' (go from root)
         goes_from_root = readline_input.start_with?('/')
         # Cloning existing active context, as all changes shouldn't be permanent, but temporary for autocomplete
@@ -169,10 +170,9 @@ module DTK
         # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
         # component-templates to autocomplete
         extended_candidates, new_context = {}, nil
-        line_buffer = nil if line_buffer.empty?
         command_clazz = Context.get_command_class(active_context_copy.last_command_name)
         
-        unless line_buffer.nil?
+        unless line_buffer.empty?
           line_buffer = line_buffer.split(' ').first
           line_buffer.gsub!('-','_') unless (line_buffer.nil? || line_buffer.empty?)
         end
@@ -189,7 +189,7 @@ module DTK
           end
         end
         
-        return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root)
+        return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root, line_buffer)
       end
 
       # TODO: this is hack used this to hide 'node' context and use just node_identifier
@@ -363,7 +363,7 @@ module DTK
 
 
       # hack: used just to avoid entering assembly/id/node or workspace/node context (remove when include this contexts again)
-      def is_restricted_context(first_c, args = [])
+      def is_restricted_context(first_c, args = [], tmp_active_context=nil)
         entries = args.first.split(/\//)
         invalid_context = ["workspace/node", "assembly/node"]
         double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
@@ -392,13 +392,18 @@ module DTK
                 end
               end
               message = "'#{last_c}' context is not valid."
-
+              is_valid_id = check_for_id(first_c, last_c, tmp_active_context, args)
+              
               # if ../ to node context, add one more .. to go to previous context (assembly/id or workspace)
               if back_flag
                 message = nil
-                entries << ".."
+                entries << ".." if is_valid_id==false
               else
-                entries.pop
+                if is_valid_id==false
+                  entries.pop 
+                else
+                  message = nil
+                end
               end
 
               args = (entries.size<=1 ? entries : entries.join('/'))
@@ -415,6 +420,35 @@ module DTK
         
         return {:args => args, :message => message}
       end
+
+      def check_for_id(context, command, tmp_active_context, args)
+        command_clazz = Context.get_command_class(context)
+        invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context.map { |e| e.to_s } : []
+        entries = args.first.split(/\//)
+        
+        entries = Context.check_for_sym_link(entries) if root?
+        unless invisible_context.empty?
+          if root?
+            tmp_active_context.push_new_context(entries[0], entries[0])
+            context_hash_data, error_message, invalid_context = validate_value(entries[0], entries[1], tmp_active_context)
+            
+            return if error_message
+            tmp_active_context.push_new_context(context_hash_data[:name], entries[0], context_hash_data[:identifier])
+            context_hash_data, error_message, invalid_context = validate_value(command, command, tmp_active_context)
+            
+            return if error_message
+            tmp_active_context.push_new_context(context_hash_data[:name], command, context_hash_data[:identifier])
+          end
+
+          
+          node_ids = get_command_identifiers(invisible_context.first.to_s, tmp_active_context)
+          node_names = node_ids ? node_ids.collect { |e| e[:name] } : []
+        end
+        
+        return node_names.include?(command)
+      end
+
+
 
       def validate_value(command, value, active_context_copy=nil)
         context_hash_data = nil
@@ -550,7 +584,7 @@ module DTK
         return nil
       end
 
-      def get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root)
+      def get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root, line_buffer=[])
         # helper indicator for case when there are more options in current context and cc command is not ended with '/'
         cutoff_forcely = false
         # input string segment used to filter results candidates
@@ -570,7 +604,7 @@ module DTK
         
         # checking if results will contain context candidates based on input string segment
         context_candidates = context_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
-
+        
         # Show all context tasks if active context orignal and it's copy are on same context, and are not on root, 
         # and if readline has one split result indicating user is not going trough n-level, but possibly executing a task
         task_candidates = []
@@ -582,7 +616,18 @@ module DTK
         task_candidates = task_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
 
         # autocomplete candidates are both context and task candidates; remove duplicates in results
-        results = (context_candidates + task_candidates).uniq
+        results = context_candidates
+
+        # if command is 'cc/cd/pushc' displat only context candidates
+        if line_buffer.empty?
+          results += task_candidates
+        else
+          is_cc = line_buffer.split(' ')
+          results += task_candidates unless (is_cc.first.eql?('cc') || is_cc.first.eql?('cd') || is_cc.first.eql?('pushc'))
+        end
+
+        # remove duplicate context or task candidates
+        results.uniq!
 
         # Send system beep if there are no candidates 
         if results.empty?
