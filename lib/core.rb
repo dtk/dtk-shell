@@ -390,7 +390,7 @@ module DTK
         DefaultRestOpts = {:timeout => 2000, :open_timeout => 2, :error_response_class => Client::Response::Error}
         # DefaultRestOpts = {:timeout => 50, :open_timeout => 2, :error_response_class => Client::Response::Error}
       else
-        DefaultRestOpts = {:timeout => 50, :open_timeout => 0.5, :error_response_class => Client::Response::Error}
+        DefaultRestOpts = {:timeout => 100, :open_timeout => 1, :error_response_class => Client::Response::Error}
       end
 
       def get_raw(url)
