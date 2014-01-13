@@ -19,7 +19,7 @@ module DTK
 
       def self.validate_region(region)
         unless EC2_REGIONS.include? region
-          raise ::DTK::Client::DtkValidationError.new("Region '#{region}' is not EC2 region, use one of: #{EC2_REGIONS.join(',')}", true) 
+          raise ::DTK::Client::DtkValidationError.new("Region '#{region}' is not EC2 region, use one of: #{EC2_REGIONS.join(',')}") 
         end
       end
 

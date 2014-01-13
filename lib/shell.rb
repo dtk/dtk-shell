@@ -125,17 +125,17 @@ def execute_shell_command(line, prompt)
     if ('cc' == cmd)
       # in case there is no params we just reload command
       args << "/" if args.empty?      
-      prompt = @context.change_context(args)
+      prompt = @context.change_context(args, cmd)
     elsif ('popc' == cmd)
         @context.dirs.shift()
         args << (@context.dirs.first.nil? ? '/' : @context.dirs.first)
-        prompt = @context.change_context(args)
+        prompt = @context.change_context(args, cmd)
     elsif ('pushc' == cmd)
       if args.empty?
         args << (@context.dirs[1].nil? ? '/' : @context.dirs[1])
         @context.dirs.unshift(args.first)
         @context.dirs.uniq!
-        prompt = @context.change_context(args)
+        prompt = @context.change_context(args, cmd)
       else
         prompt = @context.change_context(args)
         # using regex to remove dtk: and > from path returned by change_context
@@ -186,7 +186,7 @@ def execute_shell_command(line, prompt)
       end
 
       # raise validation error if option is not valid
-      raise DTK::Client::DtkValidationError, "Option '#{args.first||method_name}' is not valid for current command!" if thor_options.nil?
+      raise DTK::Client::DtkValidationError.new("Option '#{args.first||method_name}' is not valid for current command!", true) if thor_options.nil?
 
       # execute command via Thor
       top_level_execute(entity_name, method_name, context_params, thor_options, true)

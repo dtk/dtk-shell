@@ -84,10 +84,20 @@ module DTK
       end
 
       # take current path and see if it is aliased path
-      def self.enchance_path_with_alias(path)
+      def self.enchance_path_with_alias(path, context_list)
         SYM_LINKS.each do |sym_link|
           if path.downcase.include?(sym_link[:path])
-            return path.gsub(sym_link[:path], sym_link[:alias].to_s)
+            path = path.gsub(sym_link[:path], sym_link[:alias].to_s)
+          end
+        end
+
+        unless context_list.empty?
+          init_context = context_list.first.name
+          command_clazz = Context.get_command_class(init_context)
+          invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context() : {}
+          
+          invisible_context.each do |ic|
+            path = path.gsub(/\/#{ic}\//,'/')
           end
         end
 
@@ -95,7 +105,7 @@ module DTK
       end
       
       # Validates and changes context
-      def change_context(args)
+      def change_context(args, cmd=[])
         begin
           # check if we are doing switch context
           if args.join("").match(/\A\-\Z/)
@@ -117,7 +127,8 @@ module DTK
           # hack: used just to avoid entering assembly/id/node or workspace/node context (remove when include this contexts again)
           first_c, warning_message = nil, nil
           first_c = @active_context.context_list().first.name unless @active_context.context_list().empty?
-          restricted = is_restricted_context(first_c, args)
+          tmp_active_context = @active_context.clone_me
+          restricted = is_restricted_context(first_c, args, tmp_active_context)
 
           args = restricted[:args]
           warning_message = restricted[:message]
@@ -127,7 +138,7 @@ module DTK
           # end
 
           # Validate and change context
-          @active_context, error_message = prepare_context_change(args, @active_context, node_specific)
+          @active_context, error_message = prepare_context_change(args, @active_context, node_specific, cmd, true)
 
           load_context(active_context.last_context_name)
 
@@ -142,7 +153,7 @@ module DTK
       end
 
       # this method is used to scan and provide context to be available Readline.complete_proc
-      def dynamic_autocomplete_context(readline_input, line_buffer)
+      def dynamic_autocomplete_context(readline_input, line_buffer=[])
         # special case indicator when user starts cc with '/' (go from root)
         goes_from_root = readline_input.start_with?('/')
         # Cloning existing active context, as all changes shouldn't be permanent, but temporary for autocomplete
@@ -151,18 +162,17 @@ module DTK
         active_context_copy.clear if goes_from_root
         # Invalid context is user leftover to be matched; i.e. 'cc /assembly/te' - 'te' is leftover
         invalid_context = ""
-
+        
         # Validate and change context; skip step if user's input is empty or it is equal to '/'
-        active_context_copy, error_message, invalid_context = prepare_context_change([readline_input], active_context_copy) unless (readline_input.empty? || readline_input == "/")
+        active_context_copy, error_message, invalid_context = prepare_context_change([readline_input], active_context_copy, nil, line_buffer) unless (readline_input.empty? || readline_input == "/")
         
         # using extended_context when we want to use autocomplete from other context
         # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
         # component-templates to autocomplete
         extended_candidates, new_context = {}, nil
-        line_buffer = nil if line_buffer.empty?
         command_clazz = Context.get_command_class(active_context_copy.last_command_name)
         
-        unless line_buffer.nil?
+        unless line_buffer.empty?
           line_buffer = line_buffer.split(' ').first
           line_buffer.gsub!('-','_') unless (line_buffer.nil? || line_buffer.empty?)
         end
@@ -178,16 +188,78 @@ module DTK
             active_context_copy.push_new_context(new_context, new_context) unless new_context.nil?
           end
         end
-
-        return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root)
+        
+        return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root, line_buffer)
       end
 
-      def prepare_context_change(args, active_context_copy, node_specific=nil)
+      # TODO: this is hack used this to hide 'node' context and use just node_identifier
+      # we should rethink the design of shell context if we are about to use different behaviors like this
+      def self.check_invisible_context(acc, entries, is_root, line_buffer=[], args=[])
+        entries.reject! { |e| e.empty? }
+
+        unless line_buffer.empty?
+          command = line_buffer.split(' ').first
+          current_c_name = acc.last_command_name
+          current_context = acc.last_context
+          clazz = DTK::Shell::Context.get_command_class(current_c_name)
+          command_from_args = nil
+
+          if args.first.include?('/')
+            command_from_args = args.first.split('/').first
+            clazz_from_args = DTK::Shell::Context.get_command_class(command_from_args) if command_from_args
+          end
+          
+          if (command.eql?('cd') || command.eql?('cc') || command.eql?('popc') || command.eql?('pushc'))
+            if is_root
+              if entries.size >= 3
+                node = entries[2]
+                if (node && clazz_from_args.respond_to?(:valid_child?))
+                  unless clazz_from_args.valid_children().first.to_s.include?(node)
+                    entries[2] = ["node", node]
+                    entries.flatten!
+                  end
+                end
+              end
+            else
+              double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
+              
+              unless double_dots_count > 0
+                if clazz.respond_to?(:invisible_context)
+                  if current_context.is_command?
+                    node = entries[1]
+                    if (node && clazz.respond_to?(:valid_child?))
+                      unless clazz.valid_children().first.to_s.include?(node)
+                        entries[1] = ["node", node]
+                        entries.flatten!
+                      end
+                    end
+                  elsif current_context.is_identifier?
+                    node = entries[0]
+                    if (node && clazz.respond_to?(:valid_child?))
+                      unless clazz.valid_children().first.to_s.include?(node)
+                        entries[0] = ["node", node]
+                        entries.flatten!
+                      end
+                    end
+                  end
+                end
+              end
+
+            end
+          end
+
+        end
+        
+        entries
+      end
+
+      def prepare_context_change(args, active_context_copy, node_specific=nil, line_buffer=[], on_complete=false)
         # split original cc command
         entries = args.first.split(/\//)
 
         # transform alias to full path
         entries = Context.check_for_sym_link(entries) if root?
+        entries = Context.check_invisible_context(active_context_copy, entries, root?, line_buffer, args)
 
         # if only '/' or just cc skip validation
         return active_context_copy if entries.empty?
@@ -200,6 +272,11 @@ module DTK
         
         # we go back in context based on '..'
         active_context_copy.pop_context(double_dots_count)
+
+        # if cd .. back to node, skip node context and go to assembly/workspace context
+        if (active_context_copy.last_context && entries)
+          active_context_copy.pop_context(1) if (node_specific && active_context_copy.last_context.is_command? && active_context_copy.last_command_name.eql?("node") && on_complete)
+        end
 
         # special case when using workspace context
         # if do cd .. from workspace/workspace identifier go directly to root not to workspace
@@ -216,19 +293,19 @@ module DTK
         ac_size = context_name_list.size
         
         invalid_context = ""
-        
         # check each par for command / value
         (0..(entries.size-1)).step(2) do |i|
           command       = entries[i]
           value         = entries[i+1]
           
           clazz = DTK::Shell::Context.get_command_class(command)
-          error_message, invalid_context = validate_command(clazz,current_context_clazz,command)
+          error_message, invalid_context = validate_command(clazz, current_context_clazz, command)
+          
           break if error_message
           # if we are dealing with new entries add them to active_context
           active_context_copy.push_new_context(command, command) if (i >= ac_size)
-
           current_context_clazz = clazz
+
           if value
             # context_hash_data is hash with :name, :identifier values
             context_hash_data, error_message, invalid_context = validate_value(command, value, active_context_copy)
@@ -239,6 +316,7 @@ module DTK
               end
               break
             end
+            
             active_context_copy.push_new_context(context_hash_data[:name], command, context_hash_data[:identifier]) if ((i+1) >= ac_size)
           end
         end
@@ -261,12 +339,22 @@ module DTK
           # valid child method is necessery to define parent-child relet.
           if current_context_clazz.respond_to?(:valid_child?)
             unless current_context_clazz.valid_child?(command)
+              
               error_message = "'#{command}' context is not valid."
               invalid_context = command
+              
+              if current_context_clazz.respond_to?(:invisible_context)
+                ic = current_context_clazz.invisible_context()
+                ic.each do |c|
+                  if c.to_s.include?(command)
+                    return nil, ""
+                  end
+                end
+              end
             end
           else
             error_message = "'#{command}' context is not valid."
-              invalid_context = command
+            invalid_context = command
           end
         end
 
@@ -275,7 +363,7 @@ module DTK
 
 
       # hack: used just to avoid entering assembly/id/node or workspace/node context (remove when include this contexts again)
-      def is_restricted_context(first_c, args = [])
+      def is_restricted_context(first_c, args = [], tmp_active_context=nil)
         entries = args.first.split(/\//)
         invalid_context = ["workspace/node", "assembly/node"]
         double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
@@ -304,13 +392,18 @@ module DTK
                 end
               end
               message = "'#{last_c}' context is not valid."
-
+              is_valid_id = check_for_id(first_c, last_c, tmp_active_context, args)
+              
               # if ../ to node context, add one more .. to go to previous context (assembly/id or workspace)
               if back_flag
                 message = nil
-                entries << ".."
+                entries << ".." if is_valid_id==false
               else
-                entries.pop
+                if is_valid_id==false
+                  entries.pop 
+                else
+                  message = nil
+                end
               end
 
               args = (entries.size<=1 ? entries : entries.join('/'))
@@ -328,6 +421,35 @@ module DTK
         return {:args => args, :message => message}
       end
 
+      def check_for_id(context, command, tmp_active_context, args)
+        command_clazz = Context.get_command_class(context)
+        invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context.map { |e| e.to_s } : []
+        entries = args.first.split(/\//)
+        
+        entries = Context.check_for_sym_link(entries) if root?
+        unless invisible_context.empty?
+          if root?
+            tmp_active_context.push_new_context(entries[0], entries[0])
+            context_hash_data, error_message, invalid_context = validate_value(entries[0], entries[1], tmp_active_context)
+            
+            return if error_message
+            tmp_active_context.push_new_context(context_hash_data[:name], entries[0], context_hash_data[:identifier])
+            context_hash_data, error_message, invalid_context = validate_value(command, command, tmp_active_context)
+            
+            return if error_message
+            tmp_active_context.push_new_context(context_hash_data[:name], command, context_hash_data[:identifier])
+          end
+
+          
+          node_ids = get_command_identifiers(invisible_context.first.to_s, tmp_active_context)
+          node_names = node_ids ? node_ids.collect { |e| e[:name] } : []
+        end
+        
+        return node_names.include?(command)
+      end
+
+
+
       def validate_value(command, value, active_context_copy=nil)
         context_hash_data = nil
         invalid_context = ""
@@ -335,7 +457,8 @@ module DTK
         if value
           context_hash_data = valid_id?(command, value, nil, active_context_copy)
           unless context_hash_data
-            error_message = "Identifier '#{value}' for context '#{command}' is not valid";
+            error_message = "Identifier '#{value}' is not valid."
+            # error_message = "Identifier '#{value}' for context '#{command}' is not valid";
             invalid_context = value
           end
         end
@@ -461,14 +584,13 @@ module DTK
         return nil
       end
 
-      def get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root)
-        
+      def get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root, line_buffer=[])
         # helper indicator for case when there are more options in current context and cc command is not ended with '/'
         cutoff_forcely = false
         # input string segment used to filter results candidates
         results_filter = (readline_input.match(/\/$/) && invalid_context.empty?) ? "" : readline_input.split("/").last
         results_filter ||= ""
-
+        
         # If command does not end with '/' check if there are more than one result candidate for current context
         if !readline_input.empty? && !readline_input.match(/\/$/) && invalid_context.empty? && !active_context_copy.empty?
           context_list = active_context_copy.context_list
@@ -479,10 +601,10 @@ module DTK
           # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
           context_candidates = get_ac_candidates_for_context(active_context_copy.last_context(), active_context_copy)
         end
-
+        
         # checking if results will contain context candidates based on input string segment
         context_candidates = context_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
-
+        
         # Show all context tasks if active context orignal and it's copy are on same context, and are not on root, 
         # and if readline has one split result indicating user is not going trough n-level, but possibly executing a task
         task_candidates = []
@@ -494,7 +616,18 @@ module DTK
         task_candidates = task_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
 
         # autocomplete candidates are both context and task candidates; remove duplicates in results
-        results = (context_candidates + task_candidates).uniq
+        results = context_candidates
+
+        # if command is 'cc/cd/pushc' displat only context candidates
+        if line_buffer.empty?
+          results += task_candidates
+        else
+          is_cc = line_buffer.split(' ')
+          results += task_candidates unless (is_cc.first.eql?('cc') || is_cc.first.eql?('cd') || is_cc.first.eql?('pushc'))
+        end
+
+        # remove duplicate context or task candidates
+        results.uniq!
 
         # Send system beep if there are no candidates 
         if results.empty?
@@ -533,6 +666,16 @@ module DTK
           else
             command_clazz = Context.get_command_class(active_context_copy.last_command_name)
             n_level_ac_candidates = command_clazz.respond_to?(:valid_children) ? command_clazz.valid_children.map { |e| e.to_s } : []
+            
+            invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context.map { |e| e.to_s } : []
+            unless invisible_context.empty?
+              node_ids = get_command_identifiers(invisible_context.first.to_s, active_context_copy)
+              node_names = node_ids ? node_ids.collect { |e| e[:name] } : []
+              
+              n_level_ac_candidates.concat(node_names)
+            end
+
+            n_level_ac_candidates
           end
         else
           n_level_ac_candidates =  ROOT_TASKS
