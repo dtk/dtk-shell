@@ -975,6 +975,10 @@ module DTK::Client
       detail_to_include = nil
       format = nil
       post_options = Hash.new
+
+      # use_default is used if we want to use provided data_type and not data_type returned from server
+      use_default = false
+
       # if list method is called outside of dtk-shell and called for workspace context (dtk workspace list-nodes)
       # without workspace identifier, we will set 'workspace' as identifier (dtk workspace workspace list-nodes)
       assembly_or_workspace_id = 'workspace' if (context_params.is_last_command_eql_to?(:workspace) && assembly_or_workspace_id.nil?)
@@ -1027,6 +1031,11 @@ module DTK::Client
       else
         if assembly_or_workspace_id
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
+          
+          if data_type.to_s.eql?("component")
+            use_default = true
+            data_type = :component_w_path_and_dependencies
+          end
           #TODO: need to cleanup that data_type set in multiple places
           if about == "attributes"
             data_type = (options.links? ? :workspace_attribute_w_link : :workspace_attribute)
@@ -1043,8 +1052,9 @@ module DTK::Client
 
       # set render view to be used
       unless format
-        response.render_table(data_type)
+        response.render_table(data_type, use_default)
       end
+      
       response
     end
 

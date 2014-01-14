@@ -120,13 +120,14 @@ TODO: overlaps with different meaning
             # ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
             ['list-attributes',"list-attributes","# List attributes associated with assembly's node."],
             ['list-components',"list-components","# List components associated with assembly's node."],
+            ['set-attribute',"set-attribute ATTRIBUTE-NAME [VALUE] [-u]","# (Un)Set attribute value. The option -u will unset the attribute's value."],
             ['start', "start", "# Start node instance."],
             ['stop', "stop", "# Stop node instance."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
             ['edit',"edit","# Edit component module related to given component."],
-            ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."],
+            # ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."],
             ['link-components',"link-components ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."],
             ['list-component-links',"list-component-links","# List component's links to other components."],
             ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."]
@@ -311,7 +312,7 @@ TODO: will put in dot release and will rename to 'extend'
       workflow_info_aux(context_params)
     end
 
-    desc "[ASSEMBLY-NAME/ID] list","List assemblies."
+    desc "list","List assemblies."
     def list(context_params)
       assembly_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
       detail_to_include = nil
@@ -527,23 +528,7 @@ TODO: will put in dot release and will rename to 'extend'
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
     desc "HIDE_FROM_BASE edit","Edit component module related to given component."
     def edit(context_params)
-      assembly_id, component_id = context_params.retrieve_arguments([:assembly_id!, :component_id!], method_argument_names)
-
-      post_body = {
-        :assembly_id => assembly_id,
-        :component_id => component_id
-      }
-      response = post(rest_url("assembly/get_components_module"), post_body)
-      return response unless response.ok?
-
-      component_module = response['data']['component']
-      version             = response['data']['version']
-      
-      context_params_for_service = DTK::Shell::ContextParams.new
-      context_params_for_service.add_context_to_params(component_module['display_name'], "module", component_module['id']) unless component_module.nil?
-      context_params_for_service.override_method_argument!('option_1', version)
-        
-      response = DTK::Client::ContextRouter.routeTask("module", "edit", context_params_for_service, @conn)
+      component_edit_aux(context_params)
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)

@@ -169,8 +169,8 @@ module DTK
         self
       end
 
-      def render_table(default_data_type=nil)
-        unless data_type = response_datatype() || default_data_type
+      def render_table(default_data_type=nil, use_default=false)
+        unless data_type = (use_default ? default_data_type : (response_datatype() || default_data_type))
           raise DTK::Client::DtkError, "Server did not return datatype."
         end
 
