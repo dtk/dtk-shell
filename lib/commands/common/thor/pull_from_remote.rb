@@ -85,11 +85,9 @@ module DTK::Client
         post_body.merge!(:version => remote_params[:version]) if remote_params[:version]
         response = post rest_url("#{module_type}/pull_from_remote"), post_body
         
-        if response.ok?
-          puts "You have successfully pulled code on server instance."
-        else
-          response
-        end
+        
+        puts "You have successfully pulled code on server instance." if response.ok?
+        response
       end
       
       def self.id_field(module_type)
