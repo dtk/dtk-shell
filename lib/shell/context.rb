@@ -17,6 +17,7 @@ module DTK
       HISTORY_LOCATION      = DTK::Client::OsUtil.dtk_local_folder + "shell_history"
       ROOT_TASKS            = DTK::Client::Dtk.task_names
       ALL_COMMANDS          = ROOT_TASKS + DTK::Client::Dtk.additional_entities
+      IDENTIFIERS_ONLY      = ['cc','cd','pushc']
 
 
       SYM_LINKS = [
@@ -172,7 +173,7 @@ module DTK
         extended_candidates, new_context = {}, nil
         command_clazz = Context.get_command_class(active_context_copy.last_command_name)
         
-        unless line_buffer.empty?
+        unless (line_buffer.empty? || line_buffer.strip().empty?)
           line_buffer = line_buffer.split(' ').first
           line_buffer.gsub!('-','_') unless (line_buffer.nil? || line_buffer.empty?)
         end
@@ -252,6 +253,7 @@ module DTK
         
         entries
       end
+
 
       def prepare_context_change(args, active_context_copy, node_specific=nil, line_buffer=[], on_complete=false)
         # split original cc command
@@ -623,7 +625,7 @@ module DTK
           results += task_candidates
         else
           is_cc = line_buffer.split(' ')
-          results += task_candidates unless (is_cc.first.eql?('cc') || is_cc.first.eql?('cd') || is_cc.first.eql?('pushc'))
+          results += task_candidates unless IDENTIFIERS_ONLY.include?(is_cc.first)
         end
 
         # remove duplicate context or task candidates

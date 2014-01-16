@@ -169,14 +169,13 @@ module DTK::Client
         :assembly_id => assembly_template_id
       }
 
-
-
       # we check current options and forwarded options (from deploy method)
       in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
 
       post_body.merge!(:target_id => in_target) if in_target
       post_body.merge!(:name => name) if name
       response = post rest_url("assembly/stage"), post_body
+
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
 
