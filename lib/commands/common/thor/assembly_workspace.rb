@@ -1040,10 +1040,9 @@ module DTK::Client
         else
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
         end
-      #TODO: Ask Aldin what type of call I put in here
       else
         if assembly_or_workspace_id
-          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
+          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "modules","tasks"])
           
           if data_type.to_s.eql?("component")
             use_default = true
