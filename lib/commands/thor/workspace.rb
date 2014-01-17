@@ -332,7 +332,8 @@ module DTK::Client
       list_attributes_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-components","List components associated with workspace."
+    desc "WORKSPACE-NAME/ID list-components [--links]","List components associated with workspace."
+    method_option :links, :type => :boolean, :default => false, :aliases => '-l'
     def list_components(context_params)
       list_components_aux(context_params)
     end
@@ -345,6 +346,11 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID list-component-links","List component links."
     def list_component_links(context_params)
       list_component_links_aux(context_params)
+    end
+
+    desc "WORKSPACE-NAME/ID list-modules","List modules associated with workspace."
+    def list_modules(context_params)
+      list_modules_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID list-tasks","List tasks associated with workspace."

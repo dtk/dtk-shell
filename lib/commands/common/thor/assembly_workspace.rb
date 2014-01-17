@@ -243,6 +243,12 @@ module DTK::Client
       # list_assemblies(context_params)
     end
 
+    def list_modules_aux(context_params)
+      context_params.method_arguments = ["modules"]
+      list_aux(context_params)
+      # list_assemblies(context_params)
+    end
+
     def list_attributes_aux(context_params)
       context_params.method_arguments = ["attributes"]
       list_aux(context_params)
@@ -988,15 +994,21 @@ module DTK::Client
           when "nodes"
             data_type = :node
           when "components"
+            #TODO: data_type should be fn of whether  options.links? is true
             data_type = :component
-            detail_to_include = [:component_dependencies]
+            if options.links?
+              detail_to_include = [:component_dependencies]
+            end  
           when "attributes"
             data_type = (options.links? ? :workspace_attribute_w_link : :workspace_attribute)
             if format = options.format
               post_options.merge!(:format => format)
-            else
+              #dont need to compute links if using a format
+            elsif options.links?
               detail_to_include = [:attribute_links]
             end
+          when "modules"
+             data_type = :assembly_module
           when "tasks"
             data_type = :task
           else
@@ -1028,6 +1040,7 @@ module DTK::Client
         else
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
         end
+      #TODO: Ask Aldin what type of call I put in here
       else
         if assembly_or_workspace_id
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
