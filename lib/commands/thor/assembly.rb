@@ -532,12 +532,6 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE edit","Edit component module related to given component."
-    def edit(context_params)
-      component_edit_aux(context_params)
-    end
-
-    # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
     desc "HIDE_FROM_BASE get-netstats", "Get netstats"
     def get_netstats(context_params)
       get_netstats_aux(context_params)

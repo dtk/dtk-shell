@@ -260,19 +260,6 @@ module DTK::Client
       unlink_components_aux(context_params)
     end
 
-
-   # desc "COMPONENT-NAME/ID edit-dsl","Edit component module related to given component."
-   # def edit_dsl(context_params)
-   #   context_params.forward_options( { :edit_dsl => true})
-   #   component_edit_aux(context_params)
-   # end
-
-   # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE edit","Edit component module related to given component."
-    def edit(context_params)
-      component_edit_aux(context_params)
-    end
-
     desc "WORKSPACE-NAME/ID edit-module MODULE-NAME", "Edit a component module used in the workspace."
     def edit_module(context_params)
       edit_module_aux(context_params)
