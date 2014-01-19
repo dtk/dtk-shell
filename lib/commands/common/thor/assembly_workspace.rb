@@ -966,7 +966,9 @@ module DTK::Client
       # if list method is called outside of dtk-shell and called for workspace context (dtk workspace list-nodes)
       # without workspace identifier, we will set 'workspace' as identifier (dtk workspace workspace list-nodes)
       assembly_or_workspace_id = 'workspace' if (context_params.is_last_command_eql_to?(:workspace) && assembly_or_workspace_id.nil?)
-      
+
+      #TODO: looking for cleaner way of showing which ones are using the default datatype passed back from server;
+      #might use data_type = DynamicDatatype
       if about
         case about
           when "nodes"
@@ -986,7 +988,7 @@ module DTK::Client
             end
           when "modules"
              detail_to_include = [:version_info]
-             data_type = :assembly_module
+             data_type = nil #TODO: DynamicDatatype
           when "tasks"
             data_type = :task
           else
@@ -1043,7 +1045,6 @@ module DTK::Client
       unless format
         response.render_table(data_type, use_default)
       end
-      
       response
     end
 
