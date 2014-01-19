@@ -985,6 +985,7 @@ module DTK::Client
               detail_to_include = [:attribute_links]
             end
           when "modules"
+             detail_to_include = [:version_info]
              data_type = :assembly_module
           when "tasks"
             data_type = :task
