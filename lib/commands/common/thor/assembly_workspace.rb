@@ -671,7 +671,7 @@ module DTK::Client
         end
       end
 
-      #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
+      #TODO: needed better way to render what is one of the fields which is any array (:results in this case)
       response.set_data(*response.data(:results))
       response.render_table(:netstat_data)
     end
@@ -972,9 +972,8 @@ module DTK::Client
           when "nodes"
             data_type = :node
           when "components"
-            #TODO: data_type should be fn of whether  options.links? is true
             data_type = :component
-            if options.links?
+            if options.deps?
               detail_to_include = [:component_dependencies]
             end  
           when "attributes"
@@ -1039,7 +1038,6 @@ module DTK::Client
 
       post_body[:about] = about
       response = post rest_url(rest_endpoint), post_body
-
       # set render view to be used
       unless format
         response.render_table(data_type, use_default)

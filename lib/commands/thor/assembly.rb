@@ -285,8 +285,8 @@ TODO: will put in dot release and will rename to 'extend'
       list_component_links_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-components [--links]","List components associated with assembly."
-    method_option :links, :type => :boolean, :default => false, :aliases => '-l'
+    desc "ASSEMBLY-NAME/ID list-components [--deps]","List components associated with assembly."
+    method_option :deps, :type => :boolean, :default => false, :aliases => '-l'
     def list_components(context_params)
       list_components_aux(context_params)
     end
