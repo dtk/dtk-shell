@@ -1025,8 +1025,7 @@ module DTK::Client
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "modules","tasks"])
           
           if data_type.to_s.eql?("component")
-            use_default = true
-            data_type = :component_w_path_and_dependencies
+            data_type = nil #DynamicDatatype
           end
           #TODO: need to cleanup that data_type set in multiple places
           if about == "attributes"
@@ -1045,6 +1044,7 @@ module DTK::Client
       unless format
         response.render_table(data_type, use_default)
       end
+
       response
     end
 
