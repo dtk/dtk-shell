@@ -243,6 +243,12 @@ module DTK::Client
       # list_assemblies(context_params)
     end
 
+    def list_modules_aux(context_params)
+      context_params.method_arguments = ["modules"]
+      list_aux(context_params)
+      # list_assemblies(context_params)
+    end
+
     def list_attributes_aux(context_params)
       context_params.method_arguments = ["attributes"]
       list_aux(context_params)
@@ -628,28 +634,6 @@ module DTK::Client
       response = post(rest_url("assembly/delete_component"),post_body)
     end
 
-    def component_edit_aux(context_params)
-      assembly_or_workspace_id, component_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :component_id!], method_argument_names)
-      edit_dsl = context_params.get_forwarded_options()[:edit_dsl] if context_params.get_forwarded_options()
-      
-      post_body = {
-        :assembly_id => assembly_or_workspace_id,
-        :component_id => component_id
-      }
-      response = post(rest_url("assembly/get_components_module"), post_body)
-      return response unless response.ok?
-
-      component_module = response['data']['component']
-      version             = response['data']['version']
-      
-      context_params_for_service = DTK::Shell::ContextParams.new
-      context_params_for_service.add_context_to_params(component_module['display_name'], "module", component_module['id']) unless component_module.nil?
-      context_params_for_service.override_method_argument!('option_1', version)
-      context_params_for_service.forward_options( { :edit_dsl => true}) if edit_dsl
-        
-      response = DTK::Client::ContextRouter.routeTask("module", "edit", context_params_for_service, @conn)
-    end
-
     def get_netstats_aux(context_params)
       netstat_tries = 6
       netstat_sleep = 0.5
@@ -687,7 +671,7 @@ module DTK::Client
         end
       end
 
-      #TODO: needed better way to render what is one of teh feileds which is any array (:results in this case)
+      #TODO: needed better way to render what is one of the fields which is any array (:results in this case)
       response.set_data(*response.data(:results))
       response.render_table(:netstat_data)
     end
@@ -982,21 +966,29 @@ module DTK::Client
       # if list method is called outside of dtk-shell and called for workspace context (dtk workspace list-nodes)
       # without workspace identifier, we will set 'workspace' as identifier (dtk workspace workspace list-nodes)
       assembly_or_workspace_id = 'workspace' if (context_params.is_last_command_eql_to?(:workspace) && assembly_or_workspace_id.nil?)
-      
+
+      #TODO: looking for cleaner way of showing which ones are using the default datatype passed back from server;
+      #might use data_type = DynamicDatatype
       if about
         case about
           when "nodes"
             data_type = :node
           when "components"
             data_type = :component
-            detail_to_include = [:component_dependencies]
+            if options.deps?
+              detail_to_include = [:component_dependencies]
+            end  
           when "attributes"
             data_type = (options.links? ? :workspace_attribute_w_link : :workspace_attribute)
             if format = options.format
               post_options.merge!(:format => format)
-            else
+              #dont need to compute links if using a format
+            elsif options.links?
               detail_to_include = [:attribute_links]
             end
+          when "modules"
+             detail_to_include = [:version_info]
+             data_type = nil #TODO: DynamicDatatype
           when "tasks"
             data_type = :task
           else
@@ -1030,11 +1022,10 @@ module DTK::Client
         end
       else
         if assembly_or_workspace_id
-          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
+          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "modules","tasks"])
           
           if data_type.to_s.eql?("component")
-            use_default = true
-            data_type = :component_w_path_and_dependencies
+            data_type = nil #DynamicDatatype
           end
           #TODO: need to cleanup that data_type set in multiple places
           if about == "attributes"
@@ -1049,12 +1040,11 @@ module DTK::Client
 
       post_body[:about] = about
       response = post rest_url(rest_endpoint), post_body
-
       # set render view to be used
       unless format
         response.render_table(data_type, use_default)
       end
-      
+
       response
     end
 

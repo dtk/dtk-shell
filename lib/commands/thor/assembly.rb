@@ -285,7 +285,8 @@ TODO: will put in dot release and will rename to 'extend'
       list_component_links_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-components","List components associated with assembly."
+    desc "ASSEMBLY-NAME/ID list-components [--deps]","List components associated with assembly."
+    method_option :deps, :type => :boolean, :default => false, :aliases => '-l'
     def list_components(context_params)
       list_components_aux(context_params)
     end
@@ -295,6 +296,11 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :links, :type => :boolean, :default => false, :aliases => '-l'
     def list_attributes(context_params)
       list_attributes_aux(context_params)
+    end
+
+    desc "ASSEMBLY-NAME/ID list-modules","List modules associated with assembly."
+    def list_modules(context_params)
+      list_modules_aux(context_params)
     end
 
     desc "ASSEMBLY-NAME/ID list-tasks","List tasks associated with assembly."
@@ -523,12 +529,6 @@ TODO: will put in dot release and will rename to 'extend'
       @@invalidate_map << :assembly_node_component
 
       response
-    end
-
-    # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE edit","Edit component module related to given component."
-    def edit(context_params)
-      component_edit_aux(context_params)
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
