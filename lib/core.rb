@@ -18,7 +18,7 @@ def top_level_execute(entity_name, method_name, context_params=nil, options_args
     top_level_execute_core(entity_name, method_name, context_params, options_args, shell_execute)
   rescue DTK::Client::DtkLoginRequiredError
     # re-logging user and repeating request
-    DTK::Client::OsUtil.print("Session expired; re-establishing session", :yellow)
+    DTK::Client::OsUtil.print("Session expired: re-establishing session & repeating given task", :yellow)
     DTK::Client::Session.re_initialize()
     top_level_execute_core(entity_name, method_name, context_params, options_args, shell_execute)
   end
@@ -127,6 +127,18 @@ module DTK
   module Client
     class ResponseErrorHandler
       class << self
+
+        def check_for_session_expiried(response_ruby_obj)
+          error_code = nil
+          if response_ruby_obj && response_ruby_obj['errors']
+            response_ruby_obj['errors'].each do |err|
+              error_code      = err["code"]||(err["errors"] && err["errors"].first["code"])
+            end
+          end
+
+          return (error_code == "forbidden")
+        end
+
         def check(response_ruby_obj)
           # check for errors in response
              
@@ -269,6 +281,7 @@ module DTK
       def self.re_initialize()
         Session.instance.conn = nil
         Session.instance.conn = DTK::Client::Conn.new()
+        Session.instance.conn.cookies
       end
 
       def self.logout()
@@ -286,7 +299,7 @@ module DTK
 
       VERBOSE_MODE_ON = ::DTK::Configuration.get(:verbose_rest_calls)
 
-      attr_reader :connection_error
+      attr_reader :connection_error, :cookies
 
       if VERBOSE_MODE_ON
         require 'ap'
@@ -310,7 +323,8 @@ module DTK
 
       def get(command_class,url)
         ap "GET #{url}" if VERBOSE_MODE_ON
-        Response.new(command_class,json_parse_if_needed(get_raw(url)))
+
+        check_and_wrap_response(command_class, Proc.new { json_parse_if_needed(get_raw(url)) })
       end
 
       def post(command_class,url,body=nil)
@@ -319,7 +333,8 @@ module DTK
           ap "params: "
           ap body
         end
-        Response.new(command_class,json_parse_if_needed(post_raw(url,body)))
+
+        check_and_wrap_response(command_class, Proc.new { json_parse_if_needed(post_raw(url,body)) })
       end
 
       def post_file(command_class,url,body=nil)
@@ -328,8 +343,25 @@ module DTK
           ap "params: "
           ap body
         end
-        Response.new(command_class,json_parse_if_needed(post_raw(url,body,{:content_type => 'avro/binary'})))
+
+        check_and_wrap_response(command_class, Proc.new { json_parse_if_needed(post_raw(url,body,{:content_type => 'avro/binary'})) })
       end
+
+      # method will repeat request in case session has expired
+      def check_and_wrap_response(command_class, rest_method_func)
+        response = rest_method_func.call
+
+        if ResponseErrorHandler.check_for_session_expiried(response)
+          # re-logging user and repeating request
+          DTK::Client::OsUtil.print("Session expired: re-establishing session & re-trying request ...", :yellow)
+          @cookies = DTK::Client::Session.re_initialize()
+          response = rest_method_func.call
+        end
+
+        Response.new(command_class, response)
+      end
+
+
 
       def connection_error?
         return !@connection_error.nil?
@@ -360,7 +392,9 @@ module DTK
       end
 
       private
+
       include ParseFile
+
       def login()
         creds = get_credentials()
         response = post_raw rest_url("user/process_login"),creds
