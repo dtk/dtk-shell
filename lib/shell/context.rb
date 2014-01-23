@@ -6,7 +6,7 @@ module DTK
   module Shell
 
     class Context
-      extend DTK::Client::Auxiliary
+      include DTK::Client::Auxiliary
       
       # client commands
       CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs','help']
@@ -179,12 +179,12 @@ module DTK
         end
 
         unless command_clazz.nil?
-          extended_context    = command_clazz.respond_to?(:extended_context) ? command_clazz.extended_context() : {}
+          extended_context = command_clazz.respond_to?(:extended_context) ? command_clazz.extended_context() : {}
           
           unless extended_context.empty?
-            # extended_candidates = extended_context.reject!{|k,v| k.to_s!=line_buffer}
-            # new_context = extended_candidates[line_buffer.to_sym] unless line_buffer.nil?
+            extended_context = extended_context[:context]
             extended_context.reject!{|k,v| k.to_s!=line_buffer}
+
             new_context = extended_context[line_buffer.to_sym] unless line_buffer.nil?
             active_context_copy.push_new_context(new_context, new_context) unless new_context.nil?
           end
@@ -593,15 +593,32 @@ module DTK
         results_filter = (readline_input.match(/\/$/) && invalid_context.empty?) ? "" : readline_input.split("/").last
         results_filter ||= ""
         
-        # If command does not end with '/' check if there are more than one result candidate for current context
-        if !readline_input.empty? && !readline_input.match(/\/$/) && invalid_context.empty? && !active_context_copy.empty?
-          context_list = active_context_copy.context_list
-          context_name = context_list.size == 1 ? nil : context_list[context_list.size-2] # if case when on 1st level, return root candidates
-          context_candidates = get_ac_candidates_for_context(context_name, active_context_copy)
-          cutoff_forcely = true
+        command_clazz = Context.get_command_class(active_context_copy.last_command_name)
+        extended_context_commands = nil
+
+        unless command_clazz.nil?
+          extended_context = command_clazz.respond_to?(:extended_context) ? command_clazz.extended_context() : {}
+          
+          unless extended_context.empty?
+            extended_context = extended_context[:command]
+            extended_context.reject!{|k,v| k.to_s!=line_buffer} if extended_context
+            extended_context_commands = extended_context[line_buffer.to_sym] unless (line_buffer.empty? || extended_context.nil?)
+          end
+        end
+
+        if extended_context_commands
+            context_candidates = load_extended_context_commands(extended_context_commands, active_context_copy)
         else
-          # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
-          context_candidates = get_ac_candidates_for_context(active_context_copy.last_context(), active_context_copy)
+          # If command does not end with '/' check if there are more than one result candidate for current context
+          if !readline_input.empty? && !readline_input.match(/\/$/) && invalid_context.empty? && !active_context_copy.empty?
+            context_list = active_context_copy.context_list
+            context_name = context_list.size == 1 ? nil : context_list[context_list.size-2] # if case when on 1st level, return root candidates
+            context_candidates = get_ac_candidates_for_context(context_name, active_context_copy)
+            cutoff_forcely = true
+          else
+            # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
+            context_candidates = get_ac_candidates_for_context(active_context_copy.last_context(), active_context_copy)
+          end
         end
         
         # checking if results will contain context candidates based on input string segment
@@ -625,7 +642,7 @@ module DTK
           results += task_candidates
         else
           is_cc = line_buffer.split(' ')
-          results += task_candidates unless IDENTIFIERS_ONLY.include?(is_cc.first)
+          results += task_candidates unless (IDENTIFIERS_ONLY.include?(is_cc.first) || extended_context_commands)
         end
 
         # remove duplicate context or task candidates
@@ -698,6 +715,30 @@ module DTK
         end
 
         return []
+      end
+
+      def load_extended_context_commands(extended_context_commands, active_context_copy)
+        candidates = []
+        entity_name = active_context_copy.last_context
+
+        if entity_name.is_identifier?
+          endpoint = extended_context_commands[:endpoint]
+          url = extended_context_commands[:url]
+          opts = extended_context_commands[:opts]||{}
+        
+          id_label = "#{endpoint}_id".to_sym
+          id = entity_name.identifier
+          opts[id_label] = id
+
+          response_ruby_obj = DTK::Client::CommandBaseThor.get_cached_response(endpoint.to_sym, url, opts)
+          return [] unless response_ruby_obj.ok?
+
+          response_ruby_obj.data.each do |d|
+            candidates << d["display_name"]
+          end
+        end
+
+        candidates
       end
 
       # changes command and argument if argument is plural of one of 

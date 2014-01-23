@@ -969,6 +969,7 @@ module DTK::Client
 
       #TODO: looking for cleaner way of showing which ones are using the default datatype passed back from server;
       #might use data_type = DynamicDatatype
+      pp "::::::: #{about}"
       if about
         case about
           when "nodes"

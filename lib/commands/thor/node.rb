@@ -23,7 +23,11 @@ module DTK::Client
     # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
     # component-templates to autocomplete
     def self.extended_context()
-      {:create_component => "component_template"}
+      {
+        :context => {
+          :create_component => "component_template"
+        }
+      }
     end
 
     def self.valid_child?(name_of_sub_context)
