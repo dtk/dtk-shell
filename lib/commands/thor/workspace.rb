@@ -217,7 +217,13 @@ module DTK::Client
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
     desc "HIDE_FROM_BASE create-component NODE-NAME COMPONENT", "Add a component to a workspace."
     def create_component(context_params)
-      create_component_aux(context_params)
+      response = create_component_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+
+      response
     end
 
     # using ^^ before NODE-NAME to remove this command from workspace/node/node_id but show in workspace
@@ -258,8 +264,11 @@ module DTK::Client
     def delete_component(context_params)
       response = delete_component_aux(context_params)
       return response unless response.ok?
-
+      
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
       @@invalidate_map << :assembly_node_component
+      
       return response
     end
 
