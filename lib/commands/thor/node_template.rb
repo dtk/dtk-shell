@@ -79,6 +79,7 @@ module DTK::Client
       response = post rest_url("node/stage"), post_body
       # when changing context send request for getting latest node_templates instead of getting from cache
       @@invalidate_map << :node_template
+      @@invalidate_map << :node
 
       return response
     end

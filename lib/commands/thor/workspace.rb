@@ -67,7 +67,8 @@ module DTK::Client
 
     # this includes children of children
     def self.all_children()
-      [:node, :component, :attribute]
+      # [:node, :component, :attribute]
+      [:node]
     end
 
     def self.multi_context_children()
@@ -268,7 +269,7 @@ module DTK::Client
       @@invalidate_map << :assembly
       @@invalidate_map << :assembly_node
       @@invalidate_map << :assembly_node_component
-      
+
       return response
     end
 

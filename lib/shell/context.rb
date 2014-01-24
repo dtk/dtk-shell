@@ -301,7 +301,7 @@ module DTK
           value         = entries[i+1]
           
           clazz = DTK::Shell::Context.get_command_class(command)
-          error_message, invalid_context = validate_command(clazz, current_context_clazz, command)
+          error_message, invalid_context = validate_command(clazz, current_context_clazz, command, active_context_copy)
           
           break if error_message
           # if we are dealing with new entries add them to active_context
@@ -326,7 +326,7 @@ module DTK
         return active_context_copy, error_message, invalid_context
       end
 
-      def validate_command(clazz, current_context_clazz, command)
+      def validate_command(clazz, current_context_clazz, command, active_context_copy=nil)
         error_message = nil
         invalid_context = ""
 
@@ -340,7 +340,11 @@ module DTK
         unless current_context_clazz.nil?
           # valid child method is necessery to define parent-child relet.
           if current_context_clazz.respond_to?(:valid_child?)
-            unless current_context_clazz.valid_child?(command)
+            root_clazz = DTK::Shell::Context.get_command_class(active_context_copy.first_command_name)
+            all_children = root_clazz.all_children() + root_clazz.valid_children()
+
+            valid_all_children = (root_clazz != current_context_clazz) ? all_children.include?(command.to_sym) : true
+            unless (current_context_clazz.valid_child?(command) && valid_all_children)
               
               error_message = "'#{command}' context is not valid."
               invalid_context = command
@@ -683,10 +687,14 @@ module DTK
             command_identifiers   = get_command_identifiers(context.name, active_context_copy)
             n_level_ac_candidates = command_identifiers ? command_identifiers.collect { |e| e[:name] } : []
           else
-            command_clazz = Context.get_command_class(active_context_copy.last_command_name)
+            command_clazz         = Context.get_command_class(active_context_copy.last_command_name)
+            root_clazz            = DTK::Shell::Context.get_command_class(active_context_copy.first_command_name)
+            valid_all_children    = (root_clazz != command_clazz) ? (root_clazz.all_children() + root_clazz.valid_children()) : []
             n_level_ac_candidates = command_clazz.respond_to?(:valid_children) ? command_clazz.valid_children.map { |e| e.to_s } : []
-            
+
+            n_level_ac_candidates.keep_if{|v| valid_all_children.include?(v.to_sym)} unless valid_all_children.empty?
             invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context.map { |e| e.to_s } : []
+            
             unless invisible_context.empty?
               node_ids = get_command_identifiers(invisible_context.first.to_s, active_context_copy)
               node_names = node_ids ? node_ids.collect { |e| e[:name] } : []

@@ -73,7 +73,8 @@ module DTK::Client
 
     # this includes children of children
     def self.all_children()
-      [:node, :component, :attribute]
+      # [:node, :component, :attribute]
+      [:node]
     end
 
     def self.multi_context_children()
