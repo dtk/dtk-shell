@@ -60,6 +60,20 @@ module DTK::Client
       end
     end
 
+    def self.assembly_list()
+      assembly_list = []
+      response = get_cached_response(:assembly, "assembly/list", {:subtype => 'instance'})
+      raise DTK::Client::DtkError, "Unable to retreive assembly list." unless response.ok?
+      
+      if assemblies = response.data
+        assemblies.each do |assembly|
+          assembly_list << assembly["display_name"]
+        end
+      end
+      
+      assembly_list
+    end
+
     desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."
     method_option :list, :type => :boolean, :default => false
     def info(context_params)
@@ -172,10 +186,16 @@ module DTK::Client
       # we check current options and forwarded options (from deploy method)
       in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
 
+      if name
+        assembly_list = AssemblyTemplate.assembly_list()
+        raise DTK::Client::DtkValidationError, "Unable to stage assembly with name '#{name}'. Assembly with specified name exists already!" if assembly_list.include?(name)
+      end
+      
       post_body.merge!(:target_id => in_target) if in_target
       post_body.merge!(:name => name) if name
-      response = post rest_url("assembly/stage"), post_body
 
+      response = post rest_url("assembly/stage"), post_body
+      return response unless response.ok?
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
 
