@@ -197,6 +197,7 @@ module DTK
       # we should rethink the design of shell context if we are about to use different behaviors like this
       def self.check_invisible_context(acc, entries, is_root, line_buffer=[], args=[])
         entries.reject! { |e| e.empty? }
+        goes_from_root = args.first.start_with?('/')
 
         unless line_buffer.empty?
           command = line_buffer.split(' ').first
@@ -206,7 +207,7 @@ module DTK
           command_from_args = nil
 
           if args.first.include?('/')
-            command_from_args = args.first.split('/').first
+            command_from_args = goes_from_root ? args.first.split('/')[1] : args.first.split('/').first
             clazz_from_args = DTK::Shell::Context.get_command_class(command_from_args) if command_from_args
           end
           
