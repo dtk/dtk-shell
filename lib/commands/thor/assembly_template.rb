@@ -62,7 +62,7 @@ module DTK::Client
 
     def self.assembly_list()
       assembly_list = []
-      response = get_cached_response(:assembly, "assembly/list", {:subtype => 'instance'})
+      response = get_cached_response(:assembly, "assembly/list", {})
       raise DTK::Client::DtkError, "Unable to retreive assembly list." unless response.ok?
       
       if assemblies = response.data
