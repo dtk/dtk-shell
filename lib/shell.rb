@@ -172,7 +172,7 @@ def execute_shell_command(line, prompt)
       Thor.set_context(@context)
       
       # we get command and hash params, will return Validation error if command is not valid
-      entity_name, method_name, context_params, thor_options = @context.get_command_parameters(cmd,args)
+      entity_name, method_name, context_params, thor_options, invalid_options = @context.get_command_parameters(cmd,args)
 
       # check if command is executed from parent context (e.g assembly_name list-nodes)
       if context_candidates.include?(method_name)
@@ -186,7 +186,7 @@ def execute_shell_command(line, prompt)
       end
 
       # raise validation error if option is not valid
-      raise DTK::Client::DtkValidationError.new("Option '#{args.first||method_name}' is not valid for current command!", true) if thor_options.nil?
+      raise DTK::Client::DtkValidationError.new("Option '#{invalid_options.first||method_name}' is not valid for current command!", true) unless invalid_options.empty?
 
       # execute command via Thor
       top_level_execute(entity_name, method_name, context_params, thor_options, true)

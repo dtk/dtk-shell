@@ -800,14 +800,15 @@ module DTK
         # extract thor options
         clazz              = Context.get_command_class(entity_name)
         options            = Context.get_thor_options(clazz, method_name) unless clazz.nil?
-        args, thor_options = Context.parse_thor_options(args, options)
+        args, thor_options, invalid_options = Context.parse_thor_options(args, options)
         context_params.method_arguments = args
 
 
         unless available_tasks.include?(method_name)
           raise DTK::Client::DtkError, "Could not find task \"#{method_name}\"."
-
         end
+
+        raise DTK::Client::DtkValidationError, "Option '#{invalid_options.first}' is not valid for current command!" unless invalid_options.empty?
 
         return entity_name, method_name, context_params, thor_options
       end
@@ -838,12 +839,12 @@ module DTK
         # extract thor options
         clazz              = Context.get_command_class(entity_name)
         options            = Context.get_thor_options(clazz, cmd) unless clazz.nil?
-        args, thor_options = Context.parse_thor_options(args, options)
+        args, thor_options, invalid_options = Context.parse_thor_options(args, options)
 
         # set rest of arguments as method options
         context_params.method_arguments = args
 
-        return entity_name, method_name, context_params, thor_options
+        return entity_name, method_name, context_params, thor_options, invalid_options
       end
 
       private
@@ -852,7 +853,7 @@ module DTK
       # method takes parameters that can hold specific thor options
       #
       def self.parse_thor_options(args, options=nil)
-        type = nil
+        type, invalid_options = nil, []
         
         # options to handle thor options -m MESSAGE and --list
         options_param_args = []
@@ -861,8 +862,9 @@ module DTK
             type = Context.get_option_type(options, e) unless options.nil?
             if type.nil?
               options_param_args = nil
-              # break
-              raise DTK::Client::DtkValidationError, "Option '#{e}' is not valid for current command!"
+              invalid_options << e
+              break
+              # raise DTK::Client::DtkValidationError, "Option '#{e}' is not valid for current command!"
             else
               options_param_args << e
               options_param_args << args[i+1] unless type == :boolean
@@ -873,7 +875,7 @@ module DTK
         # remove thor_options
         args = args - options_param_args unless options_param_args.nil?
 
-        return args, options_param_args
+        return args, options_param_args, invalid_options
       end
 
       def self.get_thor_options(clazz, command)
