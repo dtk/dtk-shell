@@ -642,8 +642,8 @@ module DTK::Client
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    #hidden options for dev
-    method_option 'parse', :aliases => '-p', :type => :boolean, :default => false
+    #hidden option for dev
+    method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
     def push(context_params, internal_trigger=false)
       component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!, :module_name],method_argument_names)
       version = options["version"]
