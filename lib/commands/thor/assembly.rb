@@ -454,6 +454,7 @@ TODO: will put in dot release and will rename to 'extend'
          
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_template
       response
     end
 

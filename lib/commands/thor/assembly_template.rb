@@ -198,6 +198,7 @@ module DTK::Client
       return response unless response.ok?
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_template
 
       return response
     end
