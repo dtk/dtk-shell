@@ -25,15 +25,20 @@ $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2
 
 # check if .add_direct_access file exists, if not then add direct access and create .add_direct_access file
 check_direct_access(::DTK::Client::Configurator.check_direct_access)
+entries = []
 
-entity_name = ARGV.shift if ARGV.size > 0
+if ARGV.size > 0
+  entries = ARGV
+  entries = DTK::Shell::Context.check_for_sym_link(entries)
+  entity_name = entries.shift
+end
 
 # special case for when no params are provided use help method
 if (entity_name == 'help' || entity_name.nil?)
   entity_name = 'dtk'
   args = ['help']
 else
-  args = ARGV
+  args = entries
 end
 
 context = DTK::Shell::Context.new(true)
