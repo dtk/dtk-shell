@@ -269,7 +269,7 @@ module DTK::Client
       @@invalidate_map << :module_component
 
       repo_url,repo_id,module_id,branch = response.data(:repo_url,:repo_id,:module_id,:workspace_branch)
-      response = Helper(:git_repo).initialize_client_clone_and_push(:component_module,module_name,branch,repo_url)
+      response = Helper(:git_repo).initialize_client_clone_and_push(:component_module,module_name,branch,repo_url,module_directory)
       return response unless response.ok?
       repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
 

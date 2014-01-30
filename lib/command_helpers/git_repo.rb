@@ -128,15 +128,19 @@ module DTK; module Client; class CommandHelper
         unless File.directory?(local_repo_dir)
           raise ErrorUsage.new("The content for module (#{module_name}) should be put in directory (#{local_repo_dir})")
         end
-        if File.directory?("#{local_repo_dir}/.git")
-          response =  unlink_local_clone?(type,module_name,version)
-          unless response.ok?
-            # in case delete went wrong, we raise usage error
-            raise ErrorUsage.new("Directory (#{local_repo_dir} is set as a git repo; to continue it must be a non git repo; this can be handled by shell command 'rm -rf #{local_repo_dir}/.git'")
-          end
 
-          # we return to normal flow, since .git dir is removed
-        end
+        # transfered this part to initialize_client_clone_and_push because if we remove .git folder and
+        # if create on server fails we will lose this .git folder and will not be able to push local changes to server
+        # if File.directory?("#{local_repo_dir}/.git")
+        #   response =  unlink_local_clone?(type,module_name,version)
+        #   unless response.ok?
+        #     # in case delete went wrong, we raise usage error
+        #     raise ErrorUsage.new("Directory (#{local_repo_dir} is set as a git repo; to continue it must be a non git repo; this can be handled by shell command 'rm -rf #{local_repo_dir}/.git'")
+        #   end
+
+        #   # we return to normal flow, since .git dir is removed
+        # end
+
         if Dir["#{local_repo_dir}/*"].empty?
           raise ErrorUsage.new("Directory (#{local_repo_dir}) must have ths initial content for module (#{module_name})")
         end
@@ -145,8 +149,19 @@ module DTK; module Client; class CommandHelper
     end
 
     #makes repo_dir (determined from type and module_name) into a git dir, pulls, adds, content and then pushes
-    def initialize_client_clone_and_push(type,module_name,branch,repo_url)
-       Response.wrap_helper_actions() do
+    def initialize_client_clone_and_push(type,module_name,branch,repo_url,local_repo_dir,version=nil)
+      # moved this part from 'check_local_dir_exists_with_content' to this method since this only deletes .git folder
+      # which can cause us problems if import fails
+      if File.directory?("#{local_repo_dir}/.git")
+        response =  unlink_local_clone?(type,module_name,version)
+        unless response.ok?
+          # in case delete went wrong, we raise usage error
+          raise ErrorUsage.new("Directory (#{local_repo_dir} is set as a git repo; to continue it must be a non git repo; this can be handled by shell command 'rm -rf #{local_repo_dir}/.git'")
+        end
+        # we return to normal flow, since .git dir is removed
+      end
+      
+      Response.wrap_helper_actions() do
         ret = Hash.new
         repo_dir = local_repo_dir(type,module_name)
 

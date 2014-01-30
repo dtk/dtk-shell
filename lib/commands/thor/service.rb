@@ -458,7 +458,7 @@ module DTK::Client
       # initial commit for given service module
       service_module_id, repo_info, module_id = response.data(:service_module_id, :repo_info)
       repo_url,repo_id,module_id,branch = [:repo_url,:repo_id,:module_id,:workspace_branch].map { |k| repo_info[k.to_s] }
-      response = Helper(:git_repo).initialize_client_clone_and_push(:service_module, module_name,branch,repo_url)
+      response = Helper(:git_repo).initialize_client_clone_and_push(:service_module, module_name,branch,repo_url,service_directory)
       return response unless response.ok?
       repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
 
