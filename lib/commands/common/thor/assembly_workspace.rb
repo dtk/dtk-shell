@@ -49,13 +49,13 @@ module DTK::Client
     end
 
     #mode will be :create or :update
-    def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name,assembly_template_name)
+    def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name=nil,assembly_template_name=nil)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
-        :service_module_name => service_module_name,
-        :assembly_template_name => assembly_template_name,
         :mode => mode.to_s
       }
+      post_body.merge!(:service_module_name => service_module_name) if service_module_name
+      post_body.merge!(:assembly_template_name => assembly_template_name) if assembly_template_name
       response = post rest_url("assembly/promote_to_template"), post_body
       # when changing context send request for getting latest assembly_templates instead of getting from cache
       # @@invalidate_map << :assembly_template
