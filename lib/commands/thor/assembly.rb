@@ -201,6 +201,11 @@ TODO: overlaps with different meaning
 
       raise DTK::Client::DtkValidationError, "No object of type assembly with name (#{assembly_name}) exists." unless assembly_id
       response = post rest_url("assembly/rename"), post_body
+
+      return response unless response.ok?
+      @@invalidate_map << :assembly
+
+      response      
     end
 
     #desc "ASSEMBLY-NAME/ID clear-tasks", "Clears the tasks that have been run already."
