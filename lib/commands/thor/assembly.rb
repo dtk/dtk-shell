@@ -28,6 +28,20 @@ module DTK::Client
       def get_assembly_name(assembly_id)
         get_name_from_id_helper(assembly_id)
       end
+
+      def get_assembly_id(assembly_name)
+        assembly_id = nil
+        list = CommandBaseThor.get_cached_response(:assembly, "assembly/list", {})
+
+        list.data.each do |item|
+          if item["display_name"] == assembly_name
+            assembly_id = item["id"]
+            break
+          end
+        end
+
+        assembly_id
+      end
     end
 
     def self.whoami()
@@ -172,6 +186,21 @@ TODO: overlaps with different meaning
     desc "ASSEMBLY-NAME/ID cancel-task [TASK_ID]", "Cancels an executing task.  If task id is omitted, this command cancels the most recent executing task."
     def cancel_task(context_params)
       cancel_task_aux(context_params)
+    end
+
+    desc "rename ASSEMBLY-NAME NEW-ASSEMBLY-NAME","List assemblies."
+    def rename(context_params)
+      assembly_name, new_assembly_name = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
+      assembly_id = get_assembly_id(assembly_name)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :assembly_name => assembly_name,
+        :new_assembly_name => new_assembly_name
+      }
+
+      raise DTK::Client::DtkValidationError, "No object of type assembly with name (#{assembly_name}) exists." unless assembly_id
+      response = post rest_url("assembly/rename"), post_body
     end
 
     #desc "ASSEMBLY-NAME/ID clear-tasks", "Clears the tasks that have been run already."
