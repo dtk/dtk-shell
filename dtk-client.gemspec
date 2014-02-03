@@ -16,7 +16,7 @@ Gem::Specification.new do |gem|
   gem.summary       = %q{DTK CLI client for DTK server interaction.}
   gem.homepage      = "https://github.com/rich-reactor8/dtk-client"
 
-  gem.files = %w(README.md Gemfile Gemfile.lock Gemfile_dev Gemfile_dev.lock dtk-client.gemspec)
+  gem.files = %w(README.md Gemfile Gemfile_dev dtk-client.gemspec)
   gem.files += Dir.glob("bin/**/*")
   gem.files += Dir.glob("lib/**/*")
   gem.files += Dir.glob("puppet/**/*")
