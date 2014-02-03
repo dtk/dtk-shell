@@ -228,14 +228,19 @@ TODO: overlaps with different meaning
       converge_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID push-assembly-updates SERVICE-NAME/ASSEMBLY-NAME", "Push workspace instance to the designated assembly."
+    desc "ASSEMBLY-NAME/ID push-assembly-updates [SERVICE-NAME/ASSEMBLY-NAME]", "Push assembly instance to the designated assembly; default is parent assembly."
     def push_assembly_updates(context_params)
-      assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names) 
-      if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
-        service_module_name, assembly_template_name = [$1,$2]
-      else
-        raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-NAME/ASSEMBLY-NAME"
-      end
+      assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:assembly_id!,:option_1],method_argument_names) 
+      service_module_name, assembly_template_name =
+        if qualified_assembly_name
+          if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
+            [$1,$2]
+          else
+            raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-NAME/ASSEMBLY-NAME"
+          end
+        else
+          [nil,nil]
+        end
       response = promote_assembly_aux(:update,assembly_id, service_module_name, assembly_template_name)
       return response unless response.ok?
       @@invalidate_map << :assembly_template

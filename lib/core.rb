@@ -430,12 +430,19 @@ module DTK
       # In development mode we want bigger timeout allowing us to debbug on server while still
       # keeping connection alive and receivinga response
       if ::DTK::Configuration.get(:development_mode)
-        DefaultRestOpts = {:timeout => 2000, :open_timeout => 2, :error_response_class => Client::Response::Error, :verify_ssl => OpenSSL::SSL::VERIFY_PEER}
+        DefaultRestOpts = {:timeout => 2000, :open_timeout => 2, :error_response_class => Client::Response::Error}
         # DefaultRestOpts = {:timeout => 50, :open_timeout => 2, :error_response_class => Client::Response::Error}
       else
-        DefaultRestOpts = {:timeout => 100, :open_timeout => 1, :error_response_class => Client::Response::Error, :verify_ssl => OpenSSL::SSL::VERIFY_PEER}
+        DefaultRestOpts = {:timeout => 100, :open_timeout => 1, :error_response_class => Client::Response::Error}
       end
 
+      # enable SSL verification
+      DefaultRestOpts.merge!(:verify_ssl => OpenSSL::SSL::VERIFY_PEER)
+      # Net:HTTP from Ruby 1.8.7 doesn't verify SSL certs correctly
+      # this is a CA bundle downloaded from http://curl.haxx.se/docs/caextract.html, 
+      # and it will only be used for 1.8.7, otherwise the default (system) CA will be used
+      DefaultRestOpts.merge!(:ssl_ca_file => File.expand_path('../lib/config/cacert.pem', File.dirname(__FILE__))) if RUBY_VERSION == '1.8.7'
+    
       def get_raw(url)
         RestClientWrapper.get_raw(url, {}, DefaultRestOpts.merge(:cookies => @cookies))
       end
