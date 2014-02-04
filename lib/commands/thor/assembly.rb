@@ -45,7 +45,7 @@ module DTK::Client
       end
 
       def validate_assembly_name(new_assembly_name)
-        raise DTK::Client::DtkValidationError, "You are not allowed to use keyword 'workspace' as assembly name!" if new_assembly_name.eql?("workspace")
+        raise DTK::Client::DtkValidationError, "You are not allowed to use keyword 'workspace' as assembly name." if new_assembly_name.eql?("workspace")
 
         list = CommandBaseThor.get_cached_response(:assembly, "assembly/list", {})
         list.data.each do |item|
