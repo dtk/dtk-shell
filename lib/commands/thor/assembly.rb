@@ -40,7 +40,17 @@ module DTK::Client
           end
         end
 
+        raise DTK::Client::DtkValidationError, "No object of type assembly with name (#{assembly_name}) exists!" unless assembly_id
         assembly_id
+      end
+
+      def validate_assembly_name(new_assembly_name)
+        raise DTK::Client::DtkValidationError, "You are not allowed to use keyword 'workspace' as assembly name!" if new_assembly_name.eql?("workspace")
+
+        list = CommandBaseThor.get_cached_response(:assembly, "assembly/list", {})
+        list.data.each do |item|
+          raise DTK::Client::DtkValidationError, "Assembly with name '#{new_assembly_name}' exists already!" if item["display_name"].eql?(new_assembly_name)
+        end
       end
     end
 
@@ -199,7 +209,7 @@ TODO: overlaps with different meaning
         :new_assembly_name => new_assembly_name
       }
 
-      raise DTK::Client::DtkValidationError, "No object of type assembly with name (#{assembly_name}) exists." unless assembly_id
+      validate_assembly_name(new_assembly_name)
       response = post rest_url("assembly/rename"), post_body
 
       return response unless response.ok?
