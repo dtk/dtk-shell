@@ -441,7 +441,7 @@ module DTK
       # Net:HTTP from Ruby 1.8.7 doesn't verify SSL certs correctly
       # this is a CA bundle downloaded from http://curl.haxx.se/docs/caextract.html, 
       # and it will only be used for 1.8.7, otherwise the default (system) CA will be used
-      DefaultRestOpts.merge!(:ssl_ca_file => File.expand_path('../lib/config/cacert.pem', File.dirname(__FILE__))) if RUBY_VERSION == '1.8.7'
+      DefaultRestOpts.merge!(:ssl_ca_file => File.expand_path('../lib/config/cacert.pem', File.dirname(__FILE__)))
     
       def get_raw(url)
         RestClientWrapper.get_raw(url, {}, DefaultRestOpts.merge(:cookies => @cookies))
