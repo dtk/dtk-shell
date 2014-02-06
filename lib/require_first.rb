@@ -3,7 +3,7 @@ require File.expand_path('../lib/error', File.dirname(__FILE__))
 # we leave possibilites that folders user multiple names
 # when somebody takes fresh projects from git it is expected that
 # person will use dtk-common name
-POSSIBLE_COMMON_REPO_FOLDERS = ['dtk-common-repo','dtk-common-core']
+POSSIBLE_COMMON_CORE_FOLDERS = ['dtk-common-repo','dtk-common-core']
 
 
 def dtk_require(*files_x)
@@ -43,7 +43,7 @@ end
 # this returns true if there is no common folder e.g. dtk-common in parent folder,
 # and gem is installed
 def gem_only_available?()
-  return !determine_common_folder() && is_dtk_common_repo_gem_installed?
+  return !determine_common_folder() && is_dtk_common_core_gem_installed?
 end
 
 def dtk_require_dtk_common_core(common_library)
@@ -52,7 +52,7 @@ def dtk_require_dtk_common_core(common_library)
 
   if common_folder
     dtk_require("../../" + common_folder + "/lib/#{common_library}")
-  elsif is_dtk_common_repo_gem_installed?       
+  elsif is_dtk_common_core_gem_installed?       
     # already loaded so do not do anything
   else
     raise DTK::Client::DtkError,"Common directory/gem not found, please make sure that you have cloned dtk-common folder or installed dtk common gem!"
@@ -65,7 +65,7 @@ private
 # Check if dtk-common gem has been installed if so use common gem. If there is no gem
 # logic from dtk_require_dtk_common will try to find commond folder.
 # DEVELOPER NOTE: Uninstall dtk-common gem when changing dtk-common to avoid re-building gem.
-def is_dtk_common_repo_gem_installed?
+def is_dtk_common_core_gem_installed?
   begin
     # if no exception gem is found
     gem 'dtk-common-repo'
@@ -78,7 +78,7 @@ end
 ##
 # Checks for expected names of dtk-common folder and returns name of existing common folder
 def determine_common_folder
-  POSSIBLE_COMMON_REPO_FOLDERS.each do |folder|
+  POSSIBLE_COMMON_CORE_FOLDERS.each do |folder|
     path = File.join(File.dirname(__FILE__),'..','..',folder)
     return folder if File.directory?(path)
   end

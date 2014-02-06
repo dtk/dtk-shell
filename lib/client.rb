@@ -5,11 +5,11 @@ begin
 
   if gem_only_available?
     # loads it only if there is no common folder, and gem is installed
-    require 'dtk_common_repo'
+    require 'dtk_common_core'
   end
 
   # Load DTK Common
-  dtk_require_dtk_common_core("dtk_common_repo")
+  dtk_require_dtk_common_core("dtk_common_core")
 
   # Monkey Patching bundler to support loading specific Gemfile from dtk-client project's root - Ticket: DTK-585
   dtk_require("config/configuration")
