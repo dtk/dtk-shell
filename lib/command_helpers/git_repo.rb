@@ -1,6 +1,3 @@
-dtk_require_dtk_common('grit_adapter') #only one adapter now
-dtk_require_dtk_common('errors') 
-dtk_require_dtk_common('log') 
 require 'fileutils'
 
 module DTK; module Client; class CommandHelper

@@ -1,6 +1,3 @@
-dtk_require_dtk_common("response")
-require 'grit'
-
 # This is wrapper for holding rest response information as well as 
 # passing selection of ViewProcessor from Thor selection to render view 
 # selection

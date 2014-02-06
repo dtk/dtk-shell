@@ -5,17 +5,18 @@ begin
 
   if gem_only_available?
     # loads it only if there is no common folder, and gem is installed
-    require 'dtk-common'
+    require 'dtk_common_repo'
   end
+
+  # Load DTK Common
+  dtk_require_dtk_common_core("dtk_common_repo")
 
   # Monkey Patching bundler to support loading specific Gemfile from dtk-client project's root - Ticket: DTK-585
   dtk_require("config/configuration")
 
 
   if DTK::Configuration.get(:debug_grit)
-    require 'grit'
-    # enable grit debug logs
-    Grit.debug = true
+    # INSERT NEW CODE HERE
   end
 
   # we don't need Bundler.setup but will leave it commented just in case
@@ -29,10 +30,6 @@ begin
     end
     dtk_require("bundler_monkey_patch")
   end
-
-  #TODO: should be common gem
-  dtk_require_dtk_common("hash_object")
-  dtk_require_dtk_common("auxiliary")
 
   ########
   dtk_require("auxiliary")
