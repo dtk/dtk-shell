@@ -68,7 +68,7 @@ private
 def is_dtk_common_core_gem_installed?
   begin
     # if no exception gem is found
-    gem 'dtk-common-repo'
+    gem 'dtk-common-core'
     return true
   rescue Gem::LoadError
     return false
