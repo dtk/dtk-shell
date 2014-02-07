@@ -1,10 +1,11 @@
 require 'fileutils'
+dtk_require("../domain/git_adapter")
 
 module DTK; module Client; class CommandHelper
   class GitRepo < self; class << self
 
     def create(repo_dir,branch=nil,opts={})
-      adapter_class().new(repo_dir,branch,opts)
+      GitAdapter.new(repo_dir,branch,opts)
     end
 
     def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil, opts={})
@@ -15,7 +16,7 @@ module DTK; module Client; class CommandHelper
         opts = {}
         opts = { :branch => branch } if branch
         begin 
-          adapter_class().clone(target_repo_dir,repo_url, opts)
+          GitAdapter.clone(repo_url, target_repo_dir, opts[:branch])
         rescue => e
           #cleanup by deleting directory
           FileUtils.rm_rf(target_repo_dir) if File.directory?(target_repo_dir)
@@ -60,6 +61,8 @@ module DTK; module Client; class CommandHelper
     #
     def push_changes(type,module_name,version,opts={})
       Response.wrap_helper_actions() do
+        # DEBUG SNIPPET >>> REMOVE <<<
+        require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
         repo_dir = local_repo_dir(type,module_name,version,opts)
         repo = create(repo_dir,opts[:local_branch])
         push_repo_changes_aux(repo,opts)
@@ -176,7 +179,7 @@ module DTK; module Client; class CommandHelper
 
    private
     #TODO: in common expose Common::GritAdapter at less nested level
-    class DiffSummary < Common::GritAdapter::FileAccess::Diffs::Summary
+    class DiffSummary
       def self.new_version()
         new(:new_version => true)
       end
@@ -196,18 +199,16 @@ module DTK; module Client; class CommandHelper
     def push_repo_changes_aux(repo,opts={})
       diffs = DiffSummary.new()
 
-      #add any file that is untracked
-      status = repo.status()
-      if status[:untracked]
-        status[:untracked].each{|untracked_file_path|repo.add_file_command(untracked_file_path)}
-      end
+      # adding untracked files (newly added files)
+      repo.stage_changes()
       
-      if status.any_changes?() 
+      # commit if there has been changes
+      if repo.changed?
         repo.commit(opts[:commit_msg]||"Pushing changes from client") #TODO: make more descriptive
       end
 
       if opts[:remote_repo] and opts[:remote_repo_url]
-        repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
+        repo.add_remote(opts[:remote_repo],opts[:remote_repo_url])
       end
       
       unless opts[:no_fetch]
@@ -215,8 +216,11 @@ module DTK; module Client; class CommandHelper
       end
 
       local_branch = repo.branch 
-      remote_branch_ref = remote_branch_ref(local_branch,opts)
+      remote_branch_ref = remote_branch_ref(local_branch, opts)
 
+
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
       #check if merge needed
       commit_shas = Hash.new
       merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
@@ -253,7 +257,7 @@ module DTK; module Client; class CommandHelper
       end
 
       if opts[:remote_repo] and opts[:remote_repo_url]
-      repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
+        repo.add_remote(opts[:remote_repo],opts[:remote_repo_url])
       end
 
       unless opts[:no_fetch]
@@ -261,7 +265,7 @@ module DTK; module Client; class CommandHelper
       end
 
       local_branch      = repo.branch 
-      remote_branch_ref = remote_branch_ref(local_branch,opts)
+      remote_branch_ref = remote_branch_ref(local_branch, opts)
 
       commit_shas = Hash.new
       merge_rel   = repo.ret_merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
@@ -333,6 +337,8 @@ module DTK; module Client; class CommandHelper
       remote_repo||"origin"
     end
     def remote_branch_ref(local_branch,opts={})
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
       "#{remote(opts[:remote_repo])}/#{opts[:remote_branch]||local_branch}"
     end
 

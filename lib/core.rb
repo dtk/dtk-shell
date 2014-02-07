@@ -182,7 +182,7 @@ module DTK
             elsif error_internal
               where = (error_on_server ? "SERVER" : "CLIENT")
               #opts = (error_backtrace ? {:backtrace => error_backtrace} : {})
-              raise DTK::Client::DtkError.new("[#{where} INTERNAL ERROR] #{error_msg}")
+              raise DTK::Client::DtkError.new("[#{where} INTERNAL ERROR] #{error_msg}", :backtrace => error_backtrace)
             else
               # if usage error occurred, display message to console and display that same message to log
               raise DTK::Client::DtkError, "[ERROR] #{error_msg}." 

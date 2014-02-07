@@ -58,7 +58,7 @@ module DTK::Client
         return Response::Ok.new()
       end
 
-      unless  file_to_edit
+      unless file_to_edit
         grit_adapter.print_status
       end
 
