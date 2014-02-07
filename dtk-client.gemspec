@@ -1,14 +1,6 @@
 # -*- encoding: utf-8 -*-
 require File.expand_path('../lib/dtk-client/version', __FILE__)
 
-# only used for autoincremeting versions in production
-prod_version_path = File.expand_path('../lib/dtk-client/prod_version', __FILE__)
-if File.exist?("#{prod_version_path}.rb")
-  require prod_version_path
-else
-  DtkClient::PROD_VERSION = nil
-end
-
 Gem::Specification.new do |gem|
   gem.authors       = ["Rich PELAVIN"]
   gem.email         = ["rich@reactor8.com"]
@@ -27,7 +19,7 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.name          = "dtk-client"
   gem.require_paths = ["lib"]
-  gem.version       = DtkClient::PROD_VERSION || "#{DtkClient::VERSION}.#{ARGV[3]}".chomp(".")
+  gem.version       = "#{DtkClient::VERSION}.#{ARGV[3]}".chomp(".")
 
   gem.add_dependency 'bundler','>= 1.2.4'
   gem.add_dependency 'json' ,'1.7.4'
