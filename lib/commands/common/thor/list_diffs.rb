@@ -59,44 +59,24 @@ module DTK::Client
       deleted  = []
       modified = []
 
-      if remote
-        unless response[:files_modified].nil?
-          response[:files_modified].each do |file|
-            modified << file[:path]
-          end
-        end
-
-        unless response[:files_deleted].nil?
-          response[:files_deleted].each do |file|
-            deleted << file[:path]
-          end
-        end
-
-        unless response[:files_added].nil?
-          response[:files_added].each do |file|
-            added << file[:path]
-          end
-        end
-      else
-        unless response[:changed].nil?
-          response[:changed].each do |file|
-            modified << file
-          end
-        end
-
-        unless response[:deleted].nil?
-          response[:deleted].each do |file|
-            deleted << file
-          end
-        end
-
-        unless response[:added].nil?
-          response[:added].each do |file|
-            added << file
-          end
+      unless response[:files_modified].nil?
+        response[:files_modified].each do |file|
+          modified << file[:path]
         end
       end
-      
+
+      unless response[:files_deleted].nil?
+        response[:files_deleted].each do |file|
+          deleted << file[:path]
+        end
+      end
+
+      unless response[:files_added].nil?
+        response[:files_added].each do |file|
+          added << file[:path]
+        end
+      end
+
       return added, deleted, modified
     end
 
