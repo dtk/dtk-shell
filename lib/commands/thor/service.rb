@@ -564,7 +564,7 @@ module DTK::Client
     desc "SERVICE-NAME/ID delete-assembly ASSEMBLY-TEMPLATE-ID [-y]", "Delete assembly template."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_assembly(context_params)
-      service_module_id,assembly_template_id = context_params.retrieve_arguments([:service_id!,:option_1!], method_argument_names)
+      service_module_id, assembly_template_id = context_params.retrieve_arguments([:service_id!,:option_1!], method_argument_names)
       service_module_name = context_params.retrieve_arguments([:service_name],method_argument_names)
       assembly_template_name = (assembly_template_id.to_s =~ /^[0-9]+$/) ? DTK::Client::AssemblyTemplate.get_assembly_template_name_for_service(assembly_template_id, service_module_name) : assembly_template_id
       assembly_template_id   = DTK::Client::AssemblyTemplate.get_assembly_template_id_for_service(assembly_template_id, service_module_name) unless assembly_template_id.to_s =~ /^[0-9]+$/
@@ -574,7 +574,7 @@ module DTK::Client
         service_module_name = get_service_module_name(service_module_id)
       end
 
-      return unless Console.confirmation_prompt("Are you sure you want to delete assembly_template '#{assembly_template_id}'"+'?') unless options.force?
+      return unless Console.confirmation_prompt("Are you sure you want to delete assembly_template '#{assembly_template_name||assembly_template_id}'"+'?') unless options.force?
       
       post_body = {
         :service_module_id => service_module_id,
@@ -595,7 +595,7 @@ module DTK::Client
         end
       end
       version = nil
-      commit_msg = "Deleting assembly template #{assembly_template_id.to_s}"
+      commit_msg = "Deleting assembly template #{assembly_template_name.to_s}"
       internal_trigger = true
       push_clone_changes_aux(:service_module, service_module_id, version, commit_msg, internal_trigger)
       @@invalidate_map << :assembly_template
