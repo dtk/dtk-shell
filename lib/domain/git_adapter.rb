@@ -11,7 +11,7 @@ module DTK
       end
 
       def changed?
-        !(@git_repo.status.changed.empty? && @git_repo.status.untracked.empty?)
+        (!(@git_repo.status.changed.empty? && @git_repo.status.untracked.empty? && @git_repo.status.deleted.empty?) || staged_commits?)
       end
 
       def stage_changes()
@@ -52,13 +52,6 @@ module DTK
         }
       end
 
-      #
-      # Returns name of current branch (String)
-      #
-      def branch
-        current_branch.name
-      end
-
       def commit(commit_msg = "")
         @git_repo.commit(commit_msg)
       end
@@ -77,6 +70,11 @@ module DTK
         git_command('rev-list', commit_sha)
       end
 
+      def staged_commits?()
+        response = git_command('diff','--cached')
+        !response.empty?
+      end
+
       def rev_list_contains?(container_sha, index_sha)
         results = rev_list(container_sha)
         !results.split("\n").grep(index_sha).empty?
@@ -92,8 +90,6 @@ module DTK
       end
 
       def merge_relationship(type, ref, opts={})
-        # DEBUG SNIPPET >>> REMOVE <<<
-        require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
         ref_remote, ref_branch = ref.split('/')
         # fetch remote branch
         fetch(ref_remote) if opts[:fetch_if_needed]
@@ -141,6 +137,8 @@ module DTK
       end
 
       def push(remote_branch_ref)
+        # DEBUG SNIPPET >>> REMOVE <<<
+        require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
         remote, branch = remote_branch_ref.split('/')
         @git_repo.push(remote, branch)
       end
@@ -155,14 +153,18 @@ module DTK
         @git_repo.dir.path
       end
 
-    private
-
-      def is_there_remote?(remote_name)
-        @git_repo.remotes.find { |r| r.name == remote_name }
+      def current_branch_name
+        current_branch.name
       end
 
       def current_branch
         @git_repo.branches.local.find { |b| b.current }
+      end
+
+    private
+
+      def is_there_remote?(remote_name)
+        @git_repo.remotes.find { |r| r.name == remote_name }
       end
 
       def any_differences?(sha1, sha2)

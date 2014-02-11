@@ -195,8 +195,6 @@ module DTK; module Client; class CommandHelper
     #: diffs - hash with diffs
     # commit_sha - sha of currenet_commit
     def push_repo_changes_aux(repo,opts={})
-      # DEBUG SNIPPET >>> REMOVE <<<
-      require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
       diffs = DiffSummary.new()
 
       # adding untracked files (newly added files)
@@ -215,7 +213,8 @@ module DTK; module Client; class CommandHelper
         repo.fetch(remote(opts[:remote_repo]))
       end
 
-      local_branch = repo.branch 
+      local_branch = repo.current_branch_name 
+
       remote_branch_ref = remote_branch_ref(local_branch, opts)
 
       #check if merge needed
@@ -234,14 +233,8 @@ module DTK; module Client; class CommandHelper
         # see if any diffs between fetched remote and local branch
         # this has be done after commit
 
-        # DEBUG SNIPPET >>> REMOVE <<<
-        require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
-
         diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
 
-        # DEBUG SNIPPET >>> REMOVE <<<
-        require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
-        
         # DEBUG SNIPPET >>> REMOVE <<<
     
         #if diffs.any_diffs?()
