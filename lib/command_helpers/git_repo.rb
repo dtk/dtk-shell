@@ -61,8 +61,6 @@ module DTK; module Client; class CommandHelper
     #
     def push_changes(type,module_name,version,opts={})
       Response.wrap_helper_actions() do
-        # DEBUG SNIPPET >>> REMOVE <<<
-        require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
         repo_dir = local_repo_dir(type,module_name,version,opts)
         repo = create(repo_dir,opts[:local_branch])
         push_repo_changes_aux(repo,opts)
@@ -197,6 +195,8 @@ module DTK; module Client; class CommandHelper
     #: diffs - hash with diffs
     # commit_sha - sha of currenet_commit
     def push_repo_changes_aux(repo,opts={})
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
       diffs = DiffSummary.new()
 
       # adding untracked files (newly added files)
@@ -238,6 +238,9 @@ module DTK; module Client; class CommandHelper
         require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
 
         diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+
+        # DEBUG SNIPPET >>> REMOVE <<<
+        require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
         
         # DEBUG SNIPPET >>> REMOVE <<<
     

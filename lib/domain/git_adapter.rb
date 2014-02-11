@@ -92,6 +92,8 @@ module DTK
       end
 
       def merge_relationship(type, ref, opts={})
+        # DEBUG SNIPPET >>> REMOVE <<<
+        require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
         ref_remote, ref_branch = ref.split('/')
         # fetch remote branch
         fetch(ref_remote) if opts[:fetch_if_needed]

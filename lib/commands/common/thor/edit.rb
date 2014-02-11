@@ -53,6 +53,9 @@ module DTK::Client
         Console.unix_shell(module_location, module_id, module_type, version)
       end
 
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
+
       unless grit_adapter.changed?
         puts "No changes to repository"
         return Response::Ok.new()
