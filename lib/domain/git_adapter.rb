@@ -138,6 +138,11 @@ module DTK
       def diff(ref1, ref2)
       end
 
+      def push(remote_branch_ref)
+        remote, branch = remote_branch_ref.split('/')
+        @git_repo.push(remote, branch)
+      end
+
       def self.clone(repo_url, target_path, branch)
         git_base = Git.clone(repo_url, target_path)
         git_base.branch(branch).checkout
@@ -164,14 +169,18 @@ module DTK
 
       def git_command(cmd, opts=[])
         ENV['GIT_DIR'] = "#{@git_repo.dir.path}/.git"
-        # ENV['GIT_WORK_TREE'] = @git_repo.dir.path
         ENV['GIT_INDEX_FILE'] = @git_repo.index.path
 
         path = @git_repo.dir.path
 
         opts = [opts].flatten.join(' ')
 
-        return `git #{cmd} #{opts}`.chomp
+        response = `git #{cmd} #{opts}`.chomp
+
+        ENV.delete('GIT_DIR')
+        ENV.delete('GIT_INDEX_FILE')
+
+        return response
       end
 
     end

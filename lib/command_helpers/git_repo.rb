@@ -236,12 +236,14 @@ module DTK; module Client; class CommandHelper
 
         # DEBUG SNIPPET >>> REMOVE <<<
         require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
-        
+
         diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
         
-        if diffs.any_diffs?()
+        # DEBUG SNIPPET >>> REMOVE <<<
+    
+        #if diffs.any_diffs?()
           repo.push(remote_branch_ref)
-        end
+        #end
 
         commit_sha = repo.find_remote_sha(remote_branch_ref)
       else
