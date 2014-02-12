@@ -36,12 +36,21 @@ module DTK
         puts ""
       end
 
-      def diff_summary(ref_1, ref_2)
-        {
-          :files_added => @git_repo.status.untracked().keys,
-          :files_modified => @git_repo.status.changed().keys,
-          :files_deleted => @git_repo.status.deleted().keys
-        }
+      def diff_summary(local_branch, remote_reference)
+        branch_local_obj  = @git_repo.branches.local.find { |b| b.name == local_branch }
+        branch_remote_obj = @git_repo.branches.remote.find{|r| "#{r.remote}/#{r.name}" == remote_reference }
+
+        if branch_local_obj && branch_remote_obj
+
+          difference = @git_repo.diff(branch_local_obj, branch_remote_obj)
+
+          files_modified = difference.stats[:files] ? difference.stats[:files].keys.collect { |file| { :path => file }} : []
+          {
+            :files_modified => files_modified
+          }
+        else
+          raise Error.new("Error finding branches: local branch '#{local_branch}' (found: #{!branch_local_obj.nil?}), remote branch '#{remote_reference}' (found: #{!branch_remote_obj.nil?})")
+        end
       end
 
       def local_summary()
@@ -81,7 +90,7 @@ module DTK
       end
 
       def head_commit_sha()
-        current = @git_repo.branches.current
+        current_branch.gcommit.sha
       end
 
       def find_remote_sha(ref)
@@ -133,14 +142,14 @@ module DTK
         end
       end
 
-      def diff(ref1, ref2)
+      def push(remote_branch_ref)
+        remote, remote_branch = remote_branch_ref.split('/')
+        branch_for_push = "#{current_branch_name}:refs/heads/#{remote_branch||current_branch_name}"
+        @git_repo.push(remote, branch_for_push)
       end
 
-      def push(remote_branch_ref)
-        # DEBUG SNIPPET >>> REMOVE <<<
-        require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
-        remote, branch = remote_branch_ref.split('/')
-        @git_repo.push(remote, branch)
+      def merge(remote_branch_ref)
+        @git_repo.merge(remote_branch_ref)
       end
 
       def self.clone(repo_url, target_path, branch)

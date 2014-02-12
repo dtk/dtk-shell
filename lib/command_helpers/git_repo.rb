@@ -182,12 +182,23 @@ module DTK; module Client; class CommandHelper
         new(:new_version => true)
       end
       
-      def self.diff(repo,ref1,ref2)
-        new(repo.diff_summary(ref1,ref2))
+      def self.diff(repo,local_branch,remote_reference)
+        new(repo.diff_summary(local_branch,remote_reference))
       end
 
       def self.diff_remote(repo,ref1)
         new(repo.diff(ref1).ret_summary())
+      end
+
+      def any_diffs?
+        changes = false
+        self.each do |k,v|
+          unless v.empty?
+            changes = true
+            break
+          end
+        end
+        changes
       end
     end
     
@@ -233,13 +244,13 @@ module DTK; module Client; class CommandHelper
         # see if any diffs between fetched remote and local branch
         # this has be done after commit
 
-        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+        diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
 
         # DEBUG SNIPPET >>> REMOVE <<<
     
-        #if diffs.any_diffs?()
+        if diffs.any_diffs?()
           repo.push(remote_branch_ref)
-        #end
+        end
 
         commit_sha = repo.find_remote_sha(remote_branch_ref)
       else
@@ -277,49 +288,62 @@ module DTK; module Client; class CommandHelper
       end
 
       # diffs = DiffSummary.diff_remote(repo,"remotes/#{remote_branch_ref}")
-      diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+      diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
       commit_sha = repo.find_remote_sha(remote_branch_ref)
       
       {"diffs" => diffs, "commit_sha" => commit_sha, "repo_obj" => repo, "status" => repo.local_summary() }
     end
 
     def pull_repo_changes_aux(repo,opts={})
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
       diffs = DiffSummary.new()
+
       if commit_sha = opts[:commit_sha]
         #no op if at commit_sha
         return diffs if commit_sha == repo.head_commit_sha()
       end
 
       if opts[:remote_repo] and opts[:remote_repo_url]
-        repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
+        repo.add_remote(opts[:remote_repo],opts[:remote_repo_url])
       end
+
       repo.fetch(remote(opts[:remote_repo]))
 
-      local_branch = repo.branch 
+      local_branch = repo.current_branch_name 
       remote_branch_ref = remote_branch_ref(local_branch,opts)
 
       if opts[:hard_reset]
-        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+        diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
         repo.merge_theirs(remote_branch_ref)
         return({:diffs => diffs, :commit_sha => repo.head_commit_sha()})
       end
 
+      # default commit in case it is needed
+      repo.commit("Commit prior to pull from remote") if repo.changed?
+
       #check if merge needed
-      merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch_ref)
+      merge_rel = repo.merge_relationship(:remote_branch,remote_branch_ref)
       if merge_rel == :equal
         { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif [:branchpoint,:local_ahead].include?(merge_rel)
         # TODO: right now just wiping out what is in repo
-        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+        diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
         repo.merge_theirs(remote_branch_ref)
         { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif merge_rel == :local_behind
         #see if any diffs between fetched remote and local branch
         #this has be done after commit
-        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+        diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
         return diffs unless diffs.any_diffs?()
 
-        repo.merge(remote_branch_ref)
+        begin
+          # DEBUG SNIPPET >>> REMOVE <<<
+          require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
+          repo.merge(remote_branch_ref)
+        rescue Exception => e
+          puts e
+        end
 
         if commit_sha and commit_sha != repo.head_commit_sha()
           raise Error.new("Git synchronization problem: expected local head to have sha (#{commit_sha})")
