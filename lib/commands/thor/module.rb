@@ -266,6 +266,9 @@ module DTK::Client
       return response unless response.ok?
       module_directory = response.data(:module_directory)
 
+      #check for yaml/json parsing errors before import
+      reparse_aux(module_directory)
+
       # first make call to server to create an empty repo
       response = post rest_url("component_module/create"), { :module_name => module_name }
       return response unless response.ok?
