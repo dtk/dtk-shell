@@ -267,6 +267,11 @@ TODO: overlaps with different meaning
       edit_workflow_aux(context_params)
     end
 
+    desc "ASSEMBLY-NAME/ID edit-attributes", "Edit assembly's attributes."
+    def edit_attributes(context_params)
+      edit_attributes_aux(context_params)
+    end
+
     # desc "ASSEMBLY-NAME/ID promote-module-updates COMPONENT-MODULE-NAME [--force]", "Promotes changes made to component module in assembly to base component module"
     # method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     # def promote_module_updates(context_params)

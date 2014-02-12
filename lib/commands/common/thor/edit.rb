@@ -2,6 +2,8 @@ dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/push_clone_changes')
 dtk_require_common_commands('thor/pull_clone_changes')
 dtk_require_common_commands('thor/reparse')
+require 'yaml'
+
 module DTK::Client
   module EditMixin
     include CloneMixin
@@ -93,5 +95,72 @@ module DTK::Client
       #puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
       Response::Ok.new()
     end
+
+    def attribute_header()
+      header_string = 
+      "#############################\n####  REQUIRED ATTRIBUTES\n#############################\n#\n"
+    end
+
+    def attributes_editor(attributes,format)
+      if (format.eql?('yaml'))
+        dtk_folder = OsUtil.dtk_local_folder
+        file_path = "#{dtk_folder}/temp_attrs.yaml"
+
+        first_iteration_keys, first_iteration_values = [], []
+        second_iteration_keys, second_iteration_values = [], []
+        required_attributes = []
+        
+        attribute_pairs = YAML.load(attributes)
+        
+        attribute_pairs.each do |k,v|
+          first_iteration_keys << k
+
+          #prepare required attributes for editor display
+          if v.eql?("*REQUIRED*")
+            required_attributes << k 
+            attribute_pairs[k] = nil
+            v = nil
+          end
+
+          first_iteration_values << v
+        end
+
+        File.open(file_path, 'w') do |out|
+          # print out required attributes
+          unless required_attributes.empty?
+            out.write(attribute_header())
+            required_attributes.each do |req_attr|
+              out.write("##{req_attr}\n")
+            end
+            out.write("#\n")
+          end
+
+          YAML.dump(attribute_pairs, out)
+        end
+
+        OsUtil.edit(file_path)
+        begin
+          edited = YAML.load_file(file_path)
+        rescue Psych::SyntaxError => e
+          raise DTK::Client::DSLParsing::YAMLParsing.new("YAML parsing error #{e} in file",file_path)
+        end
+
+        edited.each do |k,v|
+          second_iteration_keys << k
+          second_iteration_values << v
+        end
+
+        unless first_iteration_keys == second_iteration_keys
+          edited_keys = second_iteration_keys.select{|k| !first_iteration_keys.include?(k)}
+          raise DtkValidationError, "You have changed key(s) '#{edited_keys}'. We do not support key editing yet!"
+        end
+        
+        raise DtkValidationError, "No attribute changes have been made." if ((first_iteration_keys == second_iteration_keys) && (first_iteration_values == second_iteration_values))
+        edited
+      else
+        raise DTK::Client::DtkValidationError, "Unsupported format type '#{format.to_s}'!"
+      end
+    end
+
   end
 end

@@ -169,6 +169,27 @@ module DTK::Client
       version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
       edit_aux(:service_module,service_module_id,service_module_name,version,edit_opts)
     end
+    
+    def edit_attributes_aux(context_params)
+      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
+      
+      # if no format is set then we use 'yaml'
+      format = options.format || 'yaml'
+      context_params.forward_options( { :format => format})
+      
+      response = list_attributes_aux(context_params)
+      return response unless response.ok?
+
+      attributes_list = response.data
+      attributes_hash = attributes_editor(attributes_list, format)
+      
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :av_pairs_hash => attributes_hash
+      }
+      
+      response = post rest_url("assembly/set_attributes"), post_body
+    end
 
     def push_module_updates_aux(context_params)
       assembly_or_workspace_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
@@ -253,7 +274,6 @@ module DTK::Client
     def list_attributes_aux(context_params)
       context_params.method_arguments = ["attributes"]
       list_aux(context_params)
-      # list_assemblies(context_params)
     end
 
     def list_tasks_aux(context_params)
@@ -981,7 +1001,8 @@ module DTK::Client
             end  
           when "attributes"
             data_type = (options.links? ? :workspace_attribute_w_link : :workspace_attribute)
-            if format = options.format
+            edit_attr_format = context_params.get_forwarded_options()[:format] if context_params.get_forwarded_options()
+            if format = (options.format || edit_attr_format)
               post_options.merge!(:format => format)
               #dont need to compute links if using a format
             elsif options.links?
@@ -1001,8 +1022,9 @@ module DTK::Client
         :assembly_id => assembly_or_workspace_id,
         :node_id => node_id,
         :component_id => component_id,
-        :subtype     => 'instance'
+        :subtype     => 'instance',
       }.merge(post_options)
+
       post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
       rest_endpoint = "assembly/info_about"
 
