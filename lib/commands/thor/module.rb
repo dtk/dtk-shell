@@ -78,7 +78,7 @@ module DTK::Client
       end
 
       def module_info_about(context_params, about, data_type)
-        component_module_id, component_template_id = context_params.retrieve_arguments([:module_id!, :component_template_id],method_argument_names)
+        component_module_id, component_template_id = context_params.retrieve_arguments([:module_id!, :component_id],method_argument_names)
         post_body = {
           :component_module_id => component_module_id,
           :component_template_id => component_template_id,
