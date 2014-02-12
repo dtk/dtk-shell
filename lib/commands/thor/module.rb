@@ -19,13 +19,15 @@ module DTK::Client
     DEFAULT_COMMIT_MSG = "Initial commit."
 
     def self.valid_children()
-      [:"component-template"]
+      # [:"component-template"]
+      [:component]
     end
 
     # this includes children of children - has to be sorted by n-level access
     def self.all_children()
       # [:"component-template", :attribute] # Amar: attribute context commented out per Rich suggeston
-      [:"component-template"]
+      # [:"component-template"]
+      [:component]
     end
 
     def self.valid_child?(name_of_sub_context)
@@ -43,7 +45,7 @@ module DTK::Client
             :self => [
               ["list"," list [--remote] [--diff]","# List loaded or remote component modules. Use --diff to compare loaded and remote modules."]
             ],
-            :"component-template" => [
+            :"component" => [
               ["list","list","# List all component templates."],
               ["list-attributes","list-attributes", "# List all attributes for given component module."]
             ]            
@@ -52,7 +54,7 @@ module DTK::Client
             #]
           },
           :identifier_only => {
-            :"component-template" => [
+            :"component" => [
               ["list-attributes","list-attributes", "# List all attributes for given component template."]
             ]
           }
@@ -205,7 +207,8 @@ module DTK::Client
       #if context_params.is_there_command?(:attribute)
       #  return module_info_about(context_params, :attributes, :attribute)
       #elsif context_params.is_there_command?(:"component-template")
-      if context_params.is_there_command?(:"component-template")
+      # if context_params.is_there_command?(:"component-template")
+      if context_params.is_there_command?(:"component")
         return module_info_about(context_params, :components, :component)
       end
 
