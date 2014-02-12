@@ -146,19 +146,22 @@ module DTK
 
 
       def to_ostruct(data)
-        arr = data.map do |k, v|
+        result = data.inject({}) do |res, (k, v)|
           k = safe_name(k)
           case v
           when Hash
-            [k, to_ostruct(v)]
+            res.store(k, to_ostruct(v))
+            res
           when Array
-            [k, v.each { |el| Hash === el ? to_ostruct(el) : el }]
+            res.store(k, v.each { |el| Hash === el ? to_ostruct(el) : el })
+            res
           else
-            [k,v]
+            res.store(k,v)
+            res
           end
         end
 
-        DtkOpenStruct.new(arr)
+        DtkOpenStruct.new(result)
       end
 
       def safe_name(identifier)
