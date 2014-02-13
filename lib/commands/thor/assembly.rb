@@ -150,7 +150,7 @@ TODO: overlaps with different meaning
           :node      => [
             ['create-component',"create-component COMPONENT","# Add a component to the node."],
             ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from assembly's node"],
-            ['info',"info","# Return info about node instance belonging to given workspace."],
+            ['info',"info","# Return info about node instance belonging to given assembly."],
             # ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
             ['list-attributes',"list-attributes","# List attributes associated with assembly's node."],
             ['list-components',"list-components","# List components associated with assembly's node."],
@@ -189,7 +189,7 @@ TODO: overlaps with different meaning
       cancel_task_aux(context_params)
     end
 
-    desc "rename ASSEMBLY-NAME NEW-ASSEMBLY-NAME","List assemblies."
+    desc "rename ASSEMBLY-NAME NEW-ASSEMBLY-NAME","Rename assembly."
     def rename(context_params)
       assembly_name, new_assembly_name = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
       assembly_id = get_assembly_id(assembly_name)

@@ -118,7 +118,7 @@ module DTK::Client
       response.render_table(:account_ssh_keys)
     end
 
-    desc "add-ssh-key NAME [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
+    desc "add-ssh-key NAME [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional parameters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def add_ssh_key(context_params)
       name, path_to_key = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       path_to_key ||= SshProcessing.default_rsa_pub_key_path()
@@ -174,7 +174,7 @@ module DTK::Client
     #   end
     # end
 
-    # desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
+    # desc "add-direct-access [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional parameters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     # def add_direct_access(context_params)
     #   return
     #   path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
