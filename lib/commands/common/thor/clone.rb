@@ -19,9 +19,9 @@ module DTK::Client
         unless internal_trigger
           if Console.confirmation_prompt("Would you like to edit cloned module now?")
             if module_type.to_s.start_with?("service")
-              context_params_for_module = create_context_for_module(module_name, "service")
+              context_params_for_module = create_context_for_module(module_name, :"service-module")
             else
-              context_params_for_module = create_context_for_module(module_name, "module")
+              context_params_for_module = create_context_for_module(module_name, :"component-module")
             end
             return edit(context_params_for_module)
           end

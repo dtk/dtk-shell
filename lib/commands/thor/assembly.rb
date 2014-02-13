@@ -212,7 +212,7 @@ TODO: overlaps with different meaning
     #  clear_tasks_aux(context_params)
     #end
 
-    desc "ASSEMBLY-NAME/ID create-assembly SERVICE-NAME ASSEMBLY-NAME", "Create a new assembly from this assembly instance in the designated service module."
+    desc "ASSEMBLY-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create a new assembly from this assembly instance in the designated service module."
     def create_assembly(context_params)
       assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!],method_argument_names)
       response = promote_assembly_aux(:create,assembly_id,service_module_name,assembly_template_name)
@@ -232,7 +232,7 @@ TODO: overlaps with different meaning
       converge_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID push-assembly-updates [SERVICE-NAME/ASSEMBLY-NAME]", "Push assembly instance to the designated assembly; default is parent assembly."
+    desc "ASSEMBLY-NAME/ID push-assembly-updates [SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push assembly instance to the designated assembly; default is parent assembly."
     def push_assembly_updates(context_params)
       assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:assembly_id!,:option_1],method_argument_names) 
       service_module_name, assembly_template_name =
@@ -240,7 +240,7 @@ TODO: overlaps with different meaning
           if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
             [$1,$2]
           else
-            raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-NAME/ASSEMBLY-NAME"
+            raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-MODULE-NAME/ASSEMBLY-NAME"
           end
         else
           [nil,nil]

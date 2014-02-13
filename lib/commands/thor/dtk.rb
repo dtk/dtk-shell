@@ -22,7 +22,7 @@ module DTK::Client
       # API descriptor
     end
 
-    desc "assembly","Commands to execute, query and manipulate assembly instances."
+    desc "assembly","Services instances that have been deployed via the DTK ."
     def assembly
       # API descriptor
     end
@@ -43,7 +43,7 @@ module DTK::Client
     #   # API descriptor
     # end
 
-    desc "component_module", "DTK definitions for modeling/defining individual configuration components."
+    desc "component-module", "DTK definitions for modeling/defining individual configuration components."
     def component_module
       # API descriptor
     end
@@ -80,8 +80,8 @@ module DTK::Client
     #  # API descriptor
     #end
 
-    desc "service", "Commands to create, query, import and export service modules."
-    def service
+    desc "service-module", "DTK definitions for model/defining distributed applications and services."
+    def service_module
       # API descriptor
     end
 

@@ -52,8 +52,8 @@ module DTK::Client
 
     # List assembly templates for specific module
     def self.validation_list(context_params)
-      if context_params.is_there_identifier?(:service)
-        service_module_id = context_params.retrieve_arguments([:service_id!])
+      if context_params.is_there_identifier?(:"service-module")
+        service_module_id = context_params.retrieve_arguments([:service_module_id!])
         get_cached_response(:assembly_template, "service_module/list_assemblies", { :service_module_id => service_module_id })
       else
         get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template' })
@@ -132,10 +132,10 @@ module DTK::Client
           end
 
           context_params_for_service = DTK::Shell::ContextParams.new
-          context_params_for_service.add_context_to_params("service", "service", service_id)
+          context_params_for_service.add_context_to_params("service_module", "service_module", service_id)
           context_params_for_service.method_arguments = ['list']
           
-          response = DTK::Client::ContextRouter.routeTask("service", "assembly_template", context_params_for_service, @conn)
+          response = DTK::Client::ContextRouter.routeTask("service_module", "assembly_template", context_params_for_service, @conn)
 
         else
           response = post rest_url("assembly/list"), {:subtype => 'template', :detail_level => 'nodes'}

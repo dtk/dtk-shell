@@ -189,7 +189,7 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "WORKSPACE-NAME/ID create-assembly SERVICE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
+    desc "WORKSPACE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
    # The option -p will purge the workspace after assembly creation." 
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def create_assembly(context_params)
