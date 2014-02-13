@@ -78,7 +78,7 @@ module DTK::Client
       list(context_params)
     end
 
-    desc "list [--module MODULE-NAME]", "List all component templates. Optional filter by modul name."
+    desc "list [--module MODULE-NAME]", "List all component templates. Optional filter by module name."
     method_option :list, :type => :boolean, :default => false
     method_option "module",:aliases => "-m" ,
       :type => :string, 
