@@ -35,7 +35,8 @@ module DTK::Client
       match, matched_username = nil, nil
     
       unless File.file?(path_to_key)
-        raise DTK::Client::DtkError,"No ssh key file found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
+        OsUtil.put_warning "[ERROR]  " ,"No ssh key file found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run `ssh-keygen -t rsa`)", :red
+        abort
       end
 
       rsa_pub_key = File.open(path_to_key){|f|f.read}

@@ -7,8 +7,8 @@ module DTK
 		class Configurator
 
 		CONFIG_FILE   = File.join(OsUtil.dtk_local_folder, "client.conf")
-	  CRED_FILE 	  = File.join(OsUtil.dtk_local_folder, ".connection")
-	  DIRECT_ACCESS = File.join(OsUtil.dtk_local_folder, ".add_direct_access")
+	  	CRED_FILE 	  = File.join(OsUtil.dtk_local_folder, ".connection")
+	  	DIRECT_ACCESS = File.join(OsUtil.dtk_local_folder, ".add_direct_access")
 
 		require 'fileutils'
 		FileUtils.mkdir(OsUtil.dtk_local_folder) unless File.directory?(OsUtil.dtk_local_folder)
@@ -36,10 +36,10 @@ module DTK
 			def self.check_git
 				if OsUtil.is_linux? || OsUtil.is_mac?
 					if OsUtil.which('git') == nil
-						puts "[WARNING] Can't find the 'git' command in you path. Please make sure git is installed in order to use all features of DTK Client."
+						OsUtil.put_warning "[WARNING]", "Can't find the 'git' command in you path. Please make sure git is installed in order to use all features of DTK Client.", :yellow
 					else
-						puts '[WARNING] Git username not set. This can cause issues while using DTK Client. To set it, run `git config --global user.name "User Name"`' if `git config --get user.name` == ""
-						puts '[WARNING] Git email not set. This can cause issues while using DTK Client. To set it, run `git config --global user.email "me@here.com"`' if `git config --get user.email` == ""
+						OsUtil.put_warning "[WARNING]", 'Git username not set. This can cause issues while using DTK Client. To set it, run `git config --global user.name "User Name"`', :yellow if `git config --get user.name` == ""
+						OsUtil.put_warning "[WARNING]", 'Git email not set. This can cause issues while using DTK Client. To set it, run `git config --global user.email "me@here.com"`', :yellow if `git config --get user.email` == ""
 					end
 				end
 			end
