@@ -43,8 +43,8 @@ module DTK::Client
     #   # API descriptor
     # end
 
-    desc "module", "Commands to create, query, import and export component modules."
-    def module
+    desc "component_module", "Commands to create, query, import and export component modules."
+    def component_module
       # API descriptor
     end
 

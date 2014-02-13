@@ -14,7 +14,7 @@ dtk_require_from_base('command_helpers/service_importer')
 require 'fileutils'
 
 module DTK::Client
-  class Module < CommandBaseThor
+  class ComponentModule < CommandBaseThor
 
     DEFAULT_COMMIT_MSG = "Initial commit."
 
@@ -31,7 +31,7 @@ module DTK::Client
     end
 
     def self.valid_child?(name_of_sub_context)
-      return Module.valid_children().include?(name_of_sub_context.to_sym)
+      return ComponentModule.valid_children().include?(name_of_sub_context.to_sym)
     end
 
     def self.validation_list(context_params)
@@ -43,7 +43,7 @@ module DTK::Client
         {
           :command_only => {
             :self => [
-              ["list"," list [--remote] [--diff]","# List loaded or remote component modules. Use --diff to compare loaded and remote modules."]
+              ["list"," list [--remote] [--diff]","# List loaded or remote component modules. Use --diff to compare loaded and remote component modules."]
             ],
             :"component" => [
               ["list","list","# List all component templates."],
@@ -78,7 +78,7 @@ module DTK::Client
       end
 
       def module_info_about(context_params, about, data_type)
-        component_module_id, component_template_id = context_params.retrieve_arguments([:module_id!, :component_id],method_argument_names)
+        component_module_id, component_template_id = context_params.retrieve_arguments([:component_module_id!, :component_id],method_argument_names)
         post_body = {
           :component_module_id => component_module_id,
           :component_template_id => component_template_id,
@@ -117,7 +117,7 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete MODULE [-v VERSION] [-y] [-p]", "Delete component module or component module version and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete COMPONENT-MODULE [-v VERSION] [-y] [-p]", "Delete component module or component module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
@@ -154,7 +154,7 @@ module DTK::Client
       return response unless response.ok?
       
       # when changing context send request for getting latest modules instead of getting from cache
-      @@invalidate_map << :module_component
+      @@invalidate_map << :component_module_component
 
       unless method_opts[:no_error_msg]
         msg = "Component module '#{component_module_name}' "
@@ -166,12 +166,12 @@ module DTK::Client
     end
 
 
-    desc "MODULE-NAME/ID set-attribute ATTRIBUTE-ID VALUE", "Set value of module attributes"
+    desc "COMPONENT-MODULE-NAME/ID set-attribute ATTRIBUTE-ID VALUE", "Set value of component module attributes"
     def set_attribute(context_params)
       if context_params.is_there_identifier?(:attribute)
-        mapping = [:module_id!,:attribute_id!, :option_1]
+        mapping = [:component_module_id!,:attribute_id!, :option_1]
       else
-        mapping = [:module_id!,:option_1!,:option_2]
+        mapping = [:component_module_id!,:option_1!,:option_2]
       end
 
       module_component_id, attribute_id, value = context_params.retrieve_arguments(mapping,method_argument_names)
@@ -187,9 +187,9 @@ module DTK::Client
     #### end: create and delete commands ###
 
     #### list and info commands ###
-    desc "MODULE-NAME/ID info", "Get information about given component module."
+    desc "COMPONENT-MODULE-NAME/ID info", "Get information about given component module."
     def info(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
+      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
       
       post_body = {
         :component_module_id => component_module_id
@@ -199,7 +199,7 @@ module DTK::Client
       response.render_custom_info("module")
     end
 
-    desc "list [--remote] [--diff]", "List loaded or remote component modules. Use --diff to compare loaded and remote modules."
+    desc "list [--remote] [--diff]", "List loaded or remote component modules. Use --diff to compare loaded and remote component modules."
     method_option :remote, :type => :boolean, :default => false
     method_option :diff, :type => :boolean, :default => false
     def list(context_params)
@@ -222,9 +222,9 @@ module DTK::Client
     end
 
 
-    desc "MODULE-NAME/ID list-versions","List all versions associated with this module."
+    desc "COMPONENT-MODULE-NAME/ID list-versions","List all versions associated with this component module."
     def list_versions(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
+      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
       post_body = {
         :component_module_id => component_module_id,
         :detail_to_include => ["remotes"],
@@ -235,17 +235,17 @@ module DTK::Client
       response.render_table(:module_version)
     end
 
-    desc "MODULE-NAME/ID list-components", "List all components for given component module."
+    desc "COMPONENT-MODULE-NAME/ID list-components", "List all components for given component module."
     def list_components(context_params)
       module_info_about(context_params, :components, :component)
     end
 
-    desc "MODULE-NAME/ID list-attributes", "List all attributes for given component module."
+    desc "COMPONENT-MODULE-NAME/ID list-attributes", "List all attributes for given component module."
     def list_attributes(context_params)
       module_info_about(context_params, :attributes, :attribute_without_link)
     end
 
-    desc "MODULE-NAME/ID list-instances", "List all instances for given component module."
+    desc "COMPONENT-MODULE-NAME/ID list-instances", "List all instances for given component module."
     def list_instances(context_params)
       module_info_about(context_params, :instances, :component)
     end
@@ -255,7 +255,7 @@ module DTK::Client
     #### commands to interact with remote repo ###
 
 
-    desc "import MODULE-NAME", "Create new module from local clone"
+    desc "import COMPONENT-MODULE-NAME", "Create new component module from local clone"
     def import(context_params)
       git_import = context_params.get_forwarded_options()[:git_import] if context_params.get_forwarded_options()
       name_option = git_import ? :option_2! : :option_1!
@@ -272,7 +272,7 @@ module DTK::Client
       # first make call to server to create an empty repo
       response = post rest_url("component_module/create"), { :module_name => module_name }
       return response unless response.ok?
-      @@invalidate_map << :module_component
+      @@invalidate_map << :component_module_component
 
       repo_url,repo_id,module_id,branch = response.data(:repo_url,:repo_id,:module_id,:workspace_branch)
       response = Helper(:git_repo).initialize_client_clone_and_push(:component_module,module_name,branch,repo_url,module_directory)
@@ -312,10 +312,10 @@ module DTK::Client
       return response
     end
 
-    desc "MODULE-NAME/ID validate-model [-v VERSION]", "Check the DSL model for errors"
+    desc "COMPONENT-MODULE-NAME/ID validate-model [-v VERSION]", "Check the DSL model for errors"
     version_method_option
     def validate_model(context_params)
-      module_id, module_name = context_params.retrieve_arguments([:module_id!, :module_name],method_argument_names)
+      module_id, module_name = context_params.retrieve_arguments([:component_module_id!, :component_module_name],method_argument_names)
       version = options["version"]
 
       if module_name.to_s =~ /^[0-9]+$/
@@ -351,8 +351,8 @@ module DTK::Client
       
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name,version)
-        message = "Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
-        message += ". To ignore this conflict and use existing module please use -i switch (import-dtkn REMOTE-SERVICE-NAME -i)." if additional_message
+        message = "Component module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed"
+        message += ". To ignore this conflict and use existing component module please use -i switch (import-dtkn REMOTE-SERVICE-NAME -i)." if additional_message
 
         raise DtkError, message unless ignore_component_error
       end
@@ -380,7 +380,7 @@ module DTK::Client
       unless skip_cloning
         response = Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
       end
-      @@invalidate_map << :module_component
+      @@invalidate_map << :component_module_component
 
       response
     end
@@ -388,7 +388,7 @@ module DTK::Client
     #
     # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
     #
-    desc "import-git GIT-SSH-REPO-URL MODULE-NAME", "Create new local module by importing from provided git repo URL"
+    desc "import-git GIT-SSH-REPO-URL MODULE-NAME", "Create new local component module by importing from provided git repo URL"
     def import_git(context_params)
       git_repo_url, module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
       
@@ -442,15 +442,15 @@ module DTK::Client
     end
 =end
 
-    desc "MODULE-NAME/ID import-version VERSION", "Import a specfic version from a linked component module"
+    desc "COMPONENT-MODULE-NAME/ID import-version VERSION", "Import a specfic version from a linked component module"
     def import_version(context_params)
-      component_module_id,version = context_params.retrieve_arguments([:module_id!,:option_1!],method_argument_names)
+      component_module_id,version = context_params.retrieve_arguments([:component_module_id!,:option_1!],method_argument_names)
       post_body = {
         :component_module_id => component_module_id,
         :version => version
       }
       response = post rest_url("component_module/import_version"), post_body
-      @@invalidate_map << :module_component
+      @@invalidate_map << :component_module_component
 
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
@@ -483,9 +483,9 @@ module DTK::Client
       post rest_url("component_module/delete_remote"), post_body
     end
 
-    desc "MODULE-NAME/ID create-on-dtkn [[NAME-SPACE/]REMOTE-MODULE-NAME]", "Export component module to remote repository."
+    desc "COMPONENT-MODULE-NAME/ID create-on-dtkn [[NAME-SPACE/]REMOTE-MODULE-NAME]", "Export component module to remote repository."
     def create_on_dtkn(context_params)
-      component_module_id, input_remote_name = context_params.retrieve_arguments([:module_id!, :option_1],method_argument_names)
+      component_module_id, input_remote_name = context_params.retrieve_arguments([:component_module_id!, :option_1],method_argument_names)
 
       post_body = {
         :component_module_id => component_module_id,
@@ -498,14 +498,14 @@ module DTK::Client
       return response         
     end
 
-    desc "MODULE-NAME/ID push-to-dtkn [-n NAMESPACE] [-v VERSION]", "Push local copy of component module to remote repository."
+    desc "COMPONENT-MODULE-NAME/ID push-to-dtkn [-n NAMESPACE] [-v VERSION]", "Push local copy of component module to remote repository."
     version_method_option
     method_option "namespace",:aliases => "-n",
         :type => :string, 
         :banner => "NAMESPACE",
         :desc => "Remote namespace"
     def push_to_dtkn(context_params)
-      component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!, :module_name!],method_argument_names)
+      component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!, :component_module_name!],method_argument_names)
       version = options["version"]
 
       if component_module_name.to_s =~ /^[0-9]+$/
@@ -536,10 +536,10 @@ module DTK::Client
       push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)
     end
 
-    desc "MODULE-NAME/ID pull-from-dtkn [-v VERSION]", "Update local component module from remote repository."
+    desc "COMPONENT-MODULE-NAME/ID pull-from-dtkn [-v VERSION]", "Update local component module from remote repository."
     version_method_option
     def pull_from_dtkn(context_params)     
-      component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!,:module_name],method_argument_names)
+      component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!,:component_module_name],method_argument_names)
       version = options["version"]
 
       response = pull_from_remote_aux(:component_module,component_module_id,version)
@@ -560,9 +560,9 @@ module DTK::Client
     #### end: commands to interact with remote repo ###
 
     #### commands to manage workspace and versioning ###
-    desc "MODULE-NAME/ID create-version VERSION", "Snapshot current state of module as a new version"
+    desc "COMPONENT-MODULE-NAME/ID create-version VERSION", "Snapshot current state of component module as a new version"
     def create_version(context_params)
-      component_module_id,version = context_params.retrieve_arguments([:module_id!,:option_1!],method_argument_names)
+      component_module_id,version = context_params.retrieve_arguments([:component_module_id!,:option_1!],method_argument_names)
 
       post_body = {
         :component_module_id => component_module_id,
@@ -598,13 +598,13 @@ module DTK::Client
     #                   This will change behaviour of method in such way that edit will not be 
     #                   triggered after it.
     #
-    desc "MODULE-NAME/ID clone [-v VERSION] [-n]", "Locally clone module and component files. Use -n to skip edit prompt"
+    desc "COMPONENT-MODULE-NAME/ID clone [-v VERSION] [-n]", "Locally clone component module and component files. Use -n to skip edit prompt"
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
     version_method_option
     def clone(context_params, internal_trigger=false)
       thor_options = context_params.get_forwarded_options() || options
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      module_name         = context_params.retrieve_arguments([:module_name],method_argument_names)
+      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
+      module_name         = context_params.retrieve_arguments([:component_module_name],method_argument_names)
       version             = thor_options["version"]
       internal_trigger    = true if thor_options['skip_edit']   
 
@@ -617,15 +617,15 @@ module DTK::Client
       modules_path    = OsUtil.module_clone_location()
       module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
 
-      raise DTK::Client::DtkValidationError, "Trying to clone a module '#{module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
+      raise DTK::Client::DtkValidationError, "Trying to clone a component module '#{module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
       clone_aux(:component_module,component_module_id,version,internal_trigger,thor_options['omit_output'])
     end
 
-    desc "MODULE-NAME/ID edit [-v VERSION]","Switch to unix editing for given module."
+    desc "COMPONENT-MODULE-NAME/ID edit [-v VERSION]","Switch to unix editing for given component module."
     version_method_option
     def edit(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      module_name         = context_params.retrieve_arguments([:module_name],method_argument_names)
+      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
+      module_name         = context_params.retrieve_arguments([:component_module_name],method_argument_names)
       version             = options.version||context_params.retrieve_arguments([:option_1],method_argument_names)
       edit_dsl            = context_params.get_forwarded_options()[:edit_dsl] if context_params.get_forwarded_options()
 
@@ -642,7 +642,7 @@ module DTK::Client
       edit_aux(:component_module,component_module_id,module_name,version,opts)
     end
 
-    desc "MODULE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of module to server"
+    desc "COMPONENT-MODULE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
     version_method_option
     method_option "message",:aliases => "-m" ,
       :type => :string, 
@@ -651,7 +651,7 @@ module DTK::Client
     #hidden option for dev
     method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
     def push(context_params, internal_trigger=false)
-      component_module_id, component_module_name = context_params.retrieve_arguments([:module_id!, :module_name],method_argument_names)
+      component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!, :component_module_name],method_argument_names)
       version = options["version"]
       if component_module_name.to_s =~ /^[0-9]+$/
         component_module_id   = component_module_name
@@ -665,12 +665,12 @@ module DTK::Client
       push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
     end
 
-    desc "MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"
+    desc "COMPONENT-MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"
     version_method_option
     method_option :remote, :type => :boolean, :default => false
     def list_diffs(context_params)
-      component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-      module_name         = context_params.retrieve_arguments([:module_name],method_argument_names)
+      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
+      module_name         = context_params.retrieve_arguments([:component_module_name],method_argument_names)
       version             = options["version"]
 
       # if this is not name it will not work, we need module name
@@ -686,7 +686,7 @@ module DTK::Client
       if File.directory?(module_location)
         list_diffs_aux(:component_module, component_module_id, options.remote?, version)
       else
-        if Console.confirmation_prompt("Module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
+        if Console.confirmation_prompt("Component module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone component module now"+'?')
           response = clone_aux(:component_module,component_module_id,version,true)
           # if error return
           unless response.ok?

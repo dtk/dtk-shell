@@ -23,8 +23,8 @@ module DTK::Client
     end
 
     def self.validation_list(context_params)
-      if context_params.is_there_identifier?(:module)
-        component_module_id = context_params.retrieve_arguments([:module_id!])
+      if context_params.is_there_identifier?("component-module")
+        component_module_id = context_params.retrieve_arguments([:component_module_id!])
         res = get_cached_response(:component_template, "component_module/info_about", { :component_module_id => component_module_id, :about => :components})
       else
         get_cached_response(:component_template, "component/list", {:subtype => 'template'})
@@ -99,9 +99,9 @@ module DTK::Client
         end
 
         context_params_for_service = DTK::Shell::ContextParams.new
-        context_params_for_service.add_context_to_params("module", "module", module_id)
+        context_params_for_service.add_context_to_params("component_module", "component_module", module_id)
         
-        response = DTK::Client::ContextRouter.routeTask("module", "list_components", context_params_for_service, @conn)
+        response = DTK::Client::ContextRouter.routeTask("component_module", "list_components", context_params_for_service, @conn)
       
       else # Case without module filter
 

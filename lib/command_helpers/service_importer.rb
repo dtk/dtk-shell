@@ -29,7 +29,7 @@ module DTK::Client
         new_context_params.override_method_argument!('option_2', m_module['version'])
         new_context_params.forward_options( { "skip_cloning" => true}).merge!(opts)
 
-        response = ContextRouter.routeTask("module", "import_dtkn", new_context_params, @conn)
+        response = ContextRouter.routeTask("component_module", "import_dtkn", new_context_params, @conn)
         puts(response.data(:does_not_exist) ? response.data(:does_not_exist) : "Done.")
         raise DTK::Client::DtkError, response.error_message unless response.ok?        
       end
@@ -69,7 +69,7 @@ module DTK::Client
             new_context_params = ::DTK::Shell::ContextParams.new
             new_context_params.forward_options(thor_options)
             new_context_params.add_context_to_params(formated_name, "module", m['id'])               
-            response = ContextRouter.routeTask("module", "clone", new_context_params, @conn)
+            response = ContextRouter.routeTask("component_module", "clone", new_context_params, @conn)
             puts "Done."
           end
         end

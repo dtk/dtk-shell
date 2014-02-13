@@ -1,10 +1,10 @@
 require 'lib/spec_thor'
 require File.expand_path('../lib/require_first', File.dirname(__FILE__))
-require File.expand_path('../lib/commands/thor/module', File.dirname(__FILE__))
+require File.expand_path('../lib/commands/thor/component_module', File.dirname(__FILE__))
 
 include SpecThor
 
-describe DTK::Client::Module do
+describe DTK::Client::ComponentModule do
   $module_id = nil
 
   #list all assemblies and take one assembly_id
