@@ -22,8 +22,8 @@ module DTK::Client
       # API descriptor
     end
 
-    desc "assembly","Services instances that have been deployed via the DTK ."
-    def assembly
+    desc "service","Services instances that have been deployed via the DTK ."
+    def service
       # API descriptor
     end
 

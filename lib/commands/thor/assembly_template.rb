@@ -62,8 +62,8 @@ module DTK::Client
 
     def self.assembly_list()
       assembly_list = []
-      response = get_cached_response(:assembly, "assembly/list", {})
-      raise DTK::Client::DtkError, "Unable to retreive assembly list." unless response.ok?
+      response = get_cached_response(:service, "assembly/list", {})
+      raise DTK::Client::DtkError, "Unable to retreive service list." unless response.ok?
       
       if assemblies = response.data
         assemblies.each do |assembly|
@@ -197,7 +197,7 @@ module DTK::Client
       response = post rest_url("assembly/stage"), post_body
       return response unless response.ok?
       # when changing context send request for getting latest assemblies instead of getting from cache
-      @@invalidate_map << :assembly
+      @@invalidate_map << :service
       @@invalidate_map << :assembly_template
 
       return response
@@ -256,7 +256,7 @@ module DTK::Client
       ret.add_data_value!(:task_id,task_id)
 
       # when changing context send request for getting latest assemblies instead of getting from cache
-      @@invalidate_map << :assembly
+      @@invalidate_map << :service
 
       return ret
     end

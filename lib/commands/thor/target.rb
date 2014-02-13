@@ -15,8 +15,8 @@ module DTK::Client
       list_targets(context_params)
     end
 
-    desc "TARGET-NAME/ID list-assemblies","Lists assembly instances in given targets."
-    def list_assemblies(context_params)
+    desc "TARGET-NAME/ID list-services","Lists service instances in given targets."
+    def list_services(context_params)
       context_params.method_arguments = ["assemblies"]
       list_targets(context_params)
     end

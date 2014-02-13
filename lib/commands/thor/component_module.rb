@@ -35,7 +35,7 @@ module DTK::Client
     end
 
     def self.validation_list(context_params)
-      get_cached_response(:module_component, "component_module/list", {})
+      get_cached_response(:component_module, "component_module/list", {})
     end
 
      def self.override_allowed_methods()
@@ -91,7 +91,7 @@ module DTK::Client
     end
 
     def self.whoami()
-      return :module_component, "component_module/list", nil
+      return :component_module, "component_module/list", nil
     end
 
 #TODO: in for testing; may remove
@@ -154,7 +154,7 @@ module DTK::Client
       return response unless response.ok?
       
       # when changing context send request for getting latest modules instead of getting from cache
-      @@invalidate_map << :component_module_component
+      @@invalidate_map << :component_module
 
       unless method_opts[:no_error_msg]
         msg = "Component module '#{component_module_name}' "
@@ -174,7 +174,7 @@ module DTK::Client
         mapping = [:component_module_id!,:option_1!,:option_2]
       end
 
-      module_component_id, attribute_id, value = context_params.retrieve_arguments(mapping,method_argument_names)
+      component_module_id, attribute_id, value = context_params.retrieve_arguments(mapping,method_argument_names)
 
       post_body = {
         :attribute_id => attribute_id,
@@ -272,7 +272,7 @@ module DTK::Client
       # first make call to server to create an empty repo
       response = post rest_url("component_module/create"), { :module_name => module_name }
       return response unless response.ok?
-      @@invalidate_map << :component_module_component
+      @@invalidate_map << :component_module
 
       repo_url,repo_id,module_id,branch = response.data(:repo_url,:repo_id,:module_id,:workspace_branch)
       response = Helper(:git_repo).initialize_client_clone_and_push(:component_module,module_name,branch,repo_url,module_directory)
@@ -380,7 +380,7 @@ module DTK::Client
       unless skip_cloning
         response = Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
       end
-      @@invalidate_map << :component_module_component
+      @@invalidate_map << :component_module
 
       response
     end
@@ -450,7 +450,7 @@ module DTK::Client
         :version => version
       }
       response = post rest_url("component_module/import_version"), post_body
-      @@invalidate_map << :component_module_component
+      @@invalidate_map << :component_module
 
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)

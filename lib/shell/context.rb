@@ -372,7 +372,7 @@ module DTK
       # hack: used just to avoid entering assembly/id/node or workspace/node context (remove when include this contexts again)
       def is_restricted_context(first_c, args = [], tmp_active_context=nil)
         entries = args.first.split(/\//)
-        invalid_context = ["workspace/node", "assembly/node"]
+        invalid_context = ["workspace/node", "service/node"]
         double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
         only_double_dots = entries.select{|e| e.to_s!=".."}||[]
         back_flag = false

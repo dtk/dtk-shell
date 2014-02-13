@@ -5,7 +5,7 @@ module DTK::Client
     no_tasks do
 
       def self.assembly_validation_list(context_params)
-        assembly_or_worspace_id, node_id, component_id = context_params.retrieve_arguments([[:assembly_id!, :workspace_id!], :node_id!, :component_id!])
+        assembly_or_worspace_id, node_id, component_id = context_params.retrieve_arguments([[:service_id!, :workspace_id!], :node_id!, :component_id!])
 
         post_body = {
           :assembly_id  => assembly_or_worspace_id,
@@ -16,7 +16,7 @@ module DTK::Client
           :filter       => nil
         }
 
-        response = get_cached_response(:assembly_node_component_attribute, "assembly/info_about", post_body)
+        response = get_cached_response(:service_node_component_attribute, "assembly/info_about", post_body)
         modified_response = response.clone_me()
 
         modified_response['data'].each { |e| e['display_name'] = e['display_name'].split('/').last }
@@ -46,7 +46,7 @@ module DTK::Client
       command_name = context_params.root_command_name
 
       case command_name
-      when 'assembly'
+      when 'service'
         return assembly_validation_list(context_params)
       when 'workspace'
         return assembly_validation_list(context_params)

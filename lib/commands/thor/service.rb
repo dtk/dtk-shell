@@ -16,7 +16,7 @@ DEBUG_SLEEP_TIME = DTK::Configuration.get(:debug_task_frequency)
 # replace: $1,method_argument_names
 
 module DTK::Client
-  class Assembly < CommandBaseThor
+  class Service < CommandBaseThor
 
     no_tasks do
       include TaskStatusMixin
@@ -31,7 +31,7 @@ module DTK::Client
 
       def get_assembly_id(assembly_name)
         assembly_id = nil
-        list = CommandBaseThor.get_cached_response(:assembly, "assembly/list", {})
+        list = CommandBaseThor.get_cached_response(:service, "assembly/list", {})
 
         list.data.each do |item|
           if item["display_name"] == assembly_name
@@ -46,7 +46,7 @@ module DTK::Client
     end
 
     def self.whoami()
-      return :assembly, "assembly/list", {:subtype  => 'instance'}
+      return :service, "assembly/list", {:subtype  => 'instance'}
     end
 
     def self.pretty_print_cols()
@@ -97,11 +97,11 @@ module DTK::Client
     end
 
     def self.valid_child?(name_of_sub_context)
-      return Assembly.valid_children().include?(name_of_sub_context.to_sym)
+      return Service.valid_children().include?(name_of_sub_context.to_sym)
     end
 
     def self.validation_list(context_params)
-      get_cached_response(:assembly, "assembly/list", {})
+      get_cached_response(:service, "assembly/list", {})
     end
 
     # TODO: Hack which is necessery for the specific problem (DTK-541), something to reconsider down the line
@@ -149,11 +149,11 @@ TODO: overlaps with different meaning
         :identifier_only => {
           :node      => [
             ['create-component',"create-component COMPONENT","# Add a component to the node."],
-            ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from assembly's node"],
+            ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from service's node"],
             ['info',"info","# Return info about node instance belonging to given workspace."],
             # ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
-            ['list-attributes',"list-attributes","# List attributes associated with assembly's node."],
-            ['list-components',"list-components","# List components associated with assembly's node."],
+            ['list-attributes',"list-attributes","# List attributes associated with service's node."],
+            ['list-components',"list-components","# List components associated with service's node."],
             ['set-attribute',"set-attribute ATTRIBUTE-NAME [VALUE] [-u]","# (Un)Set attribute value. The option -u will unset the attribute's value."],
             ['start', "start", "# Start node instance."],
             ['stop', "stop", "# Stop node instance."]
@@ -173,23 +173,23 @@ TODO: overlaps with different meaning
       })
     end
 
-    desc "ASSEMBLY-NAME/ID start [NODE-NAME]", "Starts all the assembly's nodes. A single node can be selected."
+    desc "SERVICE-NAME/ID start [NODE-NAME]", "Starts all the service's nodes. A single node can be selected."
     def start(context_params)
       start_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID stop [NODE-NAME]", "Stops all the assembly's nodes. A single node can be selected."
+    desc "SERVICE-NAME/ID stop [NODE-NAME]", "Stops all the service's nodes. A single node can be selected."
     def stop(context_params)
       stop_aux(context_params)
     end
 
 
-    desc "ASSEMBLY-NAME/ID cancel-task [TASK_ID]", "Cancels an executing task.  If task id is omitted, this command cancels the most recent executing task."
+    desc "SERVICE-NAME/ID cancel-task [TASK_ID]", "Cancels an executing task.  If task id is omitted, this command cancels the most recent executing task."
     def cancel_task(context_params)
       cancel_task_aux(context_params)
     end
 
-    desc "rename ASSEMBLY-NAME NEW-ASSEMBLY-NAME","List assemblies."
+    desc "rename SERVICE-NAME NEW-SERVICE-NAME","List assemblies."
     def rename(context_params)
       assembly_name, new_assembly_name = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
       assembly_id = get_assembly_id(assembly_name)
@@ -203,7 +203,7 @@ TODO: overlaps with different meaning
       response = post rest_url("assembly/rename"), post_body
       return response unless response.ok?
 
-      @@invalidate_map << :assembly
+      @@invalidate_map << :service
       response      
     end
 
@@ -212,9 +212,9 @@ TODO: overlaps with different meaning
     #  clear_tasks_aux(context_params)
     #end
 
-    desc "ASSEMBLY-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create a new assembly from this assembly instance in the designated service module."
-    def create_assembly(context_params)
-      assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:assembly_id!,:option_1!,:option_2!],method_argument_names)
+    desc "SERVICE-NAME/ID create-service SERVICE-MODULE-NAME SERVICE-NAME", "Create a new service from this service instance in the designated service module."
+    def create_service(context_params)
+      assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
       response = promote_assembly_aux(:create,assembly_id,service_module_name,assembly_template_name)
       return response unless response.ok?
 
@@ -223,7 +223,7 @@ TODO: overlaps with different meaning
       Response::Ok.new()
     end
     
-    desc "ASSEMBLY-NAME/ID converge [-m COMMIT-MSG]", "Converge assembly instance."
+    desc "SERVICE-NAME/ID converge [-m COMMIT-MSG]", "Converge service instance."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
@@ -232,15 +232,15 @@ TODO: overlaps with different meaning
       converge_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID push-assembly-updates [SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push assembly instance to the designated assembly; default is parent assembly."
-    def push_assembly_updates(context_params)
-      assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:assembly_id!,:option_1],method_argument_names) 
+    desc "SERVICE-NAME/ID push-service-updates [SERVICE-MODULE-NAME/SERVICE-NAME]", "Push service instance to the designated service; default is parent service."
+    def push_service_updates(context_params)
+      assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:service_id!,:option_1],method_argument_names) 
       service_module_name, assembly_template_name =
         if qualified_assembly_name
           if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
             [$1,$2]
           else
-            raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-MODULE-NAME/ASSEMBLY-NAME"
+            raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-MODULE-NAME/SERVICE-NAME"
           end
         else
           [nil,nil]
@@ -251,23 +251,23 @@ TODO: overlaps with different meaning
       Response::Ok.new()
     end
 
-    desc "ASSEMBLY-NAME/ID push-module-updates MODULE-NAME [--force]", "Push changes made to a component module in the assembly to its base component module."
+    desc "SERVICE-NAME/ID push-module-updates MODULE-NAME [--force]", "Push changes made to a component module in the service to its base component module."
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def push_module_updates(context_params)
       push_module_updates_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID edit-module MODULE-NAME", "Edit a component module used in the assembly."
+    desc "SERVICE-NAME/ID edit-module MODULE-NAME", "Edit a component module used in the service."
     def edit_module(context_params)
       edit_module_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID edit-workflow", "Edit assembly's workflow."
+    desc "SERVICE-NAME/ID edit-workflow", "Edit service's workflow."
     def edit_workflow(context_params)
       edit_workflow_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID edit-attributes", "Edit assembly's attributes."
+    desc "SERVICE-NAME/ID edit-attributes", "Edit service's attributes."
     def edit_attributes(context_params)
       edit_attributes_aux(context_params)
     end
@@ -315,7 +315,7 @@ TODO: will put in dot release and will rename to 'extend'
     end
 =end
 
-    desc "ASSEMBLY-NAME/ID task-status [--wait]", "Get the task status of the running or last running assembly task."
+    desc "SERVICE-NAME/ID task-status [--wait]", "Get the task status of the running or last running service task."
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
       task_status_aw_aux(context_params)
@@ -337,52 +337,52 @@ TODO: will put in dot release and will rename to 'extend'
     end
 =end
 
-    desc "ASSEMBLY-NAME/ID list-nodes","List nodes associated with assembly."
+    desc "SERVICE-NAME/ID list-nodes","List nodes associated with service."
     def list_nodes(context_params)
       list_nodes_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-component-links","List component links."
+    desc "SERVICE-NAME/ID list-component-links","List component links."
     def list_component_links(context_params)
       list_component_links_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-components [--deps]","List components associated with assembly."
+    desc "SERVICE-NAME/ID list-components [--deps]","List components associated with service."
     method_option :deps, :type => :boolean, :default => false, :aliases => '-l'
     def list_components(context_params)
       list_components_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-attributes [-f FORMAT] [--links]","List attributes associated with assembly."
+    desc "SERVICE-NAME/ID list-attributes [-f FORMAT] [--links]","List attributes associated with service."
     method_option :format,:aliases => '-f'
     method_option :links, :type => :boolean, :default => false, :aliases => '-l'
     def list_attributes(context_params)
       list_attributes_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-modules","List modules associated with assembly."
+    desc "SERVICE-NAME/ID list-modules","List modules associated with service."
     def list_modules(context_params)
       list_modules_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-tasks","List tasks associated with assembly."
+    desc "SERVICE-NAME/ID list-tasks","List tasks associated with service."
     def list_tasks(context_params)
       list_tasks_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID list-violations", "Finds violations in the assembly that will prevent a converge operation."
+    desc "SERVICE-NAME/ID list-violations", "Finds violations in the service that will prevent a converge operation."
     def list_violations(context_params)
       list_violations_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID workflow-info", "Get the structure of the workflow associated with assembly."
+    desc "SERVICE-NAME/ID workflow-info", "Get the structure of the workflow associated with service."
     def workflow_info(context_params)
       workflow_info_aux(context_params)
     end
 
     desc "list","List assemblies."
     def list(context_params)
-      assembly_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([:assembly_id,:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
+      assembly_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([:service_id,:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
       detail_to_include = nil
 
       if about
@@ -461,17 +461,17 @@ TODO: will put in dot release and will rename to 'extend'
     #  post rest_url("assembly/list_smoketests"), post_body
     #end
 
-    desc "ASSEMBLY-NAME/ID info", "Get info about content of the assembly."
+    desc "SERVICE-NAME/ID info", "Get info about content of the service."
     def info(context_params)
       info_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID link-attributes TARGET-ATTR SOURCE-ATTR", "Link the value of the target attribute to the source attribute."
+    desc "SERVICE-NAME/ID link-attributes TARGET-ATTR SOURCE-ATTR", "Link the value of the target attribute to the source attribute."
     def link_attributes(context_params)
       link_attributes_aux(context_params)
     end
 
-    desc "delete-and-destroy ASSEMBLY-NODE/ID [-y]", "Delete assembly instance, terminating any nodes that have been spun up."
+    desc "delete-and-destroy NAME/ID [-y]", "Delete service instance, terminating any nodes that have been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
       assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
@@ -480,7 +480,7 @@ TODO: will put in dot release and will rename to 'extend'
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
         #used form "+'?' because ?" confused emacs ruby rendering
-        what = "assembly"
+        what = "service"
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_name}' and its nodes"+'?')
       end
 
@@ -496,18 +496,18 @@ TODO: will put in dot release and will rename to 'extend'
       response = post rest_url("assembly/delete"), post_body
          
       # when changing context send request for getting latest assemblies instead of getting from cache
-      @@invalidate_map << :assembly
+      @@invalidate_map << :service
       @@invalidate_map << :assembly_template
       response
     end
 
-    desc "ASSEMBLY-NAME/ID set-attribute ATTRIBUTE-NAME [VALUE] [-u]", "(Un)Set attribute value. The option -u will unset the attribute's value."
+    desc "SERVICE-NAME/ID set-attribute ATTRIBUTE-NAME [VALUE] [-u]", "(Un)Set attribute value. The option -u will unset the attribute's value."
     method_option :unset, :aliases => '-u', :type => :boolean, :default => false
     def set_attribute(context_params)
       set_attribute_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--type DATATYPE] [--required] [--dynamic]", "Create a new attribute and optionally assign it a value."
+    desc "SERVICE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--type DATATYPE] [--required] [--dynamic]", "Create a new attribute and optionally assign it a value."
     method_option :required, :type => :boolean, :default => false
     method_option :dynamic, :type => :boolean, :default => false
     method_option "type",:aliases => "-t"
@@ -531,37 +531,37 @@ TODO: will put in dot release and will rename to 'extend'
   #  end
 
     # using ^^ before NODE-NAME to remove this command from assembly/assembly_id/node/node_id but show in assembly/assembly_id
-    desc "ASSEMBLY-NAME/ID create-node ^^NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the assembly."
+    desc "SERVICE-NAME/ID create-node ^^NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the service."
     def create_node(context_params)
       response = create_node_aux(context_params)
-      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service_node
 
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID link-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]","Link the target component to the source component."
+    desc "SERVICE-NAME/ID link-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]","Link the target component to the source component."
     def link_components(context_params)
       link_components_aux(context_params)
     end
 
     # only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE create-component NODE-NAME COMPONENT", "Add a component to the assembly."
+    desc "HIDE_FROM_BASE create-component NODE-NAME COMPONENT", "Add a component to the service."
     def create_component(context_params)
       response = create_component_aux(context_params)
 
-      @@invalidate_map << :assembly
-      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
 
       response
     end
 
     # using ^^ before NODE-NAME to remove this command from assembly/assembly_id/node/node_id but show in assembly/assembly_id
-    desc "ASSEMBLY-NAME/ID delete-node ^^NODE-NAME [-y]","Delete node, terminating it if the node has been spun up."
+    desc "SERVICE-NAME/ID delete-node ^^NODE-NAME [-y]","Delete node, terminating it if the node has been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       response = delete_node_aux(context_params)
-      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service_node
 
       return response
     end
@@ -571,7 +571,7 @@ TODO: will put in dot release and will rename to 'extend'
       if context_params.is_last_command_eql_to?(:node)
         response = delete_node_aux(context_params)
         return response unless response.ok?
-        @@invalidate_map << :assembly_node
+        @@invalidate_map << :service_node
 
         response
       elsif context_params.is_last_command_eql_to?(:component)
@@ -583,21 +583,21 @@ TODO: will put in dot release and will rename to 'extend'
       end
     end
 
-    desc "ASSEMBLY-NAME/ID unlink-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]", "Remove a component link."
+    desc "SERVICE-NAME/ID unlink-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]", "Remove a component link."
     def unlink_components(context_params)
       unlink_components_aux(context_params)
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE delete-component COMPONENT-NAME [-y]","Delete component from the assembly."
+    desc "HIDE_FROM_BASE delete-component COMPONENT-NAME [-y]","Delete component from the service."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
       response = delete_component_aux(context_params)
       return response unless response.ok?
       
-      @@invalidate_map << :assembly
-      @@invalidate_map << :assembly_node
-      @@invalidate_map << :assembly_node_component
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      @@invalidate_map << :service_node_component
 
       response
     end
@@ -615,9 +615,9 @@ TODO: will put in dot release and will rename to 'extend'
       get_ps_aux(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
+    desc "SERVICE-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
     def set_required_params(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+      assembly_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
       set_required_params_aux(assembly_id,:assembly,:instance)
     end
 

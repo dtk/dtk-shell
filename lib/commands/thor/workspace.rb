@@ -125,7 +125,7 @@ module DTK::Client
         :identifier_only => {
           :node      => [
             ['create-component',"create-component COMPONENT","# Add a component to the node."],
-            ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from assembly's node"],
+            ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from workspace's node"],
             ['info',"info","# Return info about node instance belonging to given workspace."],
             # ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
             ['list-attributes',"list-attributes","# List attributes associated with workspace's node."],
@@ -175,13 +175,13 @@ module DTK::Client
       push_module_updates_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-assembly-updates SERVICE-NAME/ASSEMBLY-NAME", "Push workspace instance to the designated assembly."
-    def push_assembly_updates(context_params)
+    desc "WORKSPACE-NAME/ID push-service-updates SERVICE-NAME/SERVICE-NAME", "Push workspace instance to the designated service."
+    def push_service_updates(context_params)
       workspace_id, qualified_assembly_name = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names) 
       if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
         service_module_name, assembly_template_name = [$1,$2]
       else
-        raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-NAME/ASSEMBLY-NAME"
+        raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-NAME/SERVICE-NAME"
       end
       response = promote_assembly_aux(:update,workspace_id, service_module_name, assembly_template_name)
       return response unless response.ok?
@@ -189,10 +189,10 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "WORKSPACE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
+    desc "WORKSPACE-NAME/ID create-service SERVICE-MODULE-NAME SERVICE-NAME [-p]", "Create a new service from the workspace instance in the designated service module."
    # The option -p will purge the workspace after assembly creation." 
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
-    def create_assembly(context_params)
+    def create_service(context_params)
       workspace_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:workspace_id!,:option_1!,:option_2!],method_argument_names)
       response = promote_assembly_aux(:create,workspace_id,service_module_name,assembly_template_name)
       return response unless response.ok?
@@ -221,8 +221,8 @@ module DTK::Client
       response = create_component_aux(context_params)
       return response unless response.ok?
 
-      @@invalidate_map << :assembly
-      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
 
       response
     end
@@ -231,7 +231,7 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID create-node ^^NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the workspace."
     def create_node(context_params)
       response = create_node_aux(context_params)
-      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service_node
 
       return response
     end
@@ -246,13 +246,13 @@ module DTK::Client
     def delete(context_params)
       if context_params.is_last_command_eql_to?(:node)
         response = delete_node_aux(context_params)
-        @@invalidate_map << :assembly_node
+        @@invalidate_map << :service_node
 
         response
       elsif context_params.is_last_command_eql_to?(:component)
         response = delete_component_aux(context_params)
         return response unless response.ok?
-        @@invalidate_map << :assembly_node_component
+        @@invalidate_map << :service_node_component
         
         response
       end
@@ -266,9 +266,9 @@ module DTK::Client
       response = delete_component_aux(context_params)
       return response unless response.ok?
       
-      @@invalidate_map << :assembly
-      @@invalidate_map << :assembly_node
-      @@invalidate_map << :assembly_node_component
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      @@invalidate_map << :service_node_component
 
       return response
     end
@@ -278,7 +278,7 @@ module DTK::Client
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       response = delete_node_aux(context_params)
-      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service_node
 
       return response
     end

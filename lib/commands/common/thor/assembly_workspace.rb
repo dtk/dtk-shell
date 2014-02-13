@@ -12,7 +12,7 @@ LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
 
 module DTK::Client
   module AssemblyWorkspaceMixin
-    REQ_ASSEMBLY_OR_WS_ID = [:assembly_id!, :workspace_id!]
+    REQ_ASSEMBLY_OR_WS_ID = [:service_id!, :workspace_id!]
     def get_name(assembly_or_workspace_id)
       get_name_from_id_helper(assembly_or_workspace_id)
     end
@@ -98,7 +98,7 @@ module DTK::Client
         confirmation_message = response.data["confirmation_message"]
         
         if confirmation_message
-          return unless Console.confirmation_prompt("Workspace assembly is stopped, do you want to start it"+'?')
+          return unless Console.confirmation_prompt("Workspace service is stopped, do you want to start it"+'?')
           post_body.merge!(:start_assembly=>true)
           response = post rest_url("assembly/create_task"), post_body
           return response unless response.ok?
@@ -502,7 +502,7 @@ module DTK::Client
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
         #used form "+'?' because ?" confused emacs ruby rendering
-        what = "assembly"
+        what = "service"
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_name}' and its nodes"+'?')
       end
 
@@ -561,9 +561,9 @@ module DTK::Client
 
     def unset(context_params)
       if context_params.is_there_identifier?(:attribute)
-        mapping = [[:assembly_id, :workspace_id!],:attribute_id!]
+        mapping = [[:service_id, :workspace_id!],:attribute_id!]
       else
-        mapping = [[:assembly_id, :workspace_id!],:option_1!]
+        mapping = [[:service_id, :workspace_id!],:option_1!]
       end
 
       assembly_or_workspace_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
@@ -578,7 +578,7 @@ module DTK::Client
     end
 
     def add_assembly(context_params)
-      assembly_or_workspace_id,assembly_template_id = context_params.retrieve_arguments([[:assembly_id, :workspace_id!],:option_1!],method_argument_names)
+      assembly_or_workspace_id,assembly_template_id = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :assembly_template_id => assembly_template_id
@@ -588,7 +588,7 @@ module DTK::Client
     end
 
     def create_node_aux(context_params)
-      assembly_or_workspace_id,assembly_node_name,node_template_identifier = context_params.retrieve_arguments([[:assembly_id, :workspace_id!],:option_1!,:option_2!],method_argument_names)
+      assembly_or_workspace_id,assembly_node_name,node_template_identifier = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!,:option_2!],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :assembly_node_name => assembly_node_name
@@ -976,7 +976,7 @@ module DTK::Client
     end
 
     def list_aux(context_params)
-      assembly_or_workspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([[:assembly_id!, :workspace_id],:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
+      assembly_or_workspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([[:service_id!, :workspace_id],:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
       detail_to_include = nil
       format = nil
       post_options = Hash.new
