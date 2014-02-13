@@ -170,7 +170,7 @@ TODO: overlaps with different meaning
             ['info',"info","# Return info about attribute instance belonging to given component."]
           ]
         }
-      })
+      }, [:utils])
     end
 
     desc "SERVICE-NAME/ID start [NODE-NAME]", "Starts all the service's nodes. A single node can be selected."
