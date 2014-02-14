@@ -77,7 +77,7 @@ module DTK::Client
             :url => "assembly/info_about", 
             :opts => {:subtype=>"instance", :about=>"modules"}
           },
-          :push_module_updates => {
+          :push_component_module_updates => {
             :endpoint => "assembly", 
             :url => "assembly/info_about", 
             :opts => {:subtype=>"instance", :about=>"modules"}
@@ -251,9 +251,9 @@ TODO: overlaps with different meaning
       Response::Ok.new()
     end
 
-    desc "SERVICE-NAME/ID push-module-updates MODULE-NAME [--force]", "Push changes made to a component module in the service to its base component module."
+    desc "SERVICE-NAME/ID push-component-module-updates MODULE-NAME [--force]", "Push changes made to a component module in the service to its base component module."
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-    def push_module_updates(context_params)
+    def push_component_module_updates(context_params)
       push_module_updates_aux(context_params)
     end
 
@@ -360,8 +360,8 @@ TODO: will put in dot release and will rename to 'extend'
       list_attributes_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID list-modules","List modules associated with service."
-    def list_modules(context_params)
+    desc "SERVICE-NAME/ID list-component-modules","List component modules associated with service."
+    def list_component_modules(context_params)
       list_modules_aux(context_params)
     end
 

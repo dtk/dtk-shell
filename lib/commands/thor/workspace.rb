@@ -56,7 +56,7 @@ module DTK::Client
             :url => "assembly/info_about", 
             :opts => {:subtype=>"instance", :about=>"modules"}
           },
-          :push_module_updates => {
+          :push_component_module_updates => {
             :endpoint => "assembly", 
             :url => "assembly/info_about", 
             :opts => {:subtype=>"instance", :about=>"modules"}
@@ -169,9 +169,9 @@ module DTK::Client
       converge_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-module-updates MODULE-NAME [--force]", "Push changes made to a component module in the workspace to its base component module."
+    desc "WORKSPACE-NAME/ID push-component-module-updates MODULE-NAME [--force]", "Push changes made to a component module in the workspace to its base component module."
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-    def push_module_updates(context_params)
+    def push_component_module_updates(context_params)
       push_module_updates_aux(context_params)
     end
 
