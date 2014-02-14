@@ -569,7 +569,7 @@ module DTK::Client
       return response
     end
 
-    desc "SERVICE-MODULE-NAME/ID delete-assembly ASSEMBLY-TEMPLATE-ID [-y]", "Delete assembly from service module."
+    desc "SERVICE-MODULE-NAME/ID delete-assembly ASSEMBLY-ID [-y]", "Delete assembly from service module."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_assembly(context_params)
       service_module_id, assembly_template_id = context_params.retrieve_arguments([:service_module_id!,:option_1!], method_argument_names)
