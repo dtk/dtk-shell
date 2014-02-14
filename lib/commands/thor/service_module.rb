@@ -425,8 +425,8 @@ module DTK::Client
       clone_aux(:service_module,service_module_name,version,internal_trigger,omit_output)
     end
 
-    desc "SERVICE-MODULE-NAME/ID set-module-version COMPONENT-MODULE-NAME VERSION", "Set the version of the component module to use in the service module's assemblies"
-    def set_module_version(context_params)
+    desc "SERVICE-MODULE-NAME/ID set-component-module-version COMPONENT-MODULE-NAME VERSION", "Set the version of the component module to use in the service module's assemblies"
+    def set_component_module_version(context_params)
       service_module_id,component_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!,:option_2!],method_argument_names)
       post_body = {
         :service_module_id => service_module_id,
