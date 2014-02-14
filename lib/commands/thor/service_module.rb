@@ -10,7 +10,7 @@ dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/reparse')
 dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
-dtk_require_from_base("commands/thor/assembly_template")
+dtk_require_from_base("commands/thor/assembly")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 dtk_require_common_commands('thor/purge_clone')
@@ -35,11 +35,11 @@ module DTK::Client
     end
 
     def self.valid_children()
-      [:"assembly-template"]
+      [:"assembly"]
     end
 
     def self.all_children()
-      [:"assembly-template"]
+      [:"assembly"]
     end
 
     def self.valid_child?(name_of_sub_context)
@@ -60,7 +60,7 @@ module DTK::Client
           :self => [
             ["list"," list [--remote] [--diff]","# List service modules (local/remote). Use --diff to compare loaded and remote modules."]
           ],
-          :"assembly-template" => [
+          :"assembly" => [
             ["list","list","# List assembly templates for given service module"]
           ]
         },
@@ -69,7 +69,7 @@ module DTK::Client
             ["list-assemblies","list-assemblies","# List assembly templates associated with service module."],
             ["list-modules","list-modules","# List modules associated with service module."]
           ],
-          :"assembly-template" => [
+          :"assembly" => [
             ["info","info","# Info for given assembly template in current service module"],
             ["stage", "stage [INSTANCE-NAME] -t [TARGET-NAME/ID]", "# Stage assembly template in target."],
             ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-m COMMIT-MSG]", "# Stage and deploy assembly template in target."],
@@ -84,18 +84,19 @@ module DTK::Client
     ##MERGE-QUESTION: need to add options of what info is about
     desc "SERVICE-MODULE-NAME/ID info", "Provides information about specified service module"
     def info(context_params)
-      if context_params.is_there_identifier?(:assembly_template)
-        response = DTK::Client::ContextRouter.routeTask("assembly_template", "info", context_params, @conn)
+      #TODO Aldin
+      if context_params.is_there_identifier?(:assembly)
+        response = DTK::Client::ContextRouter.routeTask("assembly", "info", context_params, @conn)
       else  
         service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
+        
         post_body = {
          :service_module_id => service_module_id
         }
-
+        
         response = post rest_url('service_module/info'), post_body
+        response.render_custom_info("module")
       end
-      
-      response.render_custom_info("module")
     end
 
     desc "SERVICE-MODULE-NAME/ID list-assemblies","List assembly templates associated with service module."
@@ -116,11 +117,15 @@ module DTK::Client
     method_option :remote, :type => :boolean, :default => false
     method_option :diff, :type => :boolean, :default => false
     def list(context_params)
-      service_module_id, about = context_params.retrieve_arguments([:service_module_id, :option_1],method_argument_names)
-
+      service_module_id, about, service_module_name = context_params.retrieve_arguments([:service_module_id, :option_1, :option_2],method_argument_names)
       datatype = nil
-      if context_params.is_there_command?(:"assembly-template")
-        about = "assembly-templates"
+
+      if context_params.is_there_command?(:"assembly")
+        about = "assembly"
+      end
+
+      if service_module_id.nil? && !service_module_name.nil?
+        service_module_id = service_module_name
       end
       
       # If user is on service level, list task can't have about value set
@@ -134,11 +139,11 @@ module DTK::Client
       else
         # TODO: this is temp; will shortly support this
         raise DTK::Client::DtkValidationError.new("Not supported '--remote' option when listing service module assemblies, component templates or modules", true) if options.remote?
-        raise DTK::Client::DtkValidationError.new("Not supported type '#{about}' for list for current context level. Possible type options: 'assembly-templates'", true) unless(about == "assembly-templates" || about == "modules")
+        raise DTK::Client::DtkValidationError.new("Not supported type '#{about}' for list for current context level. Possible type options: 'assembly'", true) unless(about == "assembly" || about == "modules")
       
         if about
           case about
-          when "assembly-templates"
+          when "assembly"
             data_type        = :assembly_template
             action           = "list_assemblies"
           when "modules"
@@ -569,15 +574,15 @@ module DTK::Client
     def delete_assembly(context_params)
       service_module_id, assembly_template_id = context_params.retrieve_arguments([:service_module_id!,:option_1!], method_argument_names)
       service_module_name = context_params.retrieve_arguments([:service_module_name],method_argument_names)
-      assembly_template_name = (assembly_template_id.to_s =~ /^[0-9]+$/) ? DTK::Client::AssemblyTemplate.get_assembly_template_name_for_service(assembly_template_id, service_module_name) : assembly_template_id
-      assembly_template_id   = DTK::Client::AssemblyTemplate.get_assembly_template_id_for_service(assembly_template_id, service_module_name) unless assembly_template_id.to_s =~ /^[0-9]+$/
+      assembly_template_name = (assembly_template_id.to_s =~ /^[0-9]+$/) ? DTK::Client::Assembly.get_assembly_template_name_for_service(assembly_template_id, service_module_name) : assembly_template_id
+      assembly_template_id   = DTK::Client::Assembly.get_assembly_template_id_for_service(assembly_template_id, service_module_name) unless assembly_template_id.to_s =~ /^[0-9]+$/
 
       if service_module_name.to_s =~ /^[0-9]+$/
         service_module_id   = service_module_name
         service_module_name = get_service_module_name(service_module_id)
       end
 
-      return unless Console.confirmation_prompt("Are you sure you want to delete assembly_template '#{assembly_template_name||assembly_template_id}'"+'?') unless options.force?
+      return unless Console.confirmation_prompt("Are you sure you want to delete assembly '#{assembly_template_name||assembly_template_id}'"+'?') unless options.force?
       
       post_body = {
         :service_module_id => service_module_id,
@@ -601,7 +606,7 @@ module DTK::Client
       commit_msg = "Deleting assembly template #{assembly_template_name.to_s}"
       internal_trigger = true
       push_clone_changes_aux(:service_module, service_module_id, version, commit_msg, internal_trigger)
-      @@invalidate_map << :assembly_template
+      @@invalidate_map << :assembly
       Response::Ok.new()
     end
 =begin

@@ -218,7 +218,7 @@ TODO: overlaps with different meaning
       response = promote_assembly_aux(:create,assembly_id,service_module_name,assembly_template_name)
       return response unless response.ok?
 
-      @@invalidate_map << :assembly_template
+      @@invalidate_map << :assembly
       @@invalidate_map << :service_module
       Response::Ok.new()
     end
@@ -247,7 +247,7 @@ TODO: overlaps with different meaning
         end
       response = promote_assembly_aux(:update,assembly_id, service_module_name, assembly_template_name)
       return response unless response.ok?
-      @@invalidate_map << :assembly_template
+      @@invalidate_map << :assembly
       Response::Ok.new()
     end
 
@@ -497,7 +497,7 @@ TODO: will put in dot release and will rename to 'extend'
          
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :service
-      @@invalidate_map << :assembly_template
+      @@invalidate_map << :assembly
       response
     end
 

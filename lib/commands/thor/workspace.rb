@@ -185,7 +185,7 @@ module DTK::Client
       end
       response = promote_assembly_aux(:update,workspace_id, service_module_name, assembly_template_name)
       return response unless response.ok?
-      @@invalidate_map << :assembly_template
+      @@invalidate_map << :assembly
       Response::Ok.new()
     end
 
@@ -201,7 +201,7 @@ module DTK::Client
         return response unless response.ok?
       end
 
-      @@invalidate_map << :assembly_template
+      @@invalidate_map << :assembly
       @@invalidate_map << :service_module
       Response::Ok.new()
     end

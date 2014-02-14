@@ -1,12 +1,12 @@
 dtk_require("../../shell/status_monitor")
 
 module DTK::Client
-  class AssemblyTemplate < CommandBaseThor
+  class Assembly < CommandBaseThor
 
     def self.get_assembly_template_id_for_service(assembly_template_name, service)
       assembly_template_id = nil
       # TODO: See with Rich if there is better way to resolve this
-      response = DTK::Client::CommandBaseThor.get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template' })
+      response = DTK::Client::CommandBaseThor.get_cached_response(:assembly, "assembly/list", {:subtype => 'template' })
       # response = DTK::Client::CommandBaseThor.get_cached_response(:module, "service_module/list")
 
       if response.ok?
@@ -20,7 +20,7 @@ module DTK::Client
         end
       end
 
-      raise DTK::Client::DtkError, "Illegal name (#{assembly_template_name}) for template." if assembly_template_id.nil?
+      raise DTK::Client::DtkError, "Illegal name (#{assembly_template_name}) for assembly." if assembly_template_id.nil?
       
       return assembly_template_id
     end
@@ -28,7 +28,7 @@ module DTK::Client
     def self.get_assembly_template_name_for_service(assembly_template_id, service)
       assembly_template_name = nil
       # TODO: See with Rich if there is better way to resolve this
-      response = DTK::Client::CommandBaseThor.get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template' })
+      response = DTK::Client::CommandBaseThor.get_cached_response(:assembly, "assembly/list", {:subtype => 'template' })
 
       if response.ok?
         unless response['data'].nil?
@@ -41,12 +41,12 @@ module DTK::Client
         end
       end
 
-      raise DTK::Client::DtkError, "Illegal name (#{assembly_template_name}) for template." if assembly_template_name.nil?
+      raise DTK::Client::DtkError, "Illegal name (#{assembly_template_name}) for assembly." if assembly_template_name.nil?
       return assembly_template_name
     end
 
     def self.pretty_print_cols()
-      PPColumns.get(:assembly_template)
+      PPColumns.get(:assembly)
     end
 
 
@@ -54,9 +54,9 @@ module DTK::Client
     def self.validation_list(context_params)
       if context_params.is_there_identifier?(:"service-module")
         service_module_id = context_params.retrieve_arguments([:service_module_id!])
-        get_cached_response(:assembly_template, "service_module/list_assemblies", { :service_module_id => service_module_id })
+        get_cached_response(:assembly, "service_module/list_assemblies", { :service_module_id => service_module_id })
       else
-        get_cached_response(:assembly_template, "assembly/list", {:subtype => 'template' })
+        get_cached_response(:assembly, "assembly/list", {:subtype => 'template' })
       end
     end
 
@@ -74,21 +74,21 @@ module DTK::Client
       assembly_list
     end
 
-    desc "ASSEMBLY-TEMPLATE-NAME/ID info", "Get information about given assembly template."
+    desc "ASSEMBLY-NAME/ID info", "Get information about given assembly."
     method_option :list, :type => :boolean, :default => false
     def info(context_params)
-      assembly_template_id = context_params.retrieve_arguments([:assembly_template_id!],method_argument_names)
-
+      assembly_template_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
       data_type = :assembly_template
       
       post_body = {
         :assembly_id => assembly_template_id,
         :subtype => 'template',
       }
+      
       post rest_url("assembly/info"), post_body
     end
 
-    desc "ASSEMBLY-TEMPLATE-NAME/ID list-nodes [--service SERVICE-NAME]", "List all nodes for given assembly template."
+    desc "ASSEMBLY-NAME/ID list-nodes [--service SERVICE-NAME]", "List all nodes for given assembly."
     method_option :list, :type => :boolean, :default => false
     method_option "service",:aliases => "-s" ,
       :type => :string, 
@@ -99,7 +99,7 @@ module DTK::Client
       list(context_params)
     end
 
-    desc "ASSEMBLY-TEMPLATE-NAME/ID list-components [--service SERVICE-NAME]", "List all components for given assembly template."
+    desc "ASSEMBLY-NAME/ID list-components [--service SERVICE-NAME]", "List all components for given assembly."
     method_option :list, :type => :boolean, :default => false
     method_option "service",:aliases => "-s" ,
       :type => :string, 
@@ -112,14 +112,14 @@ module DTK::Client
 
 #    desc "[ASSEMBLY-TEMPLATE-NAME/ID] show [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
     #TODO: temporaily taking out target option
-    desc "list [--service SERVICE-NAME]", "List all assembly templates."
+    desc "list [--service SERVICE-NAME]", "List all assemblies."
     method_option :list, :type => :boolean, :default => false
     method_option "service",:aliases => "-s" ,
       :type => :string, 
       :banner => "SERVICE-LIST-FILTER",
       :desc => "Service list filter"
     def list(context_params)
-      assembly_template_id, about, service_filter = context_params.retrieve_arguments([:assembly_template_id, :option_1, :option_1],method_argument_names)
+      assembly_template_id, about, service_filter = context_params.retrieve_arguments([:assembly_id, :option_1, :option_1],method_argument_names)
 
       if assembly_template_id.nil?
 
@@ -127,16 +127,15 @@ module DTK::Client
           # Special case when user sends --service; until now --OPTION didn't have value attached to it
           if options.service.eql?("service")
             service_id = service_filter
-          else 
+          else
             service_id = options.service
           end
-
+          
           context_params_for_service = DTK::Shell::ContextParams.new
           context_params_for_service.add_context_to_params("service_module", "service_module", service_id)
-          context_params_for_service.method_arguments = ['list']
+          context_params_for_service.method_arguments = ['assembly',"#{service_id}"]
           
-          response = DTK::Client::ContextRouter.routeTask("service_module", "assembly_template", context_params_for_service, @conn)
-
+          response = DTK::Client::ContextRouter.routeTask("service_module", "list", context_params_for_service, @conn)
         else
           response = post rest_url("assembly/list"), {:subtype => 'template', :detail_level => 'nodes'}
           data_type = :assembly_template
@@ -172,13 +171,13 @@ module DTK::Client
       end
     end
 
-    desc "ASSEMBLY-TEMPLATE-NAME/ID stage [INSTANCE-NAME] -t [TARGET-NAME/ID]", "Stage assembly template in target."
+    desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] -t [TARGET-NAME/ID]", "Stage assembly in target."
     method_option "in-target",:aliases => "-t" ,
       :type => :string, 
       :banner => "TARGET-NAME/ID",
       :desc => "Target (id) to create assembly in" 
     def stage(context_params)
-      assembly_template_id, name = context_params.retrieve_arguments([:assembly_template_id!, :option_1],method_argument_names)
+      assembly_template_id, name = context_params.retrieve_arguments([:assembly_id!, :option_1],method_argument_names)
       post_body = {
         :assembly_id => assembly_template_id
       }
@@ -187,7 +186,7 @@ module DTK::Client
       in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
 
       if name
-        assembly_list = AssemblyTemplate.assembly_list()
+        assembly_list = Assembly.assembly_list()
         raise DTK::Client::DtkValidationError, "Unable to stage assembly with name '#{name}'. Assembly with specified name exists already!" if assembly_list.include?(name)
       end
       
@@ -198,12 +197,12 @@ module DTK::Client
       return response unless response.ok?
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :service
-      @@invalidate_map << :assembly_template
+      @@invalidate_map << :assembly
 
       return response
     end
 
-    desc "ASSEMBLY-TEMPLATE-NAME/ID deploy [-v VERSION] [INSTANCE-NAME] [-m COMMIT-MSG]", "Stage and deploy assembly template in target."
+    desc "ASSEMBLY-NAME/ID deploy [-v VERSION] [INSTANCE-NAME] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
     version_method_option
     method_option "in-target",:aliases => "-t" ,
       :type => :numeric, 
@@ -234,7 +233,7 @@ module DTK::Client
       response = post rest_url("assembly/find_violations"), post_body
       return response unless response.ok?
       if response.data and response.data.size > 0
-        error_message =  "The following violations were found; they must be corrected before the assembly-template can be deployed"
+        error_message =  "The following violations were found; they must be corrected before the assembly can be deployed"
         DTK::Client::OsUtil.print(error_message, :red)
         return response.render_table(:violation)
       end
@@ -262,13 +261,13 @@ module DTK::Client
     end
 
 
-    desc "delete ASSEMBLY-TEMPLATE-ID", "Delete assembly template"
+    desc "delete ASSEMBLY-ID", "Delete assembly"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete(context_params)
       assembly_template_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       unless options.force?
         # Ask user if really want to delete assembly-template, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete assembly-template '#{assembly_template_id}'"+"?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete assembly '#{assembly_template_id}'"+"?")
       end
 
       post_body = {
@@ -278,7 +277,7 @@ module DTK::Client
       response = post rest_url("assembly/delete"), post_body
       
       # when changing context send request for getting latest assemblies instead of getting from cache
-      @@invalidate_map << :assembly_template
+      @@invalidate_map << :assembly
       return response unless response.ok?
       module_name,branch = response.data(:module_name,:workspace_branch)
       response = Helper(:git_repo).pull_changes?(:service_module,module_name,:local_branch => branch)

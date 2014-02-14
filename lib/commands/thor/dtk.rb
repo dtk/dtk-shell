@@ -6,10 +6,10 @@ module DTK::Client
 
     # entities that are not available on root but later in n-context
     def self.additional_entities()
-      ['target','component','attribute','utils']
+      ['target','component','attribute','utils','node','task','component-template','assembly']
     end
 
-    desc "workspace","Manipulate provided workspace"
+    desc "workspace","Sandbox for development and testing"
     def workspace
       # API descriptor, SYM_LINK!
     end
@@ -17,7 +17,7 @@ module DTK::Client
 
     # NOTE
     # Following methods are just api descriptors, invocation happens at "bin/dtk" entry point
-    desc "account","Commands to execute, query and manipulate account information."
+    desc "account","Services instances that have been deployed via the DTK."
     def account
       # API descriptor
     end
@@ -27,8 +27,8 @@ module DTK::Client
       # API descriptor
     end
 
-    desc "assembly-template","Commands to stage or launch new assemblies and query assembly templates."
-    def assembly_template
+    desc "assembly","Commands to stage or launch new assemblies and query assembly templates."
+    def assembly
       # API descriptor
     end
 
@@ -48,25 +48,25 @@ module DTK::Client
       # API descriptor
     end
 
-    desc "node", "Commands to list, query, and delete/destroy node instances."
-    def node
-      # API descriptor
-    end    
+    # desc "node", "Commands to list, query, and delete/destroy node instances."
+    # def node
+    #   # API descriptor
+    # end    
 
     # desc "node-group", "Add/Destroy/List available groups of nodes."
     # def node_group
     #   # API descriptor
     # end
 
-    desc "node-template", "Commands to list and query node templates."
+    desc "node-template", "Node Templates that map to machine images and containers."
     def node_template
       # API descriptor
     end
 
-    desc "component-template","Commands to list and query component templates."
-    def component_template
-      # API descriptor
-    end
+    # desc "component-template","Commands to list and query component templates."
+    # def component_template
+    #   # API descriptor
+    # end
 
     #TODO: remove
     #desc "repo", "Part of dtk client which enables us to sync, destroy, view available repos."
@@ -91,10 +91,10 @@ module DTK::Client
     #   # API descriptor
     # end
 
-    desc "task", "Commands to list and view current and past tasks."
-    def task
-      # API descriptor
-    end
+    # desc "task", "Commands to list and view current and past tasks."
+    # def task
+    #   # API descriptor
+    # end
 
     if ::DTK::Configuration.get(:development_mode)
       desc "developer", "DEV tools only available to developers."
@@ -104,7 +104,7 @@ module DTK::Client
     end
     
 
-    desc "provider", "DTK providers"
+    desc "provider", "Manage infrastructure providers and deployment targets (ie: EC2 and us-east)"
     def provider
       # API descriptor
     end

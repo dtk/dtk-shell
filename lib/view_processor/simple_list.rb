@@ -12,7 +12,8 @@ module DTK
         end
       end
      private
-      HIDE_FROM_VIEW = ["assembly_template"]
+      #TODO Aldin check if assembly or assembly_name
+      HIDE_FROM_VIEW = ["assembly"]
       def render_simple_assignment(key,val)
         key + KeyValSeperator + val.to_s + "\n" 
       end
