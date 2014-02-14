@@ -522,6 +522,15 @@ module DTK::Client
       response
     end
 
+    def set_target_aux(context_params)
+      assembly_or_workspace_id, target_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :target_id => target_id
+      }
+      post rest_url("assembly/set_target"), post_body
+    end
+
     def set_attribute_aux(context_params)
       if context_params.is_there_identifier?(:attribute)
         mapping = (options.unset? ? [REQ_ASSEMBLY_OR_WS_ID,:attribute_id!] : [REQ_ASSEMBLY_OR_WS_ID,:attribute_id!,:option_1!])
