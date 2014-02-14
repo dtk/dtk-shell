@@ -38,16 +38,8 @@ module DTK::Client
         response = get_cached_response(:target, "target/list", { :subtype => :instance })
       end
 
-      return response
+      response
     end
-
-=begin
-    desc "list-providers","Lists available providers."
-    def list_providers(context_params)
-      context_params.method_arguments = ["templates"]
-      list_targets(context_params)
-    end
-=end
 
     desc "list-targets","Lists available targets."
     def list_targets(context_params)

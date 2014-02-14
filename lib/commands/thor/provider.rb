@@ -95,6 +95,13 @@ module DTK::Client
       response.render_table(:provider)
     end
 
+    #TODO: Aldin; wanted to name this list_targets, but did not know how to do so w/o conflicting with desc "PROVIDER-ID/NAME list-targets
+    desc "list-all-targets","Lists all targets for all providers."
+    def list_all_targets(context_params)
+      response  = post rest_url("target/list"), { :subtype => :instance }
+      response.render_table(:target)
+    end
+
     desc "PROVIDER-ID/NAME list-targets", "List targets"
     def list_targets(context_params)
       provider_id = context_params.retrieve_arguments([:provider_id!],method_argument_names)
