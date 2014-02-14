@@ -388,16 +388,15 @@ module DTK::Client
       list_violations_aux(context_params)
     end
 
-    # desc "WORKSPACE-NAME/ID promote-module-updates COMPONENT-MODULE-NAME [--force]", "Promotes changes made to component module in workspace to base component module"
-    # method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-    # def promote_module_updates(context_params)
-    #   promote_module_updates_aux(context_params)
-    # end
-
     desc "WORKSPACE-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def purge(context_params)
       purge_aux(context_params)
+    end
+
+    desc "WORKSPACE-NAME/ID set-target TARGET-NAME/ID", "Set target associated with workspace."
+    def set_target(context_params)
+      set_target_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID set-attribute ATTRIBUTE-NAME [VALUE] [-u]", "(Un)Set attribute value. The option -u will unset the attribute's value."
