@@ -27,10 +27,10 @@ module DTK::Client
       # API descriptor
     end
 
-    desc "assembly","Commands to stage or launch new assemblies and query assembly templates."
-    def assembly
-      # API descriptor
-    end
+    # desc "assembly","Commands to stage or launch new assemblies and query assembly templates."
+    # def assembly
+    #   # API descriptor
+    # end
 
     #TODO: not exposed 
     #desc "dependency","DESCRIPTION TO BE ADDED."

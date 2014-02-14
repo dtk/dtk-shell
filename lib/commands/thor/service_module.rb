@@ -61,20 +61,20 @@ module DTK::Client
             ["list"," list [--remote] [--diff]","# List service modules (local/remote). Use --diff to compare loaded and remote modules."]
           ],
           :"assembly" => [
-            ["list","list","# List assembly templates for given service module"]
+            ["list","list","# List assemblies for given service module."]
           ]
         },
         :identifier_only => {
           :self      => [
-            ["list-assemblies","list-assemblies","# List assembly templates associated with service module."],
+            ["list-assemblies","list-assemblies","# List assemblies associated with service module."],
             ["list-modules","list-modules","# List modules associated with service module."]
           ],
           :"assembly" => [
-            ["info","info","# Info for given assembly template in current service module"],
-            ["stage", "stage [INSTANCE-NAME] -t [TARGET-NAME/ID]", "# Stage assembly template in target."],
-            ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-m COMMIT-MSG]", "# Stage and deploy assembly template in target."],
-            ["list-nodes","list-nodes", "# List all nodes for given assembly template."],
-            ["list-components","list-components", "# List all components for given assembly template."]
+            ["info","info","# Info for given assembly in current service module."],
+            ["stage", "stage [INSTANCE-NAME] -t [TARGET-NAME/ID]", "# Stage assembly in target."],
+            ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
+            ["list-nodes","list-nodes", "# List all nodes for given assembly."],
+            ["list-components","list-components", "# List all components for given assembly."]
           ]
         }
 
@@ -93,7 +93,7 @@ module DTK::Client
         post_body = {
          :service_module_id => service_module_id
         }
-        
+
         response = post rest_url('service_module/info'), post_body
         response.render_custom_info("module")
       end
