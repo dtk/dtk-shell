@@ -99,10 +99,10 @@ module DTK::Client
       end
     end
 
-    desc "SERVICE-MODULE-NAME/ID list-assemblies","List assembly templates associated with service module."
+    desc "SERVICE-MODULE-NAME/ID list-assemblies","List assemblies associated with service module."
     method_option :remote, :type => :boolean, :default => false
     def list_assemblies(context_params)
-      context_params.method_arguments = ["assembly-templates"]
+      context_params.method_arguments = ["assembly"]
       list(context_params)
     end
 
