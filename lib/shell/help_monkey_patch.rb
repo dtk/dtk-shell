@@ -38,7 +38,8 @@ class Thor
       (all ? all_tasks : tasks).map do |_, task|
         # using HIDE_FROM_BASE to hide command from base context help (e.g from dtk:/assembly>help) ...
         # but show that command in other context help (e.g in dtk:/assembly/assembly_id/utils>help)
-        next if (task.hidden? || (task.usage.include?(HIDE_FROM_BASE_CONTEXT_HELP) && (@@shell_context ? !@@shell_context.active_context.is_n_context? : '')))
+        # added (task.name.eql?('help')) to hide help from command list
+        next if (task.hidden? || (task.name.eql?("help")) || (task.usage.include?(HIDE_FROM_BASE_CONTEXT_HELP) && (@@shell_context ? !@@shell_context.active_context.is_n_context? : '')))
         item = []
         item << banner(task, false, subcommand)
         item << (task.description ? "# #{task.description.gsub(/\s+/m,' ')}" : "")

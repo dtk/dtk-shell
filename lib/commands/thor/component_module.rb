@@ -47,7 +47,7 @@ module DTK::Client
             ],
             :"component" => [
               ["list","list","# List all component templates."],
-              ["list-attributes","list-attributes", "# List all attributes for given component module."]
+              ["list-attributes","list-attributes", "# List all attributes for given component."]
             ]            
             #:attribute => [
             #  ['list',"list","List attributes for given component"]
@@ -55,7 +55,7 @@ module DTK::Client
           },
           :identifier_only => {
             :"component" => [
-              ["list-attributes","list-attributes", "# List all attributes for given component template."]
+              ["list-attributes","list-attributes", "# List all attributes for given component."]
             ]
           }
 

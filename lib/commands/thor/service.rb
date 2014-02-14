@@ -189,7 +189,7 @@ TODO: overlaps with different meaning
       cancel_task_aux(context_params)
     end
 
-    desc "rename SERVICE-NAME NEW-SERVICE-NAME","List assemblies."
+    desc "rename SERVICE-NAME NEW-SERVICE-NAME","Change service name."
     def rename(context_params)
       assembly_name, new_assembly_name = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
       assembly_id = get_assembly_id(assembly_name)

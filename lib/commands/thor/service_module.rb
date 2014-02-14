@@ -378,7 +378,7 @@ module DTK::Client
       clone_aux(:service_module,service_module_id,version,internal_trigger)
     end
 
-    desc "SERVICE-MODULE-NAME/ID edit [-v VERSION]","Switch to unix editing for given module."
+    desc "SERVICE-MODULE-NAME/ID edit [-v VERSION]","Switch to unix editing for given service module."
     version_method_option
     def edit(context_params)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!, :service_module_name],method_argument_names)
@@ -393,7 +393,7 @@ module DTK::Client
       edit_aux(:service_module,service_module_id,service_module_name,version)
     end
 
-    desc "SERVICE-MODULE-NAME/ID create-version NEW-VERSION", "Snapshot current state of module as a new version"
+    desc "SERVICE-MODULE-NAME/ID create-version NEW-VERSION", "Snapshot current state of service module as a new version"
     def create_version(context_params)
       service_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!],method_argument_names)
       post_body = {
@@ -569,7 +569,7 @@ module DTK::Client
       return response
     end
 
-    desc "SERVICE-MODULE-NAME/ID delete-assembly ASSEMBLY-TEMPLATE-ID [-y]", "Delete assembly template."
+    desc "SERVICE-MODULE-NAME/ID delete-assembly ASSEMBLY-TEMPLATE-ID [-y]", "Delete assembly from service module."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_assembly(context_params)
       service_module_id, assembly_template_id = context_params.retrieve_arguments([:service_module_id!,:option_1!], method_argument_names)
