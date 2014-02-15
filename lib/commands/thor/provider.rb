@@ -54,12 +54,12 @@ module DTK::Client
           :keypair_name => keypair,
           :security_group => security_group
         },
-          :target_name => provider_name,
+          :provider_name => provider_name,
           :iaas_type => provider_type.downcase,
           :no_bootstrap => options.no_bootstrap?
       }
 
-      response = post rest_url("target/create"), post_body
+      response = post rest_url("target/create_provider"), post_body
       @@invalidate_map << :provider
 
       return response
