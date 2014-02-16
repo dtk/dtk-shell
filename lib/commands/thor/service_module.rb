@@ -162,7 +162,7 @@ module DTK::Client
       response
     end
 
-    desc "SERVICE-MODULE-NAME/ID list-instances","List all versions associated with this service module."
+    desc "SERVICE-MODULE-NAME/ID list-instances","List all instances associated with this service module."
     def list_instances(context_params)
       service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
       post_body = {
