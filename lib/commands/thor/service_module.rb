@@ -278,7 +278,7 @@ module DTK::Client
       Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
     end
 
-    desc "SERVICE-MODULE-NAME/ID create-on-dtkn [[NAME-SPACE/]REMOTE-MODULE-NAME]","Export service module to remote repository"
+    desc "SERVICE-MODULE-NAME/ID create-on-dtkn [[NAMESPACE/]REMOTE-MODULE-NAME]","Export service module to remote repository"
     def create_on_dtkn(context_params)
       service_module_id, input_remote_name = context_params.retrieve_arguments([:service_module_id!, :option_1],method_argument_names)
 

@@ -117,7 +117,7 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete COMPONENT-MODULE [-v VERSION] [-y] [-p]", "Delete component module or component module version and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete COMPONENT-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete component module or component module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
@@ -334,7 +334,7 @@ module DTK::Client
     # TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     # if multiple items and failire; stops on first failure
-    desc "import-dtkn NAMESPACE/REMOTE-MODULE-NAME [-r DTK-REPO-MANAGER]","Import remote component module into local environment"
+    desc "import-dtkn NAMESPACE/REMOTE-COMPONENT-MODULE-NAME [-r DTK-REPO-MANAGER]","Import remote component module into local environment"
     method_option "repo-manager",:aliases => "-r" ,
       :type => :string, 
       :banner => "REPO-MANAGER",
@@ -388,7 +388,7 @@ module DTK::Client
     #
     # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
     #
-    desc "import-git GIT-SSH-REPO-URL MODULE-NAME", "Create new local component module by importing from provided git repo URL"
+    desc "import-git GIT-SSH-REPO-URL COMPONENT-MODULE-NAME", "Create new local component module by importing from provided git repo URL"
     def import_git(context_params)
       git_repo_url, module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
       
@@ -464,7 +464,7 @@ module DTK::Client
       Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
     end
     
-    desc "delete-from-dtkn [NAME-SPACE/]REMOTE-MODULE [-y]", "Delete the component module from the DTK Network catalog"
+    desc "delete-from-dtkn [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-y]", "Delete the component module from the DTK Network catalog"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_from_dtkn(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
@@ -483,7 +483,7 @@ module DTK::Client
       post rest_url("component_module/delete_remote"), post_body
     end
 
-    desc "COMPONENT-MODULE-NAME/ID create-on-dtkn [[NAME-SPACE/]REMOTE-MODULE-NAME]", "Export component module to remote repository."
+    desc "COMPONENT-MODULE-NAME/ID create-on-dtkn [[NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME]", "Export component module to remote repository."
     def create_on_dtkn(context_params)
       component_module_id, input_remote_name = context_params.retrieve_arguments([:component_module_id!, :option_1],method_argument_names)
 

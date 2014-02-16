@@ -17,12 +17,12 @@ module DTK::Client
 
     # NOTE
     # Following methods are just api descriptors, invocation happens at "bin/dtk" entry point
-    desc "account","Services instances that have been deployed via the DTK."
+    desc "account","Account management for accessing DTK server"
     def account
       # API descriptor
     end
 
-    desc "service","Services instances that have been deployed via the DTK ."
+    desc "service","Assembly instances that have been deployed via DTK."
     def service
       # API descriptor
     end
@@ -80,7 +80,7 @@ module DTK::Client
     #  # API descriptor
     #end
 
-    desc "service-module", "DTK definitions for model/defining distributed applications and services."
+    desc "service-module", "DTK definitions for modeling/defining distributed applications and services."
     def service_module
       # API descriptor
     end
