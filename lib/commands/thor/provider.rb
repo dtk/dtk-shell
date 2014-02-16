@@ -124,12 +124,12 @@ module DTK::Client
       # Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies that belong to this target will be deleted as well)'"+'?')
       
       post_body = {
-        :target_id => provider_id
+        :provider_id => provider_id
       }
 
       @@invalidate_map << :provider
 
-      return post rest_url("target/delete"), post_body
+      return post rest_url("target/delete_provider"), post_body
     end
 
     no_tasks do

@@ -90,28 +90,5 @@ module DTK::Client
 
       return post rest_url("target/delete"), post_body
     end
-
-=begin
-    desc "create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create assembly template from nodes in target" 
-    def create_assembly(context_params)
-      service_module_name, assembly_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
-      post_body = {
-        :service_module_name => service_module_name,
-        :assembly_name => assembly_name
-      }
-      response = post rest_url("target/create_assembly_template"), post_body
-      # when changing context send request for getting latest assembly_templates instead of getting from cache
-      @@invalidate_map << :assembly_template
-
-      return response
-    end
-
-    desc "TARGET-NAME/ID converge", "Converges target instance"
-    def converge(context_params)
-      not_implemented()
-    end
-=end
-
-
   end
 end
