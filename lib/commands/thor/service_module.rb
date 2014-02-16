@@ -256,7 +256,7 @@ module DTK::Client
       reparse_aux(module_location)
     end
 
-    desc "SERVICE-MODULE-NAME/ID import-version VERSION", "Import a specfic version from a linked service module"
+    desc "SERVICE-MODULE-NAME/ID import-version VERSION", "Import a specific version from a linked service module"
     def import_version(context_params)
       service_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!],method_argument_names)
       post_body = {
@@ -499,7 +499,7 @@ module DTK::Client
       push_clone_changes_aux(:service_module,service_module_id,version,nil,internal_trigger)
     end
 
-    desc "delete SERVICE-MODULE-MODULE [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete SERVICE-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false

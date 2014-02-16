@@ -169,19 +169,19 @@ module DTK::Client
       converge_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-component-module-updates MODULE-NAME [--force]", "Push changes made to a component module in the workspace to its base component module."
+    desc "WORKSPACE-NAME/ID push-component-module-updates COMPONENT-MODULE-NAME [--force]", "Push changes made to a component module in the workspace to its base component module."
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def push_component_module_updates(context_params)
       push_module_updates_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-service-updates SERVICE-NAME/SERVICE-NAME", "Push workspace instance to the designated service."
+    desc "WORKSPACE-NAME/ID push-service-updates SERVICE-MODULE-NAME/ASSEMBLY-NAME", "Push workspace instance to the designated assembly."
     def push_service_updates(context_params)
       workspace_id, qualified_assembly_name = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names) 
       if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
         service_module_name, assembly_template_name = [$1,$2]
       else
-        raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-NAME/SERVICE-NAME"
+        raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-MODULE-NAME/ASSEMBLY-NAME"
       end
       response = promote_assembly_aux(:update,workspace_id, service_module_name, assembly_template_name)
       return response unless response.ok?
@@ -189,7 +189,7 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "WORKSPACE-NAME/ID create-service SERVICE-MODULE-NAME SERVICE-NAME [-p]", "Create a new service from the workspace instance in the designated service module."
+    desc "WORKSPACE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
    # The option -p will purge the workspace after assembly creation." 
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def create_service(context_params)
@@ -288,7 +288,7 @@ module DTK::Client
       unlink_components_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID edit-module MODULE-NAME", "Edit a component module used in the workspace."
+    desc "WORKSPACE-NAME/ID edit-component-module COMPONENT-MODULE-NAME", "Edit a component module used in the workspace."
     def edit_module(context_params)
       edit_module_aux(context_params)
     end
