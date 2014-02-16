@@ -175,7 +175,7 @@ module DTK::Client
       push_module_updates_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-service-updates SERVICE-MODULE-NAME/ASSEMBLY-NAME", "Push workspace instance to the designated assembly."
+    desc "WORKSPACE-NAME/ID push-assembly-updates SERVICE-MODULE-NAME/ASSEMBLY-NAME", "Push workspace instance to the designated assembly."
     def push_service_updates(context_params)
       workspace_id, qualified_assembly_name = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names) 
       if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
@@ -368,7 +368,7 @@ module DTK::Client
       list_component_links_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-modules","List modules associated with workspace."
+    desc "WORKSPACE-NAME/ID list-component-modules","List component modules associated with workspace."
     def list_modules(context_params)
       list_modules_aux(context_params)
     end
@@ -406,13 +406,13 @@ module DTK::Client
     end
 
 #    desc "WORKSPACE-NAME/ID start [NODE-ID-PATTERN]", "Starts all workspace's nodes,  specific nodes can be selected via node id regex."
-    desc "WORKSPACE-NAME/ID start [NODE-NAME]", "Starts all the workspace's nodes. A single node can be selected."
+    desc "WORKSPACE-NAME/ID start [NODE-NAME]", "Starts all the workspace nodes. A single node can be selected."
     def start(context_params)
       start_aux(context_params)
     end
 
 #    desc "WORKSPACE-NAME/ID stop [NODE-ID-PATTERN]", "Stops all workspace's nodes, specific nodes can be selected via node id regex."
-    desc "WORKSPACE-NAME/ID stop [NODE-NAME]", "Stops all the workspace's nodes. A single node can be selected."
+    desc "WORKSPACE-NAME/ID stop [NODE-NAME]", "Stops all the workspace nodes. A single node can be selected."
     def stop(context_params)
       stop_aux(context_params)
     end

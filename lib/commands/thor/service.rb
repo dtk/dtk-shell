@@ -173,12 +173,12 @@ TODO: overlaps with different meaning
       }, [:utils])
     end
 
-    desc "SERVICE-NAME/ID start [NODE-NAME]", "Starts all the service's nodes. A single node can be selected."
+    desc "SERVICE-NAME/ID start [NODE-NAME]", "Starts all the service nodes. A single node can be selected."
     def start(context_params)
       start_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID stop [NODE-NAME]", "Stops all the service's nodes. A single node can be selected."
+    desc "SERVICE-NAME/ID stop [NODE-NAME]", "Stops all the service nodes. A single node can be selected."
     def stop(context_params)
       stop_aux(context_params)
     end
@@ -232,7 +232,7 @@ TODO: overlaps with different meaning
       converge_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID push-service-updates [SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push service instance to the designated assembly; default is parent assembly."
+    desc "SERVICE-NAME/ID push-assembly-updates [SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push service instance to the designated assembly; default is parent assembly."
     def push_service_updates(context_params)
       assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:service_id!,:option_1],method_argument_names) 
       service_module_name, assembly_template_name =
