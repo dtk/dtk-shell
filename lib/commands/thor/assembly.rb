@@ -63,7 +63,7 @@ module DTK::Client
     def self.assembly_list()
       assembly_list = []
       response = get_cached_response(:service, "assembly/list", {})
-      raise DTK::Client::DtkError, "Unable to retreive service list." unless response.ok?
+      raise DTK::Client::DtkError, "Unable to retreive service list." unless (response.nil? || response.ok?)
       
       if assemblies = response.data
         assemblies.each do |assembly|
@@ -160,7 +160,7 @@ module DTK::Client
       end
     end
 
-    desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] -t [TARGET-NAME/ID]", "Stage assembly in target."
+    desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] [-t TARGET-NAME/ID]", "Stage assembly in target."
     method_option "in-target",:aliases => "-t" ,
       :type => :string, 
       :banner => "TARGET-NAME/ID",
@@ -191,11 +191,11 @@ module DTK::Client
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID deploy [-v VERSION] [INSTANCE-NAME] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
+    desc "ASSEMBLY-NAME/ID deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
     version_method_option
     method_option "in-target",:aliases => "-t" ,
-      :type => :numeric, 
-      :banner => "TARGET-ID",
+      :type => :string,
+      :banner => "TARGET-NAME/ID",
       :desc => "Target (id) to create assembly in" 
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string, 
