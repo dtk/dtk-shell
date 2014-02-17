@@ -112,25 +112,14 @@ module DTK::Client
 
 #    desc "[ASSEMBLY-TEMPLATE-NAME/ID] show [nodes|components|targets]", "List all nodes/components/targets for given assembly template."
     #TODO: temporaily taking out target option
-    desc "list [--service SERVICE-NAME]", "List all assemblies."
-    method_option :list, :type => :boolean, :default => false
-    method_option "service",:aliases => "-s" ,
-      :type => :string, 
-      :banner => "SERVICE-LIST-FILTER",
-      :desc => "Service list filter"
+    desc "list", "List all assemblies."
     def list(context_params)
       assembly_template_id, about, service_filter = context_params.retrieve_arguments([:assembly_id, :option_1, :option_1],method_argument_names)
 
       if assembly_template_id.nil?
 
         if options.service
-          # Special case when user sends --service; until now --OPTION didn't have value attached to it
-          if options.service.eql?("service")
-            service_id = service_filter
-          else
-            service_id = options.service
-          end
-          
+          service_id = options.service
           context_params_for_service = DTK::Shell::ContextParams.new
           context_params_for_service.add_context_to_params("service_module", "service_module", service_id)
           context_params_for_service.method_arguments = ['assembly',"#{service_id}"]
