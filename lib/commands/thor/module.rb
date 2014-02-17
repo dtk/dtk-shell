@@ -1,5 +1,4 @@
 dtk_require_from_base('command_helpers/ssh_processing')
-dtk_require_dtk_common('grit_adapter')
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/list_diffs')
 dtk_require_common_commands('thor/push_to_remote')

@@ -1,13 +1,11 @@
-dtk_require_dtk_common('grit_adapter') #only one adapter now
-dtk_require_dtk_common('errors') 
-dtk_require_dtk_common('log') 
 require 'fileutils'
+dtk_require("../domain/git_adapter")
 
 module DTK; module Client; class CommandHelper
   class GitRepo < self; class << self
 
     def create(repo_dir,branch=nil,opts={})
-      adapter_class().new(repo_dir,branch,opts)
+      GitAdapter.new(repo_dir,branch,opts)
     end
 
     def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil, opts={})
@@ -18,7 +16,7 @@ module DTK; module Client; class CommandHelper
         opts = {}
         opts = { :branch => branch } if branch
         begin 
-          adapter_class().clone(target_repo_dir,repo_url, opts)
+          GitAdapter.clone(repo_url, target_repo_dir, opts[:branch])
         rescue => e
           #cleanup by deleting directory
           FileUtils.rm_rf(target_repo_dir) if File.directory?(target_repo_dir)
@@ -179,17 +177,28 @@ module DTK; module Client; class CommandHelper
 
    private
     #TODO: in common expose Common::GritAdapter at less nested level
-    class DiffSummary < Common::GritAdapter::FileAccess::Diffs::Summary
+    class DiffSummary < ::DTK::Common::SimpleHashObject
       def self.new_version()
         new(:new_version => true)
       end
       
-      def self.diff(repo,ref1,ref2)
-        new(repo.diff(ref1,ref2).ret_summary())
+      def self.diff(repo,local_branch,remote_reference)
+        new(repo.diff_summary(local_branch,remote_reference))
       end
 
       def self.diff_remote(repo,ref1)
         new(repo.diff(ref1).ret_summary())
+      end
+
+      def any_diffs?
+        changes = false
+        self.each do |k,v|
+          unless v.empty?
+            changes = true
+            break
+          end
+        end
+        changes
       end
     end
     
@@ -199,30 +208,29 @@ module DTK; module Client; class CommandHelper
     def push_repo_changes_aux(repo,opts={})
       diffs = DiffSummary.new()
 
-      #add any file that is untracked
-      status = repo.status()
-      if status[:untracked]
-        status[:untracked].each{|untracked_file_path|repo.add_file_command(untracked_file_path)}
-      end
+      # adding untracked files (newly added files)
+      repo.stage_changes()
       
-      if status.any_changes?() 
+      # commit if there has been changes
+      if repo.changed?
         repo.commit(opts[:commit_msg]||"Pushing changes from client") #TODO: make more descriptive
       end
 
       if opts[:remote_repo] and opts[:remote_repo_url]
-        repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
+        repo.add_remote(opts[:remote_repo],opts[:remote_repo_url])
       end
       
       unless opts[:no_fetch]
         repo.fetch(remote(opts[:remote_repo]))
       end
 
-      local_branch = repo.branch 
-      remote_branch_ref = remote_branch_ref(local_branch,opts)
+      local_branch = repo.current_branch_name 
+
+      remote_branch_ref = remote_branch_ref(local_branch, opts)
 
       #check if merge needed
       commit_shas = Hash.new
-      merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
+      merge_rel = repo.merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
       commit_sha = nil
       if merge_rel == :equal
         commit_sha = commit_shas[:other_sha]
@@ -235,10 +243,15 @@ module DTK; module Client; class CommandHelper
       elsif merge_rel == :local_ahead
         # see if any diffs between fetched remote and local branch
         # this has be done after commit
-        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+
+        diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
+
+        # DEBUG SNIPPET >>> REMOVE <<<
+    
         if diffs.any_diffs?()
           repo.push(remote_branch_ref)
         end
+
         commit_sha = repo.find_remote_sha(remote_branch_ref)
       else
         raise Error.new("Unexpected merge_rel (#{merge_rel})")
@@ -249,14 +262,11 @@ module DTK; module Client; class CommandHelper
     def get_diffs_aux(repo,opts={})
       diffs = DiffSummary.new()
       #add any file that is untracked
-      status = repo.status()
 
-      if status[:untracked]
-        status[:untracked].each{|untracked_file_path|repo.add_file_command(untracked_file_path)}
-      end
+      # repo.stage_changes()
 
       if opts[:remote_repo] and opts[:remote_repo_url]
-      repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
+        repo.add_remote(opts[:remote_repo],opts[:remote_repo_url])
       end
 
       unless opts[:no_fetch]
@@ -264,10 +274,10 @@ module DTK; module Client; class CommandHelper
       end
 
       local_branch      = repo.branch 
-      remote_branch_ref = remote_branch_ref(local_branch,opts)
+      remote_branch_ref = remote_branch_ref(local_branch, opts)
 
       commit_shas = Hash.new
-      merge_rel   = repo.ret_merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
+      merge_rel   = repo.merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
       commit_sha  = nil
       
       if merge_rel == :equal
@@ -278,49 +288,62 @@ module DTK; module Client; class CommandHelper
       end
 
       # diffs = DiffSummary.diff_remote(repo,"remotes/#{remote_branch_ref}")
-      diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+      diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
       commit_sha = repo.find_remote_sha(remote_branch_ref)
       
-      {"diffs" => diffs, "commit_sha" => commit_sha, "repo_obj" => repo, "status" => status}
+      {"diffs" => diffs, "commit_sha" => commit_sha, "repo_obj" => repo, "status" => repo.local_summary() }
     end
 
     def pull_repo_changes_aux(repo,opts={})
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
       diffs = DiffSummary.new()
+
       if commit_sha = opts[:commit_sha]
         #no op if at commit_sha
         return diffs if commit_sha == repo.head_commit_sha()
       end
 
       if opts[:remote_repo] and opts[:remote_repo_url]
-        repo.add_remote?(opts[:remote_repo],opts[:remote_repo_url])
+        repo.add_remote(opts[:remote_repo],opts[:remote_repo_url])
       end
+
       repo.fetch(remote(opts[:remote_repo]))
 
-      local_branch = repo.branch 
+      local_branch = repo.current_branch_name 
       remote_branch_ref = remote_branch_ref(local_branch,opts)
 
       if opts[:hard_reset]
-        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+        diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
         repo.merge_theirs(remote_branch_ref)
         return({:diffs => diffs, :commit_sha => repo.head_commit_sha()})
       end
 
+      # default commit in case it is needed
+      repo.commit("Commit prior to pull from remote") if repo.changed?
+
       #check if merge needed
-      merge_rel = repo.ret_merge_relationship(:remote_branch,remote_branch_ref)
+      merge_rel = repo.merge_relationship(:remote_branch,remote_branch_ref)
       if merge_rel == :equal
         { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif [:branchpoint,:local_ahead].include?(merge_rel)
         # TODO: right now just wiping out what is in repo
-        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+        diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
         repo.merge_theirs(remote_branch_ref)
         { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif merge_rel == :local_behind
         #see if any diffs between fetched remote and local branch
         #this has be done after commit
-        diffs = DiffSummary.diff(repo,"remotes/#{remote_branch_ref}",local_branch)
+        diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
         return diffs unless diffs.any_diffs?()
 
-        repo.merge(remote_branch_ref)
+        begin
+          # DEBUG SNIPPET >>> REMOVE <<<
+          require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
+          repo.merge(remote_branch_ref)
+        rescue Exception => e
+          puts e
+        end
 
         if commit_sha and commit_sha != repo.head_commit_sha()
           raise Error.new("Git synchronization problem: expected local head to have sha (#{commit_sha})")

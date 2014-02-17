@@ -22,15 +22,14 @@ Gem::Specification.new do |gem|
   gem.version       = "#{DtkClient::VERSION}.#{ARGV[3]}".chomp(".")
 
   gem.add_dependency 'bundler','>= 1.2.4'
-  gem.add_dependency 'json' ,'1.7.4'
+  gem.add_dependency 'json_pure' ,'1.7.4'
   gem.add_dependency 'diff-lcs','1.1.3'
   gem.add_dependency 'mime-types','~> 1.25'
   gem.add_dependency 'hirb','~> 0.7.0'
   gem.add_dependency 'thor','~> 0.15.4'
   gem.add_dependency 'erubis','~> 2.7.0'
-  gem.add_dependency 'rest-client','~> 1.6.7'
-  gem.add_dependency 'grit','~> 2.5.0'
-  gem.add_dependency 'dtk-common','~> 0.5.4'
+  gem.add_dependency 'dtk-common-core','~> 0.5.4'
+  gem.add_dependency 'git','~> 1.2.6'
   gem.add_dependency 'colorize','~> 0.5.8'
   gem.add_dependency 'highline', '1.6.16'
   gem.add_dependency 'awesome_print', '1.1.0'
