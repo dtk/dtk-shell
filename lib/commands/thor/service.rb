@@ -39,7 +39,7 @@ module DTK::Client
           end
         end
 
-        raise DtkError,"Illegal name (#{assembly_name}) for service." unless assembly_id
+        raise DtkError,"[ERROR] Illegal name (#{assembly_name}) for service." unless assembly_id
         assembly_id
       end
       
@@ -479,8 +479,14 @@ TODO: will put in dot release and will rename to 'extend'
     desc "delete-and-destroy NAME/ID [-y]", "Delete service instance, terminating any nodes that have been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
-      assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      assembly_name = get_assembly_name(assembly_id)
+      assembly_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+
+      if assembly_name.to_s =~ /^[0-9]+$/
+        assembly_id = assembly_name
+      else
+        assembly_id = get_assembly_id(assembly_name)
+      end
+      # assembly_name = get_assembly_name(assembly_id)
 
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
