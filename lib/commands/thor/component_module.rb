@@ -215,7 +215,8 @@ TODO: might deprecate
       end
 
       action           = (options.remote? ? "list_remote" : "list")
-      post_body        = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
+#      post_body        = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
+      post_body        = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
       post_body[:diff] = options.diff? ? options.diff : {}
       response         = post rest_url("component_module/#{action}"),post_body
       
