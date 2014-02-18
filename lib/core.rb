@@ -80,6 +80,8 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
     if e.display_usage_info && entity_class && method_name
       usage_info = entity_class.get_usage_info(entity_name, method_name)
       validation_message += ", usage: #{usage_info}"
+
+      validation_message.gsub!("^^", '') if validation_message.include?("^^")
     end
 
     DTK::Client::OsUtil.print(validation_message, :yellow)
