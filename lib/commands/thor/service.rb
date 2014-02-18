@@ -1,644 +1,639 @@
-#TODO: putting in version as hidden coption that can be enabled when code ready
-#TODO: may be consistent on whether service module id or service module name used as params
-dtk_require_from_base('command_helpers/ssh_processing')
-dtk_require_from_base('command_helpers/service_importer')
-dtk_require_common_commands('thor/clone')
-dtk_require_common_commands('thor/push_to_remote')
-dtk_require_common_commands('thor/pull_from_remote')
-dtk_require_common_commands('thor/push_clone_changes')
-dtk_require_common_commands('thor/edit')
-dtk_require_common_commands('thor/reparse')
+require 'rest_client'
+require 'json'
+require 'colorize'
 dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
-dtk_require_from_base("commands/thor/assembly_template")
+dtk_require_from_base("command_helper")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
+dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
+
+dtk_require_common_commands('thor/assembly_workspace')
+LOG_SLEEP_TIME   = DTK::Configuration.get(:tail_log_frequency)
+DEBUG_SLEEP_TIME = DTK::Configuration.get(:debug_task_frequency)
 
 module DTK::Client
   class Service < CommandBaseThor
 
     no_tasks do
-      include CloneMixin
-      include PushToRemoteMixin
-      include PullFromRemoteMixin
-      include PushCloneChangesMixin
+      include TaskStatusMixin
+      include SetRequiredParamsMixin
       include EditMixin
-      include ReparseMixin
-      include ServiceImporter
       include PurgeCloneMixin
+      include AssemblyWorkspaceMixin
 
-      def get_service_module_name(service_module_id)
-        get_name_from_id_helper(service_module_id)
+      def get_assembly_name(assembly_id)
+        get_name_from_id_helper(assembly_id)
       end
+
+      def get_assembly_id(assembly_name)
+        assembly_id = nil
+        list = CommandBaseThor.get_cached_response(:service, "assembly/list", {})
+
+        list.data.each do |item|
+          if item["display_name"] == assembly_name
+            assembly_id = item["id"]
+            break
+          end
+        end
+
+        assembly_id
+      end
+      
+    end
+
+    def self.whoami()
+      return :service, "assembly/list", {:subtype  => 'instance'}
+    end
+
+    def self.pretty_print_cols()
+      PPColumns.get(:assembly)
     end
 
     def self.valid_children()
-      [:"assembly-template"]
+      [:utils]
     end
 
+    def self.invisible_context()
+      [:node]
+    end
+
+    # using extended_context when we want to use autocomplete from other context
+    # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
+    # component-templates to autocomplete
+    def self.extended_context()
+      {
+        :context => {
+          :create_component => "component_template",
+          :create_node => "node_template",
+          :create_component_dependency => "component_template"  
+        },
+        :command => {
+          :edit_module => {
+            :endpoint => "assembly", 
+            :url => "assembly/info_about", 
+            :opts => {:subtype=>"instance", :about=>"modules"}
+          },
+          :push_component_module_updates => {
+            :endpoint => "assembly", 
+            :url => "assembly/info_about", 
+            :opts => {:subtype=>"instance", :about=>"modules"}
+          }
+        }
+      }
+    end
+
+    # this includes children of children
     def self.all_children()
-      [:"assembly-template"]
+      # [:node, :component, :attribute]
+      [:node]
+    end
+
+    def self.multi_context_children()
+      [[:utils],[:node, :utils]]
     end
 
     def self.valid_child?(name_of_sub_context)
       return Service.valid_children().include?(name_of_sub_context.to_sym)
     end
 
-    def self.pretty_print_cols()
-      PPColumns.get(:service_module)
+    def self.validation_list(context_params)
+      get_cached_response(:service, "assembly/list", {})
     end
 
-    def self.whoami()
-      return :service_module, "service_module/list", nil
-    end
+    # TODO: Hack which is necessery for the specific problem (DTK-541), something to reconsider down the line
+    # at this point not sure what would be clenear solution
 
+    # :all             => include both for commands with command and identifier
+    # :command_only    => only on command level
+    # :identifier_only => only on identifier level for given entity (command)
+    #
     def self.override_allowed_methods()
       return DTK::Shell::OverrideTasks.new({
+        :all => {
+          # :node => [
+            # ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
+            # ['list-components',"list-components","# List components associated with assembly's node."],
+            # ['list-attributes',"list-attributes","# List attributes associated with assembly's node."]
+          # ],
+          :component => [
+            ['list-attributes',"list-attributes","# List attributes associated with given component."]
+=begin
+TODO: overlaps with different meaning
+            ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
+=end
+          ]
+        },
         :command_only => {
-          :self => [
-            ["list"," list [--remote] [--diff]","# List service modules (local/remote). Use --diff to compare loaded and remote modules."]
+          :attribute => [
+            ['list-attributes',"list-attributes","# List attributes."]
           ],
-          :"assembly-template" => [
-            ["list","list","# List assembly templates for given service"]
+          :node => [
+            ['delete',"delete NODE-NAME/ID [-y] ","# Delete node, terminating it if the node has been spun up."],
+            ['list',"list","# List nodes."]
+          ],
+          :component => [
+            ['delete',"delete COMPONENT-NAME/ID [-y] ","# Delete component from workspace."],
+            ['list-components',"list-components","# List components."]
+          ],
+          :utils => [
+            ['get-netstats',"get-netstats","# Get netstats."],
+            ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
+            ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."],
+            ['tail',"tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."]
           ]
         },
         :identifier_only => {
-          :self      => [
-            ["list-assemblies","list-assemblies","# List assembly templates associated with service module."],
-            ["list-modules","list-modules","# List modules associated with service module."]
+          :node      => [
+            ['create-component',"create-component COMPONENT","# Add a component to the node."],
+            ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from service's node"],
+            ['info',"info","# Return info about node instance belonging to given workspace."],
+            # ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
+            ['list-attributes',"list-attributes","# List attributes associated with service's node."],
+            ['list-components',"list-components","# List components associated with service's node."],
+            ['set-attribute',"set-attribute ATTRIBUTE-NAME [VALUE] [-u]","# (Un)Set attribute value. The option -u will unset the attribute's value."],
+            ['start', "start", "# Start node instance."],
+            ['stop', "stop", "# Stop node instance."]
           ],
-          :"assembly-template" => [
-            ["info","info","# Info for given assembly template in current service"],
-            ["stage", "stage [INSTANCE-NAME] -t [TARGET-NAME/ID]", "# Stage assembly template in target."],
-            ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-m COMMIT-MSG]", "# Stage and deploy assembly template in target."],
-            ["list-nodes","list-nodes", "# List all nodes for given assembly template."],
-            ["list-components","list-components", "# List all components for given assembly template."]
+          :component => [
+            ['info',"info","# Return info about component instance belonging to given node."],
+            ['edit',"edit","# Edit component module related to given component."],
+            # ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."],
+            ['link-components',"link-components ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."],
+            ['list-component-links',"list-component-links","# List component's links to other components."],
+            ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."]
+          ],
+          :attribute => [
+            ['info',"info","# Return info about attribute instance belonging to given component."]
           ]
         }
+      }, [:utils])
+    end
 
-      })
+    desc "SERVICE-NAME/ID start [NODE-NAME]", "Starts all the service nodes. A single node can be selected."
+    def start(context_params)
+      start_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID stop [NODE-NAME]", "Stops all the service nodes. A single node can be selected."
+    def stop(context_params)
+      stop_aux(context_params)
+    end
+
+
+    desc "SERVICE-NAME/ID cancel-task [TASK_ID]", "Cancels an executing task.  If task id is omitted, this command cancels the most recent executing task."
+    def cancel_task(context_params)
+      cancel_task_aux(context_params)
+    end
+
+    desc "rename SERVICE-NAME NEW-SERVICE-NAME","Change service name."
+    def rename(context_params)
+      assembly_name, new_assembly_name = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
+      assembly_id = get_assembly_id(assembly_name)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :assembly_name => assembly_name,
+        :new_assembly_name => new_assembly_name
+      }
+
+      response = post rest_url("assembly/rename"), post_body
+      return response unless response.ok?
+
+      @@invalidate_map << :service
+      response      
+    end
+
+    #desc "ASSEMBLY-NAME/ID clear-tasks", "Clears the tasks that have been run already."
+    #def clear_tasks(context_params)
+    #  clear_tasks_aux(context_params)
+    #end
+
+    desc "SERVICE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create a new assembly from this service instance in the designated service module."
+    def create_service(context_params)
+      assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
+      response = promote_assembly_aux(:create,assembly_id,service_module_name,assembly_template_name)
+      return response unless response.ok?
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :service_module
+      Response::Ok.new()
     end
     
-    ##MERGE-QUESTION: need to add options of what info is about
-    desc "SERVICE-NAME/ID info", "Provides information about specified service module"
-    def info(context_params)
-      if context_params.is_there_identifier?(:assembly_template)
-        response = DTK::Client::ContextRouter.routeTask("assembly_template", "info", context_params, @conn)
-      else  
-        service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-        post_body = {
-         :service_module_id => service_module_id
-        }
-
-        response = post rest_url('service_module/info'), post_body
-      end
-      
-      response.render_custom_info("module")
-    end
-
-    desc "SERVICE-NAME/ID list-assemblies","List assembly templates associated with service."
-    method_option :remote, :type => :boolean, :default => false
-    def list_assemblies(context_params)
-      context_params.method_arguments = ["assembly-templates"]
-      list(context_params)
-    end
-
-    desc "SERVICE-NAME/ID list-modules","List modules associated with service."
-    method_option :remote, :type => :boolean, :default => false
-    def list_modules(context_params)
-      context_params.method_arguments = ["modules"]
-      list(context_params)
-    end
-
-    desc "list [--remote] [--diff]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
-    method_option :remote, :type => :boolean, :default => false
-    method_option :diff, :type => :boolean, :default => false
-    def list(context_params)
-      service_module_id, about = context_params.retrieve_arguments([:service_id, :option_1],method_argument_names)
-
-      datatype = nil
-      if context_params.is_there_command?(:"assembly-template")
-        about = "assembly-templates"
-      end
-      
-      # If user is on service level, list task can't have about value set
-      if (context_params.last_entity_name == :service) and about.nil?
-        action    = options.remote? ? "list_remote" : "list"
-        post_body = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
-        post_body[:diff] = options.diff? ? options.diff : {}
-        
-        response = post rest_url("service_module/#{action}"), post_body
-      # If user is on service identifier level, list task can't have '--remote' option.
-      else
-        # TODO: this is temp; will shortly support this
-        raise DTK::Client::DtkValidationError.new("Not supported '--remote' option when listing service module assemblies, component templates or modules", true) if options.remote?
-        raise DTK::Client::DtkValidationError.new("Not supported type '#{about}' for list for current context level. Possible type options: 'assembly-templates'", true) unless(about == "assembly-templates" || about == "modules")
-      
-        if about
-          case about
-          when "assembly-templates"
-            data_type        = :assembly_template
-            action           = "list_assemblies"
-          when "modules"
-            data_type        = options.remote? ? :component_remote : :component
-            action           = "list_component_modules"
-          else
-            raise_validation_error_method_usage('list')
-          end 
-        end
-        response = post rest_url("service_module/#{action}"), { :service_module_id => service_module_id }
-      end
-      return response unless response.ok?
-      
-      response.render_table(data_type) unless response.nil?
-
-      response
-    end
-
-    desc "SERVICE-NAME/ID list-instances","List all versions associated with this service."
-    def list_instances(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      post_body = {
-        :service_module_id => service_module_id,
-      }
-      response = post rest_url("service_module/list_instances"), post_body
-      
-      response.render_table(:assembly_template)
-    end
-
-    desc "SERVICE-NAME/ID list-versions","List all versions associated with this service."
-    def list_versions(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      post_body = {
-        :service_module_id => service_module_id,
-        :detail_to_include => ["remotes"],
-        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
-      }
-      response = post rest_url("service_module/versions"), post_body
-
-      response.render_table(:module_version)
-    end
-
-    desc "import-dtkn REMOTE-SERVICE-NAME [-y] [-i]", "Import remote service module into local environment. -y will automatically clone component modules. -i will ignore component import error."
-    version_method_option
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    method_option :ignore, :aliases => '-i', :type => :boolean, :default => false
-    def import_dtkn(context_params)
-      create_missing_clone_dirs()
-      check_direct_access(::DTK::Client::Configurator.check_direct_access)
-      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      ignore_component_error = options.ignore?
-      
-      remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
-
-      version = options["version"]
-      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:service_module,local_module_name)
-        raise DtkValidationError,"Module's directory (#{clone_dir}) exists on client. To import this needs to be renamed or removed."
-      end
-
-      post_body = {
-        :remote_module_name => remote_module_name,
-        :local_module_name => local_module_name,
-        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
-      }
-      
-      response = post rest_url("service_module/import"), post_body
-
-      # case when we need to import additional components
-      if (response.ok? && (missing_components = response.data(:missing_module_components)))
-        opts = {:do_not_raise=>true}
-        module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message=>true)
-        trigger_module_component_import(missing_components,module_opts)
-        puts "Resuming DTK network import for service '#{remote_module_name}' ..."
-        # repeat import call for service
-        post_body.merge!(opts)
-        response = post rest_url("service_module/import"), post_body
-      end
-      
-      return response unless response.ok?
-      @@invalidate_map << :service_module
-
-      if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.error_message(remote_module_name, error)
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
-      end
-
-      service_module_id, module_name, namespace, repo_url, branch = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch)
-      response = Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
-      resolve_missing_components(service_module_id, module_name, namespace, options.force?)
-
-      return response
-    end
-
-    desc "SERVICE-NAME/ID validate-model [-v VERSION]", "Check the DSL Model for Errors"
-    version_method_option
-    def validate_model(context_params)
-      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
-      version = options["version"]
-
-      if service_module_name.to_s =~ /^[0-9]+$/
-        service_module_id   = service_module_name
-        service_module_name = get_service_module_name(service_module_id)
-      end
-
-      modules_path    = OsUtil.service_clone_location()
-      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
-
-      raise DTK::Client::DtkValidationError, "Unable to parse service '#{service_module_name}#{version && "-#{version}"}' that doesn't exist on your local machine!" unless File.directory?(module_location)
-
-      reparse_aux(module_location)
-    end
-
-    desc "SERVICE-NAME/ID import-version VERSION", "Import a specfic version from a linked service module"
-    def import_version(context_params)
-      service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
-      post_body = {
-        :service_module_id => service_module_id,
-        :version => version
-      }
-      response = post rest_url("service_module/import_version"), post_body
-      @@invalidate_map << :module_service
-
-      return response unless response.ok?
-      module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
-
-      if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.error_message("#{module_name}-#{version}", error)
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
-      end
-
-      #TODO: need to check if local clone directory exists
-      Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
-    end
-
-    desc "SERVICE-NAME/ID create-on-dtkn [[NAME-SPACE/]REMOTE-MODULE-NAME]","Export service module to remote repository"
-    def create_on_dtkn(context_params)
-      service_module_id, input_remote_name = context_params.retrieve_arguments([:service_id!, :option_1],method_argument_names)
-
-      post_body = {
-       :service_module_id => service_module_id,
-       :remote_component_name => input_remote_name,
-       :rsa_pub_key => SshProcessing.rsa_pub_key_content()
-      }
-
-      post rest_url("service_module/export"), post_body
-    end
-
-    desc "SERVICE-NAME/ID push-to-dtkn [-n NAMESPACE] [-v VERSION]", "Push local copy of service module to remote repository."
-    version_method_option
-        method_option "namespace",:aliases => "-n",
-        :type => :string, 
-        :banner => "NAMESPACE",
-        :desc => "Remote namespace"
-    def push_to_dtkn(context_params)
-      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
-      version = options["version"]
-
-      if service_module_name.to_s =~ /^[0-9]+$/
-        service_id   = service_module_name
-        service_module_name = get_service_module_name(service_id)
-      end
-
-      modules_path    = OsUtil.service_clone_location()
-      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
-
-      unless File.directory?(module_location)
-        if Console.confirmation_prompt("Unable to push to remote because module '#{service_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
-          response = clone_aux(:service_module,service_module_id,version,false)
-          
-          if(response.nil? || response.ok?)
-            reparse_aux(module_location)
-            push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], version) if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
-          end
-
-          return response
-        else
-          # user choose not to clone needed module
-          return
-        end
-      end
-      
-      reparse_aux(module_location)
-      push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
-    end
-
-    desc "SERVICE-NAME/ID pull-from-dtkn [-v VERSION]", "Update local service module from remote repository."
-    version_method_option
-    def pull_from_dtkn(context_params)
-      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!,:service_name],method_argument_names)
-      version = options["version"]
-
-      response = pull_from_remote_aux(:service_module,service_module_id,version)
-      return response unless response.ok?
-
-      if service_module_name.to_s =~ /^[0-9]+$/
-        service_module_id   = service_module_name
-        service_module_name = get_service_module_name(service_module_id)
-      end
-
-      modules_path    = OsUtil.service_clone_location()
-      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
-
-      # server repo needs to be sync with local clone, so we will use push-clone-changes when pull changes from remote to local
-      # to automatically sync local with server repo
-      push_clone_changes_aux(:service_module,service_module_id,version,nil,true) if File.directory?(module_location)
-      Response::Ok.new()
-    end
-
-    ##
-    #
-    # internal_trigger: this flag means that other method (internal) has trigger this.
-    #                   This will change behaviour of method
-    #
-    desc "SERVICE-NAME/ID clone [-v VERSION] [-n]", "Locally clone the service module files. Use -n to skip edit prompt"
-    method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
-    version_method_option
-    def clone(context_params, internal_trigger=false)
-      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
-      internal_trigger = true if options.skip_edit?
-      version          = options["version"]
-
-      # if this is not name it will not work, we need module name
-      if service_module_name.to_s =~ /^[0-9]+$/
-        service_module_id   = service_module_name
-        service_module_name = get_service_module_name(service_module_id)
-      end
-
-      modules_path    = OsUtil.service_clone_location()
-      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
-
-      raise DTK::Client::DtkValidationError, "Trying to clone a service module '#{service_module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
-      clone_aux(:service_module,service_module_id,version,internal_trigger)
-    end
-
-    desc "SERVICE-NAME/ID edit [-v VERSION]","Switch to unix editing for given module."
-    version_method_option
-    def edit(context_params)
-      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
-      version             = options["version"]
-
-      # if this is not name it will not work, we need module name
-      if service_module_name.to_s =~ /^[0-9]+$/
-        service_module_id   = service_module_name
-        service_module_name = get_service_module_name(service_module_id)
-      end
-
-      edit_aux(:service_module,service_module_id,service_module_name,version)
-    end
-
-    desc "SERVICE-NAME/ID create-version NEW-VERSION", "Snapshot current state of module as a new version"
-    def create_version(context_params)
-      service_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!],method_argument_names)
-      post_body = {
-        :service_module_id => service_module_id,
-        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
-      }
-      response = post rest_url("service_module/versions"), post_body
-      return response unless response.ok?
-      versions = (response.data.first && response.data.first['versions'])||Array.new
-      if versions.include?(version)
-        return Response::Error::Usage.new("Version #{version} exists already")
-      end
-
-      service_module_name = get_service_module_name(service_module_id)
-      module_location = OsUtil.module_location(:service_module,service_module_name,version)
-      if File.directory?(module_location)
-        raise DtkError, "Target service module directory for version #{version} (#{module_location}) exists already; it must be deleted and this comamnd retried"
-      end
-
-      post_body = {
-        :service_module_id => service_module_id,
-        :version => version
-      }
-
-      response = post rest_url("service_module/create_new_version"), post_body
-      return response unless response.ok?
-
-      internal_trigger = omit_output = true
-      clone_aux(:service_module,service_module_name,version,internal_trigger,omit_output)
-    end
-
-    desc "SERVICE-NAME/ID set-module-version COMPONENT-MODULE-NAME VERSION", "Set the version of the component module to use in the service's assemblies"
-    def set_module_version(context_params)
-      service_module_id,component_module_id,version = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
-      post_body = {
-        :service_module_id => service_module_id,
-        :component_module_id => component_module_id,
-        :version => version                                                                                          
-      }
-      response = post rest_url("service_module/set_component_module_version"), post_body
-      @@invalidate_map << :service_module
-      return response unless response.ok?()
-      module_name,commit_sha,workspace_branch = response.data(:module_name,:commit_sha,:workspace_branch)
-      Helper(:git_repo).synchronize_clone(:service_module,module_name,commit_sha,:local_branch=>workspace_branch)
-    end
-
-    # TODO: put in two versions, one that creates empty and anotehr taht creates from local dir; use --empty flag
-    desc "import SERVICE-NAME", "Create new service module from local clone"
-    def import(context_params)
-      module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
-
-      # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
-      response = Helper(:git_repo).check_local_dir_exists_with_content(:service_module,module_name)
-      return response unless response.ok?
-      service_directory = response.data(:module_directory)
-      
-      #check for yaml/json parsing errors before import
-      reparse_aux(service_directory)
-
-      # first call to create empty module
-      response = post rest_url("service_module/create"), { :module_name => module_name }        
-      return response unless response.ok?
-      @@invalidate_map << :service_module
-      
-      if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.error_message(module_name, error)
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
-      end
-
-      # initial commit for given service module
-      service_module_id, repo_info, module_id = response.data(:service_module_id, :repo_info)
-      repo_url,repo_id,module_id,branch = [:repo_url,:repo_id,:module_id,:workspace_branch].map { |k| repo_info[k.to_s] }
-      response = Helper(:git_repo).initialize_client_clone_and_push(:service_module, module_name,branch,repo_url,service_directory)
-      return response unless response.ok?
-      repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
-
-      context_params.add_context_to_params(module_name, "service", module_id)
-      push(context_params,true)
-    end
-
-
-    desc "SERVICE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of service module to server"
-    version_method_option
-    method_option "message",:aliases => "-m" ,
-      :type => :string, 
+    desc "SERVICE-NAME/ID converge [-m COMMIT-MSG]", "Converge service instance."
+    method_option "commit_msg",:aliases => "-m" ,
+      :type => :string,
       :banner => "COMMIT-MSG",
-      :desc => "Commit message"
-    #hidden option for dev
-    method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
-    def push(context_params, internal_trigger=false)
-      service_module_id, service_module_name = context_params.retrieve_arguments([:service_id!, :service_name],method_argument_names)
-      version = options["version"]
-
-      if service_module_name.to_s =~ /^[0-9]+$/
-        service_module_id   = service_module_name
-        service_module_name = get_service_module_name(service_module_id)
-      end
-
-      modules_path    = OsUtil.service_clone_location()
-      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
-
-      reparse_aux(module_location) unless internal_trigger
-      push_clone_changes_aux(:service_module,service_module_id,version,nil,internal_trigger)
+      :desc => "Commit message" 
+    def converge(context_params)
+      converge_aux(context_params)
     end
 
-    desc "delete SERVICE-MODULE [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
-    version_method_option
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    method_option :purge, :aliases => '-p', :type => :boolean, :default => false
-    def delete(context_params)
-      module_location, modules_path = nil, nil
-      service_module_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      version = options.version
-      service_module_name = get_service_module_name(service_module_id)
-
-      unless options.force?
-        # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete service-module #{version.nil? ? '' : 'version '}'#{service_module_name}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
-      end
-
-      response = 
-        if options.purge?
-          opts = {:module_name => service_module_name}
-          if version then opts.merge!(:version => version)
-          else opts.merge!(:delete_all_versions => true)
+    desc "SERVICE-NAME/ID push-assembly-updates [SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push service instance to the designated assembly; default is parent assembly."
+    def push_service_updates(context_params)
+      assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:service_id!,:option_1],method_argument_names) 
+      service_module_name, assembly_template_name =
+        if qualified_assembly_name
+          if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
+            [$1,$2]
+          else
+            raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-MODULE-NAME/ASSEMBLY-NAME"
           end
-          
-          purge_clone_aux(:service_module,opts)
         else
-          Helper(:git_repo).unlink_local_clone?(:service_module,service_module_name,version)
+          [nil,nil]
         end
+      response = promote_assembly_aux(:update,assembly_id, service_module_name, assembly_template_name)
       return response unless response.ok?
-
-      post_body = {
-        :service_module_id => service_module_id
-      }
-
-      action = (version ? "delete_version" : "delete")
-      post_body[:version] = version if version
-
-      response = post rest_url("service_module/#{action}"), post_body
-      return response unless response.ok?
-      module_name = response.data(:module_name)
-      
-      # when changing context send request for getting latest services instead of getting from cache
-      @@invalidate_map << :service_module
-
-      msg = "Service module '#{service_module_name}' "
-      if version then msg << "version #{version} has been deleted"
-      else  msg << "has been deleted"; end
-      OsUtil.print(msg,:yellow)
-
+      @@invalidate_map << :assembly
       Response::Ok.new()
     end
 
-    desc "delete-from-dtkn REMOTE-SERVICE-NAME [-y]", "Delete the service module from the DTK Network catalog"
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete_from_dtkn(context_params)
-      remote_service_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      
-      unless options.force?
-        # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete remote service-module '#{remote_service_name}' and all items contained in it"+'?')
-      end
+    desc "SERVICE-NAME/ID push-component-module-updates COMPONENT-MODULE-NAME [--force]", "Push changes made to a component module in the service to its base component module."
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    def push_component_module_updates(context_params)
+      push_module_updates_aux(context_params)
+    end
 
+    desc "SERVICE-NAME/ID edit-component-module COMPONENT-MODULE-NAME", "Edit a component module used in the service."
+    def edit_module(context_params)
+      edit_module_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID edit-workflow", "Edit service's workflow."
+    def edit_workflow(context_params)
+      edit_workflow_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID edit-attributes", "Edit service's attributes."
+    def edit_attributes(context_params)
+      edit_attributes_aux(context_params)
+    end
+
+    # desc "ASSEMBLY-NAME/ID promote-module-updates COMPONENT-MODULE-NAME [--force]", "Promotes changes made to component module in assembly to base component module"
+    # method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    # def promote_module_updates(context_params)
+    #   promote_module_updates_aux(context_params)
+    # end
+
+=begin
+TODO: will put in dot release and will rename to 'extend'
+    desc "ASSEMBLY-NAME/ID add EXTENSION-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly"
+    method_option "count",:aliases => "-n" ,
+      :type => :string, #integer 
+      :banner => "COUNT",
+      :desc => "Number of sub-assemblies to add"
+    def add_node(context_params)
+      assembly_id,service_add_on_name = context_params.retrieve_arguments([:assembly_id!,:option_1!],method_argument_names)
+
+      # create task
       post_body = {
-       :remote_service_name => remote_service_name,
-       :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+        :assembly_id => assembly_id,
+        :service_add_on_name => service_add_on_name
       }
-      response = post rest_url("service_module/delete_remote"), post_body
-      @@invalidate_map << :module_service
+
+      post_body.merge!(:count => options.count) if options.count
+
+      response = post rest_url("assembly/add__service_add_on"), post_body
+      # when changing context send request for getting latest assemblies instead of getting from cache
+      @@invalidate_map << :assembly
 
       return response
     end
 
-    desc "SERVICE-NAME/ID delete-assembly ASSEMBLY-TEMPLATE-ID [-y]", "Delete assembly template."
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete_assembly(context_params)
-      service_module_id, assembly_template_id = context_params.retrieve_arguments([:service_id!,:option_1!], method_argument_names)
-      service_module_name = context_params.retrieve_arguments([:service_name],method_argument_names)
-      assembly_template_name = (assembly_template_id.to_s =~ /^[0-9]+$/) ? DTK::Client::AssemblyTemplate.get_assembly_template_name_for_service(assembly_template_id, service_module_name) : assembly_template_id
-      assembly_template_id   = DTK::Client::AssemblyTemplate.get_assembly_template_id_for_service(assembly_template_id, service_module_name) unless assembly_template_id.to_s =~ /^[0-9]+$/
+    desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to the assembly" 
+    def possible_extensions(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
-      if service_module_name.to_s =~ /^[0-9]+$/
-        service_module_id   = service_module_name
-        service_module_name = get_service_module_name(service_module_id)
-      end
-
-      return unless Console.confirmation_prompt("Are you sure you want to delete assembly_template '#{assembly_template_name||assembly_template_id}'"+'?') unless options.force?
-      
       post_body = {
-        :service_module_id => service_module_id,
-        :assembly_id => assembly_template_id,
-        :subtype => :template                                                                                       
+        :assembly_id => assembly_id
       }
-
-      response = post rest_url("service_module/delete_assembly_template"), post_body
-      return response unless response.ok?
-      
-      modules_path               = OsUtil.service_clone_location()
-      module_location            = "#{modules_path}/#{service_module_name}" if service_module_name
-      assembly_template_location = "#{module_location}/assemblies/#{assembly_template_name}" if (module_location && assembly_template_name) 
-      
-      if File.directory?(assembly_template_location)
-        unless (assembly_template_location.nil? || ("#{module_location}/assemblies/" == assembly_template_location))
-          FileUtils.rm_rf("#{assembly_template_location}")
-        end
-      end
-      version = nil
-      commit_msg = "Deleting assembly template #{assembly_template_name.to_s}"
-      internal_trigger = true
-      push_clone_changes_aux(:service_module, service_module_id, version, commit_msg, internal_trigger)
-      @@invalidate_map << :assembly_template
-      Response::Ok.new()
-    end
-=begin
-    desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
-    def assembly_template(context_params)
-
-      service_id, method_name = context_params.retrieve_arguments([:service_name!, :option_1!],method_argument_names)
-
-      options_args = ["-s", service_id]
-      
-      entity_name = "assembly_template"
-      load_command(entity_name)
-      entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
-      
-      response = entity_class.execute_from_cli(@conn, method_name, DTK::Shell::ContextParams.new, options_args, false)
-
+      response = post(rest_url("assembly/list_possible_add_ons"),post_body)
+      response.render_table(:service_add_on)
     end
 =end
-=begin
-TODO: needs to be rewritten
-    desc "create-jenkins-project SERVICE-ID", "Create Jenkins project for service module"
-    def create_jenkins_project(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_id],method_argument_names)
-      #require put here so dont necessarily have to install jenkins client gems
 
-      dtk_require_from_base('command_helpers/jenkins_client')
-      response = get rest_url("service_module/workspace_branch_info/#{service_module_id.to_s}")
-      unless response.ok?
-        errors_message = ''
-        response['errors'].each { |error| errors_message += ", reason='#{error['code']}' message='#{error['message']}'" }
-        raise DTK::Client::DtkError, "Invalid jenkins response#{errors_message}"
+    desc "SERVICE-NAME/ID task-status [--wait]", "Get the task status of the running or last running service task."
+    method_option :wait, :type => :boolean, :default => false
+    def task_status(context_params)
+      task_status_aw_aux(context_params)
+    end
+
+=begin
+    desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
+    def run_smoketests(context_params)
+      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_id
+      }
+      # create smoke test
+      response = post rest_url("assembly/create_smoketests_task"), post_body
+      return response unless response.ok?
+      # execute
+      task_id = response.data(:task_id)
+      post rest_url("task/execute"), "task_id" => task_id
+    end
+=end
+
+    desc "SERVICE-NAME/ID list-nodes","List nodes associated with service."
+    def list_nodes(context_params)
+      list_nodes_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID list-component-links","List component links."
+    def list_component_links(context_params)
+      list_component_links_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID list-components [--deps]","List components associated with service."
+    method_option :deps, :type => :boolean, :default => false, :aliases => '-l'
+    def list_components(context_params)
+      list_components_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID list-attributes [-f FORMAT] [--links]","List attributes associated with service."
+    method_option :format,:aliases => '-f'
+    method_option :links, :type => :boolean, :default => false, :aliases => '-l'
+    def list_attributes(context_params)
+      list_attributes_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID list-component-modules","List component modules associated with service."
+    def list_component_modules(context_params)
+      list_modules_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID list-tasks","List tasks associated with service."
+    def list_tasks(context_params)
+      list_tasks_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID list-violations", "Finds violations in the service that will prevent a converge operation."
+    def list_violations(context_params)
+      list_violations_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID workflow-info", "Get the structure of the workflow associated with service."
+    def workflow_info(context_params)
+      workflow_info_aux(context_params)
+    end
+
+    desc "list","List services."
+    def list(context_params)
+      assembly_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([:service_id,:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
+      detail_to_include = nil
+
+      if about
+        case about
+          when "nodes"
+            data_type = :node
+          when "components"
+            data_type = :component
+            detail_to_include = [:component_dependencies]
+          when "attributes"
+            data_type = :attribute
+            detail_to_include = [:attribute_links]
+          when "tasks"
+            data_type = :task
+          else
+            raise_validation_error_method_usage('list')
+        end 
       end
-      module_name,repo_url,branch = response.data_ret_and_remove!(:module_name,:repo_url,:workspace_branch)
-      JenkinsClient.create_service_module_project?(service_module_id,module_name,repo_url,branch)
-      #TODO: right now JenkinsClient wil throw error if problem; better to create an error resonse
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :node_id => node_id,
+        :component_id => component_id,
+        :subtype     => 'instance'
+      }
+      post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
+      rest_endpoint = "assembly/info_about"
+
+      if context_params.is_last_command_eql_to?(:attribute)        
+        raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
+        about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
+      elsif context_params.is_last_command_eql_to?(:component)
+        if component_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
+        else
+          about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
+        end
+      elsif context_params.is_last_command_eql_to?(:node)
+        if node_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
+        else
+          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
+        end
+      else
+        if assembly_id
+          about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
+        else
+          data_type = :assembly
+          post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
+          rest_endpoint = "assembly/list"
+        end  
+      end
+
+      post_body[:about] = about
+      response = post rest_url(rest_endpoint), post_body
+
+      # set render view to be used
+      response.render_table(data_type)
+
+      return response
+    end
+
+    # desc "ASSEMBLY-NAME/ID list-attribute-mappings SERVICE-LINK-NAME/ID", "List attribute mappings associated with service link"
+    # def list_attribute_mappings(context_params)
+    #   post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
+    #   post rest_url("assembly/list_attribute_mappings"), post_body
+    # end
+
+    #desc "ASSEMBLY-NAME/ID list-smoketests","List smoketests on asssembly"
+    #def list_smoketests(context_params)
+    #  assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+    #
+    #  post_body = {
+    #    :assembly_id => assembly_id
+    #  }
+    #  post rest_url("assembly/list_smoketests"), post_body
+    #end
+
+    desc "SERVICE-NAME/ID info", "Get info about content of the service."
+    def info(context_params)
+      info_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID link-attributes TARGET-ATTR SOURCE-ATTR", "Link the value of the target attribute to the source attribute."
+    def link_attributes(context_params)
+      link_attributes_aux(context_params)
+    end
+
+    desc "delete-and-destroy NAME/ID [-y]", "Delete service instance, terminating any nodes that have been spun up."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def delete_and_destroy(context_params)
+      assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      assembly_name = get_assembly_name(assembly_id)
+
+      unless options.force?
+        # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
+        #used form "+'?' because ?" confused emacs ruby rendering
+        what = "service"
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_name}' and its nodes"+'?')
+      end
+
+      #purge local clone
+      response = purge_clone_aux(:all,:assembly_module => {:assembly_name => assembly_name})
+      return response unless response.ok?
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :subtype => :instance
+      }
+
+      response = post rest_url("assembly/delete"), post_body
+         
+      # when changing context send request for getting latest assemblies instead of getting from cache
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
       response
     end
-=end        
+
+    desc "SERVICE-NAME/ID set-attribute ATTRIBUTE-NAME [VALUE] [-u]", "(Un)Set attribute value. The option -u will unset the attribute's value."
+    method_option :unset, :aliases => '-u', :type => :boolean, :default => false
+    def set_attribute(context_params)
+      set_attribute_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--type DATATYPE] [--required] [--dynamic]", "Create a new attribute and optionally assign it a value."
+    method_option :required, :type => :boolean, :default => false
+    method_option :dynamic, :type => :boolean, :default => false
+    method_option "type",:aliases => "-t"
+    def create_attribute(context_params)
+      create_attribute_aux(context_params)
+    end
+
+  #  desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID", "Add (stage) an assembly template to become part of this assembly instance"
+  #  method_option "auto-complete",:aliases => "-a" ,
+  #    :type => :boolean, 
+  #    :default=> false,
+  #    :desc => "Automatically add in connections"
+  #  def add_assembly(context_params)
+  #    assembly_id,assembly_template_id = context_params.retrieve_arguments([:assembly_id,:option_1!],method_argument_names)
+  #    post_body = {
+  #      :assembly_id => assembly_id,
+  #      :assembly_template_id => assembly_template_id
+  #    }
+  #    post_body.merge!(:auto_add_connections => true) if options.auto_complete?
+  #    post rest_url("assembly/add_assembly_template"), post_body
+  #  end
+
+    # using ^^ before NODE-NAME to remove this command from assembly/assembly_id/node/node_id but show in assembly/assembly_id
+    desc "SERVICE-NAME/ID create-node ^^NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the service."
+    def create_node(context_params)
+      response = create_node_aux(context_params)
+      @@invalidate_map << :service_node
+
+      return response
+    end
+
+    desc "SERVICE-NAME/ID link-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]","Link the target component to the source component."
+    def link_components(context_params)
+      link_components_aux(context_params)
+    end
+
+    # only supported at node-level
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
+    desc "HIDE_FROM_BASE create-component NODE-NAME COMPONENT", "Add a component to the service."
+    def create_component(context_params)
+      response = create_component_aux(context_params)
+
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+
+      response
+    end
+
+    # using ^^ before NODE-NAME to remove this command from assembly/assembly_id/node/node_id but show in assembly/assembly_id
+    desc "SERVICE-NAME/ID delete-node ^^NODE-NAME [-y]","Delete node, terminating it if the node has been spun up."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def delete_node(context_params)
+      response = delete_node_aux(context_params)
+      @@invalidate_map << :service_node
+
+      return response
+    end
+
+    desc "HIDE_FROM_BASE delete NAME/ID [-y]","Delete node, terminating it if the node has been spun up."
+    def delete(context_params)
+      if context_params.is_last_command_eql_to?(:node)
+        response = delete_node_aux(context_params)
+        return response unless response.ok?
+        @@invalidate_map << :service_node
+
+        response
+      elsif context_params.is_last_command_eql_to?(:component)
+        response = delete_component_aux(context_params)
+        return response unless response.ok?
+        @@invalidate_map << :assembly_node_component
+
+        response
+      end
+    end
+
+    desc "SERVICE-NAME/ID unlink-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]", "Remove a component link."
+    def unlink_components(context_params)
+      unlink_components_aux(context_params)
+    end
+
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
+    desc "HIDE_FROM_BASE delete-component COMPONENT-NAME [-y]","Delete component from the service."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def delete_component(context_params)
+      response = delete_component_aux(context_params)
+      return response unless response.ok?
+      
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      @@invalidate_map << :service_node_component
+
+      response
+    end
+
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
+    desc "HIDE_FROM_BASE get-netstats", "Get netstats"
+    def get_netstats(context_params)
+      get_netstats_aux(context_params)
+    end
+
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
+    desc "HIDE_FROM_BASE get-ps [--filter PATTERN]", "Get ps"
+    method_option :filter, :type => :boolean, :default => false, :aliases => '-f'
+    def get_ps(context_params)
+      get_ps_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
+    def set_required_params(context_params)
+      assembly_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
+      set_required_params_aux(assembly_id,:assembly,:instance)
+    end
+
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
+    desc "HIDE_FROM_BASE tail NODES-IDENTIFIER LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
+    method_option :more, :type => :boolean, :default => false
+    def tail(context_params)
+      tail_aux(context_params)
+    end
+
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
+    desc "HIDE_FROM_BASE grep LOG-PATH NODES-ID-PATTERN GREP-PATTERN [--first]","Grep log from multiple nodes. --first option returns first match (latest log entry)."
+    method_option :first, :type => :boolean, :default => false
+    def grep(context_params)
+      grep_aux(context_params)
+    end
+
+    
   end
 end
 

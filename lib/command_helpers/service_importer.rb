@@ -19,17 +19,17 @@ module DTK::Client
     # Method will trigger import for each missing module component
     #
     def trigger_module_component_import(missing_component_list,opts={})      
-      puts "Auto-importing missing module(s)"
+      puts "Auto-importing missing component module(s)"
 
       missing_component_list.each do |m_module|
-        print "Importing module component '#{m_module['name']}' ... "
+        print "Importing component module '#{m_module['name']}' ... "
         module_name = "#{m_module['namespace']}/#{m_module['name']}"
         module_name += "/#{m_module['version']}" if m_module['version']
         new_context_params = ::DTK::Shell::ContextParams.new([module_name])
         new_context_params.override_method_argument!('option_2', m_module['version'])
         new_context_params.forward_options( { "skip_cloning" => true}).merge!(opts)
 
-        response = ContextRouter.routeTask("module", "import_dtkn", new_context_params, @conn)
+        response = ContextRouter.routeTask("component_module", "import_dtkn", new_context_params, @conn)
         puts(response.data(:does_not_exist) ? response.data(:does_not_exist) : "Done.")
         raise DTK::Client::DtkError, response.error_message unless response.ok?        
       end
@@ -52,7 +52,7 @@ module DTK::Client
         puts "Service '#{service_module_name}' has following dependencies: \n\n"
         needed_modules.each { |m| puts " - #{m['formated_name']}" }
         is_install_dependencies = true
-        is_install_dependencies = Console.confirmation_prompt("\nDo you want to clone missing module component dependencies") unless force_clone
+        is_install_dependencies = Console.confirmation_prompt("\nDo you want to clone missing component module dependencies") unless force_clone
 
         # we get list of modules available on server
 
@@ -68,8 +68,8 @@ module DTK::Client
             thor_options["omit_output"] = true
             new_context_params = ::DTK::Shell::ContextParams.new
             new_context_params.forward_options(thor_options)
-            new_context_params.add_context_to_params(formated_name, "module", m['id'])               
-            response = ContextRouter.routeTask("module", "clone", new_context_params, @conn)
+            new_context_params.add_context_to_params(formated_name, :"component-module", m['id'])             
+            response = ContextRouter.routeTask("component_module", "clone", new_context_params, @conn)
             puts "Done."
           end
         end

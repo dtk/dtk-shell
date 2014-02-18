@@ -40,7 +40,7 @@ module DTK::Client
     end
 
     def self.validation_list(context_params)
-      assembly_id, workspace_id = context_params.retrieve_arguments([:assembly_id, :workspace_id])
+      assembly_id, workspace_id = context_params.retrieve_arguments([:service_id, :workspace_id])
       
       if (assembly_id || workspace_id)
         # if assebmly_id is present we're loading nodes filtered by assembly_id
@@ -51,7 +51,7 @@ module DTK::Client
           :filter      => nil
         }
 
-        response = get_cached_response(:assembly_node, "assembly/info_about", post_body)
+        response = get_cached_response(:service_node, "assembly/info_about", post_body)
       else
         # otherwise, load all nodes
         response = get_cached_response(:node, "node/list", nil)
@@ -172,7 +172,7 @@ module DTK::Client
       post rest_url("node/delete_component"), post_body
     end
 
-    desc "NODE-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
+    desc "NODE-NAME/ID converge [-m COMMIT-MSG]", "Converges service instance"
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
@@ -203,14 +203,14 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
-    desc "NODE-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
+    desc "NODE-NAME/ID task-status [--wait]", "Task status of running or last service task"
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
       task_status_aux(node_id,:node,options.wait?)
     end
 
-    desc "NODE-NAME/ID list-task-info", "Task status details of running or last assembly task"
+    desc "NODE-NAME/ID list-task-info", "Task status details of running or last service task"
     def list_task_info(context_params)
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
       list_task_info_aux("node", node_id)

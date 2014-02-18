@@ -372,7 +372,7 @@ module DTK
       # hack: used just to avoid entering assembly/id/node or workspace/node context (remove when include this contexts again)
       def is_restricted_context(first_c, args = [], tmp_active_context=nil)
         entries = args.first.split(/\//)
-        invalid_context = ["workspace/node", "assembly/node"]
+        invalid_context = ["workspace/node", "service/node"]
         double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
         only_double_dots = entries.select{|e| e.to_s!=".."}||[]
         back_flag = false
@@ -837,11 +837,18 @@ module DTK
         end
 
         # extract thor options
-        clazz              = Context.get_command_class(entity_name)
-        options            = Context.get_thor_options(clazz, cmd) unless clazz.nil?
-        args, thor_options, invalid_options = Context.parse_thor_options(args, options)
+        clazz = Context.get_command_class(entity_name)
+        current_context_command = active_context_copy.last_command_name
 
+        if (current_context_command != entity_name)
+          current_context_clazz = Context.get_command_class(current_context_command)
+          options = Context.get_thor_options(current_context_clazz, cmd) unless current_context_command.nil?
+        else
+          options = Context.get_thor_options(clazz, cmd) unless clazz.nil?
+        end
+        
         # set rest of arguments as method options
+        args, thor_options, invalid_options = Context.parse_thor_options(args, options)
         context_params.method_arguments = args
 
         return entity_name, method_name, context_params, thor_options, invalid_options

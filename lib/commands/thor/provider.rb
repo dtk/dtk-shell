@@ -54,12 +54,12 @@ module DTK::Client
           :keypair_name => keypair,
           :security_group => security_group
         },
-          :target_name => provider_name,
+          :provider_name => provider_name,
           :iaas_type => provider_type.downcase,
           :no_bootstrap => options.no_bootstrap?
       }
 
-      response = post rest_url("target/create"), post_body
+      response = post rest_url("target/create_provider"), post_body
       @@invalidate_map << :provider
 
       return response
@@ -95,6 +95,13 @@ module DTK::Client
       response.render_table(:provider)
     end
 
+    #TODO: Aldin; wanted to name this list_targets, but did not know how to do so w/o conflicting with desc "PROVIDER-ID/NAME list-targets
+    desc "list-all-targets","Lists all targets for all providers."
+    def list_all_targets(context_params)
+      response  = post rest_url("target/list"), { :subtype => :instance }
+      response.render_table(:target)
+    end
+
     desc "PROVIDER-ID/NAME list-targets", "List targets"
     def list_targets(context_params)
       provider_id = context_params.retrieve_arguments([:provider_id!],method_argument_names)
@@ -117,12 +124,12 @@ module DTK::Client
       # Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies that belong to this target will be deleted as well)'"+'?')
       
       post_body = {
-        :target_id => provider_id
+        :provider_id => provider_id
       }
 
       @@invalidate_map << :provider
 
-      return post rest_url("target/delete"), post_body
+      return post rest_url("target/delete_provider"), post_body
     end
 
     no_tasks do

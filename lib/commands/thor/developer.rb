@@ -36,23 +36,23 @@ module DTK::Client
       return response
     end
 
-    desc "remove-from-system ASSEMBLY-NAME", "Removes objects associated with assembly, but does not destroy target isnatnces"
+    desc "remove-from-system SERVICE-NAME", "Removes objects associated with service, but does not destroy target isnatnces"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def remove_from_system(context_params)
       assembly_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
-        what = "assembly"
+        what = "service"
         return unless Console.confirmation_prompt("Are you sure you want to remove #{what} '#{assembly_id}' and its nodes from the system"+'?')
       end
 
       response = post rest_url("assembly/remove_from_system"), {:assembly_id => assembly_id}
       # when changing context send request for getting latest assemblies instead of getting from cache
-      @@invalidate_map << :assembly
+      @@invalidate_map << :service
       return response
     end
 
-    desc "apply-param-set ASSEMBLY-NAME/ID PARAM-SET-PATH", "Uses the parametrs set in the file PARAM-SET-PATH and appleis to teh assembly"
+    desc "apply-param-set SERVICE-NAME/ID PARAM-SET-PATH", "Uses the parametrs set in the file PARAM-SET-PATH and appleis to the service"
     def apply_param_set(context_params)
       assembly_id,path = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
       av_pairs = JSON.parse(File.open(path).read)

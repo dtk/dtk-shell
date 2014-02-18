@@ -1,10 +1,10 @@
 require 'lib/spec_thor'
 require File.expand_path('../lib/require_first', File.dirname(__FILE__))
-require File.expand_path('../lib/commands/thor/service', File.dirname(__FILE__))
+require File.expand_path('../lib/commands/thor/service_module', File.dirname(__FILE__))
 
 include SpecThor
 
-describe DTK::Client::Service do
+describe DTK::Client::ServiceModule do
   $about       = ['assembly-templates']
   $service_id = nil
 

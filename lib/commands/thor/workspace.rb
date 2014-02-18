@@ -56,7 +56,7 @@ module DTK::Client
             :url => "assembly/info_about", 
             :opts => {:subtype=>"instance", :about=>"modules"}
           },
-          :push_module_updates => {
+          :push_component_module_updates => {
             :endpoint => "assembly", 
             :url => "assembly/info_about", 
             :opts => {:subtype=>"instance", :about=>"modules"}
@@ -125,7 +125,7 @@ module DTK::Client
         :identifier_only => {
           :node      => [
             ['create-component',"create-component COMPONENT","# Add a component to the node."],
-            ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from assembly's node"],
+            ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from workspace's node"],
             ['info',"info","# Return info about node instance belonging to given workspace."],
             # ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
             ['list-attributes',"list-attributes","# List attributes associated with workspace's node."],
@@ -169,30 +169,30 @@ module DTK::Client
       converge_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-module-updates MODULE-NAME [--force]", "Push changes made to a component module in the workspace to its base component module."
+    desc "WORKSPACE-NAME/ID push-component-module-updates COMPONENT-MODULE-NAME [--force]", "Push changes made to a component module in the workspace to its base component module."
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-    def push_module_updates(context_params)
+    def push_component_module_updates(context_params)
       push_module_updates_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-assembly-updates SERVICE-NAME/ASSEMBLY-NAME", "Push workspace instance to the designated assembly."
-    def push_assembly_updates(context_params)
+    desc "WORKSPACE-NAME/ID push-assembly-updates SERVICE-MODULE-NAME/ASSEMBLY-NAME", "Push workspace instance to the designated assembly."
+    def push_service_updates(context_params)
       workspace_id, qualified_assembly_name = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names) 
       if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
         service_module_name, assembly_template_name = [$1,$2]
       else
-        raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-NAME/ASSEMBLY-NAME"
+        raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-MODULE-NAME/ASSEMBLY-NAME"
       end
       response = promote_assembly_aux(:update,workspace_id, service_module_name, assembly_template_name)
       return response unless response.ok?
-      @@invalidate_map << :assembly_template
+      @@invalidate_map << :assembly
       Response::Ok.new()
     end
 
-    desc "WORKSPACE-NAME/ID create-assembly SERVICE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
+    desc "WORKSPACE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
    # The option -p will purge the workspace after assembly creation." 
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
-    def create_assembly(context_params)
+    def create_service(context_params)
       workspace_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:workspace_id!,:option_1!,:option_2!],method_argument_names)
       response = promote_assembly_aux(:create,workspace_id,service_module_name,assembly_template_name)
       return response unless response.ok?
@@ -201,7 +201,7 @@ module DTK::Client
         return response unless response.ok?
       end
 
-      @@invalidate_map << :assembly_template
+      @@invalidate_map << :assembly
       @@invalidate_map << :service_module
       Response::Ok.new()
     end
@@ -221,8 +221,8 @@ module DTK::Client
       response = create_component_aux(context_params)
       return response unless response.ok?
 
-      @@invalidate_map << :assembly
-      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
 
       response
     end
@@ -231,7 +231,7 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID create-node ^^NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the workspace."
     def create_node(context_params)
       response = create_node_aux(context_params)
-      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service_node
 
       return response
     end
@@ -246,13 +246,13 @@ module DTK::Client
     def delete(context_params)
       if context_params.is_last_command_eql_to?(:node)
         response = delete_node_aux(context_params)
-        @@invalidate_map << :assembly_node
+        @@invalidate_map << :service_node
 
         response
       elsif context_params.is_last_command_eql_to?(:component)
         response = delete_component_aux(context_params)
         return response unless response.ok?
-        @@invalidate_map << :assembly_node_component
+        @@invalidate_map << :service_node_component
         
         response
       end
@@ -266,9 +266,9 @@ module DTK::Client
       response = delete_component_aux(context_params)
       return response unless response.ok?
       
-      @@invalidate_map << :assembly
-      @@invalidate_map << :assembly_node
-      @@invalidate_map << :assembly_node_component
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      @@invalidate_map << :service_node_component
 
       return response
     end
@@ -278,7 +278,7 @@ module DTK::Client
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       response = delete_node_aux(context_params)
-      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service_node
 
       return response
     end
@@ -288,7 +288,7 @@ module DTK::Client
       unlink_components_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID edit-module MODULE-NAME", "Edit a component module used in the workspace."
+    desc "WORKSPACE-NAME/ID edit-component-module COMPONENT-MODULE-NAME", "Edit a component module used in the workspace."
     def edit_module(context_params)
       edit_module_aux(context_params)
     end
@@ -368,7 +368,7 @@ module DTK::Client
       list_component_links_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-modules","List modules associated with workspace."
+    desc "WORKSPACE-NAME/ID list-component-modules","List component modules associated with workspace."
     def list_modules(context_params)
       list_modules_aux(context_params)
     end
@@ -388,16 +388,15 @@ module DTK::Client
       list_violations_aux(context_params)
     end
 
-    # desc "WORKSPACE-NAME/ID promote-module-updates COMPONENT-MODULE-NAME [--force]", "Promotes changes made to component module in workspace to base component module"
-    # method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-    # def promote_module_updates(context_params)
-    #   promote_module_updates_aux(context_params)
-    # end
-
     desc "WORKSPACE-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def purge(context_params)
       purge_aux(context_params)
+    end
+
+    desc "WORKSPACE-NAME/ID set-target TARGET-NAME/ID", "Set target associated with workspace."
+    def set_target(context_params)
+      set_target_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID set-attribute ATTRIBUTE-NAME [VALUE] [-u]", "(Un)Set attribute value. The option -u will unset the attribute's value."
@@ -407,13 +406,13 @@ module DTK::Client
     end
 
 #    desc "WORKSPACE-NAME/ID start [NODE-ID-PATTERN]", "Starts all workspace's nodes,  specific nodes can be selected via node id regex."
-    desc "WORKSPACE-NAME/ID start [NODE-NAME]", "Starts all the workspace's nodes. A single node can be selected."
+    desc "WORKSPACE-NAME/ID start [NODE-NAME]", "Starts all the workspace nodes. A single node can be selected."
     def start(context_params)
       start_aux(context_params)
     end
 
 #    desc "WORKSPACE-NAME/ID stop [NODE-ID-PATTERN]", "Stops all workspace's nodes, specific nodes can be selected via node id regex."
-    desc "WORKSPACE-NAME/ID stop [NODE-NAME]", "Stops all the workspace's nodes. A single node can be selected."
+    desc "WORKSPACE-NAME/ID stop [NODE-NAME]", "Stops all the workspace nodes. A single node can be selected."
     def stop(context_params)
       stop_aux(context_params)
     end

@@ -15,8 +15,8 @@ module DTK::Client
       list_targets(context_params)
     end
 
-    desc "TARGET-NAME/ID list-assemblies","Lists assembly instances in given targets."
-    def list_assemblies(context_params)
+    desc "TARGET-NAME/ID list-services","Lists service instances in given targets."
+    def list_services(context_params)
       context_params.method_arguments = ["assemblies"]
       list_targets(context_params)
     end
@@ -38,16 +38,8 @@ module DTK::Client
         response = get_cached_response(:target, "target/list", { :subtype => :instance })
       end
 
-      return response
+      response
     end
-
-=begin
-    desc "list-providers","Lists available providers."
-    def list_providers(context_params)
-      context_params.method_arguments = ["templates"]
-      list_targets(context_params)
-    end
-=end
 
     desc "list-targets","Lists available targets."
     def list_targets(context_params)
@@ -98,28 +90,5 @@ module DTK::Client
 
       return post rest_url("target/delete"), post_body
     end
-
-=begin
-    desc "create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create assembly template from nodes in target" 
-    def create_assembly(context_params)
-      service_module_name, assembly_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
-      post_body = {
-        :service_module_name => service_module_name,
-        :assembly_name => assembly_name
-      }
-      response = post rest_url("target/create_assembly_template"), post_body
-      # when changing context send request for getting latest assembly_templates instead of getting from cache
-      @@invalidate_map << :assembly_template
-
-      return response
-    end
-
-    desc "TARGET-NAME/ID converge", "Converges target instance"
-    def converge(context_params)
-      not_implemented()
-    end
-=end
-
-
   end
 end

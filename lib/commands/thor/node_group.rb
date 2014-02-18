@@ -163,7 +163,7 @@ module DTK::Client
       return response
     end
 
-    desc "NODE-GROUP-NAME/ID converge [-m COMMIT-MSG]", "Converges assembly instance"
+    desc "NODE-GROUP-NAME/ID converge [-m COMMIT-MSG]", "Converges service instance"
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
@@ -184,7 +184,7 @@ module DTK::Client
       post rest_url("task/execute"), "task_id" => task_id
     end
 
-    desc "NODE-GROUP-NAME/ID task-status [--wait]", "Task status of running or last assembly task"
+    desc "NODE-GROUP-NAME/ID task-status [--wait]", "Task status of running or last service task"
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
       node_group_id = context_params.retrieve_arguments([:node_group_id!],method_argument_names)
