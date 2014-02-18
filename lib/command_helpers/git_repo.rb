@@ -295,8 +295,6 @@ module DTK; module Client; class CommandHelper
     end
 
     def pull_repo_changes_aux(repo,opts={})
-      # DEBUG SNIPPET >>> REMOVE <<<
-      require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
       diffs = DiffSummary.new()
 
       if commit_sha = opts[:commit_sha]
