@@ -3,7 +3,6 @@ require File.expand_path('../lib/require_first', File.dirname(__FILE__))
 require File.expand_path('../lib/view_processor', File.dirname(__FILE__))
 require File.expand_path('../lib/view_processor/table_print', File.dirname(__FILE__))
 require File.expand_path('../lib/commands/thor/assembly', File.dirname(__FILE__))
-require 'ap'
 
 include SpecThor
 
@@ -38,8 +37,6 @@ describe DTK::Client::DtkResponse do
  		}
 
 		response = DTK::Client::DtkResponse.new(@sample, @render_data_type, nil, true)
-
-		ap response
 	
 		it "should contain columns #{@assembly_name}, #{@nodes}, #{@id}, #{@components} " do
       		response.inspect.should include("assembly_name")
