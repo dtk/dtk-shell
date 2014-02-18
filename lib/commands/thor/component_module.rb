@@ -279,6 +279,7 @@ TODO: might deprecate
 
       repo_url,repo_id,module_id,branch = response.data(:repo_url,:repo_id,:module_id,:workspace_branch)
       response = Helper(:git_repo).initialize_client_clone_and_push(:component_module,module_name,branch,repo_url,module_directory)
+      
       return response unless response.ok?
       repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
 
@@ -409,7 +410,8 @@ TODO: might deprecate
       context_params.forward_options({:git_import => true})
       # Reuse module create method to create module from local component_module
       create_response = import(context_params)
-      
+
+       
       if create_response.ok?
         if external_dependencies = create_response.data(:external_dependencies)
           inconsistent = external_dependencies["inconsistent"]
