@@ -14,7 +14,6 @@ dtk_require_from_base("commands/thor/assembly")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 dtk_require_common_commands('thor/purge_clone')
-dtk_require_dtk_common('grit_adapter')
 
 module DTK::Client
   class ServiceModule < CommandBaseThor
