@@ -2,6 +2,52 @@ dtk_require("../../shell/status_monitor")
 
 module DTK::Client
   class Assembly < CommandBaseThor
+    no_tasks do
+      def get_assembly_name(assembly_id)
+        name = nil
+        3.times do
+          name = get_name_from_id_helper(assembly_id)
+          break if name
+        end
+
+        name
+      end
+
+      def get_assembly_stage_name(assembly_list,assembly_template_name)
+        name = nil
+        current_list = assembly_list.select{|e| e.include?(assembly_template_name)}
+
+        if current_list.empty?
+          name = assembly_template_name
+        else
+          numbers = []
+          base_name = nil
+
+          assembly_list.each do |assembly|
+            match = assembly.match(/#{assembly_template_name}(-)(\d*)/)
+            base_name = assembly_template_name if assembly_template_name.include?(assembly)
+            numbers << match[2].to_i if match
+          end
+
+          unless base_name
+            name = assembly_template_name
+          else
+            highest = numbers.max||1
+            new_highest = highest+1
+
+            all = (2..new_highest).to_a
+            nums = all - numbers
+            name = assembly_template_name + "-#{nums.first}"
+          end
+        end
+
+        name
+      end
+    end
+
+    def self.whoami()
+      return :assembly, "assembly/list", {:subtype  => 'template'}
+    end
 
     def self.get_assembly_template_id_for_service(assembly_template_name, service)
       assembly_template_id = nil
@@ -171,12 +217,17 @@ module DTK::Client
         :assembly_id => assembly_template_id
       }
 
+      assembly_template_name = get_assembly_name(assembly_template_id)
+      assembly_template_name.gsub!('::','-') if assembly_template_name
+
       # we check current options and forwarded options (from deploy method)
       in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
+      assembly_list = Assembly.assembly_list()
 
       if name
-        assembly_list = Assembly.assembly_list()
-        raise DTK::Client::DtkValidationError, "Unable to stage assembly with name '#{name}'. Assembly with specified name exists already!" if assembly_list.include?(name)
+        raise DTK::Client::DtkValidationError, "Unable to stage service with name '#{name}'. Service with specified name exists already!" if assembly_list.include?(name)
+      else
+        name = get_assembly_stage_name(assembly_list,assembly_template_name)
       end
       
       post_body.merge!(:target_id => in_target) if in_target
