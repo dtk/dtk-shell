@@ -4,6 +4,8 @@ require File.expand_path('../lib/commands/thor/node', File.dirname(__FILE__))
 
 include SpecThor
 
+#Currently disabled because this context does not exist anymore
+=begin
 describe DTK::Client::Node do
 	$about   = ['components', 'attributes']
   $node_id = nil
@@ -38,3 +40,4 @@ describe DTK::Client::Node do
   # end
 
 end
+=end

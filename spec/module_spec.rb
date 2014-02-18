@@ -9,7 +9,7 @@ describe DTK::Client::ComponentModule do
 
   #list all assemblies and take one assembly_id
   context '#list' do
-    $module_list = run_from_dtk_shell('module list')
+    $module_list = run_from_dtk_shell('component-module list')
 
     it "should have module listing" do
       $module_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
@@ -24,7 +24,7 @@ describe DTK::Client::ComponentModule do
 
   context "#list/command" do
     unless $module_id.nil?
-      output = run_from_dtk_shell("module #{$module_id} list-components")
+      output = run_from_dtk_shell("component-module #{$module_id} list-components")
 
       it "should list all components for module with id #{$module_id}" do
         $module_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)

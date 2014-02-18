@@ -14,7 +14,7 @@ describe DTK::Client::Dtk do
     output = f.readlines.join('')
 
     it "should have assembly listing" do
-      output.should match(/(dtk|assembly|ok|status|empty|INFO|WARNING)/)
+      output.should match(/(dtk|service|ok|status|empty|INFO|WARNING)/)
     end
 
     it "should have node listing" do

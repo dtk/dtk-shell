@@ -10,7 +10,7 @@ describe DTK::Client::Assembly do
 
   #list all assemblies and take one assembly_id
   context "#list" do
-    $assembly_list = run_from_dtk_shell('assembly list')
+    $assembly_list = run_from_dtk_shell('service list')
 
     it "should have assembly listing" do
       $assembly_list.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
@@ -27,7 +27,7 @@ describe DTK::Client::Assembly do
   context "#list/command" do
     unless $assembly_id.nil?
       $about.each do |type|
-        output = run_from_dtk_shell("assembly #{$assembly_id} list #{type}")
+        output = run_from_dtk_shell("service #{$assembly_id} list #{type}")
 
         it "should list all #{type} for assembly with id #{$assembly_id}" do
           output.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
@@ -39,7 +39,7 @@ describe DTK::Client::Assembly do
   # for previously taken assembly_id, do info
   context "#info" do
     unless $assembly_id.nil?
-      output = run_from_dtk_shell("assembly #{$assembly_id} info")
+      output = run_from_dtk_shell("service #{$assembly_id} info")
 
       it "should show information about assembly with id #{$assembly_id}" do
         output.to_s.should match(/(ok|status|empty|INFO|WARNING|name|id)/)
