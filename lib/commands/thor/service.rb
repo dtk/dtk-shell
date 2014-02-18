@@ -39,6 +39,7 @@ module DTK::Client
           end
         end
 
+        raise DtkError,"Illegal name (#{assembly_name}) for service." unless assembly_id
         assembly_id
       end
       
@@ -191,7 +192,12 @@ TODO: overlaps with different meaning
     desc "rename SERVICE-NAME NEW-SERVICE-NAME","Change service name."
     def rename(context_params)
       assembly_name, new_assembly_name = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
-      assembly_id = get_assembly_id(assembly_name)
+
+      if assembly_name.to_s =~ /^[0-9]+$/
+        assembly_id = assembly_name
+      else
+        assembly_id = get_assembly_id(assembly_name)
+      end
 
       post_body = {
         :assembly_id => assembly_id,
