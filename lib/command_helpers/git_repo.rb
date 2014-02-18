@@ -21,9 +21,12 @@ module DTK; module Client; class CommandHelper
           #cleanup by deleting directory
           FileUtils.rm_rf(target_repo_dir) if File.directory?(target_repo_dir)
           error_msg = "Clone to directory (#{target_repo_dir}) failed"
-          if e.kind_of?(::Grit::Git::CommandFailed)
-            error_msg << " (#{e.err.chomp()})"
+
+          # additional data about this exception
+          if DTK::Configuration.get(:development_mode)
+            DtkLogger.instance.error_pp(e.message, e.backtrace)
           end
+
           raise ErrorUsage.new(error_msg,:log_error=>false)
         end
         {"module_directory" => target_repo_dir}
@@ -35,7 +38,6 @@ module DTK; module Client; class CommandHelper
       Response.wrap_helper_actions() do
         ret = Hash.new
         repo_obj.add_file(path,content)
-        repo_obj.add_file_command(path)
         ret["message"] = msg if msg
         ret
       end
@@ -166,10 +168,12 @@ module DTK; module Client; class CommandHelper
         repo = create(repo_dir,branch,:init => true, :no_initial_commit => true)
         repo.add_remote(remote(),repo_url)
         remote_branch = local_branch = branch
-        repo.pull(remote_branch,local_branch,remote())
-        repo.add_file_command(".")
+
+        repo.pull_remote_to_local(remote_branch,local_branch,remote())
+        repo.stage_changes()
         repo.commit("Adding files during initialization")
-        repo.push()
+        repo.push_with_remote(remote(), remote_branch)
+
         commit_sha = repo.head_commit_sha()
         {"repo_obj" => repo,"commit_sha" => commit_sha}
       end

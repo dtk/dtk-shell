@@ -45,6 +45,11 @@ module DTK
             "backtrace" => e.backtrace,
             "on_client" => true
             }
+
+          if DTK::Configuration.get(:development_mode)
+            DtkLogger.instance.error_pp("Error inside wrapper DEV ONLY: #{e.message}", e.backtrace)
+          end
+
           Error::Internal.new(error_hash)
         end
       end

@@ -6,7 +6,7 @@ module DTK
       attr_accessor :git_repo
 
       def initialize(repo_dir, branch = nil, opts = {})
-        @git_repo = Git.open(repo_dir)
+        @git_repo = Git.init(repo_dir)
         @git_repo.branch(branch) if branch
       end
 
@@ -144,8 +144,23 @@ module DTK
 
       def push(remote_branch_ref)
         remote, remote_branch = remote_branch_ref.split('/')
+        push_with_remote(remote, remote_branch)
+      end
+      
+      def push_with_remote(remote, remote_branch)
         branch_for_push = "#{current_branch_name}:refs/heads/#{remote_branch||current_branch_name}"
         @git_repo.push(remote, branch_for_push)
+      end
+
+      def add_file(file_rel_path, content)
+        content ||= String.new
+        file_path = "#{@git_repo.dir}/#{file_rel_path}"
+        File.open(file_path,"w"){|f|f << content}
+        @git_repo.add(file_path)
+      end
+
+      def pull_remote_to_local(remote_branch, local_branch, remote='origin')
+        @git_repo.pull(remote,"#{remote_branch}:#{local_branch}")
       end
 
       def merge(remote_branch_ref)
@@ -154,7 +169,7 @@ module DTK
 
       def self.clone(repo_url, target_path, branch)
         git_base = Git.clone(repo_url, target_path)
-        git_base.branch(branch).checkout
+        git_base.branch(branch).checkout unless branch.nil?
         git_base
       end
 
