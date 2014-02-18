@@ -4,6 +4,8 @@ require File.expand_path('../lib/commands/thor/component_template', File.dirname
 
 include SpecThor
 
+#Currently disabled because this context does not exist anymore
+=begin
 describe DTK::Client::ComponentTemplate do
   $about                 = ['none', 'nodes']
   $component_template_id = nil
@@ -35,3 +37,4 @@ describe DTK::Client::ComponentTemplate do
   end
 
 end
+=end

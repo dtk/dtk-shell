@@ -7,7 +7,7 @@ describe DTK::Shell do
 
   init_shell_context()
 
-  line = 'cc /assembly'
+  line = 'cc /service'
   execute_shell_command(line,'')
 
 end

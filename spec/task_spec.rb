@@ -4,6 +4,8 @@ require File.expand_path('../lib/commands/thor/task', File.dirname(__FILE__))
 
 include SpecThor
 
+#Currently disabled because this context does not exist anymore
+=begin
 describe DTK::Client::Task do
   $task_id = nil
 
@@ -23,3 +25,4 @@ describe DTK::Client::Task do
   end
 
 end
+=end

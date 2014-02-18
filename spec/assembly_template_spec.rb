@@ -4,7 +4,8 @@ require File.expand_path('../lib/commands/thor/assembly', File.dirname(__FILE__)
 
 include SpecThor
 
-
+#Currently disabled because this context does not exist anymore
+=begin
 describe DTK::Client::AssemblyTemplate do
   $about                = ['nodes', 'components']
   $assembly_template_id = nil
@@ -45,5 +46,6 @@ describe DTK::Client::AssemblyTemplate do
       end
     end
   end
-
 end
+
+=end
