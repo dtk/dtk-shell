@@ -473,9 +473,9 @@ TODO: might deprecate
     end
 =end
     
-    desc "delete-from-dtkn [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-y]", "Delete the component module from the DTK Network catalog"
+    desc "delete-from-catalog [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-y]", "Delete the component module from the DTK Network catalog"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete_from_dtkn(context_params)
+    def delete_from_catalog(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       remote_namespace, remote_name = get_namespace_and_name(remote_module_name)
 

@@ -188,10 +188,10 @@ module DTK::Client
     # end
 
     # version_method_option
-    desc "import-dtkn REMOTE-SERVICE-MODULE-NAME [-y] [-i]", "Import remote service module into local environment. -y will automatically clone component modules. -i will ignore component import error."
+    desc "install REMOTE-SERVICE-MODULE-NAME [-y] [-i]", "Install remote service module into local environment. -y will automatically clone component modules. -i will ignore component import error."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :ignore, :aliases => '-i', :type => :boolean, :default => false
-    def import_dtkn(context_params)
+    def install(context_params)
       create_missing_clone_dirs()
       check_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
@@ -557,9 +557,9 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "delete-from-dtkn REMOTE-SERVICE-MODULE-NAME [-y]", "Delete the service module from the DTK Network catalog"
+    desc "delete-from-catalog [NAMESPACE/]REMOTE-SERVICE-MODULE-NAME [-y]", "Delete the service module from the DTK Network catalog"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete_from_dtkn(context_params)
+    def delete_from_catalog(context_params)
       remote_service_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       
       unless options.force?
