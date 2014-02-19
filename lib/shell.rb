@@ -24,7 +24,7 @@ ALIAS_COMMANDS = {
 
 # METHODS
 
-# support for alias commands (ls for list etc.)
+# support for alias commands (ls for list, cd for cc etc.)
 def preprocess_commands(original_command)
   command = ALIAS_COMMANDS[original_command]
   # return command if alias for specific command exist in predefined ALIAS_COMMANDS
