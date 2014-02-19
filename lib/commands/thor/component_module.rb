@@ -729,9 +729,7 @@ TODO: might deprecate
 
 
 
-    desc "COMPONENT-MODULE-NAME/ID push origin|dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of to server (origin) or to remote repository (dtkn)."
-    method_option :origin, :type => :boolean, :default => false
-    method_option :dtkn, :type => :boolean, :default => false
+    desc "COMPONENT-MODULE-NAME/ID push origin|dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to server (origin) or to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
