@@ -919,6 +919,7 @@ module DTK
       # PART OF THE CODE USED FOR WORKING WITH DTK::Shell HISTORY
       public
 
+      # this file loads sessions history
       def self.load_session_history()
         unless is_there_history_file()
           puts "[INFO] History file is missing, shell history will be disabled. To enable it create file: '#{HISTORY_LOCATION}'"
