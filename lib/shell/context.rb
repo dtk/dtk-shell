@@ -919,6 +919,7 @@ module DTK
       # PART OF THE CODE USED FOR WORKING WITH DTK::Shell HISTORY
       public
 
+      # this file loads sessions history
       def self.load_session_history()
         unless is_there_history_file()
           puts "[INFO] History file is missing, shell history will be disabled. To enable it create file: '#{HISTORY_LOCATION}'"
@@ -934,7 +935,7 @@ module DTK
         # we filter the list to remove neighbour duplicates
         filtered_commands = []
         array_of_commands.each_with_index do |a,i|
-          filtered_commands << a if (a != array_of_commands[i+1])
+          filtered_commands << a if (a != array_of_commands[i+1] && is_allowed_command?(a))
         end
              
         # make sure we only save up to 'COMMAND_HISTORY_LIMIT' commands
@@ -946,6 +947,14 @@ module DTK
       end
 
       private
+
+      # list of commands that should be excluded from history
+      EXCLUDE_COMMAND_LIST = ['create-provider']
+
+      def self.is_allowed_command?(full_command_entry)
+        found = EXCLUDE_COMMAND_LIST.find { |cmd| full_command_entry.include?(cmd) }
+        found.nil?
+      end
 
       def self.is_there_history_file()
         unless File.exists? HISTORY_LOCATION
