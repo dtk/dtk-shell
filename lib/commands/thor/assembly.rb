@@ -242,8 +242,9 @@ module DTK::Client
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
-    version_method_option
+    # desc "ASSEMBLY-NAME/ID deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
+    # version_method_option
+    desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
     method_option "in-target",:aliases => "-t" ,
       :type => :string,
       :banner => "TARGET-NAME/ID",

@@ -116,8 +116,9 @@ module DTK::Client
 ### end
 
     #### create and delete commands ###
-    desc "delete COMPONENT-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete component module or component module version and all items contained in it. Optional parameter [-p] is to delete local directory."
-    version_method_option
+    # desc "delete COMPONENT-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete component module or component module version and all items contained in it. Optional parameter [-p] is to delete local directory."
+    # version_method_option
+    desc "delete COMPONENT-MODULE-NAME [-y] [-p]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params,method_opts={})
@@ -318,8 +319,8 @@ TODO: might deprecate
     end
 
 #    desc "COMPONENT-MODULE-NAME/ID validate-model [-v VERSION]", "Check the DSL model for errors"
+    # version_method_option
     desc "COMPONENT-MODULE-NAME/ID validate-model", "Check the DSL model for errors"
-    version_method_option
     def validate_model(context_params)
       module_id, module_name = context_params.retrieve_arguments([:component_module_id!, :component_module_name],method_argument_names)
       version = options["version"]
@@ -507,8 +508,8 @@ TODO: might deprecate
     end
 
 #    desc "COMPONENT-MODULE-NAME/ID push-to-dtkn [-n NAMESPACE] [-v VERSION]", "Push local copy of component module to remote repository."
+    # version_method_option
     desc "COMPONENT-MODULE-NAME/ID push-to-dtkn [-n NAMESPACE]", "Push local copy of component module to remote repository."
-    version_method_option
     method_option "namespace",:aliases => "-n",
         :type => :string, 
         :banner => "NAMESPACE",
@@ -546,8 +547,8 @@ TODO: might deprecate
     end
 
 #    desc "COMPONENT-MODULE-NAME/ID pull-from-dtkn [-v VERSION]", "Update local component module from remote repository."
+    # version_method_option
     desc "COMPONENT-MODULE-NAME/ID pull-from-dtkn", "Update local component module from remote repository."
-    version_method_option
     def pull_from_dtkn(context_params)     
       component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!,:component_module_name],method_argument_names)
       version = options["version"]
@@ -611,9 +612,9 @@ TODO: might deprecate
     #                   triggered after it.
     #
     #desc "COMPONENT-MODULE-NAME/ID clone [-v VERSION] [-n]", "Locally clone component module and component files. Use -n to skip edit prompt"
+    # version_method_option
     desc "COMPONENT-MODULE-NAME/ID clone [-n]", "Locally clone component module and component files. Use -n to skip edit prompt"
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
-    version_method_option
     def clone(context_params, internal_trigger=false)
       thor_options = context_params.get_forwarded_options() || options
       component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
@@ -635,8 +636,8 @@ TODO: might deprecate
     end
 
 #    desc "COMPONENT-MODULE-NAME/ID edit [-v VERSION]","Switch to unix editing for given component module."
+    # version_method_option
     desc "COMPONENT-MODULE-NAME/ID edit","Switch to unix editing for given component module."
-    version_method_option
     def edit(context_params)
       component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
       module_name         = context_params.retrieve_arguments([:component_module_name],method_argument_names)
@@ -657,8 +658,8 @@ TODO: might deprecate
     end
 
 #    desc "COMPONENT-MODULE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
+    # version_method_option
     desc "COMPONENT-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
-    version_method_option
     method_option "message",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
@@ -681,8 +682,8 @@ TODO: might deprecate
     end
 
 #    desc "COMPONENT-MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"
+    # version_method_option
     desc "COMPONENT-MODULE-NAME/ID list-diffs [--remote]", "List diffs"
-    version_method_option
     method_option :remote, :type => :boolean, :default => false
     def list_diffs(context_params)
       component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)

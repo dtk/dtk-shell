@@ -145,8 +145,9 @@ module DTK::Client
       set_required_params_aux(node_id,:node)
     end
 
-    desc "NODE-NAME/ID create-component COMPONENT-TEMPLATE-NAME/ID [-v VERSION]", "Add component template to node"
-    version_method_option
+    # desc "NODE-NAME/ID create-component COMPONENT-TEMPLATE-NAME/ID [-v VERSION]", "Add component template to node"
+    # version_method_option
+    desc "NODE-NAME/ID create-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node"
     def create_component(context_params)
       node_id,component_template_id = context_params.retrieve_arguments([:node_id!, :option_1!],method_argument_names)
       post_body = {

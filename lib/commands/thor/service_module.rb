@@ -71,7 +71,8 @@ module DTK::Client
           :"assembly" => [
             ["info","info","# Info for given assembly in current service module."],
             ["stage", "stage [INSTANCE-NAME] [-t TARGET-NAME/ID]", "# Stage assembly in target."],
-            ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
+            # ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
+            ["deploy","deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
             ["list-nodes","list-nodes", "# List all nodes for given assembly."],
             ["list-components","list-components", "# List all components for given assembly."]
           ]
@@ -130,7 +131,8 @@ module DTK::Client
       # If user is on service level, list task can't have about value set
       if (context_params.last_entity_name == :"service-module") and about.nil?
         action    = options.remote? ? "list_remote" : "list"
-        post_body = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
+        # post_body = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
+        post_body = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
         post_body[:diff] = options.diff? ? options.diff : {}
         
         response = post rest_url("service_module/#{action}"), post_body
@@ -172,21 +174,21 @@ module DTK::Client
       response.render_table(:assembly_template)
     end
 
-    desc "SERVICE-MODULE-NAME/ID list-versions","List all versions associated with this service module."
-    def list_versions(context_params)
-      service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
-      post_body = {
-        :service_module_id => service_module_id,
-        :detail_to_include => ["remotes"],
-        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
-      }
-      response = post rest_url("service_module/versions"), post_body
+    # desc "SERVICE-MODULE-NAME/ID list-versions","List all versions associated with this service module."
+    # def list_versions(context_params)
+    #   service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
+    #   post_body = {
+    #     :service_module_id => service_module_id,
+    #     :detail_to_include => ["remotes"],
+    #     :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+    #   }
+    #   response = post rest_url("service_module/versions"), post_body
 
-      response.render_table(:module_version)
-    end
+    #   response.render_table(:module_version)
+    # end
 
+    # version_method_option
     desc "import-dtkn REMOTE-SERVICE-MODULE-NAME [-y] [-i]", "Import remote service module into local environment. -y will automatically clone component modules. -i will ignore component import error."
-    version_method_option
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :ignore, :aliases => '-i', :type => :boolean, :default => false
     def import_dtkn(context_params)
@@ -236,8 +238,9 @@ module DTK::Client
       return response
     end
 
-    desc "SERVICE-MODULE-NAME/ID validate-model [-v VERSION]", "Check the DSL Model for Errors"
-    version_method_option
+    # desc "SERVICE-MODULE-NAME/ID validate-model [-v VERSION]", "Check the DSL Model for Errors"
+    # version_method_option
+    desc "SERVICE-MODULE-NAME/ID validate-model", "Check the DSL Model for Errors"
     def validate_model(context_params)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!, :service_module_name],method_argument_names)
       version = options["version"]
@@ -255,27 +258,27 @@ module DTK::Client
       reparse_aux(module_location)
     end
 
-    desc "SERVICE-MODULE-NAME/ID import-version VERSION", "Import a specific version from a linked service module"
-    def import_version(context_params)
-      service_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!],method_argument_names)
-      post_body = {
-        :service_module_id => service_module_id,
-        :version => version
-      }
-      response = post rest_url("service_module/import_version"), post_body
-      @@invalidate_map << :module_service
+    # desc "SERVICE-MODULE-NAME/ID import-version VERSION", "Import a specific version from a linked service module"
+    # def import_version(context_params)
+    #   service_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!],method_argument_names)
+    #   post_body = {
+    #     :service_module_id => service_module_id,
+    #     :version => version
+    #   }
+    #   response = post rest_url("service_module/import_version"), post_body
+    #   @@invalidate_map << :module_service
 
-      return response unless response.ok?
-      module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
+    #   return response unless response.ok?
+    #   module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
 
-      if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.error_message("#{module_name}-#{version}", error)
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
-      end
+    #   if error = response.data(:dsl_parsed_info)
+    #     dsl_parsed_message = ServiceImporter.error_message("#{module_name}-#{version}", error)
+    #     DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+    #   end
 
-      #TODO: need to check if local clone directory exists
-      Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
-    end
+    #   #TODO: need to check if local clone directory exists
+    #   Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
+    # end
 
     desc "SERVICE-MODULE-NAME/ID create-on-dtkn [[NAMESPACE/]REMOTE-MODULE-NAME]","Export service module to remote repository"
     def create_on_dtkn(context_params)
@@ -290,8 +293,9 @@ module DTK::Client
       post rest_url("service_module/export"), post_body
     end
 
-    desc "SERVICE-MODULE-NAME/ID push-to-dtkn [-n NAMESPACE] [-v VERSION]", "Push local copy of service module to remote repository."
-    version_method_option
+    # desc "SERVICE-MODULE-NAME/ID push-to-dtkn [-n NAMESPACE] [-v VERSION]", "Push local copy of service module to remote repository."
+    # version_method_option
+    desc "SERVICE-MODULE-NAME/ID push-to-dtkn [-n NAMESPACE]", "Push local copy of service module to remote repository."
         method_option "namespace",:aliases => "-n",
         :type => :string, 
         :banner => "NAMESPACE",
@@ -328,8 +332,9 @@ module DTK::Client
       push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
     end
 
-    desc "SERVICE-MODULE-NAME/ID pull-from-dtkn [-v VERSION]", "Update local service module from remote repository."
-    version_method_option
+    # desc "SERVICE-MODULE-NAME/ID pull-from-dtkn [-v VERSION]", "Update local service module from remote repository."
+    # version_method_option
+    desc "SERVICE-MODULE-NAME/ID pull-from-dtkn", "Update local service module from remote repository."
     def pull_from_dtkn(context_params)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!,:service_module_name],method_argument_names)
       version = options["version"]
@@ -356,9 +361,10 @@ module DTK::Client
     # internal_trigger: this flag means that other method (internal) has trigger this.
     #                   This will change behaviour of method
     #
-    desc "SERVICE-MODULE-NAME/ID clone [-v VERSION] [-n]", "Locally clone the service module files. Use -n to skip edit prompt"
+    # desc "SERVICE-MODULE-NAME/ID clone [-v VERSION] [-n]", "Locally clone the service module files. Use -n to skip edit prompt"
+    # version_method_option
+    desc "SERVICE-MODULE-NAME/ID clone [-n]", "Locally clone the service module files. Use -n to skip edit prompt"
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
-    version_method_option
     def clone(context_params, internal_trigger=false)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!, :service_module_name],method_argument_names)
       internal_trigger = true if options.skip_edit?
@@ -377,11 +383,12 @@ module DTK::Client
       clone_aux(:service_module,service_module_id,version,internal_trigger)
     end
 
-    desc "SERVICE-MODULE-NAME/ID edit [-v VERSION]","Switch to unix editing for given service module."
-    version_method_option
+    # desc "SERVICE-MODULE-NAME/ID edit [-v VERSION]","Switch to unix editing for given service module."
+    # version_method_option
+    desc "SERVICE-MODULE-NAME/ID edit","Switch to unix editing for given service module."
     def edit(context_params)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!, :service_module_name],method_argument_names)
-      version             = options["version"]
+      version = options["version"]
 
       # if this is not name it will not work, we need module name
       if service_module_name.to_s =~ /^[0-9]+$/
@@ -392,52 +399,52 @@ module DTK::Client
       edit_aux(:service_module,service_module_id,service_module_name,version)
     end
 
-    desc "SERVICE-MODULE-NAME/ID create-version NEW-VERSION", "Snapshot current state of service module as a new version"
-    def create_version(context_params)
-      service_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!],method_argument_names)
-      post_body = {
-        :service_module_id => service_module_id,
-        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
-      }
-      response = post rest_url("service_module/versions"), post_body
-      return response unless response.ok?
-      versions = (response.data.first && response.data.first['versions'])||Array.new
-      if versions.include?(version)
-        return Response::Error::Usage.new("Version #{version} exists already")
-      end
+    # desc "SERVICE-MODULE-NAME/ID create-version NEW-VERSION", "Snapshot current state of service module as a new version"
+    # def create_version(context_params)
+    #   service_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!],method_argument_names)
+    #   post_body = {
+    #     :service_module_id => service_module_id,
+    #     :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+    #   }
+    #   response = post rest_url("service_module/versions"), post_body
+    #   return response unless response.ok?
+    #   versions = (response.data.first && response.data.first['versions'])||Array.new
+    #   if versions.include?(version)
+    #     return Response::Error::Usage.new("Version #{version} exists already")
+    #   end
 
-      service_module_name = get_service_module_name(service_module_id)
-      module_location = OsUtil.module_location(:service_module,service_module_name,version)
-      if File.directory?(module_location)
-        raise DtkError, "Target service module directory for version #{version} (#{module_location}) exists already; it must be deleted and this comamnd retried"
-      end
+    #   service_module_name = get_service_module_name(service_module_id)
+    #   module_location = OsUtil.module_location(:service_module,service_module_name,version)
+    #   if File.directory?(module_location)
+    #     raise DtkError, "Target service module directory for version #{version} (#{module_location}) exists already; it must be deleted and this comamnd retried"
+    #   end
 
-      post_body = {
-        :service_module_id => service_module_id,
-        :version => version
-      }
+    #   post_body = {
+    #     :service_module_id => service_module_id,
+    #     :version => version
+    #   }
 
-      response = post rest_url("service_module/create_new_version"), post_body
-      return response unless response.ok?
+    #   response = post rest_url("service_module/create_new_version"), post_body
+    #   return response unless response.ok?
 
-      internal_trigger = omit_output = true
-      clone_aux(:service_module,service_module_name,version,internal_trigger,omit_output)
-    end
+    #   internal_trigger = omit_output = true
+    #   clone_aux(:service_module,service_module_name,version,internal_trigger,omit_output)
+    # end
 
-    desc "SERVICE-MODULE-NAME/ID set-component-module-version COMPONENT-MODULE-NAME VERSION", "Set the version of the component module to use in the service module's assemblies"
-    def set_component_module_version(context_params)
-      service_module_id,component_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!,:option_2!],method_argument_names)
-      post_body = {
-        :service_module_id => service_module_id,
-        :component_module_id => component_module_id,
-        :version => version                                                                                          
-      }
-      response = post rest_url("service_module/set_component_module_version"), post_body
-      @@invalidate_map << :service_module
-      return response unless response.ok?()
-      module_name,commit_sha,workspace_branch = response.data(:module_name,:commit_sha,:workspace_branch)
-      Helper(:git_repo).synchronize_clone(:service_module,module_name,commit_sha,:local_branch=>workspace_branch)
-    end
+    # desc "SERVICE-MODULE-NAME/ID set-component-module-version COMPONENT-MODULE-NAME VERSION", "Set the version of the component module to use in the service module's assemblies"
+    # def set_component_module_version(context_params)
+    #   service_module_id,component_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!,:option_2!],method_argument_names)
+    #   post_body = {
+    #     :service_module_id => service_module_id,
+    #     :component_module_id => component_module_id,
+    #     :version => version                                                                                          
+    #   }
+    #   response = post rest_url("service_module/set_component_module_version"), post_body
+    #   @@invalidate_map << :service_module
+    #   return response unless response.ok?()
+    #   module_name,commit_sha,workspace_branch = response.data(:module_name,:commit_sha,:workspace_branch)
+    #   Helper(:git_repo).synchronize_clone(:service_module,module_name,commit_sha,:local_branch=>workspace_branch)
+    # end
 
     # TODO: put in two versions, one that creates empty and anotehr taht creates from local dir; use --empty flag
     desc "import SERVICE-MODULE-NAME", "Create new service module from local clone"
@@ -474,8 +481,9 @@ module DTK::Client
     end
 
 
-    desc "SERVICE-MODULE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of service module to server"
-    version_method_option
+    # desc "SERVICE-MODULE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of service module to server"
+    # version_method_option
+    desc "SERVICE-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy of service module to server"
     method_option "message",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
@@ -498,8 +506,9 @@ module DTK::Client
       push_clone_changes_aux(:service_module,service_module_id,version,nil,internal_trigger)
     end
 
-    desc "delete SERVICE-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
-    version_method_option
+    # desc "delete SERVICE-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
+    # version_method_option
+    desc "delete SERVICE-MODULE-NAME [-y] [-p]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
