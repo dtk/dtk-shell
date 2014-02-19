@@ -134,8 +134,8 @@ module DTK::Client
       response.render_table(:node)
     end
 
-    desc "NODE-GROUP-NAME/ID create-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node group"
-    def create_component(context_params)
+    desc "NODE-GROUP-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node group"
+    def add_component(context_params)
       node_group_id,component_template_id = context_params.retrieve_arguments([:node_group_id!, :option_1!],method_argument_names)
 
       post_body = {

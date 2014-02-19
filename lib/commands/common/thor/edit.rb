@@ -51,6 +51,7 @@ module DTK::Client
             (File.exists?("#{module_location}/#{base_file}.yaml") ? "#{base_file}.yaml" : "#{base_file}.json")
           end
         OsUtil.edit("#{module_location}/#{file_to_edit}")
+        OsUtil.print("If you want to use different editor please set environment variable EDITOR and log back into dtk-shell!", :yellow)
       else
         Console.unix_shell(module_location, module_id, module_type, version)
       end
@@ -139,6 +140,7 @@ module DTK::Client
         end
 
         OsUtil.edit(file_path)
+        OsUtil.print("If you want to use different editor please set environment variable EDITOR and log back into dtk-shell!", :yellow)
         begin
           edited = YAML.load_file(file_path)
         rescue Psych::SyntaxError => e

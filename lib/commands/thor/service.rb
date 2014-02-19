@@ -67,12 +67,12 @@ module DTK::Client
     def self.extended_context()
       {
         :context => {
-          :create_component => "component_template",
+          :add_component => "component_template",
           :create_node => "node_template",
-          :create_component_dependency => "component_template"  
+          :add_component_dependency => "component_template"  
         },
         :command => {
-          :edit_module => {
+          :edit_component_module => {
             :endpoint => "assembly", 
             :url => "assembly/info_about", 
             :opts => {:subtype=>"instance", :about=>"modules"}
@@ -148,7 +148,7 @@ TODO: overlaps with different meaning
         },
         :identifier_only => {
           :node      => [
-            ['create-component',"create-component COMPONENT","# Add a component to the node."],
+            ['add-component',"add-component COMPONENT","# Add a component to the node."],
             ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from service's node"],
             ['info',"info","# Return info about node instance belonging to given workspace."],
             # ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
@@ -263,7 +263,7 @@ TODO: overlaps with different meaning
     end
 
     desc "SERVICE-NAME/ID edit-component-module COMPONENT-MODULE-NAME", "Edit a component module used in the service."
-    def edit_module(context_params)
+    def edit_component_module(context_params)
       edit_module_aux(context_params)
     end
 
@@ -545,9 +545,11 @@ TODO: will put in dot release and will rename to 'extend'
     desc "SERVICE-NAME/ID create-node ^^NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the service."
     def create_node(context_params)
       response = create_node_aux(context_params)
-      @@invalidate_map << :service_node
+      return response unless response.ok?
 
-      return response
+      @@invalidate_map << :service_node
+      message = "Created node '#{response.data["display_name"]}'."
+      DTK::Client::OsUtil.print(message, :yellow)
     end
 
     desc "SERVICE-NAME/ID link-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]","Link the target component to the source component."
@@ -557,8 +559,8 @@ TODO: will put in dot release and will rename to 'extend'
 
     # only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE create-component NODE-NAME COMPONENT", "Add a component to the service."
-    def create_component(context_params)
+    desc "HIDE_FROM_BASE add-component NODE-NAME COMPONENT", "Add a component to the service."
+    def addcomponent(context_params)
       response = create_component_aux(context_params)
 
       @@invalidate_map << :service

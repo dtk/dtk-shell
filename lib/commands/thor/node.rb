@@ -30,7 +30,7 @@ module DTK::Client
     def self.extended_context()
       {
         :context => {
-          :create_component => "component_template"
+          :add_component => "component_template"
         }
       }
     end
@@ -147,8 +147,8 @@ module DTK::Client
 
     # desc "NODE-NAME/ID create-component COMPONENT-TEMPLATE-NAME/ID [-v VERSION]", "Add component template to node"
     # version_method_option
-    desc "NODE-NAME/ID create-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node"
-    def create_component(context_params)
+    desc "NODE-NAME/ID add-component COMPONENT-TEMPLATE-NAME/ID", "Add component template to node"
+    def add_component(context_params)
       node_id,component_template_id = context_params.retrieve_arguments([:node_id!, :option_1!],method_argument_names)
       post_body = {
         :node_id => node_id,
