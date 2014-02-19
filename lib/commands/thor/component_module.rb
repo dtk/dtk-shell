@@ -341,7 +341,7 @@ TODO: might deprecate
     # TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     # if multiple items and failire; stops on first failure
-    desc "install NAMESPACE/REMOTE-COMPONENT-MODULE-NAME [-r DTK-REPO-MANAGER]","Install remote component module into local environment"
+    desc "install [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-r DTK-REPO-MANAGER]","Install remote component module into local environment"
     method_option "repo-manager",:aliases => "-r" ,
       :type => :string, 
       :banner => "REPO-MANAGER",
