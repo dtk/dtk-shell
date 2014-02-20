@@ -62,9 +62,7 @@ module DTK
       end
 
       def new_version()
-        {
-          :files_added => [{ :path => 'dtk.model.yaml' }]
-        }
+        return local_summary()
       end
 
       def commit(commit_msg = "")
