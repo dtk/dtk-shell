@@ -149,6 +149,7 @@ module DTK::Client
             action           = "list_assemblies"
           when "modules"
             #data_type is set by server
+            data_type        = options.remote? ? :component_remote : :component
             action           = "list_component_modules"
           else
             raise_validation_error_method_usage('list')
