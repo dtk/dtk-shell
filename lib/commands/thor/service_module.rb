@@ -234,9 +234,10 @@ module DTK::Client
       response = Helper(:git_repo).create_clone_with_branch(:service_module,module_name,repo_url,branch,version)
       resolve_missing_components(service_module_id, module_name, namespace, options.force?)
 
-      return response
+      response
     end
 
+=begin
     # desc "SERVICE-MODULE-NAME/ID validate-model [-v VERSION]", "Check the DSL Model for Errors"
     # version_method_option
     desc "SERVICE-MODULE-NAME/ID validate-model", "Check the DSL Model for Errors"
@@ -256,6 +257,7 @@ module DTK::Client
 
       reparse_aux(module_location)
     end
+=end
 
     # desc "SERVICE-MODULE-NAME/ID import-version VERSION", "Import a specific version from a linked service module"
     # def import_version(context_params)

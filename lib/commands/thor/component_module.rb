@@ -318,6 +318,7 @@ TODO: might deprecate
       return response
     end
 
+=begin
 #    desc "COMPONENT-MODULE-NAME/ID validate-model [-v VERSION]", "Check the DSL model for errors"
     # version_method_option
     desc "COMPONENT-MODULE-NAME/ID validate-model", "Check the DSL model for errors"
@@ -337,6 +338,7 @@ TODO: might deprecate
 
       reparse_aux(module_location)
     end
+=end
     
     # TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
