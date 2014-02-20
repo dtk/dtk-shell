@@ -66,22 +66,20 @@ module DTK::Client
     end
 
 
-    desc "PROVIDER-ID/NAME create-target --region REGION", "Create target based on given provider"
+    desc "PROVIDER-ID/NAME create-target [TARGET-NAME] --region REGION", "Create target based on given provider"
     method_option :region, :type => :string
     def create_target(context_params)
       # we use :target_id but that will retunr provider_id (another name for target template ID)
-      composed_provider_id, composed_provider_name = context_params.retrieve_arguments([:provider_id!,:provider_name!],method_argument_names)
+      provider_id, target_name = context_params.retrieve_arguments([:provider_id!,:option_1],method_argument_names)
       region = context_params.retrieve_thor_options([:region!], options)
 
       DTK::Shell::InteractiveWizard.validate_region(region)
 
       post_body = {
-        # take only last part of the name, e.g. provider::DemoABH
-        :target_name => composed_provider_name,
-        :target_template_id => composed_provider_id,
+        :provider_id => provider_id,
         :region => region
       }
-
+      post_body.merge!(:target_name => target_name) if target_name
       response = post rest_url("target/create"), post_body
       @@invalidate_map << :target
 
@@ -111,6 +109,12 @@ module DTK::Client
       response.render_table(:target)
     end
 
+    desc "set-default-target TARGET-NAME/ID","Sets the default target."
+    def set_default_target(context_params)
+      target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      post rest_url("target/set_default"), { :target_id => target_id }
+    end
+
     desc "delete-provider PROVIDER-IDENTIFIER [-y]","Deletes targets provider"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_provider(context_params)
@@ -129,7 +133,7 @@ module DTK::Client
 
       @@invalidate_map << :provider
 
-      return post rest_url("target/delete_provider"), post_body
+      post rest_url("target/delete_provider"), post_body
     end
 
     no_tasks do

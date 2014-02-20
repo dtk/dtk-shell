@@ -1,4 +1,3 @@
-
 module DTK::Client
   class Component < CommandBaseThor
 

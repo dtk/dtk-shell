@@ -603,10 +603,7 @@ module DTK::Client
         :assembly_node_name => assembly_node_name
       }
       post_body.merge!(:node_template_identifier => node_template_identifier) if node_template_identifier
-      response = post rest_url("assembly/add_node"), post_body
-
-      # @@invalidate_map << :assembly_node
-      return response
+      post rest_url("assembly/add_node"), post_body
     end
 
     def purge_aux(context_params)

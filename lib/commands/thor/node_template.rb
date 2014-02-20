@@ -12,7 +12,7 @@ module DTK::Client
     def self.extended_context()
       {
         :context => {
-          :create_component => "component_template"
+          :add_component => "component_template"
         }
       }
     end
