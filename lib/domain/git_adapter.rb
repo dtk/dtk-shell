@@ -65,7 +65,7 @@ module DTK
         {
           :files_added => @git_repo.status.untracked().keys.collect { |file| { :path => file }}
         }
-      
+      end
 
       def commit(commit_msg = "")
         @git_repo.commit(commit_msg)
