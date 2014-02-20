@@ -182,8 +182,8 @@ module DTK; module Client; class CommandHelper
    private
     #TODO: in common expose Common::GritAdapter at less nested level
     class DiffSummary < ::DTK::Common::SimpleHashObject
-      def self.new_version()
-        new(:new_version => true)
+      def self.new_version(repo)
+        new(repo.new_version())
       end
       
       def self.diff(repo,local_branch,remote_reference)
@@ -242,7 +242,7 @@ module DTK; module Client; class CommandHelper
         raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to server")
       elsif merge_rel == :no_remote_ref
         repo.push(remote_branch_ref)
-        diffs = DiffSummary.new_version()
+        diffs = DiffSummary.new_version(repo)
         commit_sha = commit_shas[:local_sha]
       elsif merge_rel == :local_ahead
         # see if any diffs between fetched remote and local branch
@@ -287,7 +287,7 @@ module DTK; module Client; class CommandHelper
       if merge_rel == :equal
         commit_sha = commit_shas[:other_sha]
       elsif merge_rel == :no_remote_ref
-        diffs = DiffSummary.new_version()
+        diffs = DiffSummary.new_version(repo)
         commit_sha = commit_shas[:local_sha]
       end
 

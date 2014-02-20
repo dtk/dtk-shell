@@ -61,6 +61,12 @@ module DTK
         }
       end
 
+      def new_version()
+        {
+          :files_added => @git_repo.status.untracked().keys.collect { |file| { :path => file }}
+        }
+      
+
       def commit(commit_msg = "")
         @git_repo.commit(commit_msg)
       end

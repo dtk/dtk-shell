@@ -19,8 +19,7 @@ $shell_mode = true
 ALIAS_COMMANDS = {
   'ls' => 'list', 
   'cd' => 'cc',
-  'rm' => 'delete',
-  'import-dtkn' => 'install'
+  'rm' => 'delete'
 }
 
 # METHODS
