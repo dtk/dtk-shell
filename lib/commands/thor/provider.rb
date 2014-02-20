@@ -109,6 +109,12 @@ module DTK::Client
       response.render_table(:target)
     end
 
+    desc "set-default-target TARGET-NAME/ID","Sets the default target."
+    def set_default_target(context_params)
+      target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      post rest_url("target/set_default"), { :target_id => target_id }
+    end
+
     desc "delete-provider PROVIDER-IDENTIFIER [-y]","Deletes targets provider"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_provider(context_params)
@@ -127,7 +133,7 @@ module DTK::Client
 
       @@invalidate_map << :provider
 
-      return post rest_url("target/delete_provider"), post_body
+      post rest_url("target/delete_provider"), post_body
     end
 
     no_tasks do
