@@ -148,7 +148,7 @@ module DTK::Client
             data_type        = :assembly_template
             action           = "list_assemblies"
           when "modules"
-            data_type        = options.remote? ? :component_remote : :component
+            #data_type is set by server
             action           = "list_component_modules"
           else
             raise_validation_error_method_usage('list')
@@ -157,7 +157,6 @@ module DTK::Client
         response = post rest_url("service_module/#{action}"), { :service_module_id => service_module_id }
       end
       return response unless response.ok?
-      
       response.render_table(data_type) unless response.nil?
 
       response
