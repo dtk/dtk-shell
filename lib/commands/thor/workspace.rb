@@ -299,12 +299,12 @@ module DTK::Client
     def edit_workflow(context_params)
       edit_workflow_aux(context_params)
     end
-
+=begin
     desc "WORKSPACE-NAME/ID edit-attributes", "Edit workspace's attributes."
     def edit_attributes(context_params)
       edit_attributes_aux(context_params)
     end
-
+=end
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
     desc "HIDE_FROM_BASE get-netstats", "Get netstats"
     def get_netstats(context_params)
