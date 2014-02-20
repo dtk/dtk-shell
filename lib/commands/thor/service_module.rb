@@ -370,9 +370,12 @@ module DTK::Client
     #   Response::Ok.new()
     # end
 
-    desc "SERVICE-MODULE-NAME/ID pull dtkn", "Update local service module from remote repository."
-    def pull(context_params)
-      service_module_id, service_module_name, catalog = context_params.retrieve_arguments([:service_module_id!,:service_module_name, :option_1],method_argument_names)
+#    desc "SERVICE-MODULE-NAME/ID pull dtkn", "Update local service module from remote repository."
+    desc "SERVICE-MODULE-NAME/ID pull-dtkn", "Update local service module from remote repository."
+    def pull_dtkn(context_params)
+#      service_module_id, service_module_name, catalog = context_params.retrieve_arguments([:service_module_id!,:service_module_name, :option_1],method_argument_names)
+      service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!,:service_module_name],method_argument_names)
+      catalog = 'dtkn'
       version = options["version"]
       
       raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PullCatalogs}" unless catalog
@@ -528,6 +531,7 @@ module DTK::Client
 
     # desc "SERVICE-MODULE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of service module to server"
     # version_method_option
+=begin
     desc "SERVICE-MODULE-NAME/ID push origin|dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of service module to server (origin) or to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
       :type => :string, 
@@ -579,6 +583,75 @@ module DTK::Client
       end
     end
     PushCatalogs = ["origin", "dtkn"]
+=end
+
+    desc "SERVICE-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy to server (origin)."
+    method_option "message",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    #hidden option for dev
+    method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
+    def push(context_params, internal_trigger=false)
+      service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!, :service_module_name],method_argument_names)
+      version = options["version"]
+
+      if service_module_name.to_s =~ /^[0-9]+$/
+        service_module_id   = service_module_name
+        service_module_name = get_service_module_name(service_module_id)
+      end
+
+      modules_path    = OsUtil.service_clone_location()
+      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
+      reparse_aux(module_location) unless internal_trigger
+      push_clone_changes_aux(:service_module,service_module_id,version,nil,internal_trigger)
+    end
+
+    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of service module to server (origin) or to remote repository (dtkn)."
+    method_option "message",:aliases => "-m" ,
+      :type => :string, 
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    method_option "namespace",:aliases => "-n",
+        :type => :string, 
+        :banner => "NAMESPACE",
+        :desc => "Remote namespace"
+    def push_dtkn(context_params, internal_trigger=false)
+      service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!, :service_module_name],method_argument_names)
+      catalog = 'dtkn'
+      version = options["version"]
+      
+      if service_module_name.to_s =~ /^[0-9]+$/
+        service_module_id   = service_module_name
+        service_module_name = get_service_module_name(service_module_id)
+      end
+
+      modules_path    = OsUtil.service_clone_location()
+      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
+      reparse_aux(module_location) unless internal_trigger
+      if catalog.to_s.eql?("dtkn")
+        unless File.directory?(module_location)
+          if Console.confirmation_prompt("Unable to push to remote because module '#{service_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
+            response = clone_aux(:service_module,service_module_id,version,false)
+            
+            if(response.nil? || response.ok?)
+              reparse_aux(module_location)
+              push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], version) if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
+            end
+
+            return response
+          else
+            # user choose not to clone needed module
+            return
+          end
+        end
+        
+        push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
+      else
+        raise DtkValidationError, "You have to provide valid catalog to push changes to!"
+      end
+    end
+
 
     # desc "delete SERVICE-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     # version_method_option
