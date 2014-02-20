@@ -55,7 +55,7 @@ module DTK
 
       def local_summary()
         {
-          :files_added => @git_repo.status.untracked().keys.collect { |file| { :path => file }},
+          :files_added => (@git_repo.status.untracked().keys + @git_repo.status.added().keys).collect { |file| { :path => file }},
           :files_modified => @git_repo.status.changed().keys.collect { |file| { :path => file }},
           :files_deleted => @git_repo.status.deleted().keys.collect { |file| { :path => file }}
         }
@@ -63,7 +63,7 @@ module DTK
 
       def new_version()
         {
-          :files_added => @git_repo.status.untracked().keys.collect { |file| { :path => file }}
+          :files_added => [{ :path => 'dtk.model.yaml' }]
         }
       end
 
@@ -115,7 +115,8 @@ module DTK
             @git_repo.branches.remote.find { |r| "#{r.remote}/#{r.name}" == ref } 
           when :local_branch
             # DEBUG SNIPPET >>>> REMOVE <<<<
-            raise "HARIS Exception ref #{ref}"
+            #  TODO: HARIS LOOK INTO THIS
+            # raise "Invalid ref #{ref}"
             @git_repo.branches.find { |b| b.name == ref }
           else 
             raise Error.new("Illegal type parameter (#{type}) passed to merge_relationship") 

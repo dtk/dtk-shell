@@ -340,8 +340,6 @@ module DTK; module Client; class CommandHelper
         return diffs unless diffs.any_diffs?()
 
         begin
-          # DEBUG SNIPPET >>> REMOVE <<<
-          require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
           repo.merge(remote_branch_ref)
         rescue Exception => e
           puts e
@@ -361,7 +359,7 @@ module DTK; module Client; class CommandHelper
       remote_repo||"origin"
     end
     def remote_branch_ref(local_branch,opts={})
-      "#{remote(opts[:remote_repo])}/#{opts[:remote_branch]||local_branch}"
+      "#{remote(opts[:remote_repo])}/#{opts[:remote_branch]||opts[:local_branch]||local_branch}"
     end
 
     def modules_dir(type,module_name,version=nil,opts={})
