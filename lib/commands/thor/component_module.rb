@@ -343,7 +343,8 @@ TODO: might deprecate
     # TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     # if multiple items and failire; stops on first failure
-    desc "install [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-r DTK-REPO-MANAGER]","Install remote component module into local environment"
+#    desc "install [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-r DTK-REPO-MANAGER]","Install remote component module into local environment"
+    desc "install [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME","Install remote component module into local environment"
     method_option "repo-manager",:aliases => "-r" ,
       :type => :string, 
       :banner => "REPO-MANAGER",
@@ -587,9 +588,11 @@ TODO: might deprecate
     #   Response::Ok.new()
     # end
 
-    desc "COMPONENT-MODULE-NAME/ID pull dtkn", "Update local component module from remote repository."
-    def pull(context_params)     
-      component_module_id, component_module_name, catalog = context_params.retrieve_arguments([:component_module_id!,:component_module_name,:option_1],method_argument_names)
+    desc "COMPONENT-MODULE-NAME/ID pull-dtkn", "Update local component module from remote repository."
+    def pull_dtkn(context_params)     
+#      component_module_id, component_module_name, catalog = context_params.retrieve_arguments([:component_module_id!,:component_module_name,:option_1],method_argument_names)
+      component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!,:component_module_name,:option_1],method_argument_names)
+      catalog = 'dtkn'
       version = options["version"]
       
       raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PullCatalogs}" unless catalog
@@ -706,32 +709,30 @@ TODO: might deprecate
     end
 
 #    desc "COMPONENT-MODULE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
-    # version_method_option
-    # desc "COMPONENT-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
-    # method_option "message",:aliases => "-m" ,
-    #   :type => :string, 
-    #   :banner => "COMMIT-MSG",
-    #   :desc => "Commit message"
-    # #hidden option for dev
-    # method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
-    # def push(context_params, internal_trigger=false)
-    #   component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!, :component_module_name],method_argument_names)
-    #   version = options["version"]
-    #   if component_module_name.to_s =~ /^[0-9]+$/
-    #     component_module_id   = component_module_name
-    #     component_module_name = get_module_name(component_module_id)
-    #   end
+    desc "COMPONENT-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
+     version_method_option
+     method_option "message",:aliases => "-m" ,
+       :type => :string, 
+       :banner => "COMMIT-MSG",
+       :desc => "Commit message"
+     # hidden option for dev
+     method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
+     def push(context_params, internal_trigger=false)
+       component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!, :component_module_name],method_argument_names)
+       version = options["version"]
+       if component_module_name.to_s =~ /^[0-9]+$/
+         component_module_id   = component_module_name
+         component_module_name = get_module_name(component_module_id)
+       end
 
-    #   modules_path    = OsUtil.module_clone_location()
-    #   module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
+       modules_path    = OsUtil.module_clone_location()
+       module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
 
-    #   reparse_aux(module_location)
-    #   push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
-    # end
+       reparse_aux(module_location)
+       push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
+     end
 
-
-
-    desc "COMPONENT-MODULE-NAME/ID push origin|dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to server (origin) or to remote repository (dtkn)."
+    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
@@ -742,8 +743,10 @@ TODO: might deprecate
         :desc => "Remote namespace"
     #hidden option for dev
     method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
-    def push(context_params, internal_trigger=false)
-      component_module_id, component_module_name, catalog = context_params.retrieve_arguments([:component_module_id!, :component_module_name, :option_1],method_argument_names)
+    def push_dtkn(context_params, internal_trigger=false)
+#      component_module_id, component_module_name, catalog = context_params.retrieve_arguments([:component_module_id!, :component_module_name, :option_1],method_argument_names)
+      component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!, :component_module_name],method_argument_names)
+      catalog = 'dtkn'
       version = options["version"]
 
       raise DtkValidationError, "You have to provide valid catalog to push changes to! Valid catalogs: #{PushCatalogs}" unless catalog
@@ -757,9 +760,9 @@ TODO: might deprecate
       module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
       reparse_aux(module_location)
 
-      if catalog.to_s.eql?("origin")
-        push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
-      elsif catalog.to_s.eql?("dtkn")
+#      if catalog.to_s.eql?("origin")
+#        push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
+      if catalog.to_s.eql?("dtkn")
         unless File.directory?(module_location)
           if Console.confirmation_prompt("Unable to push to remote because module '#{component_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
             response = clone_aux(:component_module,component_module_id,version,false)
