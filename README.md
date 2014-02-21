@@ -74,3 +74,7 @@ Run Tests
 
 - From dtk-client project root run <tt>rspec</tt>, this will run all unit tests
 
+
+License
+----------------------
+DTK Client is released under the GPLv3 license. Please see LICENSE for more details.
