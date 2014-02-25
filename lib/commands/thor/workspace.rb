@@ -192,7 +192,7 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
    # The option -p will purge the workspace after assembly creation." 
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
-    def create_service(context_params)
+    def create_assembly(context_params)
       workspace_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:workspace_id!,:option_1!,:option_2!],method_argument_names)
       response = promote_assembly_aux(:create,workspace_id,service_module_name,assembly_template_name)
       return response unless response.ok?
