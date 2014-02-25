@@ -45,29 +45,23 @@ module DTK::Client
             
       post_body.merge!(:username => name.chomp) if name
       proper_response = nil
-      response, key_exists_already = Account.internal_add_user_access("service_module/add_user_direct_access", post_body, 'service module')
+
+      response, key_exists_already = Account.internal_add_user_access("account/add_user_direct_access", post_body, 'service module')
       return response unless (response.ok? || key_exists_already)
 
+      match = response.data['match']
+      matched_username = response.data['matched_username']
 
-      if response.ok?
-        proper_response = response
-        match = response.data['match']
-        matched_username = response.data['matched_username']
-      end
-
-      response, key_exists_already = Account.internal_add_user_access("component_module/add_user_direct_access", post_body, 'component module')
-      return response unless (response.ok? || key_exists_already)
-      proper_response = response if response.ok?
       
       # if either of request passed we will add to known hosts
       if match
         OsUtil.print("Provided RSA public key already exists, user creation aborted!", :yellow) 
-      elsif proper_response
-        repo_manager_fingerprint,repo_manager_dns = proper_response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
+      elsif response
+        repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
         SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
         OsUtil.print("Ssh key added successfully!", :yellow)
 
-        return proper_response
+        return response
       else
         nil
       end
