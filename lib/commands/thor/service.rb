@@ -218,12 +218,14 @@ TODO: overlaps with different meaning
     #end
 
     desc "SERVICE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create a new assembly from this service instance in the designated service module."
-    def create_service(context_params)
+    def create_assembly(context_params)
       assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
       response = promote_assembly_aux(:create,assembly_id,service_module_name,assembly_template_name)
       return response unless response.ok?
 
       @@invalidate_map << :assembly
+      @@invalidate_map << :service
+      @@invalidate_map << :workspace
       @@invalidate_map << :service_module
       Response::Ok.new()
     end
