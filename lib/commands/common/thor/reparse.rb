@@ -25,6 +25,7 @@ module DTK::Client
         begin 
           YAML.load(file_content)
         rescue Exception => e
+          e.to_s.gsub!(/\(<unknown>\)/,'')
           raise DTK::Client::DSLParsing::YAMLParsing.new("YAML parsing error #{e} in file",file)
         end
       end
