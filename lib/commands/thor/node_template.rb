@@ -35,7 +35,8 @@ module DTK::Client
       return response
     end
 =end
-    desc "list --all -t [TARGET-NAME]", "List all node templates."
+#    desc "list --all -t [TARGET-NAME]", "List all node templates."
+    desc "list", "List all node templates."
     method_option :all, :type => :boolean, :default => false
     method_option "target_identifier",:aliases => "-t" ,
       :type => :string, 
@@ -61,7 +62,7 @@ module DTK::Client
       }
       post rest_url("node/image_upgrade"), post_body
     end
-
+=begin
     #TODO: move to form desc "NODE-TEMPLATE-NAME/ID stage [INSTANCE-NAME]"
     #will then have to reverse arguments
     desc "stage NODE-TEMPLATE-NAME [INSTANCE-NAME]", "Stage node template in target."
@@ -81,8 +82,9 @@ module DTK::Client
       @@invalidate_map << :node_template
       @@invalidate_map << :node
 
-      return response
+      response
     end
+=end
   end
 end
 
