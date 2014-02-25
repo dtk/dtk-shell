@@ -192,7 +192,7 @@ module DTK::Client
     desc "WORKSPACE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
    # The option -p will purge the workspace after assembly creation." 
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
-    def create_service(context_params)
+    def create_assembly(context_params)
       workspace_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:workspace_id!,:option_1!,:option_2!],method_argument_names)
       response = promote_assembly_aux(:create,workspace_id,service_module_name,assembly_template_name)
       return response unless response.ok?
@@ -202,6 +202,8 @@ module DTK::Client
       end
 
       @@invalidate_map << :assembly
+      @@invalidate_map << :service
+      @@invalidate_map << :workspace
       @@invalidate_map << :service_module
       Response::Ok.new()
     end
@@ -299,12 +301,12 @@ module DTK::Client
     def edit_workflow(context_params)
       edit_workflow_aux(context_params)
     end
-
+=begin
     desc "WORKSPACE-NAME/ID edit-attributes", "Edit workspace's attributes."
     def edit_attributes(context_params)
       edit_attributes_aux(context_params)
     end
-
+=end
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
     desc "HIDE_FROM_BASE get-netstats", "Get netstats"
     def get_netstats(context_params)

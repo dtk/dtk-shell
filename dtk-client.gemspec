@@ -7,6 +7,7 @@ Gem::Specification.new do |gem|
   gem.description   = %q{Dtk client is CLI tool used for communication with Reactor8.}
   gem.summary       = %q{DTK CLI client for DTK server interaction.}
   gem.homepage      = "https://github.com/rich-reactor8/dtk-client"
+  gem.licenses      = ["GPL-3.0"]
 
   gem.files = %w(README.md Gemfile Gemfile_dev dtk-client.gemspec)
   gem.files += Dir.glob("bin/**/*")
