@@ -314,8 +314,11 @@ TODO: might deprecate
       # we push clone changes anyway, user can change and push again
       context_params.add_context_to_params(module_name, :"component-module", module_id)
       response = push(context_params, true)
-      response[:module_id] = module_id if git_import
-      response.add_data_value!(:external_dependencies,external_dependencies) if external_dependencies
+      
+      if git_import
+        response[:module_id] = module_id 
+        response.add_data_value!(:external_dependencies,external_dependencies) if external_dependencies
+      end
 
       return response
     end
