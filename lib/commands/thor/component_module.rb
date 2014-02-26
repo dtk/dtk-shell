@@ -296,10 +296,12 @@ TODO: might deprecate
 
       external_dependencies = response.data(:external_dependencies)
 
-      if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.error_message(module_name, error)
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
-      end
+      # commented out for now, since we have this same part of the code in push method
+      # which will always be called from this method
+      # if error = response.data(:dsl_parsed_info)
+      #   dsl_parsed_message = ServiceImporter.error_message(module_name, error)
+      #   DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+      # end
 
       dsl_created_info = response.data(:dsl_created_info)
       if dsl_created_info and !dsl_created_info.empty?
