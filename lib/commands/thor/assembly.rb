@@ -211,6 +211,10 @@ module DTK::Client
       :type => :string, 
       :banner => "TARGET-NAME/ID",
       :desc => "Target (id) to create assembly in" 
+    #hidden option
+    method_option "instance-bindings",
+      :type => :string 
+
     def stage(context_params)
       assembly_template_id, name = context_params.retrieve_arguments([:assembly_id!, :option_1],method_argument_names)
       post_body = {
@@ -226,6 +230,7 @@ module DTK::Client
 
       # we check current options and forwarded options (from deploy method)
       in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
+      instance_bindings = options["instance-bindings"]
       assembly_list = Assembly.assembly_list()
 
       if name
@@ -236,6 +241,7 @@ module DTK::Client
       
       post_body.merge!(:target_id => in_target) if in_target
       post_body.merge!(:name => name) if name
+      post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
 
       response = post rest_url("assembly/stage"), post_body
       return response unless response.ok?
@@ -246,6 +252,7 @@ module DTK::Client
       return response
     end
 
+=begin
     # desc "ASSEMBLY-NAME/ID deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
     # version_method_option
     desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
@@ -304,7 +311,7 @@ module DTK::Client
 
       return ret
     end
-
+=end
 
     desc "delete ASSEMBLY-ID", "Delete assembly"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
