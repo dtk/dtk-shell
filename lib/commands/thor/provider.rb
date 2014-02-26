@@ -35,17 +35,23 @@ module DTK::Client
       return Provider.valid_children().include?(name_of_sub_context.to_sym)
     end
 
-    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME --access-key ACCESS_KEY --secret-key SECRET_KEY --keypair KEYPAIR --security-group SECURITY-GROUP [--no-bootstrap]", "Create provider"
+    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME --keypair KEYPAIR --security-group SECURITY-GROUP [--no-bootstrap]", "Create provider"
     method_option :keypair,    :type => :string
-    method_option :access_key, :type => :string
-    method_option :secret_key, :type => :string
     method_option :security_group, :type => :string
     method_option :no_bootstrap, :type => :boolean, :default => false
     def create_provider(context_params)
       composed_provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       provider_type, provider_name = decompose_provider_type_and_name(composed_provider_name)
-      access_key, secret_key, keypair, security_group = context_params.retrieve_thor_options([:access_key!, :secret_key!, :keypair!, :security_group!], options)
+      keypair, security_group = context_params.retrieve_thor_options([:keypair!, :security_group!], options)
+
+      result = DTK::Shell::InteractiveWizard::interactive_user_input(
+        {'IAAS Credentials' => { :type => :group, :options => [
+              {:key    => {}},
+              {:secret => {}}
+          ]}})
+      
+      access_key, secret_key = result['IAAS Credentials'].values_at(:key, :secret)
 
       post_body = {
         :iaas_properties => {
