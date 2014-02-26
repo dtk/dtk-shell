@@ -24,9 +24,12 @@ module DTK
       end
 
       # Generic wizard which will return hash map based on metadata input
+      #
+      # Example provided bellow
+      #
       def self.interactive_user_input(wizard_dsl, recursion_call = false)
         results = {}
-        
+        wizard_dsl = [wizard_dsl].flatten
         begin
           wizard_dsl.each do |meta_input|
             input_name = meta_input.keys.first
@@ -56,7 +59,7 @@ module DTK
                 validation = (validation_range_start..metadata[:options].size).to_a
               when :group
                 # recursion call to populate second level of hash params
-                puts " Enter '#{display_name}' details: "
+                puts " Enter '#{display_name}': "
                 results[input_name] = self.interactive_user_input(metadata[:options], true)
                 next
             end
