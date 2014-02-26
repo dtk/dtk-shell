@@ -217,6 +217,10 @@ module DTK::Client
         :assembly_id => assembly_template_id
       }
 
+      # using this to make sure cache will be invalidated after new assembly is created from other commands e.g.
+      # 'assembly-create', 'install' etc.
+      @@invalidate_map << :assembly
+      
       assembly_template_name = get_assembly_name(assembly_template_id)
       assembly_template_name.gsub!('::','-') if assembly_template_name
 
@@ -237,7 +241,6 @@ module DTK::Client
       return response unless response.ok?
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :service
-      @@invalidate_map << :workspace
       @@invalidate_map << :assembly
 
       return response
