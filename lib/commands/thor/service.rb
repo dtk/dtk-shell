@@ -239,8 +239,8 @@ TODO: overlaps with different meaning
       converge_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID push-assembly-updates [SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push service instance to the designated assembly; default is parent assembly."
-    def push_service_updates(context_params)
+    desc "SERVICE-NAME/ID push-assembly-updates [SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push changes made to this service instance to the designated assembly; default is parent assembly."
+    def push_assembly_updates(context_params)
       assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:service_id!,:option_1],method_argument_names) 
       service_module_name, assembly_template_name =
         if qualified_assembly_name

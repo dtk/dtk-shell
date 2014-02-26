@@ -175,8 +175,8 @@ module DTK::Client
       push_module_updates_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-assembly-updates SERVICE-MODULE-NAME/ASSEMBLY-NAME", "Push workspace instance to the designated assembly."
-    def push_service_updates(context_params)
+    desc "WORKSPACE-NAME/ID push-assembly-updates SERVICE-MODULE-NAME/ASSEMBLY-NAME", "Push changes made to this workspace to the designated assembly."
+    def push_assembly_updates(context_params)
       workspace_id, qualified_assembly_name = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names) 
       if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
         service_module_name, assembly_template_name = [$1,$2]
