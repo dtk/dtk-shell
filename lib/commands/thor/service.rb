@@ -225,8 +225,7 @@ TODO: overlaps with different meaning
 
       @@invalidate_map << :assembly
       @@invalidate_map << :service
-      @@invalidate_map << :workspace
-      @@invalidate_map << :service_module
+
       Response::Ok.new()
     end
     
@@ -610,7 +609,6 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
       response = delete_component_aux(context_params)
-      return response unless response.ok?
       
       @@invalidate_map << :service
       @@invalidate_map << :service_node

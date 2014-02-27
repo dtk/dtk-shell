@@ -163,9 +163,15 @@ module DTK::Client
       return response
     end
 
-    desc "NODE-NAME/ID delete-component COMPONENT-ID", "Delete component from node"
+    desc "NODE-NAME/ID delete-component COMPONENT-ID [-y]", "Delete component from node"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
       node_id,component_id = context_params.retrieve_arguments([:node_id!, :option_1!],method_argument_names)
+
+      unless options.force?
+        return unless Console.confirmation_prompt("Are you sure you want to delete component '#{component_id}'"+'?')
+      end
+
       post_body = {
         :node_id => node_id,
         :component_id => component_id
