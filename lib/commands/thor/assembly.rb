@@ -211,17 +211,26 @@ module DTK::Client
       :type => :string, 
       :banner => "TARGET-NAME/ID",
       :desc => "Target (id) to create assembly in" 
+    #hidden option
+    method_option "instance-bindings",
+      :type => :string 
+
     def stage(context_params)
       assembly_template_id, name = context_params.retrieve_arguments([:assembly_id!, :option_1],method_argument_names)
       post_body = {
         :assembly_id => assembly_template_id
       }
 
+      # using this to make sure cache will be invalidated after new assembly is created from other commands e.g.
+      # 'assembly-create', 'install' etc.
+      @@invalidate_map << :assembly
+      
       assembly_template_name = get_assembly_name(assembly_template_id)
       assembly_template_name.gsub!('::','-') if assembly_template_name
 
       # we check current options and forwarded options (from deploy method)
       in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
+      instance_bindings = options["instance-bindings"]
       assembly_list = Assembly.assembly_list()
 
       if name
@@ -232,17 +241,18 @@ module DTK::Client
       
       post_body.merge!(:target_id => in_target) if in_target
       post_body.merge!(:name => name) if name
+      post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
 
       response = post rest_url("assembly/stage"), post_body
       return response unless response.ok?
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :service
-      @@invalidate_map << :workspace
       @@invalidate_map << :assembly
 
       return response
     end
 
+=begin
     # desc "ASSEMBLY-NAME/ID deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
     # version_method_option
     desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
@@ -301,7 +311,7 @@ module DTK::Client
 
       return ret
     end
-
+=end
 
     desc "delete ASSEMBLY-ID", "Delete assembly"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
