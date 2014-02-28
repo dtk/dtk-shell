@@ -47,6 +47,7 @@ module DTK::Client
       proper_response = nil
 
       response, key_exists_already = Account.internal_add_user_access("account/add_user_direct_access", post_body, 'service module')
+
       return response unless (response.ok? || key_exists_already)
 
       match = response.data['match']
@@ -117,9 +118,11 @@ module DTK::Client
     def add_ssh_key(context_params)
       name, path_to_key = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       path_to_key ||= SshProcessing.default_rsa_pub_key_path()
-      access_granted = Account.add_key(path_to_key, name)
+      response = Account.add_key(path_to_key, name)
 
-      FileUtils.touch(DTK::Client::Configurator::DIRECT_ACCESS) if access_granted
+      FileUtils.touch(DTK::Client::Configurator::DIRECT_ACCESS) if response.ok?
+
+      response
     end
 
     desc "remove-ssh-key NAME ","Removes user and direct access to modules."
