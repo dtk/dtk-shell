@@ -396,7 +396,7 @@ module DTK::Client
       purge_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID destroy-and-reset-nodes", "Terminates all nodes, but keeps config state so they can be spun up from scratch."
+    desc "WORKSPACE-NAME/ID destroy-and-reset-nodes [-y]", "Terminates all nodes, but keeps config state so they can be spun up from scratch."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def destroy_and_reset_nodes(context_params)
       destroy_and_reset_nodes_aux(context_params)
