@@ -618,6 +618,18 @@ module DTK::Client
       response = post(rest_url("assembly/purge"),post_body)
     end
 
+    def destroy_and_reset_nodes_aux(context_params)
+      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
+      unless options.force?
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy all nodes in the workspace"+'?')
+      end
+
+      post_body = {
+        :assembly_id => assembly_or_workspace_id
+      }
+      response = post(rest_url("assembly/destroy_and_reset_nodes"),post_body)
+    end
+
     def delete_aux(context_params)
       if context_params.is_last_command_eql_to?(:node)
         delete_node_aux(context_params) 

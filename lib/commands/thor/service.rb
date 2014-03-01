@@ -173,6 +173,13 @@ TODO: overlaps with different meaning
       }, [:utils])
     end
 
+    desc "SERVICE-NAME/ID destroy-and-reset-nodes", "Terminates all nodes, but keeps config state so they can be spun up from scratch."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def destroy_and_reset_nodes(context_params)
+      destroy_and_reset_nodes_aux(context_params)
+    end
+
+
     desc "SERVICE-NAME/ID start [NODE-NAME]", "Starts all the service nodes. A single node can be selected."
     def start(context_params)
       start_aux(context_params)
