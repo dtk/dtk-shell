@@ -570,7 +570,7 @@ TODO: will put in dot release and will rename to 'extend'
     # only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
     desc "HIDE_FROM_BASE add-component NODE-NAME COMPONENT", "Add a component to the service."
-    def addcomponent(context_params)
+    def add_component(context_params)
       response = create_component_aux(context_params)
 
       @@invalidate_map << :service
