@@ -621,7 +621,7 @@ module DTK::Client
     def destroy_and_reset_nodes_aux(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       unless options.force?
-        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy all nodes in the workspace"+'?')
+        return unless Console.confirmation_prompt("Are you sure you want to destroy and reset all nodes in the workspace"+'?')
       end
 
       post_body = {
