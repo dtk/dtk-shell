@@ -841,26 +841,32 @@ module DTK::Client
               sleep(1)
             end
 
-            raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
+            if response.data(:is_complete)
+              # due to complicated response we change its formating
+              response = response.data(:results).first[1]
 
-            # due to complicated response we change its formating
-            response = response.data(:results).first[1]
+              unless response["error"].nil?
+                raise DTK::Client::DtkError, response["error"]
+              end
 
-            unless response["error"].nil?
-              raise DTK::Client::DtkError, response["error"]
-            end
+              # removing invalid chars from log
+              output = response["output"].gsub(/`/,'\'')
 
-            # removing invalid chars from log
-            output = response["output"].gsub(/`/,'\'')
+              unless output.empty?
+                file_ready = true
+                tail_temp_file << output 
+                tail_temp_file.flush
+              end
 
-            unless output.empty?
+              last_line = response["last_line"]
+              sleep(LOG_SLEEP_TIME_W)
+            else
               file_ready = true
-              tail_temp_file << output 
+              tail_temp_file << "\n\nError while logging there was no successful response after 3 tries, ^C to exit. \n\n"  
               tail_temp_file.flush
+              tail_temp_file.close
+              Thread.current.exit
             end
-
-            last_line = response["last_line"]
-            sleep(LOG_SLEEP_TIME_W)
           end
         end
 
