@@ -82,6 +82,7 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
       validation_message += ", usage: #{usage_info}"
 
       validation_message.gsub!("^^", '') if validation_message.include?("^^")
+      validation_message.gsub!("HIDE_FROM_BASE ", '') if validation_message.include?("HIDE_FROM_BASE")
     end
 
     DTK::Client::OsUtil.print(validation_message, :yellow)
