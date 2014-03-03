@@ -862,7 +862,7 @@ module DTK::Client
               sleep(LOG_SLEEP_TIME_W)
             else
               file_ready = true
-              tail_temp_file << "\n\nError while logging there was no successful response after 3 tries, ^C to exit. \n\n"  
+              tail_temp_file << "\n\nError while logging there was no successful response after 3 tries, (^C, Q) to exit. \n\n"
               tail_temp_file.flush
               tail_temp_file.close
               Thread.current.exit
