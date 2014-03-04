@@ -195,7 +195,8 @@ TODO: overlaps with different meaning
     def cancel_task(context_params)
       cancel_task_aux(context_params)
     end
-
+=begin
+#TODO: until we investigate DTK-1349
     desc "rename SERVICE-NAME NEW-SERVICE-NAME","Change service name."
     def rename(context_params)
       assembly_name, new_assembly_name = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
@@ -218,6 +219,7 @@ TODO: overlaps with different meaning
       @@invalidate_map << :service
       response      
     end
+=end
 
     #desc "ASSEMBLY-NAME/ID clear-tasks", "Clears the tasks that have been run already."
     #def clear_tasks(context_params)
