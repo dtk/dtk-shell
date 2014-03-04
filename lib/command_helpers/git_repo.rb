@@ -250,7 +250,6 @@ module DTK; module Client; class CommandHelper
 
         diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
 
-        # DEBUG SNIPPET >>> REMOVE <<<
     
         if diffs.any_diffs?()
           repo.push(remote_branch_ref)

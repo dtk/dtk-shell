@@ -116,14 +116,23 @@ def check_direct_access(params)
 
   puts "Adding direct access for current user..."
   # response = DTK::Client::Account.add_access(params[:ssh_key_path])
-  response = DTK::Client::Account.add_key(params[:ssh_key_path])
+  response, matched_pub_key, matched_username = DTK::Client::Account.add_key(params[:ssh_key_path])
   
-  if response.nil? || !response.ok?
-    DTK::Client::OsUtil.print("We were not able to add direct access for current user. In order to properly use dtk-shell you will have to add access manually ('dtk account add-ssh-key').\n", :yellow) 
-    return
+  if !response.ok?
+    DTK::Client::OsUtil.print("We were not able to add direct access for current user, server error '#{response.error_message}'. In order to properly use dtk-shell you will have to add access manually ('dtk account add-ssh-key').\n", :yellow) 
+  elsif matched_pub_key
+    # message will be displayed by add key # TODO: Refactor this flow
+    DTK::Client::OsUtil.print("Provided SSH PUB key has already been added.", :yellow)
+    FileUtils.touch(params[:file_path])
+  elsif matched_username
+    DTK::Client::OsUtil.print("User with provided name already exists.", :yellow)
+  else
+    DTK::Client::OsUtil.print("Your SSH PUB key has been successfully added.", :yellow)
+    FileUtils.touch(params[:file_path])
   end
+  
 
-  FileUtils.touch(params[:file_path])
+  response
 end
 
 module DTK

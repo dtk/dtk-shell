@@ -33,7 +33,7 @@ module DTK::Client
 
     def self.add_key(path_to_key, name=nil)
       match, matched_username = nil, nil
-    
+
       unless File.file?(path_to_key)
         OsUtil.put_warning "[ERROR]  " ,"No ssh key file found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run `ssh-keygen -t rsa`)", :red
         abort
@@ -53,19 +53,13 @@ module DTK::Client
       match = response.data['match']
       matched_username = response.data['matched_username']
 
-      
-      # if either of request passed we will add to known hosts
-      if match
-        OsUtil.print("Provided RSA public key already exists, user creation aborted!", :yellow) 
-      elsif response
+      if response && !match
         repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
         SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
         OsUtil.print("Ssh key added successfully!", :yellow)
-
-        return response
-      else
-        nil
       end
+
+      return response, match, matched_username
     end
 
     desc "set-password", "Change password for your dtk user account"
@@ -118,11 +112,16 @@ module DTK::Client
     def add_ssh_key(context_params)
       name, path_to_key = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       path_to_key ||= SshProcessing.default_rsa_pub_key_path()
-      response = Account.add_key(path_to_key, name)
 
-      FileUtils.touch(DTK::Client::Configurator::DIRECT_ACCESS) if response.ok?
+      response, matched, matched_username = Account.add_key(path_to_key, name)
 
-      response
+      if matched
+        DTK::Client::OsUtil.print("Provided SSH PUB key has already been added.", :yellow)
+      elsif matched_username
+        DTK::Client::OsUtil.print("User ('#{matched_username}') already exists.", :yellow)
+      else        
+        FileUtils.touch(DTK::Client::Configurator::DIRECT_ACCESS) if response.ok?
+      end
     end
 
     desc "remove-ssh-key NAME ","Removes user and direct access to modules."
@@ -136,7 +135,8 @@ module DTK::Client
       response = post rest_url("service_module/remove_user_direct_access"), post_body
       return response unless response.ok?
 
-      OsUtil.print("Ssh key removed successfully!", :yellow)
+      OsUtil.print("SSH key removed successfully!", :yellow)
+      response
     end
 
 
