@@ -1,3 +1,3 @@
 module DtkClient
-  VERSION="0.5.7"
+  VERSION="0.5.8"
 end
