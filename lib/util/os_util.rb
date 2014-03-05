@@ -1,6 +1,7 @@
 dtk_require_from_base('domain/response')
 dtk_require_from_base('auxiliary')
 require 'highline'
+require 'readline'
 
 module DTK
   module Client
@@ -23,6 +24,14 @@ module DTK
 
         def get_temp_location
           is_windows? ? genv(:temp) : '/tmp'
+        end
+
+
+        def pop_readline_history(number_of_last_commands)
+          number_of_last_commands.downto(1) do
+            Readline::HISTORY.pop
+          end
+          nil
         end
 
         def get_log_location

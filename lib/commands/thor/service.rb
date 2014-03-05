@@ -173,6 +173,13 @@ TODO: overlaps with different meaning
       }, [:utils])
     end
 
+    desc "SERVICE-NAME/ID destroy-and-reset-nodes [-y]", "Terminates all nodes, but keeps config state so they can be spun up from scratch."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def destroy_and_reset_nodes(context_params)
+      destroy_and_reset_nodes_aux(context_params)
+    end
+
+
     desc "SERVICE-NAME/ID start [NODE-NAME]", "Starts all the service nodes. A single node can be selected."
     def start(context_params)
       start_aux(context_params)
@@ -188,7 +195,8 @@ TODO: overlaps with different meaning
     def cancel_task(context_params)
       cancel_task_aux(context_params)
     end
-
+=begin
+#TODO: until we investigate DTK-1349
     desc "rename SERVICE-NAME NEW-SERVICE-NAME","Change service name."
     def rename(context_params)
       assembly_name, new_assembly_name = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
@@ -211,6 +219,7 @@ TODO: overlaps with different meaning
       @@invalidate_map << :service
       response      
     end
+=end
 
     #desc "ASSEMBLY-NAME/ID clear-tasks", "Clears the tasks that have been run already."
     #def clear_tasks(context_params)
@@ -563,7 +572,7 @@ TODO: will put in dot release and will rename to 'extend'
     # only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
     desc "HIDE_FROM_BASE add-component NODE-NAME COMPONENT", "Add a component to the service."
-    def addcomponent(context_params)
+    def add_component(context_params)
       response = create_component_aux(context_params)
 
       @@invalidate_map << :service

@@ -53,6 +53,9 @@ module DTK::Client
       
       access_key, secret_key = result['IAAS Credentials'].values_at(:key, :secret)
 
+      # Remove sensitive readline history
+      OsUtil.pop_readline_history(2)
+
       post_body = {
         :iaas_properties => {
           :key     => access_key,
