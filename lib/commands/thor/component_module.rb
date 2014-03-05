@@ -714,7 +714,8 @@ TODO: might deprecate
     end
 
 #    desc "COMPONENT-MODULE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
-    desc "COMPONENT-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
+#    desc "COMPONENT-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
+    desc "COMPONENT-MODULE-NAME/ID push", "Push changes from local copy of component module to server"
      version_method_option
      method_option "message",:aliases => "-m" ,
        :type => :string, 
@@ -737,7 +738,8 @@ TODO: might deprecate
        push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
      end
 
-    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to remote repository (dtkn)."
+#    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to remote repository (dtkn)."
+    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE]", "Push changes from local copy of component module to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",

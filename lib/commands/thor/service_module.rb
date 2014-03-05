@@ -586,7 +586,8 @@ module DTK::Client
     PushCatalogs = ["origin", "dtkn"]
 =end
 
-    desc "SERVICE-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy to server (origin)."
+#    desc "SERVICE-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy to server (origin)."
+    desc "SERVICE-MODULE-NAME/ID push", "Push changes from local copy to server."
     method_option "message",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
@@ -608,7 +609,8 @@ module DTK::Client
       push_clone_changes_aux(:service_module,service_module_id,version,nil,internal_trigger)
     end
 
-    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of service module to remote repository (dtkn)."
+#    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of service module to remote repository (dtkn)."
+    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE]", "Push changes from local copy of service module to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
