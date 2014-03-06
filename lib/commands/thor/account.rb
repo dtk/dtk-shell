@@ -10,14 +10,16 @@ module DTK::Client
     KEY_EXISTS_ALREADY_CONTENT = 'key exists already'
 
     no_tasks do
-      def password_prompt(message, add_options=true)        
+      def password_prompt(message, add_options=true)
         begin
-          while line = Readline.readline("#{message}: ", add_hist = false)
+          # while line = Readline.readline("#{message}: ", add_hist = false)
+          # using 'ask' from highline gem to be able to hide input for key and secret
+          while line = (HighLine.ask("#{message}") { |q| q.echo = false})
             raise Interrupt if line.empty?
             return line
           end
-        rescue Interrupt => e
-          retry
+        rescue Interrupt
+          return nil
         ensure
           puts "\n" if line.nil?
         end
@@ -75,16 +77,16 @@ module DTK::Client
       end
 
       3.times do
-        old_pass_prompt = password_prompt("Enter old password")
+        old_pass_prompt = password_prompt("Enter old password: ")
 
         break if (old_pass.eql?(old_pass_prompt) || old_pass_prompt.nil?)
         OsUtil.print("Incorrect old password!", :yellow)
       end
       return unless old_pass.eql?(old_pass_prompt)
 
-      new_pass_prompt = password_prompt("Enter new password")
+      new_pass_prompt = password_prompt("Enter new password: ")
       return if new_pass_prompt.nil?
-      confirm_pass_prompt = password_prompt("Confirm new password")
+      confirm_pass_prompt = password_prompt("Confirm new password: ")
       
       if new_pass_prompt.eql?(confirm_pass_prompt)
         post_body = {:new_password => new_pass_prompt}

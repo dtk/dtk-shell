@@ -1,5 +1,6 @@
 require 'colorize'
 require 'readline'
+require 'highline/import'
 
 module DTK
   module Shell
@@ -100,7 +101,9 @@ module DTK
           prompt_input = ">> "
         end
         
-        while line = Readline.readline(prompt_input, true)
+        # while line = Readline.readline(prompt_input, true)
+        #using 'ask' from highline gem to be able to hide input for key and secret
+        while line = ask("#{prompt_input}") { |q| q.echo = false}
           if is_required && line.empty?
             puts INVALID_INPUT
             next
