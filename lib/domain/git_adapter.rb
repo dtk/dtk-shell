@@ -16,6 +16,7 @@ module DTK
 
       def stage_changes()
         @git_repo.add(untracked())
+        @git_repo.add(added())
         @git_repo.add(changed())
         deleted().each do |file, status|
           # this indicates that change has not been staged
@@ -63,6 +64,11 @@ module DTK
 
       def new_version()
         return local_summary()
+      end
+
+      def stage_and_commit(commit_msg = "")
+        stage_changes()
+        commit(commit_msg)
       end
 
       def commit(commit_msg = "")
@@ -192,23 +198,18 @@ module DTK
 
       TEMP_BRANCH = "temp_branch"
 
-      def merge_theirs()
-        require 'ap'
-        ap "MERGE STARTED!!!!"
+      def merge_theirs(remote_branch_ref)
+        branch = current_branch_name
 
-        @git_repo.branch(TEMP_BRANCH).create()
-        @git_repo.branch(TEMP_BRANCH).checkout()
-      end
-
-
-      def merge_theirs2(remote_branch_ref)
-        #since there is no 'git merge -s theirs' we need to simulate it
-        chdir do
-          git_command(:checkout,"-b",TempBranch,remote_branch_ref)
-          git_command(:merge,@branch,"-s","ours")
-          git_command(:checkout,@branch)
-          git_command(:reset,"--hard",TempBranch)
-          git_command(:branch,"-D",TempBranch)
+        # Git is not agile enoguh to work with following commands so we are using native commands to achive this
+        Dir.chdir(repo_dir) do
+          OsUtil.suspend_output do
+            puts `git checkout -b #{TEMP_BRANCH} #{remote_branch_ref}`
+            puts `git merge #{branch} -s ours`
+            puts `git checkout #{branch}`
+            puts `git reset #{TEMP_BRANCH} --hard`
+            puts `git branch -D #{TEMP_BRANCH}`
+          end
         end
       end
 

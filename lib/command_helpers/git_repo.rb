@@ -109,7 +109,7 @@ module DTK; module Client; class CommandHelper
       Response::Ok.new()
     end
 
-    #if local clone exists remove its .git directory
+    # if local clone exists remove its .git directory
     def unlink_local_clone?(type,module_name,version=nil)
       Response.wrap_helper_actions() do
         local_repo_dir = local_repo_dir(type,module_name,version)
@@ -148,7 +148,7 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    #makes repo_dir (determined from type and module_name) into a git dir, pulls, adds, content and then pushes
+    # makes repo_dir (determined from type and module_name) into a git dir, pulls, adds, content and then pushes
     def initialize_client_clone_and_push(type,module_name,branch,repo_url,local_repo_dir,version=nil)
       # moved this part from 'check_local_dir_exists_with_content' to this method since this only deletes .git folder
       # which can cause us problems if import fails
@@ -180,7 +180,7 @@ module DTK; module Client; class CommandHelper
     end
 
    private
-    #TODO: in common expose Common::GritAdapter at less nested level
+    # TODO: in common expose Common::GritAdapter at less nested level
     class DiffSummary < ::DTK::Common::SimpleHashObject
       def self.new_version(repo)
         new(repo.new_version())
@@ -321,7 +321,7 @@ module DTK; module Client; class CommandHelper
       end
 
       # default commit in case it is needed
-      repo.commit("Commit prior to pull from remote") if repo.changed?
+      repo.stage_and_commit("Commit prior to pull from remote") if repo.changed?
 
       #check if merge needed
       merge_rel = repo.merge_relationship(:remote_branch,remote_branch_ref)
