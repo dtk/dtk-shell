@@ -11,13 +11,14 @@ module DTK
       end
 
       def changed?
-        (!(@git_repo.status.changed.empty? && @git_repo.status.untracked.empty? && @git_repo.status.deleted.empty?) || staged_commits?)
+        (!(changed().empty? && untracked().empty? && deleted().empty?) || staged_commits?)
       end
 
       def stage_changes()
-        @git_repo.add(@git_repo.status.untracked().keys)
-        @git_repo.add(@git_repo.status.changed().keys)
-        @git_repo.status.deleted().each do |file, status|
+        @git_repo.add(untracked())
+        @git_repo.add(added())
+        @git_repo.add(changed())
+        deleted().each do |file, status|
           # this indicates that change has not been staged
           if status.stage
             @git_repo.remove(file)
@@ -26,7 +27,7 @@ module DTK
       end
 
       def print_status()
-        changes = [@git_repo.status.changed().keys, @git_repo.status.untracked().keys, @git_repo.status.deleted().keys]
+        changes = [changed(), untracked(), deleted()]
         puts "\nModified files:\n".colorize(:green) unless changes[0].empty?
         changes[0].each { |item| puts "\t#{item}" }
         puts "\nAdded files:\n".colorize(:yellow) unless changes[1].empty?
@@ -55,14 +56,19 @@ module DTK
 
       def local_summary()
         {
-          :files_added => (@git_repo.status.untracked().keys + @git_repo.status.added().keys).collect { |file| { :path => file }},
-          :files_modified => @git_repo.status.changed().keys.collect { |file| { :path => file }},
-          :files_deleted => @git_repo.status.deleted().keys.collect { |file| { :path => file }}
+          :files_added => (untracked() + added()).collect { |file| { :path => file }},
+          :files_modified => changed().collect { |file| { :path => file }},
+          :files_deleted => deleted().collect { |file| { :path => file }}
         }
       end
 
       def new_version()
         return local_summary()
+      end
+
+      def stage_and_commit(commit_msg = "")
+        stage_changes()
+        commit(commit_msg)
       end
 
       def commit(commit_msg = "")
@@ -190,7 +196,50 @@ module DTK
         @git_repo.branches.local.find { |b| b.current }
       end
 
+      TEMP_BRANCH = "temp_branch"
+
+      def merge_theirs(remote_branch_ref)
+        branch = current_branch_name
+
+        # Git is not agile enoguh to work with following commands so we are using native commands to achive this
+        Dir.chdir(repo_dir) do
+          OsUtil.suspend_output do
+            puts `git checkout -b #{TEMP_BRANCH} #{remote_branch_ref}`
+            puts `git merge #{branch} -s ours`
+            puts `git checkout #{branch}`
+            puts `git reset #{TEMP_BRANCH} --hard`
+            puts `git branch -D #{TEMP_BRANCH}`
+          end
+        end
+      end
+
     private
+
+      # Method bellow show different behavior when working with 1.8.7
+      # so based on Hash response we know it it is:
+      # Hash  => 1.9.3 +
+      # Array => 1.8.7
+      #
+
+      def changed
+        status.is_a?(Hash) ? status.changed().keys : status.changed().collect { |file| file.first }
+      end
+
+      def untracked
+        status.is_a?(Hash) ? status.untracked().keys : status.untracked().collect { |file| file.first }
+      end
+
+      def deleted
+        status.is_a?(Hash) ? status.deleted().keys : status.deleted().collect { |file| file.first }
+      end
+
+      def added
+        status.is_a?(Hash) ? status.added().keys : status.added().collect { |file| file.first }
+      end
+
+      def status
+        @git_repo.status
+      end
 
       def is_there_remote?(remote_name)
         @git_repo.remotes.find { |r| r.name == remote_name }

@@ -185,7 +185,7 @@ module DTK
             extended_context = extended_context[:context]
             extended_context.reject!{|k,v| k.to_s!=line_buffer}
 
-            new_context = extended_context[line_buffer.to_sym] unless line_buffer.nil?
+            new_context = extended_context[line_buffer.to_sym] unless line_buffer.nil? || line_buffer.empty?
             active_context_copy.push_new_context(new_context, new_context) unless new_context.nil?
           end
         end
@@ -693,7 +693,7 @@ module DTK
             valid_all_children    = (root_clazz != command_clazz) ? (root_clazz.all_children() + root_clazz.valid_children()) : []
             n_level_ac_candidates = command_clazz.respond_to?(:valid_children) ? command_clazz.valid_children.map { |e| e.to_s } : []
 
-            n_level_ac_candidates.keep_if{|v| valid_all_children.include?(v.to_sym)} unless valid_all_children.empty?
+            n_level_ac_candidates.select {|v| valid_all_children.include?(v.to_sym)} unless valid_all_children.empty?
             invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context.map { |e| e.to_s } : []
             
             unless invisible_context.empty?
