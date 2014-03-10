@@ -715,6 +715,58 @@ module DTK::Client
       response.render_table(:netstat_data)
     end
 
+    def execute_tests_aux(context_params)
+      execute_test_tries = 6
+      execute_test_sleep = 0.5
+
+      assembly_or_workspace_id,node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :node_id => node_id
+      }  
+
+      response = post(rest_url("assembly/initiate_execute_tests"),post_body)
+      return response unless response.ok?
+
+      action_results_id = response.data(:action_results_id)
+      end_loop, response, count, ret_only_if_complete = false, nil, 0, true
+
+      until end_loop do
+        post_body = {
+          :action_results_id => action_results_id,
+          :return_only_if_complete => ret_only_if_complete,
+          :disable_post_processing => false,
+          :sort_key => "module_name"
+        }
+        response = post(rest_url("assembly/get_action_results"),post_body)
+        count += 1
+        if count > execute_test_tries or response.data(:is_complete)
+          end_loop = true
+        else
+          #last time in loop return whetever is teher
+          if count == execute_test_tries
+            ret_only_if_complete = false
+          end
+          sleep execute_test_sleep
+        end
+      end
+      filtered = response.data(:results)
+
+      puts "AAAAAAAAAAAA"
+      puts options["component"]
+      puts "AAAAAAAAAAAA"
+
+      if !options["component"].nil?
+          filtered.reject! do |entry|
+            entry[:component_name] != options["component"]
+          end
+      end
+
+      response.set_data(*filtered)
+      response.render_table(:execute_tests_data)
+    end
+
     def get_ps_aux(context_params)
       get_ps_tries = 6
       get_ps_sleep = 0.5
