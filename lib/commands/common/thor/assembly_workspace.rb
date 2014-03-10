@@ -721,9 +721,25 @@ module DTK::Client
 
       assembly_or_workspace_id,node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id],method_argument_names)
 
+      #Get list of components on particular node
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :node_id => node_id,
+        :subtype => "instance",
+        :about => "components"
+      }
+
+      response = post(rest_url("assembly/info_about"),post_body)
+
+      components = []
+      response['data'].each do |c|
+        components << c['display_name']
+      end
+
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :node_id => node_id
+        #:components => components
       }  
 
       response = post(rest_url("assembly/initiate_execute_tests"),post_body)
