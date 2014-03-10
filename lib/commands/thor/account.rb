@@ -122,7 +122,7 @@ module DTK::Client
       elsif matched_username
         DTK::Client::OsUtil.print("User ('#{matched_username}') already exists.", :yellow)
       else        
-        FileUtils.touch(DTK::Client::Configurator::DIRECT_ACCESS) if response.ok?
+        DTK::Client::Configurator.add_current_user_to_direct_access() if response.ok?
       end
     end
 

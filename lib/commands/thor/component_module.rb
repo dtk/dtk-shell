@@ -356,7 +356,7 @@ TODO: might deprecate
       :desc => "DTK Repo Manager from which to resolve requested module."
     def install(context_params)
       create_missing_clone_dirs()
-      check_direct_access(::DTK::Client::Configurator.check_direct_access)
+      resolve_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       # in case of auto-import via service import, we skip cloning to speed up a process
       skip_cloning = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()

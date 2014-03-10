@@ -111,8 +111,8 @@ def validate_connection(connection)
 end
 
 # check if .add_direct_access file exists, if not then add direct access and create .add_direct_access file
-def check_direct_access(params)
-  return if params[:file_exists]
+def resolve_direct_access(params)
+  return if params[:username_exists]
 
   puts "Adding direct access for current user..."
   # response = DTK::Client::Account.add_access(params[:ssh_key_path])
@@ -123,12 +123,12 @@ def check_direct_access(params)
   elsif matched_pub_key
     # message will be displayed by add key # TODO: Refactor this flow
     DTK::Client::OsUtil.print("Provided SSH PUB key has already been added.", :yellow)
-    FileUtils.touch(params[:file_path])
+    DTK::Client::Configurator.add_current_user_to_direct_access()
   elsif matched_username
     DTK::Client::OsUtil.print("User with provided name already exists.", :yellow)
   else
     DTK::Client::OsUtil.print("Your SSH PUB key has been successfully added.", :yellow)
-    FileUtils.touch(params[:file_path])
+    DTK::Client::Configurator.add_current_user_to_direct_access()
   end
   
 
@@ -218,22 +218,9 @@ module DTK
     module ParseFile
 
       def parse_key_value_file(file)
-        #adapted from mcollective config
-        ret = Hash.new
-        raise DTK::Client::DtkError,"Config file (#{file}) does not exists" unless File.exists?(file)
-        File.open(file).each do |line|
-          # strip blank spaces, tabs etc off the end of all lines
-          line.gsub!(/\s*$/, "")
-          unless line =~ /^#|^$/
-            if (line =~ /(.+?)\s*=\s*(.+)/)
-              key = $1
-              val = $2
-              ret[key.to_sym] = val
-            end
-          end
-        end
-        ret
+        DTK::Client::Configurator.parse_key_value_file(file)
       end
+
     end
     class Config < Hash
       include Singleton
@@ -270,6 +257,7 @@ module DTK
         missing_keys = REQUIRED_KEYS - keys
         raise DTK::Client::DtkError,"Missing config keys (#{missing_keys.join(",")}). Please check your configuration file #{CONFIG_FILE} for required keys!" unless missing_keys.empty?
       end
+
     end
 
 

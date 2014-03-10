@@ -193,7 +193,7 @@ module DTK::Client
     method_option :ignore, :aliases => '-i', :type => :boolean, :default => false
     def install(context_params)
       create_missing_clone_dirs()
-      check_direct_access(::DTK::Client::Configurator.check_direct_access)
+      resolve_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       ignore_component_error = options.ignore?
       
