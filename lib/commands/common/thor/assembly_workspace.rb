@@ -764,8 +764,8 @@ module DTK::Client
           filtered.reject! do |entry|
             puts "entry"
             puts entry
-            puts "component name: #{entry[:component_name]}"
-            entry[:component_name] != options["component"]
+            puts "component name: #{entry['component_name']}"
+            entry["component_name"] != options["component"]
           end
           puts "after filtering"
           puts filtered.inspect
