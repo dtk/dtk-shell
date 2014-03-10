@@ -116,6 +116,7 @@ module DTK::Client
             ['list-components',"list-components","# List components."]
           ],
           :utils => [
+            ['execute-tests',"execute-tests","# Execute serverspec tests on module components."],
             ['get-netstats',"get-netstats","# Get netstats."],
             ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
             ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."],

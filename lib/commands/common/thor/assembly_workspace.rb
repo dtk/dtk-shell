@@ -715,7 +715,6 @@ module DTK::Client
       response.render_table(:netstat_data)
     end
 
-    #EXECUTE TESTS!
     def execute_tests_aux(context_params)
       execute_test_tries = 6
       execute_test_sleep = 0.5
@@ -752,7 +751,7 @@ module DTK::Client
           sleep execute_test_sleep
         end
       end
-      
+
       response.set_data(*response.data(:results))
       response.render_table(:execute_tests_data)
     end
