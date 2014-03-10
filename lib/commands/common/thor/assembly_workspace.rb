@@ -757,10 +757,18 @@ module DTK::Client
       puts options["component"]
       puts "AAAAAAAAAAAA"
 
+      puts "before filtering"
+      puts filtered.inspect
+
       if !options["component"].nil?
           filtered.reject! do |entry|
+            puts "entry"
+            puts entry
+            puts "component name: #{entry[:component_name]}"
             entry[:component_name] != options["component"]
           end
+          puts "after filtering"
+          puts filtered.inspect
       end
 
       response.set_data(*filtered)
