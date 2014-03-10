@@ -79,9 +79,10 @@ module DTK
             id = matched[1].to_i - 1
             element = @method_arguments[id]
 
+            # used if last parameter has more than one word
+            # e.g. set-attribute attr_name "some value" (thor separates 'some value' as two parameters but we need it as one)
             if(mapping.last.to_s.eql?(key_mapping.to_s))
               new_id = id+1
-
               while @method_arguments[new_id] do
                 element << " #{@method_arguments[new_id]}"
                 new_id += 1;
