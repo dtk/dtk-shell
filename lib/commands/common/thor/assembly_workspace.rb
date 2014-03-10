@@ -719,7 +719,7 @@ module DTK::Client
       execute_test_tries = 6
       execute_test_sleep = 0.5
 
-      assembly_or_workspace_id,node_id,component_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id, :option_1],method_argument_names)
+      assembly_or_workspace_id,node_id,filter_component = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id, :option_1],method_argument_names)
 
       post_body = {
         :assembly_id => assembly_or_workspace_id,
@@ -751,12 +751,11 @@ module DTK::Client
           sleep execute_test_sleep
         end
       end
-
       filtered = response.data(:results)
 
-      if !component_name.nil?
+      if !filter_component.nil?
           filtered.reject! do |entry|
-            entry[:component_name] != component_name
+            entry[:component_name] != filter_component
           end
       end
 
