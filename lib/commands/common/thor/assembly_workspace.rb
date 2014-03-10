@@ -744,7 +744,7 @@ module DTK::Client
         if count > execute_test_tries or response.data(:is_complete)
           end_loop = true
         else
-          #last time in loop return whetever is teher
+          #last time in loop return whetever is there
           if count == execute_test_tries
             ret_only_if_complete = false
           end

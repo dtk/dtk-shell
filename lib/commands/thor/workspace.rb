@@ -314,7 +314,7 @@ module DTK::Client
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
     desc "HIDE_FROM_BASE execute-tests [--component COMPONENT-NAME]", "Execute tests. --component filters results per component"
-    method_option :component, :type => :string, :banner => "COMPONENT-NAME"
+    method_option :component, :type => :string, :desc => "Component name"
     def execute_tests(context_params)
       execute_tests_aux(context_params)
     end
