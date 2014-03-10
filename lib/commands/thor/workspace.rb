@@ -312,6 +312,12 @@ module DTK::Client
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
+    desc "HIDE_FROM_BASE execute-tests", "Execute tests"
+    def execute_tests(context_params)
+      execute_tests_aux(context_params)
+    end
+
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
     desc "HIDE_FROM_BASE get-ps [--filter PATTERN]", "Get ps"
     method_option :filter, :type => :boolean, :default => false, :aliases => '-f'
     def get_ps(context_params)
