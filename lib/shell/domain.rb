@@ -79,6 +79,15 @@ module DTK
             id = matched[1].to_i - 1
             element = @method_arguments[id]
 
+            if(mapping.last.to_s.eql?(key_mapping.to_s))
+              new_id = id+1
+
+              while @method_arguments[new_id] do
+                element << " #{@method_arguments[new_id]}"
+                new_id += 1;
+              end
+            end
+
             unless method_info.empty?
               unless element
                 errors << method_info[id] if required
