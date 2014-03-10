@@ -635,7 +635,7 @@ TODO: will put in dot release and will rename to 'extend'
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
     desc "HIDE_FROM_BASE execute-tests [--component COMPONENT-NAME]", "Execute tests. --component filters results per component"
-    method_option :component, :type => :boolean, :default => false
+    method_option :component, :type => :string, :banner => "COMMIT-MSG",
     def execute_tests(context_params)
       execute_tests_aux(context_params)
     end
