@@ -10,6 +10,16 @@ module DTK::Client
     KEY_EXISTS_ALREADY_CONTENT = 'key exists already'
 
     no_tasks do
+      def self.is_ssh_key_valid(path_to_key, rsa_pub_key)
+        unless path_to_key.include?(".pub")
+          raise DtkError, "[ERROR] Invalid public key file path (#{path_to_key}). Please provide valid path and try again."
+        end
+
+        if(rsa_pub_key.empty? || !rsa_pub_key.include?("AAAAB3NzaC1yc2EA"))
+          raise DtkError, "[ERROR] Ssh public key (#{path_to_key}) does not have valid content. Please check your key and try again."
+        end
+      end
+
       def password_prompt(message, add_options=true)
         begin
           # while line = Readline.readline("#{message}: ", add_hist = false)
@@ -37,17 +47,17 @@ module DTK::Client
       match, matched_username = nil, nil
 
       unless File.file?(path_to_key)
-        OsUtil.put_warning "[ERROR]  " ,"No ssh key file found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run `ssh-keygen -t rsa`)", :red
-        abort
+        # OsUtil.put_warning "[ERROR]  " ,"No ssh key file found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run `ssh-keygen -t rsa`)", :red
+        raise DtkError,"[ERROR] No ssh key file found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run `ssh-keygen -t rsa`)."
       end
 
       rsa_pub_key = File.open(path_to_key){|f|f.read}
+      is_ssh_key_valid(path_to_key, rsa_pub_key)
 
       post_body = { :rsa_pub_key => rsa_pub_key.chomp }
-            
       post_body.merge!(:username => name.chomp) if name
-      proper_response = nil
 
+      proper_response = nil
       response, key_exists_already = Account.internal_add_user_access("account/add_user_direct_access", post_body, 'service module')
 
       return response unless (response.ok? || key_exists_already)
@@ -101,7 +111,7 @@ module DTK::Client
       end
     end
 
-    desc "list-ssh-keys", "Show list of keys that your account profile has saved"
+    desc "list-ssh-keys", "Show list of key pairs that your account profile has saved"
     def list_ssh_keys(context_params)
       username  = parse_key_value_file(::DTK::Client::Configurator.CRED_FILE)[:username]
       post_body = {:username => username}
@@ -110,7 +120,7 @@ module DTK::Client
       response.render_table(:account_ssh_keys)
     end
 
-    desc "add-ssh-key NAME [PATH-TO-RSA-PUB-KEY]","Adds direct access to modules. Optional parameters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
+    desc "add-ssh-key KEYPAIR-NAME [PATH-TO-RSA-PUB-KEY]","Adds a named ssh key to your user account to access modules from the catalog. Optional parameters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def add_ssh_key(context_params)
       name, path_to_key = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       path_to_key ||= SshProcessing.default_rsa_pub_key_path()
@@ -118,23 +128,25 @@ module DTK::Client
       response, matched, matched_username = Account.add_key(path_to_key, name)
 
       if matched
-        DTK::Client::OsUtil.print("Provided SSH PUB key has already been added.", :yellow)
+        DTK::Client::OsUtil.print("Provided ssh pub key has already been added.", :yellow)
       elsif matched_username
         DTK::Client::OsUtil.print("User ('#{matched_username}') already exists.", :yellow)
       else        
         DTK::Client::Configurator.add_current_user_to_direct_access() if response.ok?
       end
+
+      response
     end
 
-    desc "remove-ssh-key NAME ","Removes user and direct access to modules."
-    def remove_ssh_key(context_params)
+    desc "delete-ssh-key KEYPAIR-NAME ","Deletes the named ssh key from your user account"
+    def delete_ssh_key(context_params)
       name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post_body = {:username => name.chomp}
 
       response = post rest_url("account/remove_user_direct_access"), post_body
       return response unless response.ok?
 
-      OsUtil.print("SSH key removed successfully!", :yellow)
+      OsUtil.print("Ssh key removed successfully!", :yellow)
       response
     end
 

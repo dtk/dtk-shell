@@ -732,8 +732,11 @@ module DTK::Client
       response = post(rest_url("assembly/info_about"),post_body)
 
       components = []
-      response['data'].each do |c|
-        components << c['display_name']
+
+      if !response['data'].nil?
+        response['data'].each do |c|
+          components << c['display_name']
+        end
       end
 
       post_body = {
@@ -769,6 +772,7 @@ module DTK::Client
       end
       filtered = response.data(:results)
 
+      #Filter out results per specific component
       if !options["component"].nil?
           filtered.reject! do |element|
             element["component_name"] != options["component"]
