@@ -16,7 +16,7 @@ module DTK::Client
         end
 
         if(rsa_pub_key.empty? || !rsa_pub_key.include?("AAAAB3NzaC1yc2EA"))
-          raise DtkError, "[ERROR] SSH public key (#{path_to_key}) does not have valid content. Please check your key and try again."
+          raise DtkError, "[ERROR] Ssh public key (#{path_to_key}) does not have valid content. Please check your key and try again."
         end
       end
 
@@ -128,12 +128,14 @@ module DTK::Client
       response, matched, matched_username = Account.add_key(path_to_key, name)
 
       if matched
-        DTK::Client::OsUtil.print("Provided SSH PUB key has already been added.", :yellow)
+        DTK::Client::OsUtil.print("Provided ssh pub key has already been added.", :yellow)
       elsif matched_username
         DTK::Client::OsUtil.print("User ('#{matched_username}') already exists.", :yellow)
       else        
         DTK::Client::Configurator.add_current_user_to_direct_access() if response.ok?
       end
+
+      response
     end
 
     desc "delete-ssh-key KEYPAIR-NAME ","Deletes the named ssh key from your user account"
@@ -147,7 +149,7 @@ module DTK::Client
       response = post rest_url("service_module/remove_user_direct_access"), post_body
       return response unless response.ok?
 
-      OsUtil.print("SSH key removed successfully!", :yellow)
+      OsUtil.print("Ssh key removed successfully!", :yellow)
       response
     end
 

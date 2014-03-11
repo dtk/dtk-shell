@@ -3,7 +3,7 @@ module DTK; module Client
     def self.update_ssh_known_hosts(server_dns,server_fingerprint)
       known_hosts_path = ssh_known_hosts_path()
       if File.file?(known_hosts_path)
-        `ssh-keygen -f #{known_hosts_path} -R #{server_dns}`
+        `ssh-keygen -f #{known_hosts_path} -R #{server_dns} 2> /dev/null`
         File.open(known_hosts_path,"a"){|f|f << server_fingerprint}
       else
         ssh_base_dir = ssh_base_dir()
