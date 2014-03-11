@@ -840,7 +840,7 @@ module DTK
         clazz = Context.get_command_class(entity_name)
         current_context_command = active_context_copy.last_command_name
 
-        if (current_context_command != entity_name)
+        if ((current_context_command != entity_name) && !current_context_command.eql?("utils"))
           current_context_clazz = Context.get_command_class(current_context_command)
           options = Context.get_thor_options(current_context_clazz, cmd) unless current_context_command.nil?
         else

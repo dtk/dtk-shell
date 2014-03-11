@@ -140,6 +140,7 @@ TODO: overlaps with different meaning
             ['list-components',"list-components","# List components."]
           ],
           :utils => [
+            ['execute-tests',"execute-tests [--component COMPONENT-NAME]","# Execute tests. --component filters results per component."],
             ['get-netstats',"get-netstats","# Get netstats."],
             ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
             ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."],
@@ -630,6 +631,13 @@ TODO: will put in dot release and will rename to 'extend'
     desc "HIDE_FROM_BASE get-netstats", "Get netstats"
     def get_netstats(context_params)
       get_netstats_aux(context_params)
+    end
+
+    # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
+    desc "HIDE_FROM_BASE execute-tests [--component COMPONENT-NAME]", "Execute tests. --component filters results per component"
+    method_option :component, :type => :string, :desc => "Component name" 
+    def execute_tests(context_params)
+      execute_tests_aux(context_params)
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
