@@ -18,10 +18,13 @@ module DTK
         @git_repo.add(untracked())
         @git_repo.add(added())
         @git_repo.add(changed())
-        deleted().each do |file, status|
-          # this indicates that change has not been staged
-          if status.stage
+        deleted().each do |file|
+          begin
             @git_repo.remove(file)
+          rescue
+            # ignore this error means file has already been staged
+            # we cannot support status of file, in 1.8.7 so this is 
+            # solution for that
           end
         end
       end
