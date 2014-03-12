@@ -22,11 +22,8 @@ module DTK; module Client; class CommandHelper
           FileUtils.rm_rf(target_repo_dir) if File.directory?(target_repo_dir)
           error_msg = "Clone to directory (#{target_repo_dir}) failed"
 
-          # additional data about this exception
-          if DTK::Configuration.get(:development_mode)
-            DtkLogger.instance.error_pp(e.message, e.backtrace)
-          end
-
+          DtkLogger.instance.error_pp(e.message, e.backtrace)
+          
           raise ErrorUsage.new(error_msg,:log_error=>false)
         end
         {"module_directory" => target_repo_dir}
