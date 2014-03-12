@@ -111,6 +111,8 @@ module DTK::Client
       if response.ok?
         public_dns = response.data['external_ref']['ec2_public_address']
 
+        raise ::DTK::Client::DtkError, "Not able to resolve instance address, has instance been stopped?" unless public_dns
+
         connection_string = "#{remote_user}@#{public_dns}"
         ssh_command = "ssh  -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{keypair_location} #{connection_string}"
 
