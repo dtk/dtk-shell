@@ -9,6 +9,8 @@ module DTK
 
       extend Auxiliary
 
+      DTK_KEYPAIR = 'dtk.pem'
+
       class << self
         def is_mac?
           RUBY_PLATFORM.downcase.include?('darwin')
@@ -147,6 +149,18 @@ module DTK
           # remove last slash if set in configuration by mistake
           final_path.gsub(/\/$/,'')
         end
+
+        #
+        # Checks to find dtk.pem in configuration node, if not found displays tip message
+        #
+        def dtk_keypair_location()
+          path_to_keypair = "#{dtk_local_folder}#{DTK_KEYPAIR}"
+          return path_to_keypair if File.exists?(path_to_keypair)
+          print("TIP: You can save your keypair as '#{path_to_keypair}' and it will be used as default keypair.", :yellow)
+          nil
+        end
+
+
         private :clone_base_path
         #
         #

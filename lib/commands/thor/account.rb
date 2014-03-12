@@ -16,7 +16,7 @@ module DTK::Client
         end
 
         if(rsa_pub_key.empty? || !rsa_pub_key.include?("AAAAB3NzaC1yc2EA"))
-          raise DtkError, "[ERROR] Ssh public key (#{path_to_key}) does not have valid content. Please check your key and try again."
+          raise DtkError, "[ERROR] SSH public key (#{path_to_key}) does not have valid content. Please check your key and try again."
         end
       end
 

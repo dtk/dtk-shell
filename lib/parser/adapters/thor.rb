@@ -25,8 +25,8 @@ module DTK
 
       @@cached_response = {}
       @@invalidate_map  = []
-      TIME_DIFF         = 60   #second(s)
-      EXTENDED_TIMEOUT  = 360  #second(s)
+      TIME_DIFF         = 60   # second(s)
+      EXTENDED_TIMEOUT  = 360  # second(s)
       HIDE_FROM_BASE_CONTEXT = "HIDE_FROM_BASE"
 
       # thor command specific constants
@@ -289,40 +289,6 @@ module DTK
                 end
               end
             end
-
-            # will leave this commented for now until we check if new code works properly
-            # if children
-            #   current_children = []
-            #   children.each do |child|
-            #     current_children << child.to_s
-
-            #     # create entry e.g. assembly_node_id
-            #     child_id_sym = (command.downcase + '_' + current_children.join('_') + '_wid').to_sym
-
-            #     # n-context matching
-            #     matched_data = task[1].usage.match(/\[?#{child.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
-            #     if matched_data
-            #       cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << task_name 
-            #     end
-
-            #     # override method list, we add these methods only once
-            #     if override_task_obj && !override_task_obj.is_completed?(child)
-            #       command_o_tasks, identifier_o_tasks = override_task_obj.get_all_tasks(child)
-            #       child_sym    = (command.downcase + '_' + current_children.join('_')).to_sym
-
-            #       command_o_tasks.each do |o_task|
-            #         cached_tasks[child_sym] = cached_tasks.fetch(child_sym,[]) << o_task[0]
-            #       end
-
-            #       identifier_o_tasks.each do |o_task|
-            #         cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << o_task[0]
-            #       end
-
-            #       override_task_obj.add_to_completed(child)
-            #     end
-            #   end
-            # end
-
           end
         end
         
@@ -480,6 +446,14 @@ module DTK
         basename = super
         basename = '' if basename == 'dtk-shell'
         return basename
+      end
+
+      #
+      # Returns list of invisible contexts with sufix provided (if any) 
+      #
+
+      def self.invisible_context_list(sufix = 'identifier')
+        self.respond_to?(:invisible_context) ? self.invisible_context.collect { |i| "#{i}-#{sufix}" } : []
       end
 
       desc "help [SUBCOMMAND]", "Describes available subcommands or one specific subcommand"

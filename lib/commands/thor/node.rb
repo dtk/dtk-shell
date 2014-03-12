@@ -2,6 +2,7 @@ dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 module DTK::Client
   class Node < CommandBaseThor
+
     no_tasks do
       include TaskStatusMixin
       include SetRequiredParamsMixin
@@ -73,13 +74,52 @@ module DTK::Client
     
     desc "NODE-NAME/ID info","Info about node"
     def info(context_params)
-
+      raise
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
       post_body = {
         :node_id => node_id,
         :subtype => 'instance',
       }
+
        post rest_url("node/info"), post_body
+    end
+
+    desc "NODE-NAME/ID ssh [--keypair] [--remote-user]","SSH into node, optional parameters are path to keypair and remote user."
+    method_option "--keypair",:type => :string, :desc => "Keypair used for connection, if not provided default is used", :banner => "KEYPAIR"
+    method_option "--remote-user",:type => :string, :desc => "Remote user used for connection", :banner => "REMOTE USER"
+    def ssh(context_params)
+      if OsUtil.is_windows?
+        puts "[NOTICE] SSH functionality is currenly not supported on Windows."
+        return
+      end
+
+      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
+
+
+      keypair_location = options.keypair || OsUtil.dtk_keypair_location()
+
+
+      remote_user = options.send('remote-user') || 'ubuntu'
+
+      unless File.exists?(keypair_location||'')
+        error_message = keypair_location ? "Not able to find keypair, '#{keypair_location}'" : "Default keypair not set, please provide one in 'ssh' command"
+        raise ::DTK::Client::DtkError, error_message
+      end
+
+      response = post rest_url("node/info"), { :node_id => node_id, :subtype => 'instance' }
+
+      if response.ok?
+        public_dns = response.data['external_ref']['ec2_public_address']
+
+        connection_string = "#{remote_user}@#{public_dns}"
+        ssh_command = "ssh  -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{keypair_location} #{connection_string}"
+
+        OsUtil.print("You are entering SSH terminal (#{connection_string}) ...", :yellow)
+        Kernel.system(ssh_command)
+        OsUtil.print("You are leaving SSH terminal, and returning to DTK Shell ...", :yellow)
+      else
+        return response
+      end
     end
 
     desc "NODE-NAME/ID list-components","List components that are on the node instance."

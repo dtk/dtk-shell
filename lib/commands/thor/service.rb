@@ -157,7 +157,8 @@ TODO: overlaps with different meaning
             ['list-components',"list-components","# List components associated with service's node."],
             ['set-attribute',"set-attribute ATTRIBUTE-NAME [VALUE] [-u]","# (Un)Set attribute value. The option -u will unset the attribute's value."],
             ['start', "start", "# Start node instance."],
-            ['stop', "stop", "# Stop node instance."]
+            ['stop', "stop", "# Stop node instance."],
+            ['ssh', "ssh [--keypair] [--remote-user]", "# SSH into node, optional parameters are path to keypair and remote user."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
