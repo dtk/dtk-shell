@@ -61,14 +61,14 @@ class DtkLogger
     @logger.error(log_text) if log_created?
   end
 
-  def error_pp(message, backtrace)
-    error(message, true)
+  def error_pp(message, backtrace, sttdout_out = true)
+    error(message, sttdout_out)
     # we do not print this to STDOUT (will be overriden with DEVELOPMENT_MODE)
     error(PP.pp(backtrace, ""), false) if backtrace
   end
 
-  def fatal_pp(message, backtrace)
-    fatal(message, true)
+  def fatal_pp(message, backtrace, sttdout_out = true)
+    fatal(message, sttdout_out)
     # we do not print this to STDOUT (will be overriden with DEVELOPMENT_MODE)
     fatal(PP.pp(backtrace, ""), false) if backtrace
   end

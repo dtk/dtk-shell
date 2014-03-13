@@ -1,5 +1,6 @@
 require 'fileutils'
 dtk_require("../domain/git_adapter")
+dtk_require("../domain/git_error_handler")
 
 module DTK; module Client; class CommandHelper
   class GitRepo < self; class << self
@@ -18,6 +19,9 @@ module DTK; module Client; class CommandHelper
         begin 
           GitAdapter.clone(repo_url, target_repo_dir, opts[:branch])
         rescue => e
+          # Handling Git error messages with more user friendly messages
+          e = GitErrorHandler.handle(e)
+
           #cleanup by deleting directory
           FileUtils.rm_rf(target_repo_dir) if File.directory?(target_repo_dir)
           error_msg = "Clone to directory (#{target_repo_dir}) failed"
