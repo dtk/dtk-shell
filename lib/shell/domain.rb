@@ -24,6 +24,10 @@ module DTK
         @thor_options
       end
 
+      def get_forwarded_option(key)
+        @thor_options ? @thor_options[key] : nil
+      end
+
       def get_forwarded_thor_option(option_key)
         return @thor_options ? @thor_options[option_key] : nil
       end
