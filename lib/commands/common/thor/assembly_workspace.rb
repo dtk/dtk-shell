@@ -476,16 +476,22 @@ module DTK::Client
 
     def info_aux(context_params)
       assembly_or_workspace_id, node_id, component_id, attribute_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :node_id, :component_id, :attribute_id],method_argument_names)
+      is_json_return = context_params.get_forwarded_option(:json_return) || false 
  
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :node_id     => node_id,
         :component_id => component_id,
         :attribute_id => attribute_id,
-        :subtype     => :instance
+        :subtype     => :instance,
+        :json_return => is_json_return      
       }
 
       resp = post rest_url("assembly/info"), post_body
+
+      # if waiting for json response we do not need to render rest of data
+      return resp if is_json_return
+
       if (component_id.nil? && !node_id.nil?)
         resp.render_workspace_node_info("node")
       elsif (component_id && node_id)

@@ -3,6 +3,8 @@ dtk_require_common_commands('thor/set_required_params')
 module DTK::Client
   class Node < CommandBaseThor
 
+    include AssemblyWorkspaceMixin
+
     no_tasks do
       include TaskStatusMixin
       include SetRequiredParamsMixin
@@ -74,7 +76,6 @@ module DTK::Client
     
     desc "NODE-NAME/ID info","Info about node"
     def info(context_params)
-      raise
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
       post_body = {
         :node_id => node_id,
@@ -106,10 +107,13 @@ module DTK::Client
         raise ::DTK::Client::DtkError, error_message
       end
 
-      response = post rest_url("node/info"), { :node_id => node_id, :subtype => 'instance' }
+      context_params.forward_options({ :json_return => true })
+      response = info_aux(context_params)
+
 
       if response.ok?
-        public_dns = response.data['external_ref']['ec2_public_address']
+        node_info = response.data['nodes'].find { |n| node_id == n['node_id'] }
+        public_dns = node_info ? node_info['external_ref']['ec2_public_address'] : nil
 
         raise ::DTK::Client::DtkError, "Not able to resolve instance address, has instance been stopped?" unless public_dns
 
