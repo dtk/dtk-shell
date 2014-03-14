@@ -127,7 +127,8 @@ def resolve_direct_access(params)
   elsif matched_username
     DTK::Client::OsUtil.print("User with provided name already exists.", :yellow)
   else
-    DTK::Client::OsUtil.print("Your SSH PUB key has been successfully added.", :yellow)
+    # commented out because 'add_key' method called above will also print the same message
+    # DTK::Client::OsUtil.print("Your SSH PUB key has been successfully added.", :yellow)
     DTK::Client::Configurator.add_current_user_to_direct_access()
   end
   

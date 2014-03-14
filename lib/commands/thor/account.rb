@@ -68,7 +68,8 @@ module DTK::Client
       if response && !match
         repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
         SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
-        OsUtil.print("SSH key added successfully!", :yellow)
+        name ||= response.data["new_username"]
+        OsUtil.print("SSH key '#{name}' added successfully!", :yellow)
       end
 
       return response, match, matched_username
@@ -146,7 +147,7 @@ module DTK::Client
       response = post rest_url("account/remove_user_direct_access"), post_body
       return response unless response.ok?
 
-      OsUtil.print("Ssh key removed successfully!", :yellow)
+      OsUtil.print("Ssh key '#{name}' removed successfully!", :yellow)
       response
     end
 
