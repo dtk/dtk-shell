@@ -740,7 +740,7 @@ module DTK
           opts[id_label] = id
 
           response_ruby_obj = DTK::Client::CommandBaseThor.get_cached_response(endpoint.to_sym, url, opts)
-          return [] unless response_ruby_obj.ok?
+          return [] if(response_ruby_obj.nil? || !response_ruby_obj.ok?)
 
           response_ruby_obj.data.each do |d|
             candidates << d["display_name"]
