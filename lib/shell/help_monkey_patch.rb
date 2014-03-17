@@ -217,13 +217,13 @@ class Thor
       shell.say
 
       # print sub context information
-      if @@shell_context && @@shell_context.active_context.current_identifier? && !@@shell_context.active_context.is_n_context?
-        sub_children  = self.respond_to?(:valid_children) ? self.valid_children() : []
-        sub_children += self.invisible_context_list()
+      # if @@shell_context && @@shell_context.active_context.current_identifier?
+      #   sub_children  = self.respond_to?(:valid_children) ? self.valid_children() : []
+      #   sub_children += self.invisible_context_list()
 
-        shell.say("  Change context (cc) to: #{sub_children.join(', ')}", :BOLD) unless sub_children.empty?
-        shell.say
-      end
+      #   shell.say("  Change context (cc) to: #{sub_children.join(', ')}", :BOLD) unless sub_children.empty?
+      #   shell.say
+      # end
 
       class_options_help(shell)
     end
