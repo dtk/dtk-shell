@@ -8,7 +8,7 @@ module DTK::Client
     def push_to_remote_aux(module_type,module_id, module_name,remote_namespace,version=nil)       
       id_field = "#{module_type}_id"
 
-      rsa_pub_value = SshProcessing.rsa_pub_key_content()
+      rsa_pub_value = SSHUtil.rsa_pub_key_content()
 
       post_body = {
         id_field => module_id,

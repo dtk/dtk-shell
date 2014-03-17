@@ -1,4 +1,3 @@
-dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
 dtk_require_from_base('configurator')
@@ -10,15 +9,6 @@ module DTK::Client
     KEY_EXISTS_ALREADY_CONTENT = 'key exists already'
 
     no_tasks do
-      def self.is_ssh_key_valid(path_to_key, rsa_pub_key)
-        unless path_to_key.include?(".pub")
-          raise DtkError, "[ERROR] Invalid public key file path (#{path_to_key}). Please provide valid path and try again."
-        end
-
-        if(rsa_pub_key.empty? || !rsa_pub_key.include?("AAAAB3NzaC1yc2EA"))
-          raise DtkError, "[ERROR] SSH public key (#{path_to_key}) does not have valid content. Please check your key and try again."
-        end
-      end
 
       def password_prompt(message, add_options=true)
         begin
@@ -51,8 +41,7 @@ module DTK::Client
         raise DtkError,"[ERROR] No ssh key file found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run `ssh-keygen -t rsa`)."
       end
 
-      rsa_pub_key = File.open(path_to_key){|f|f.read}
-      is_ssh_key_valid(path_to_key, rsa_pub_key)
+      rsa_pub_key = SSHUtil.read_and_validate_pub_key(path_to_key)
 
       post_body = { :rsa_pub_key => rsa_pub_key.chomp }
       post_body.merge!(:username => name.chomp) if name
@@ -67,9 +56,11 @@ module DTK::Client
 
       if response && !match
         repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
-        SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
+
+        SSHUtil.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
         name ||= response.data["new_username"]
         OsUtil.print("SSH key '#{name}' added successfully!", :yellow)
+
       end
 
       return response, match, matched_username
@@ -124,7 +115,7 @@ module DTK::Client
     desc "add-ssh-key KEYPAIR-NAME [PATH-TO-RSA-PUB-KEY]","Adds a named ssh key to your user account to access modules from the catalog. Optional parameters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     def add_ssh_key(context_params)
       name, path_to_key = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
-      path_to_key ||= SshProcessing.default_rsa_pub_key_path()
+      path_to_key ||= SSHUtil.default_rsa_pub_key_path()
 
       response, matched, matched_username = Account.add_key(path_to_key, name)
 
@@ -136,7 +127,7 @@ module DTK::Client
         DTK::Client::Configurator.add_current_user_to_direct_access() if response.ok?
       end
 
-      response
+      nil
     end
 
     desc "delete-ssh-key KEYPAIR-NAME ","Deletes the named ssh key from your user account"
@@ -148,7 +139,7 @@ module DTK::Client
       return response unless response.ok?
 
       OsUtil.print("Ssh key '#{name}' removed successfully!", :yellow)
-      response
+      nil
     end
 
 
@@ -177,7 +168,7 @@ module DTK::Client
     #   # if either of request passed we will add to known hosts
     #   if proper_response
     #     repo_manager_fingerprint,repo_manager_dns = proper_response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
-    #     SshProcessing.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
+    #     SSHUtil.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
     #     return proper_response
     #   else
     #     nil
@@ -188,7 +179,7 @@ module DTK::Client
     # def add_direct_access(context_params)
     #   return
     #   path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
-    #   path_to_key ||= SshProcessing.default_rsa_pub_key_path()
+    #   path_to_key ||= SSHUtil.default_rsa_pub_key_path()
     #   access_granted = Account.add_access(path_to_key)
 
     #   FileUtils.touch(DTK::Client::Configurator::DIRECT_ACCESS) if access_granted
@@ -198,7 +189,7 @@ module DTK::Client
     # desc "remove-direct-access [PATH-TO-RSA-PUB-KEY]","Removes direct access to modules. Optional paramaeters is path to a ssh rsa public key and default is <user-home-dir>/.ssh/id_rsa.pub"
     # def remove_direct_access(context_params)
     #   path_to_key = context_params.retrieve_arguments([:option_1],method_argument_names)
-    #   path_to_key ||= SshProcessing.default_rsa_pub_key_path()
+    #   path_to_key ||= SSHUtil.default_rsa_pub_key_path()
 
     #   # path_to_key ||= "#{ENV['HOME']}/.ssh/id_rsa.pub" #TODO: very brittle
     #   unless File.file?(path_to_key)

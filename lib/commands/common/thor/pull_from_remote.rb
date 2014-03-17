@@ -24,7 +24,7 @@ module DTK::Client
 
     def pull_from_remote_aux(module_type,module_id,version=nil)
       #get remote module info, errors raised if remote is not linked or access errors
-      path_to_key = SshProcessing.default_rsa_pub_key_path()
+      path_to_key = SSHUtil.default_rsa_pub_key_path()
       rsa_pub_key = File.file?(path_to_key) && File.open(path_to_key){|f|f.read}.chomp
 
       post_body = {

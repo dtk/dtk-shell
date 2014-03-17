@@ -45,7 +45,7 @@ module DTK
 			# return true/false, .add_direct_access file location and ssk key file location
 			def self.check_direct_access
 				username_exists  = check_for_username_entry(client_username())
-				ssh_key_path = SshProcessing.default_rsa_pub_key_path()
+				ssh_key_path = SSHUtil.default_rsa_pub_key_path()
 				
 				{:username_exists => username_exists, :file_path => DIRECT_ACCESS, :ssh_key_path => ssh_key_path}
 			end

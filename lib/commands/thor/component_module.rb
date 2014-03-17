@@ -1,4 +1,3 @@
-dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/list_diffs')
 dtk_require_common_commands('thor/push_to_remote')
@@ -216,8 +215,8 @@ TODO: might deprecate
       end
 
       action           = (options.remote? ? "list_remote" : "list")
-#      post_body        = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
-      post_body        = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
+#      post_body        = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
+      post_body        = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
       post_body[:diff] = options.diff? ? options.diff : {}
       response         = post rest_url("component_module/#{action}"),post_body
       
@@ -232,7 +231,7 @@ TODO: might deprecate
       post_body = {
         :component_module_id => component_module_id,
         :detail_to_include => ["remotes"],
-        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
       response = post rest_url("component_module/versions"), post_body
 
@@ -374,7 +373,7 @@ TODO: might deprecate
       post_body = {
         :remote_module_name => remote_module_name,
         :local_module_name => local_module_name,
-        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
       post_body.merge!(:do_not_raise => do_not_raise) if do_not_raise
       post_body.merge!(:ignore_component_error => ignore_component_error) if ignore_component_error
@@ -495,7 +494,7 @@ TODO: might deprecate
       post_body = {
        :remote_module_name      => remote_name,
        :remote_module_namespace => remote_namespace,
-       :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+       :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
       post rest_url("component_module/delete_remote"), post_body
     end
@@ -508,7 +507,7 @@ TODO: might deprecate
     #   post_body = {
     #     :component_module_id => component_module_id,
     #     :remote_component_name => input_remote_name,
-    #     :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+    #     :rsa_pub_key => SSHUtil.rsa_pub_key_content()
     #   }
 
     #   response = post rest_url("component_module/export"), post_body
@@ -523,7 +522,7 @@ TODO: might deprecate
       post_body = {
         :component_module_id => component_module_id,
         :remote_component_name => input_remote_name,
-        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
 
       response = post rest_url("component_module/export"), post_body
@@ -634,7 +633,7 @@ TODO: might deprecate
 
       post_body = {
         :component_module_id => component_module_id,
-        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
       response = post rest_url("component_module/versions"), post_body
       return response unless response.ok?

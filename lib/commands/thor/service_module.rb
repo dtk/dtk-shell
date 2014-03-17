@@ -1,6 +1,5 @@
 #TODO: putting in version as hidden coption that can be enabled when code ready
 #TODO: may be consistent on whether service module id or service module name used as params
-dtk_require_from_base('command_helpers/ssh_processing')
 dtk_require_from_base('command_helpers/service_importer')
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/push_to_remote')
@@ -131,8 +130,7 @@ module DTK::Client
       # If user is on service level, list task can't have about value set
       if (context_params.last_entity_name == :"service-module") and about.nil?
         action    = options.remote? ? "list_remote" : "list"
-        # post_body = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
-        post_body = (options.remote? ? { :rsa_pub_key => SshProcessing.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
+        post_body = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
         post_body[:diff] = options.diff? ? options.diff : {}
         
         response = post rest_url("service_module/#{action}"), post_body
@@ -180,7 +178,7 @@ module DTK::Client
     #   post_body = {
     #     :service_module_id => service_module_id,
     #     :detail_to_include => ["remotes"],
-    #     :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+    #     :rsa_pub_key => SSHUtil.rsa_pub_key_content()
     #   }
     #   response = post rest_url("service_module/versions"), post_body
 
@@ -207,7 +205,7 @@ module DTK::Client
       post_body = {
         :remote_module_name => remote_module_name,
         :local_module_name => local_module_name,
-        :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
       
       response = post rest_url("service_module/import"), post_body
@@ -289,7 +287,7 @@ module DTK::Client
     #   post_body = {
     #    :service_module_id => service_module_id,
     #    :remote_component_name => input_remote_name,
-    #    :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+    #    :rsa_pub_key => SSHUtil.rsa_pub_key_content()
     #   }
 
     #   post rest_url("service_module/export"), post_body
@@ -302,7 +300,7 @@ module DTK::Client
       post_body = {
        :service_module_id => service_module_id,
        :remote_component_name => input_remote_name,
-       :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+       :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
 
       post rest_url("service_module/export"), post_body
@@ -453,7 +451,7 @@ module DTK::Client
     #   service_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!],method_argument_names)
     #   post_body = {
     #     :service_module_id => service_module_id,
-    #     :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+    #     :rsa_pub_key => SSHUtil.rsa_pub_key_content()
     #   }
     #   response = post rest_url("service_module/versions"), post_body
     #   return response unless response.ok?
@@ -719,7 +717,7 @@ module DTK::Client
 
       post_body = {
        :remote_service_name => remote_service_name,
-       :rsa_pub_key => SshProcessing.rsa_pub_key_content()
+       :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
       response = post rest_url("service_module/delete_remote"), post_body
       @@invalidate_map << :module_service

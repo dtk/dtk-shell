@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 require File.expand_path('../lib/shell', File.dirname(__FILE__))
 require File.expand_path('../lib/commands/thor/account', File.dirname(__FILE__))
-require File.expand_path('../lib/command_helpers/ssh_processing', File.dirname(__FILE__))
 
 trap("INT", "SIG_IGN")
 

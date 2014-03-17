@@ -198,7 +198,7 @@ TODO: overlaps with different meaning
       cancel_task_aux(context_params)
     end
 =begin
-#TODO: until we investigate DTK-1349
+# TODO: until we investigate DTK-1349
     desc "rename SERVICE-NAME NEW-SERVICE-NAME","Change service name."
     def rename(context_params)
       assembly_name, new_assembly_name = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
@@ -480,6 +480,46 @@ TODO: will put in dot release and will rename to 'extend'
     #  post rest_url("assembly/list_smoketests"), post_body
     #end
 
+    desc "SERVICE-NAME/ID grant-access SYS-USER NAME [PATH-TO-PUB-KEY]", "Grant access to given service and its nodes" 
+    def grant_access(context_params)
+      service_id, system_user, rsa_key_name, path_to_rsa_pub_key = context_params.retrieve_arguments([:service_id!,:option_1!, :option_2!, :option_3],method_argument_names)
+
+      path_to_rsa_pub_key ||= SSHUtil.default_rsa_pub_key_path()
+      rsa_pub_key_content = SSHUtil.read_and_validate_pub_key(path_to_rsa_pub_key)
+    
+      response = post_file rest_url("assembly/initiate_grant_access"), { :system_user => system_user, :rsa_pub_name => rsa_key_name, :rsa_pub_key => rsa_pub_key_content, :assembly_id => service_id }
+
+      unless response.ok?
+        raise DTK::Client::DtkError, "Error while getting log from server, there was no successful response."
+      end
+
+      action_results_id = response.data(:action_results_id)
+
+      action_body = {
+        :action_results_id => action_results_id,
+        :return_only_if_complete => true,
+        :disable_post_processing => true
+      }
+
+      3.times do
+        response = post(rest_url("assembly/get_action_results"),action_body)
+
+        # server has found an error
+        unless response.data(:results).nil?
+          if response.data(:results)['error']
+            raise DTK::Client::DtkError, response.data(:results)['error']
+          end
+        end
+
+        break if response.data(:is_complete)
+
+        sleep(1)
+      end
+
+
+      response
+    end
+
     desc "SERVICE-NAME/ID info", "Get info about content of the service."
     def info(context_params)
       info_aux(context_params)
@@ -539,21 +579,6 @@ TODO: will put in dot release and will rename to 'extend'
     def create_attribute(context_params)
       create_attribute_aux(context_params)
     end
-
-  #  desc "ASSEMBLY-NAME/ID add-assembly ASSEMBLY-TEMPLATE-NAME/ID", "Add (stage) an assembly template to become part of this assembly instance"
-  #  method_option "auto-complete",:aliases => "-a" ,
-  #    :type => :boolean, 
-  #    :default=> false,
-  #    :desc => "Automatically add in connections"
-  #  def add_assembly(context_params)
-  #    assembly_id,assembly_template_id = context_params.retrieve_arguments([:assembly_id,:option_1!],method_argument_names)
-  #    post_body = {
-  #      :assembly_id => assembly_id,
-  #      :assembly_template_id => assembly_template_id
-  #    }
-  #    post_body.merge!(:auto_add_connections => true) if options.auto_complete?
-  #    post rest_url("assembly/add_assembly_template"), post_body
-  #  end
 
     # using ^^ before NODE-NAME to remove this command from assembly/assembly_id/node/node_id but show in assembly/assembly_id
     desc "SERVICE-NAME/ID create-node ^^NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the service."

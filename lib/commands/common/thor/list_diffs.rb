@@ -2,7 +2,7 @@ module DTK::Client
   module ListDiffsMixin
   	def list_diffs_aux(module_type,module_id,remote,version=nil)
   		id_field    = "#{module_type}_id"
-      path_to_key = SshProcessing.default_rsa_pub_key_path()
+      path_to_key = SSHUtil.default_rsa_pub_key_path()
       rsa_pub_key = File.file?(path_to_key) && File.open(path_to_key){|f|f.read}.chomp
 
       post_body = {
