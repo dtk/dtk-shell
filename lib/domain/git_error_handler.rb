@@ -27,8 +27,12 @@ module DTK
 
       def self.user_friendly_message(message)
         case message
-        when /repository (.*) not found/
+        when /repository (.*) not found/i
           "Repository #{$1.strip()} not found"
+        when /destination path (.*) already exists/i
+          "Destination folder #{$1.strip()} already exists"
+        when /Authentication failed for (.*)$/i
+          "Authentication failed for given repository #{$1.strip()}"
         else
           message
         end
