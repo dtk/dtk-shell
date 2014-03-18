@@ -405,8 +405,7 @@ module DTK
         response = post_raw rest_url("user/process_login"),creds
         errors = response['errors']
 
-        if response.kind_of?(Common::Response) and not response.ok?    
-          puts errors.first['code']
+        if response.kind_of?(Common::Response) and not response.ok?
           if (errors && errors.first['code']=="pg_error")
             DTK::Client::OsUtil.print(errors.first['message'].gsub!("403 Forbidden", "[PG_ERROR]"), :red)
             exit
