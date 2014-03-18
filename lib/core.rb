@@ -111,10 +111,10 @@ def validate_connection(connection)
 end
 
 # check if .add_direct_access file exists, if not then add direct access and create .add_direct_access file
-def resolve_direct_access(params)
+def resolve_direct_access(params, config_exists=nil)
   return if params[:username_exists]
 
-  puts "Adding direct access for current user..."
+  puts "Adding direct access for current user..." if config_exists
   # response = DTK::Client::Account.add_access(params[:ssh_key_path])
   response, matched_pub_key, matched_username = DTK::Client::Account.add_key(params[:ssh_key_path])
   

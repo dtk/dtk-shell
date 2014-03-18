@@ -22,15 +22,20 @@ module DTK
 	    end
 
 			def self.check_config_exists
+				exists = true
 				if !File.exists?(CONFIG_FILE)
 					puts "", "Please enter the DTK server address (example: dtk.r8network.com)"
 					header = File.read(File.expand_path('../lib/config/client.conf.header', File.dirname(__FILE__)))
 					generate_conf_file(CONFIG_FILE, [['server_host', 'Server address']], header)
+					exists = false
 				end
 				if !File.exists?(CRED_FILE)
 					puts "", "Please enter your DTK login details"
 					generate_conf_file(CRED_FILE, [['username', 'Username'], ['password', 'Password']], '')
+					exists = false
 				end
+
+				exists
 			end
 
 			def self.check_git
