@@ -17,13 +17,13 @@ require 'shellwords'
 
 $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
 
-::DTK::Client::Configurator.check_config_exists
+config_exists = ::DTK::Client::Configurator.check_config_exists
 ::DTK::Client::Configurator.check_git
 ::DTK::Client::Configurator.create_missing_clone_dirs
 
 
 # check if .add_direct_access file exists, if not then add direct access and create .add_direct_access file
-resolve_direct_access(::DTK::Client::Configurator.check_direct_access)
+resolve_direct_access(::DTK::Client::Configurator.check_direct_access, config_exists)
 entries = []
 
 if ARGV.size > 0

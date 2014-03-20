@@ -63,7 +63,8 @@ module DTK
           "size:" => "SIZE:",
           "os_type:" => "OS:",
           "op_status:" => "OP STATUS:",
-          "dns_name:" => "DNS NAME:"
+          "dns_name:" => "DNS NAME:",
+          "target:" => "TARGET:"
         }
         
         mappings[column]
