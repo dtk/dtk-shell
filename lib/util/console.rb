@@ -120,7 +120,8 @@ module DTK::Client
                 reparse_aux(path)
                 push_clone_changes_aux(module_type, module_id, version, commit_msg)
               else
-                system(line)        
+                # we are sending stderr to stdout
+                system("#{line} 2>&1")
               end
             rescue Exception => e
               DtkLogger.instance.error_pp(e.message, e.backtrace)
