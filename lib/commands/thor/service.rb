@@ -10,6 +10,7 @@ dtk_require_common_commands('thor/set_required_params')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/assembly_workspace')
+dtk_require_common_commands('thor/action_result_handler')
 
 LOG_SLEEP_TIME   = DTK::Configuration.get(:tail_log_frequency)
 DEBUG_SLEEP_TIME = DTK::Configuration.get(:debug_task_frequency)
@@ -23,6 +24,7 @@ module DTK::Client
       include EditMixin
       include PurgeCloneMixin
       include AssemblyWorkspaceMixin
+      include ActionResultHandler
 
       def get_assembly_name(assembly_id)
         get_name_from_id_helper(assembly_id)
@@ -42,6 +44,8 @@ module DTK::Client
         raise DtkError,"[ERROR] Illegal name (#{assembly_name}) for service." unless assembly_id
         assembly_id
       end
+
+
       
     end
 
@@ -197,36 +201,6 @@ TODO: overlaps with different meaning
     def cancel_task(context_params)
       cancel_task_aux(context_params)
     end
-=begin
-# TODO: until we investigate DTK-1349
-    desc "rename SERVICE-NAME NEW-SERVICE-NAME","Change service name."
-    def rename(context_params)
-      assembly_name, new_assembly_name = context_params.retrieve_arguments([:option_1!,:option_2!],method_argument_names)
-
-      if assembly_name.to_s =~ /^[0-9]+$/
-        assembly_id = assembly_name
-      else
-        assembly_id = get_assembly_id(assembly_name)
-      end
-
-      post_body = {
-        :assembly_id => assembly_id,
-        :assembly_name => assembly_name,
-        :new_assembly_name => new_assembly_name
-      }
-
-      response = post rest_url("assembly/rename"), post_body
-      return response unless response.ok?
-
-      @@invalidate_map << :service
-      response      
-    end
-=end
-
-    #desc "ASSEMBLY-NAME/ID clear-tasks", "Clears the tasks that have been run already."
-    #def clear_tasks(context_params)
-    #  clear_tasks_aux(context_params)
-    #end
 
     desc "SERVICE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create a new assembly from this service instance in the designated service module."
     def create_assembly(context_params)
@@ -340,21 +314,6 @@ TODO: will put in dot release and will rename to 'extend'
       task_status_aw_aux(context_params)
     end
 
-=begin
-    desc "ASSEMBLY-NAME/ID run-smoketests", "Run smoketests associated with assembly instance"
-    def run_smoketests(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_id
-      }
-      # create smoke test
-      response = post rest_url("assembly/create_smoketests_task"), post_body
-      return response unless response.ok?
-      # execute
-      task_id = response.data(:task_id)
-      post rest_url("task/execute"), "task_id" => task_id
-    end
-=end
 
     desc "SERVICE-NAME/ID list-nodes","List nodes associated with service."
     def list_nodes(context_params)
@@ -487,7 +446,13 @@ TODO: will put in dot release and will rename to 'extend'
       path_to_rsa_pub_key ||= SSHUtil.default_rsa_pub_key_path()
       rsa_pub_key_content = SSHUtil.read_and_validate_pub_key(path_to_rsa_pub_key)
     
-      response = post_file rest_url("assembly/initiate_grant_access"), { :system_user => system_user, :rsa_pub_name => rsa_key_name, :rsa_pub_key => rsa_pub_key_content, :assembly_id => service_id }
+      response = post_file rest_url("assembly/initiate_ssh_pub_access"), {
+        :agent_action => :grant_access,
+        :system_user => system_user, 
+        :rsa_pub_name => rsa_key_name, 
+        :rsa_pub_key => rsa_pub_key_content, 
+        :assembly_id => service_id 
+      }
 
       unless response.ok?
         raise DTK::Client::DtkError, "Error while getting log from server, there was no successful response."
@@ -495,28 +460,41 @@ TODO: will put in dot release and will rename to 'extend'
 
       action_results_id = response.data(:action_results_id)
 
-      action_body = {
-        :action_results_id => action_results_id,
-        :return_only_if_complete => true,
-        :disable_post_processing => true
+      print_action_results(action_results_id)
+
+      nil
+    end
+
+    desc "SERVICE-NAME/ID revoke-access SYS-USER NAME", "Revoke access to given service and its nodes" 
+    def revoke_access(context_params)
+      service_id, system_user, rsa_key_name = context_params.retrieve_arguments([:service_id!,:option_1!, :option_2!],method_argument_names)
+
+      response = post_file rest_url("assembly/initiate_ssh_pub_access"), { 
+        :agent_action => :revoke_access,
+        :system_user => system_user, 
+        :rsa_pub_name => rsa_key_name,
+        :assembly_id => service_id 
       }
 
-      3.times do
-        response = post(rest_url("assembly/get_action_results"),action_body)
-
-        # server has found an error
-        unless response.data(:results).nil?
-          if response.data(:results)['error']
-            raise DTK::Client::DtkError, response.data(:results)['error']
-          end
-        end
-
-        break if response.data(:is_complete)
-
-        sleep(1)
+      unless response.ok?
+        raise DTK::Client::DtkError, "Error while getting log from server, there was no successful response."
       end
+      action_results_id = response.data(:action_results_id)
 
+      print_action_results(action_results_id)
 
+      nil
+    end
+
+    desc "SERVICE-NAME/ID list-ssh-access", "List SSH access for each of the nodes" 
+    def list_ssh_access(context_params)
+      service_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
+
+      response = post_file rest_url("assembly/list_ssh_access"), { 
+        :assembly_id => service_id 
+      }
+
+      response.render_table(:ssh_access)
       response
     end
 
@@ -540,16 +518,15 @@ TODO: will put in dot release and will rename to 'extend'
       else
         assembly_id = get_assembly_id(assembly_name)
       end
-      # assembly_name = get_assembly_name(assembly_id)
 
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
-        #used form "+'?' because ?" confused emacs ruby rendering
+        # used form "+'?' because ?" confused emacs ruby rendering
         what = "service"
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_name}' and its nodes"+'?')
       end
 
-      #purge local clone
+      # purge local clone
       response = purge_clone_aux(:all,:assembly_module => {:assembly_name => assembly_name})
       return response unless response.ok?
 

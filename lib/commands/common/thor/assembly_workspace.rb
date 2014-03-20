@@ -1161,6 +1161,7 @@ module DTK::Client
 
       post_body[:about] = about
       response = post rest_url(rest_endpoint), post_body
+
       # set render view to be used
       unless format
         response.render_table(data_type, use_default)

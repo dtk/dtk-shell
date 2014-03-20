@@ -33,6 +33,8 @@ module DTK
           "Destination folder #{$1.strip()} already exists"
         when /Authentication failed for (.*)$/i
           "Authentication failed for given repository #{$1.strip()}"
+        when /timed out/
+          "Timeout - not able to contact remote"
         else
           message
         end
