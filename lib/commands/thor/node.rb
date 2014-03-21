@@ -85,9 +85,10 @@ module DTK::Client
        post rest_url("node/info"), post_body
     end
 
-    desc "NODE-NAME/ID ssh [--keypair] [--remote-user]","SSH into node, optional parameters are path to keypair and remote user."
+    desc "NODE-NAME/ID ssh [--keypair PATH-TO-PEM] [--remote-user REMOTE-USER] [--pub-only]","SSH into node, optional parameters are path to keypair and remote user."
     method_option "--keypair",:type => :string, :desc => "Keypair used for connection, if not provided default is used", :banner => "KEYPAIR"
     method_option "--remote-user",:type => :string, :desc => "Remote user used for connection", :banner => "REMOTE USER"
+    method_option "--pub-only",:type => :boolean, :default => false, :desc => "Use public key for authentication", :banner => "PUBLIC KEY ONLY"
     def ssh(context_params)
       if OsUtil.is_windows?
         puts "[NOTICE] SSH functionality is currenly not supported on Windows."
@@ -95,21 +96,20 @@ module DTK::Client
       end
 
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
-
-
       keypair_location = options.keypair || OsUtil.dtk_keypair_location()
-
-
+      is_pub_only = options.send('pub-only')
       remote_user = options.send('remote-user') || 'ubuntu'
 
-      unless File.exists?(keypair_location||'')
-        error_message = keypair_location ? "Not able to find keypair, '#{keypair_location}'" : "Default keypair not set, please provide one in 'ssh' command"
-        raise ::DTK::Client::DtkError, error_message
+      # if we are using public key no need to use pem
+      unless is_pub_only
+        unless File.exists?(keypair_location||'')
+          error_message = keypair_location ? "Not able to find keypair, '#{keypair_location}'" : "Default keypair not set, please provide one in 'ssh' command"
+          raise ::DTK::Client::DtkError, error_message
+        end
       end
 
       context_params.forward_options({ :json_return => true })
       response = info_aux(context_params)
-
 
       if response.ok?
         node_info = response.data['nodes'].find { |n| node_id == n['node_id'] }
@@ -118,7 +118,12 @@ module DTK::Client
         raise ::DTK::Client::DtkError, "Not able to resolve instance address, has instance been stopped?" unless public_dns
 
         connection_string = "#{remote_user}@#{public_dns}"
-        ssh_command = "ssh  -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{keypair_location} #{connection_string}"
+
+        if is_pub_only
+          ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" #{connection_string}"
+        else
+          ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{keypair_location} #{connection_string}"
+        end
 
         OsUtil.print("You are entering SSH terminal (#{connection_string}) ...", :yellow)
         Kernel.system(ssh_command)
