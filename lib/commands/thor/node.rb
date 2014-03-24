@@ -15,7 +15,8 @@ module DTK::Client
     end
 
     def self.valid_children()
-      [:component, :utils]
+      # [:component, :utils]
+      [:utils]
     end
 
     def self.multi_context_children()

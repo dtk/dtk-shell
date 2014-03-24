@@ -67,13 +67,15 @@ class Thor
       if @@shell_context
         unless @@shell_context.root?
 
+          active_context = @@shell_context.active_context
+
           # first command we are using:
           # e.g. dtk:\assembly\assembly1\node\node123> => command would be :assembly
-          command             = @@shell_context.active_context.first_command_name.upcase
+          command             = active_context.first_command_name.upcase
 
           # is there identifier for given commands (first)
           # e.g. dtk:\assembly\assembly1\node\node123> => identifier here would be 'assembly1'
-          is_there_identifier = @@shell_context.active_context.is_there_identifier_for_first_context?
+          is_there_identifier = active_context.is_there_identifier_for_first_context?
 
           # alternative providers
           alt_identifiers = get_alternative_identifiers(command)
@@ -100,7 +102,7 @@ class Thor
           # e.g. dtk:\assembly\assembly1\node\node123> THIS IS     N-LEVEL CONTEXT
           # e.g. dtk:\assembly\assembly1>              THIS IS NOT N-LEVEL CONTEXT
           #
-          if (!@@shell_context.active_context.is_n_context? || @@shell_context.active_context.current_identifier?)
+          if (!active_context.is_n_context? || active_context.current_identifier?)
 
             list.each do |help_item|
               help_item.first.gsub!("^^", '') if help_item.first.include?("^^")
@@ -127,12 +129,12 @@ class Thor
                 else
                   # Adding alt identifiers here
                   if alt_matched_data
-                    if @@shell_context.active_context.current_alt_identifier?
+                    if active_context.current_alt_identifier?
                       help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
                       filtered_list << overriden_help(override_tasks_obj, help_item, false)
                     end
                   else
-                    unless @@shell_context.active_context.current_alt_identifier?
+                    unless active_context.current_alt_identifier?
                       help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
                       filtered_list << overriden_help(override_tasks_obj, help_item, false)
                     end
@@ -144,8 +146,8 @@ class Thor
 
           # This will return commands that have identifiers
           # e.g. dtk:\assembly\assembly1\node\node123> => ['assembly','node']
-          commands_that_have_identifiers =  @@shell_context.active_context.commands_that_have_identifiers()
-          is_n_level_context             = @@shell_context.active_context.command_list.size > 1
+          commands_that_have_identifiers =  active_context.commands_that_have_identifiers()
+          is_n_level_context             = active_context.command_list.size > 1
 
           # first one does not count
           if is_n_level_context
@@ -166,12 +168,12 @@ class Thor
             end
             
             if override_tasks_obj && is_n_level_context
-              last_entity_name = @@shell_context.active_context.last_context_entity_name.to_sym
+              last_entity_name = active_context.last_context_entity_name.to_sym
 
               # we get commands task, and identifier tasks for given entity (e.g. :assembly)
               command_o_tasks, identifier_o_tasks = override_tasks_obj.get_all_tasks(last_entity_name)
 
-              if @@shell_context.active_context.current_identifier?
+              if active_context.current_identifier?
                 identifier_o_tasks.each do |o_task|
                   n_filter_list << [o_task[1],o_task[2]]
                 end
@@ -216,14 +218,28 @@ class Thor
       shell.print_table(list, :indent => 2, :truncate => true)
       shell.say
 
-      # print sub context information
-      # if @@shell_context && @@shell_context.active_context.current_identifier?
-      #   sub_children  = self.respond_to?(:valid_children) ? self.valid_children() : []
-      #   sub_children += self.invisible_context_list()
 
-      #   shell.say("  Change context (cc) to: #{sub_children.join(', ')}", :BOLD) unless sub_children.empty?
-      #   shell.say
-      # end
+      # print sub context information
+      sub_children = []
+
+      # current active context clazz
+      last_command_name = @@shell_context.active_context.last_command_name
+      command_clazz = DTK::Shell::Context.get_command_class(last_command_name)
+
+      if @@shell_context && @@shell_context.active_context.current_identifier?
+        sub_children += command_clazz.valid_children() if command_clazz.respond_to?(:valid_children)
+        sub_children += command_clazz.invisible_context_list()
+      else
+        if command_clazz.respond_to?(:validation_list)
+          sub_children += ["#{last_command_name}-identifier"]
+        end
+      end
+
+      unless sub_children.empty?
+        shell.say("  Change context (cc) to: #{sub_children.join(', ')}", :BOLD) 
+        shell.say
+      end
+
 
       class_options_help(shell)
     end

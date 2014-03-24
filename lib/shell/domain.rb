@@ -332,6 +332,14 @@ module DTK
         @context_list.size > 2
       end
 
+      def is_base_context?
+        @context_list.size == 1
+      end
+
+      def is_root_context?
+        @context_list.size == 0
+      end
+
       def current_command?
         return @context_list.empty? ? true : @context_list.last.is_command?
       end
@@ -388,7 +396,6 @@ module DTK
       def last_context()
         return @context_list.empty? ? nil : @context_list.last
       end
-
     end
 
     class CachedTasks < Hash

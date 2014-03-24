@@ -2,7 +2,8 @@ module DTK::Client
   class Component < CommandBaseThor
 
     def self.valid_children()
-      [:attribute]
+      # [:attribute]
+      []
     end
 
     def self.valid_child?(name_of_sub_context)

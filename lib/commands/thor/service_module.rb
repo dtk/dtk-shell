@@ -48,8 +48,8 @@ module DTK::Client
       PPColumns.get(:service_module)
     end
 
-    def self.whoami()
-      return :service_module, "service_module/list", nil
+    def self.validation_list(context_params)
+      get_cached_response(:service_module, "service_module/list", {})
     end
 
     def self.override_allowed_methods()
