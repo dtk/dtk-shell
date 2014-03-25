@@ -86,10 +86,9 @@ module DTK::Client
        post rest_url("node/info"), post_body
     end
 
-    desc "NODE-NAME/ID ssh [--keypair PATH-TO-PEM] [--remote-user REMOTE-USER] [--pub-only]","SSH into node, optional parameters are path to keypair and remote user."
+    desc "NODE-NAME/ID ssh [--keypair PATH-TO-PEM] [--remote-user REMOTE-USER]","SSH into node, optional parameters are path to keypair and remote user."
     method_option "--keypair",:type => :string, :desc => "Keypair used for connection, if not provided default is used", :banner => "KEYPAIR"
     method_option "--remote-user",:type => :string, :desc => "Remote user used for connection", :banner => "REMOTE USER"
-    method_option "--pub-only",:type => :boolean, :default => false, :desc => "Use public key for authentication", :banner => "PUBLIC KEY ONLY"
     def ssh(context_params)
       if OsUtil.is_windows?
         puts "[NOTICE] SSH functionality is currenly not supported on Windows."
@@ -97,15 +96,12 @@ module DTK::Client
       end
 
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
-      keypair_location = options.keypair || OsUtil.dtk_keypair_location()
-      is_pub_only = options.send('pub-only')
+      keypair_location = options.keypair
       remote_user = options.send('remote-user') || 'ubuntu'
 
-      # if we are using public key no need to use pem
-      unless is_pub_only
-        unless File.exists?(keypair_location||'')
-          error_message = keypair_location ? "Not able to find keypair, '#{keypair_location}'" : "Default keypair not set, please provide one in 'ssh' command"
-          raise ::DTK::Client::DtkError, error_message
+      if keypair_location
+        unless File.exists?(keypair_location)
+          raise ::DTK::Client::DtkError, "Not able to find keypair, '#{keypair_location}'"
         end
       end
 
@@ -120,10 +116,14 @@ module DTK::Client
 
         connection_string = "#{remote_user}@#{public_dns}"
 
-        if is_pub_only
-          ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" #{connection_string}"
-        else
+        default_keypair = OsUtil.dtk_keypair_location()
+
+        if keypair_location
           ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{keypair_location} #{connection_string}"
+        elsif default_keypair
+          ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{default_keypair} #{connection_string}"
+        else
+          ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" #{connection_string}"
         end
 
         OsUtil.print("You are entering SSH terminal (#{connection_string}) ...", :yellow)
