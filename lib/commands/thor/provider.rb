@@ -1,16 +1,16 @@
 module DTK::Client
   class Provider < CommandBaseThor
 
-    def self.whoami()
-      return :provider, "target/list", { :subtype => :template }
-    end
-
     def self.valid_children()
       [:target]
     end
 
     def self.all_children()
       [:target]
+    end
+
+    def self.validation_list(context_params)
+      get_cached_response(:provider, "target/list", {:subtype => :template })
     end
 
     def self.override_allowed_methods()

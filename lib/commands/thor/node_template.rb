@@ -5,16 +5,16 @@ module DTK::Client
       PPColumns.get(:node)
     end
 
-    def self.whoami()
-      return :node_template, "node/list", {:subtype => 'template'}
-    end
-
     def self.extended_context()
       {
         :context => {
           :add_component => "component_template"
         }
       }
+    end
+
+    def self.validation_list(context_params)
+      get_cached_response(:node_template, "node/list", {:subtype => 'template'})
     end
 =begin
   #Not implemented yet
