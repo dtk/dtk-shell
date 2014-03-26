@@ -15,7 +15,7 @@ module DTK::Client
 
       ids = []
       # get all nodes which id starts with node_pattern
-      nodes["data"].collect{|a| ids<<a["id"].to_i if a["id"].to_s.start_with?(node_pattern.to_s)}
+      nodes["data"].collect{|a| ids<<a["id"].to_i if a["id"].to_s.match(Regexp.new(node_pattern.to_s)) }
       raise DTK::Client::DtkValidationError, "Unable to find nodes to match this pattern: '#{node_pattern}'." if ids.empty?
 
       # if it doesn't contain extension upload both *.rb and *.ddl

@@ -6,18 +6,21 @@ module DTK
         response = action_results(action_results_id, number_of_retries)
 
         if response.ok? && response.data['results']
-          el = response.data['results'].values.first
-          if el['error']
-            OsUtil.print(el['error'], :red)
-          else
-            OsUtil.print(el['message'], :yellow)
+          response.data['results'].each do |k,v|
+            if v['error']
+              OsUtil.print("#{v['error']} (#{k})", :red)
+            else
+              OsUtil.print("#{v['message']} (#{k})", :yellow)
+            end
           end
+        else
+          OsUtil.print("Not able to process given request, we apologise for inconvenience", :red)
         end
 
         nil
       end
 
-      def action_results(action_results_id, number_of_retries=3)
+      def action_results(action_results_id, number_of_retries=6)
         action_body = {
           :action_results_id => action_results_id,
           :return_only_if_complete => true,

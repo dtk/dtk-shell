@@ -454,9 +454,7 @@ TODO: will put in dot release and will rename to 'extend'
         :assembly_id => service_id 
       }
 
-      unless response.ok?
-        raise DTK::Client::DtkError, "Error while getting log from server, there was no successful response."
-      end
+      return response unless response.ok?
 
       action_results_id = response.data(:action_results_id)
 
@@ -476,9 +474,8 @@ TODO: will put in dot release and will rename to 'extend'
         :assembly_id => service_id 
       }
 
-      unless response.ok?
-        raise DTK::Client::DtkError, "Error while getting log from server, there was no successful response."
-      end
+      return response unless response.ok?
+
       action_results_id = response.data(:action_results_id)
 
       print_action_results(action_results_id)
