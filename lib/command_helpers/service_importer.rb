@@ -22,9 +22,9 @@ module DTK::Client
       puts "Auto-importing missing component module(s)"
 
       missing_component_list.each do |m_module|
-        print "Importing component module '#{m_module['name']}' ... "
         module_name = "#{m_module['namespace']}/#{m_module['name']}"
         module_name += "/#{m_module['version']}" if m_module['version']
+        print "Importing component module '#{module_name}' ... "
         new_context_params = ::DTK::Shell::ContextParams.new([module_name])
         new_context_params.override_method_argument!('option_2', m_module['version'])
         new_context_params.forward_options( { "skip_cloning" => true}).merge!(opts)
