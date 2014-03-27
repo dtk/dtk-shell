@@ -29,14 +29,14 @@ module DTK::Client
       path_to_key = SSHUtil.default_rsa_pub_key_path()
       rsa_pub_key = File.file?(path_to_key) && File.open(path_to_key){|f|f.read}.chomp
 
-      post_body = {
+      post_body = PostBody.new(
         PullFromRemote.id_field(module_type) => module_id,
         :access_rights => "r",
-        :action => "pull"
-      }
-      post_body.merge!(:version => version) if version
-      post_body.merge!(:version => version) if version
-      post_body.merge!(:rsa_pub_key => rsa_pub_key) if rsa_pub_key
+        :action => "pull",
+        :version? => version,
+        :remote_namespace? => remote_namespace,
+        :rsa_pub_key? => rsa_pub_key
+      )
       response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)      
       return response unless response.ok?
       module_name = response.data(:module_name)
