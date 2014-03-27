@@ -572,39 +572,22 @@ TODO: might deprecate
 #       push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)
 #     end
 
-#    desc "COMPONENT-MODULE-NAME/ID pull-from-dtkn [-v VERSION]", "Update local component module from remote repository."
-    # version_method_option
-    # desc "COMPONENT-MODULE-NAME/ID pull-from-dtkn", "Update local component module from remote repository."
-    # def pull_from_dtkn(context_params)     
-    #   component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!,:component_module_name],method_argument_names)
-    #   version = options["version"]
+#   desc "COMPONENT-MODULE-NAME/ID pull-from-dtkn [-n NAMESPACE] [-v VERSION]", "Update local component module from remote repository."
+    desc "COMPONENT-MODULE-NAME/ID pull-dtkn [-n NAMESPACE]", "Update local component module from remote repository."
+    method_option "namespace",:aliases => "-n",
+      :type => :string, 
+      :banner => "NAMESPACE",
+      :desc => "Remote namespace"
 
-    #   response = pull_from_remote_aux(:component_module,component_module_id,version)
-    #   return response unless response.ok?
-
-    #   if component_module_name.to_s =~ /^[0-9]+$/
-    #     component_module_id = component_module_name
-    #     component_module_name = get_module_name(component_module_id)
-    #   end
-
-    #   modules_path    = OsUtil.module_clone_location()
-    #   module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
-
-    #   push_clone_changes_aux(:component_module,component_module_id,version,nil,true) if File.directory?(module_location)
-    #   Response::Ok.new()
-    # end
-
-    desc "COMPONENT-MODULE-NAME/ID pull-dtkn", "Update local component module from remote repository."
     def pull_dtkn(context_params)     
-#      component_module_id, component_module_name, catalog = context_params.retrieve_arguments([:component_module_id!,:component_module_name,:option_1],method_argument_names)
       component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!,:component_module_name,:option_1],method_argument_names)
       catalog = 'dtkn'
       version = options["version"]
-      
       raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PullCatalogs}" unless catalog
 
       if catalog.to_s.eql?("dtkn")
-        response = pull_from_remote_aux(:component_module,component_module_id,version)
+        opts = {:version => version, :remote_namespace => options.namespace}
+        response = pull_from_remote_aux(:component_module,component_module_id,opts)
         return response unless response.ok?
 
         if component_module_name.to_s =~ /^[0-9]+$/

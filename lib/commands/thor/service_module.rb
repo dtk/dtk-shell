@@ -344,34 +344,13 @@ module DTK::Client
     #   push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
     # end
 
-    # desc "SERVICE-MODULE-NAME/ID pull-from-dtkn [-v VERSION]", "Update local service module from remote repository."
-    # version_method_option
-    # desc "SERVICE-MODULE-NAME/ID pull-from-dtkn", "Update local service module from remote repository."
-    # def pull_from_dtkn(context_params)
-    #   service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!,:service_module_name],method_argument_names)
-    #   version = options["version"]
-
-    #   response = pull_from_remote_aux(:service_module,service_module_id,version)
-    #   return response unless response.ok?
-
-    #   if service_module_name.to_s =~ /^[0-9]+$/
-    #     service_module_id   = service_module_name
-    #     service_module_name = get_service_module_name(service_module_id)
-    #   end
-
-    #   modules_path    = OsUtil.service_clone_location()
-    #   module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
-
-    #   # server repo needs to be sync with local clone, so we will use push-clone-changes when pull changes from remote to local
-    #   # to automatically sync local with server repo
-    #   push_clone_changes_aux(:service_module,service_module_id,version,nil,true) if File.directory?(module_location)
-    #   Response::Ok.new()
-    # end
-
-#    desc "SERVICE-MODULE-NAME/ID pull dtkn", "Update local service module from remote repository."
-    desc "SERVICE-MODULE-NAME/ID pull-dtkn", "Update local service module from remote repository."
+    # desc "SERVICE-MODULE-NAME/ID pull-from-dtkn [-n NAMESPACE] [-v VERSION]", "Update local service module from remote repository."
+    desc "SERVICE-MODULE-NAME/ID pull-dtkn [-n NAMESPACE]", "Update local service module from remote repository."
+    method_option "namespace",:aliases => "-n",
+      :type => :string, 
+      :banner => "NAMESPACE",
+      :desc => "Remote namespace"
     def pull_dtkn(context_params)
-#      service_module_id, service_module_name, catalog = context_params.retrieve_arguments([:service_module_id!,:service_module_name, :option_1],method_argument_names)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!,:service_module_name],method_argument_names)
       catalog = 'dtkn'
       version = options["version"]
@@ -379,7 +358,8 @@ module DTK::Client
       raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PullCatalogs}" unless catalog
 
       if catalog.to_s.eql?("dtkn")
-        response = pull_from_remote_aux(:service_module,service_module_id,version)
+        opts = {:version => version, :remote_namespace => options.namespace}
+        response = pull_from_remote_aux(:service_module,service_module_id,opts)
         return response unless response.ok?
 
         if service_module_name.to_s =~ /^[0-9]+$/
