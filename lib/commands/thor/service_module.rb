@@ -83,7 +83,6 @@ module DTK::Client
     ##MERGE-QUESTION: need to add options of what info is about
     desc "SERVICE-MODULE-NAME/ID info", "Provides information about specified service module"
     def info(context_params)
-      #TODO Aldin
       if context_params.is_there_identifier?(:assembly)
         response = DTK::Client::ContextRouter.routeTask("assembly", "info", context_params, @conn)
       else  
