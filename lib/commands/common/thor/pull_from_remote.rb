@@ -1,27 +1,5 @@
 module DTK::Client
   module PullFromRemoteMixin
-
-    ##
-    #
-    # module_type: will be :component_module or :service_module
-    def import_module_component_dependencies(module_id)
-      post_body = {
-        :service_module_id => module_id
-      }
-      response = post(rest_url("service_module/resolve_pull_from_remote"),post_body)
-
-      print "Resolving dependencies please wait ... "
-      
-      if (response.ok? && !(missing_components = response.data(:missing_modules)).empty?)
-        puts " New dependencies found, Installing."
-
-        trigger_module_component_import(missing_components)
-        puts "Resuming pull from remote ..."
-      else
-        puts 'Done.'
-      end
-    end
-
     def pull_from_remote_aux(module_type,module_id,opts={})
       version = opts[:version]
       remote_namespace = opts[:remote_namespace]
@@ -44,8 +22,9 @@ module DTK::Client
       remote_params.merge!(:version => version) if version
 
       #check and import component module dependencies before importing service itself
-      import_module_component_dependencies(module_id) if (module_type == :service_module)
-
+      if (module_type == :service_module)
+        import_module_component_dependencies(module_id,remote_namespace) 
+      end
       # check whether a local module exists to determine whether pull from local clone or try to pull from server
       if Helper(:git_repo).local_clone_exists?(module_type,module_name,version)
         unless rsa_pub_key
@@ -56,7 +35,31 @@ module DTK::Client
         PullFromRemote.perform_on_server(self,module_type,module_id,module_name,remote_params)
       end
     end
+
    private
+
+    ##
+    #
+    # module_type: will be :component_module or :service_module
+    def import_module_component_dependencies(module_id,remote_namespace=nil)
+      post_body = PostBody.new(
+        :service_module_id => module_id,
+        :remote_namespace? => remote_namespace
+      )
+      response = post(rest_url("service_module/resolve_pull_from_remote"),post_body)
+
+      print "Resolving dependencies please wait ... "
+      
+      if (response.ok? && !(missing_components = response.data(:missing_modules)).empty?)
+        puts " New dependencies found, Installing."
+
+        trigger_module_component_import(missing_components)
+        puts "Resuming pull from remote ..."
+      else
+        puts 'Done.'
+      end
+    end
+
     module PullFromRemote 
       extend CommandBase
       def self.perform_locally(cmd_obj,module_type,module_id,module_name,remote_params)
