@@ -439,6 +439,7 @@ TODO: will put in dot release and will rename to 'extend'
     #  post rest_url("assembly/list_smoketests"), post_body
     #end
 
+=begin TEMPORARY COMMENTED OUT UNTIL BUGS ARE REMOVED
     desc "SERVICE-NAME/ID grant-access SYS-USER NAME [PATH-TO-PUB-KEY]", "Grant access to given service and its nodes" 
     def grant_access(context_params)
       service_id, system_user, rsa_key_name, path_to_rsa_pub_key = context_params.retrieve_arguments([:service_id!,:option_1!, :option_2!, :option_3],method_argument_names)
@@ -494,6 +495,7 @@ TODO: will put in dot release and will rename to 'extend'
       response.render_table(:ssh_access)
       response
     end
+=end
 
     desc "SERVICE-NAME/ID info", "Get info about content of the service."
     def info(context_params)
