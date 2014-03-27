@@ -2,7 +2,7 @@ module DTK
   module Client
     module ActionResultHandler
 
-      def print_action_results(action_results_id, number_of_retries=3)
+      def print_action_results(action_results_id, number_of_retries=8)
         response = action_results(action_results_id, number_of_retries)
 
         if response.ok? && response.data['results']
@@ -20,7 +20,7 @@ module DTK
         nil
       end
 
-      def action_results(action_results_id, number_of_retries=6)
+      def action_results(action_results_id, number_of_retries=8)
         action_body = {
           :action_results_id => action_results_id,
           :return_only_if_complete => true,
@@ -40,7 +40,7 @@ module DTK
 
           break if response.data(:is_complete)
 
-          sleep(1)
+          sleep(1.5)
         end
 
         response
