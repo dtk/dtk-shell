@@ -63,7 +63,6 @@ module DTK::Client
         opts = remote_params
         response = cmd_obj.Helper(:git_repo).pull_changes(module_type,module_name,opts)
         # return response unless response.ok?
-
         if response.data[:diffs].empty?
           raise DtkError, "No changes to pull from remote"
         end
@@ -80,6 +79,8 @@ module DTK::Client
       end
 
       def self.perform_on_server(cmd_obj,module_type,module_id,module_name,remote_params)
+        #TODO: this does not handle different namespaces; so suggesting workaround for now
+        raise DtkError, "Module must be cloned to perform this operation; execute 'clone' command and then retry."
         post_body = {
           id_field(module_type) => module_id,
           :remote_repo => remote_params[:remote_repo],
