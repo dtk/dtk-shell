@@ -22,7 +22,9 @@ module DTK::Client
       end
     end
 
-    def pull_from_remote_aux(module_type,module_id,version=nil)
+    def pull_from_remote_aux(module_type,module_id,opts={})
+      version = opts[:version]
+      remote_namespace = opts[:remote_namespace]
       #get remote module info, errors raised if remote is not linked or access errors
       path_to_key = SSHUtil.default_rsa_pub_key_path()
       rsa_pub_key = File.file?(path_to_key) && File.open(path_to_key){|f|f.read}.chomp
@@ -32,6 +34,7 @@ module DTK::Client
         :access_rights => "r",
         :action => "pull"
       }
+      post_body.merge!(:version => version) if version
       post_body.merge!(:version => version) if version
       post_body.merge!(:rsa_pub_key => rsa_pub_key) if rsa_pub_key
       response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)      
