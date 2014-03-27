@@ -20,10 +20,18 @@ module DTK::Client
     #
     def trigger_module_component_import(missing_component_list,opts={})      
       puts "Auto-importing missing component module(s)"
+      does_not_exist, modules_to_import = validate_missing_components(missing_component_list)
 
-      missing_component_list.each do |m_module|
+      unless does_not_exist.empty?
+        module_names = does_not_exist.collect{|x| "#{x['namespace']}/#{x['name']}"}
+        OsUtil.print("Component modules '#{module_names}' required by service module does not exist on repo manager and will not be imported!", :yellow)
+        return if modules_to_import.empty?
+        return unless Console.confirmation_prompt("Do you want to continue with import of available component modules"+'?')
+      end
+      
+      modules_to_import.each do |m_module|
         module_name = "#{m_module['namespace']}/#{m_module['name']}"
-        module_name += "/#{m_module['version']}" if m_module['version']
+        module_name += "-#{m_module['version']}" if m_module['version']
         print "Importing component module '#{module_name}' ... "
         new_context_params = ::DTK::Shell::ContextParams.new([module_name])
         new_context_params.override_method_argument!('option_2', m_module['version'])
@@ -35,6 +43,37 @@ module DTK::Client
       end
       
       Response::Ok.new()
+    end
+
+    # check if component modules dependencies specified in service module exist on repo manager
+    def validate_missing_components(missing_component_list)
+      thor_options = {}
+      thor_options["remote"] = true
+      new_context_params = ::DTK::Shell::ContextParams.new
+      new_context_params.forward_options(thor_options)
+      new_context_params.add_context_to_params(:"component-module", :"component-module")
+      response = ContextRouter.routeTask("component_module", "list", new_context_params, @conn)
+      return response unless response.ok?
+
+      does_not_exist, modules_to_import = [], []
+
+      missing_component_list.each do |missing_cmp|
+        cmp = response.data.select{|x| x['display_name'].eql?("#{missing_cmp['namespace']}/#{missing_cmp['name']}")}
+        if cmp.empty?
+          does_not_exist << missing_cmp
+        else
+          cmp = cmp.first
+          if remote_version = cmp['versions']
+            missing_version = missing_cmp['version']||'CURRENT'
+            does_not_exist << missing_cmp unless (remote_version.include?(missing_version))
+          else
+            does_not_exist << missing_cmp if missing_cmp['version']
+          end
+        end
+      end
+
+      modules_to_import = missing_component_list - does_not_exist
+      return does_not_exist, modules_to_import
     end
 
     def resolve_missing_components(service_module_id, service_module_name, namespace_to_use, force_clone=false)

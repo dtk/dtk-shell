@@ -214,9 +214,11 @@ TODO: might deprecate
         return module_info_about(context_params, :components, :component)
       end
 
-      action           = (options.remote? ? "list_remote" : "list")
-#      post_body        = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
-      post_body        = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
+      forwarded_remote = context_params.get_forwarded_options()["remote"] if context_params.get_forwarded_options()
+      remote           = options.remote? || forwarded_remote
+      action           = (remote ? "list_remote" : "list")
+#     post_body        = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
+      post_body        = (remote ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
       post_body[:diff] = options.diff? ? options.diff : {}
       response         = post rest_url("component_module/#{action}"),post_body
       
