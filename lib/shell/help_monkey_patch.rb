@@ -223,21 +223,23 @@ class Thor
       sub_children = []
 
       # current active context clazz
-      last_command_name = @@shell_context.active_context.last_command_name
-      command_clazz = DTK::Shell::Context.get_command_class(last_command_name)
+      if @@shell_context
+        last_command_name = @@shell_context.active_context.last_command_name
+        command_clazz = DTK::Shell::Context.get_command_class(last_command_name)
 
-      if @@shell_context && @@shell_context.active_context.current_identifier?
-        sub_children += command_clazz.valid_children() if command_clazz.respond_to?(:valid_children)
-        sub_children += command_clazz.invisible_context_list()
-      else
-        if command_clazz.respond_to?(:validation_list)
-          sub_children += ["#{last_command_name}-identifier"]
+        if @@shell_context && @@shell_context.active_context.current_identifier?
+          sub_children += command_clazz.valid_children() if command_clazz.respond_to?(:valid_children)
+          sub_children += command_clazz.invisible_context_list()
+        else
+          if command_clazz.respond_to?(:validation_list)
+            sub_children += ["#{last_command_name}-identifier"]
+          end
         end
-      end
 
-      unless sub_children.empty?
-        shell.say("  Change context (cc) to: #{sub_children.join(', ')}", :BOLD) 
-        shell.say
+        unless sub_children.empty?
+          shell.say("  Change context (cc) to: #{sub_children.join(', ')}", :BOLD) 
+          shell.say
+        end
       end
 
 
