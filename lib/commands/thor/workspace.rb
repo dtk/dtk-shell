@@ -134,8 +134,9 @@ module DTK::Client
             ['set-attribute',"set-attribute ATTRIBUTE-NAME [VALUE] [-u]","# (Un)Set attribute value. The option -u will unset the attribute's value."],
             ['start', "start", "# Start node instance."],
             ['stop', "stop", "# Stop node instance."],
-            ['ssh', "ssh [--keypair PATH-TO-PEM] [--remote-user REMOTE-USER]", "# SSH into node, optional parameters are path to keypair and remote user."]
+            ['ssh', "ssh REMOTE-USER [--keypair PATH-TO-PEM]", "# SSH into node, optional parameters are path to keypair and remote user."]
           ],
+          
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
             ['edit',"edit","# Edit component module related to given component."],
