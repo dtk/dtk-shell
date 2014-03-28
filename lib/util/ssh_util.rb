@@ -37,6 +37,13 @@ module DTK
         content.chomp
       end
 
+      def self.ssh_reachable?(user, server, timeout = 3)
+        output = `ssh -o ConnectTimeout=#{timeout} -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -q #{user}@#{server} exit; echo $?`
+
+        # if response 0 than it is able to connect
+        "0".eql?(output.strip())
+      end
+
 
     private
 
