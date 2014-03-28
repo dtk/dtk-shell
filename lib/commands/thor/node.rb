@@ -86,18 +86,16 @@ module DTK::Client
        post rest_url("node/info"), post_body
     end
 
-    desc "NODE-NAME/ID ssh [--keypair PATH-TO-PEM] [--remote-user REMOTE-USER]","SSH into node, optional parameters are path to keypair and remote user."
+    desc "NODE-NAME/ID ssh REMOTE-USER [--keypair PATH-TO-PEM]","SSH into node, optional parameters are path to keypair and remote user."
     method_option "--keypair",:type => :string, :desc => "Keypair used for connection, if not provided default is used", :banner => "KEYPAIR"
-    method_option "--remote-user",:type => :string, :desc => "Remote user used for connection", :banner => "REMOTE USER"
     def ssh(context_params)
       if OsUtil.is_windows?
         puts "[NOTICE] SSH functionality is currenly not supported on Windows."
         return
       end
 
-      node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
+      node_id, remote_user = context_params.retrieve_arguments([:node_id!,:option_1!],method_argument_names)
       keypair_location = options.keypair
-      remote_user = options.send('remote-user') || 'ubuntu'
 
       if keypair_location
         unless File.exists?(keypair_location)

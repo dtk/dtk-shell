@@ -162,7 +162,7 @@ TODO: overlaps with different meaning
             ['set-attribute',"set-attribute ATTRIBUTE-NAME [VALUE] [-u]","# (Un)Set attribute value. The option -u will unset the attribute's value."],
             ['start', "start", "# Start node instance."],
             ['stop', "stop", "# Stop node instance."],
-            ['ssh', "ssh [--keypair PATH-TO-PEM] [--remote-user REMOTE-USER]", "# SSH into node, optional parameters are path to keypair and remote user."]
+            ['ssh', "ssh REMOTE-USER [--keypair PATH-TO-PEM]", "# SSH into node, optional parameters are path to keypair and remote user."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
@@ -439,7 +439,6 @@ TODO: will put in dot release and will rename to 'extend'
     #  post rest_url("assembly/list_smoketests"), post_body
     #end
 
-=begin TEMPORARY COMMENTED OUT UNTIL BUGS ARE REMOVED
     desc "SERVICE-NAME/ID grant-access SYS-USER NAME [PATH-TO-PUB-KEY]", "Grant access to given service and its nodes" 
     def grant_access(context_params)
       service_id, system_user, rsa_key_name, path_to_rsa_pub_key = context_params.retrieve_arguments([:service_id!,:option_1!, :option_2!, :option_3],method_argument_names)
@@ -495,7 +494,7 @@ TODO: will put in dot release and will rename to 'extend'
       response.render_table(:ssh_access)
       response
     end
-=end
+
 
     desc "SERVICE-NAME/ID info", "Get info about content of the service."
     def info(context_params)
