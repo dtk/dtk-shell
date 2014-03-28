@@ -233,6 +233,7 @@ module DTK
         def dev_reload_shell()
           suspend_output do
             load File.expand_path('../../lib/util/os_util.rb', File.dirname(__FILE__))
+            load File.expand_path('../../lib/util/ssh_util.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/shell/help_monkey_patch.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/shell/domain.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/domain/git_adapter.rb', File.dirname(__FILE__))

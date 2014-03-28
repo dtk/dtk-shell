@@ -116,13 +116,25 @@ module DTK::Client
 
         default_keypair = OsUtil.dtk_keypair_location()
 
+        # vanilla ssh command using only pub key
+        vanilla_ssh = 
+
+        ssh_command = nil
+        
         if keypair_location
+          # provided PEM key
           ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{keypair_location} #{connection_string}"
-        elsif default_keypair
-          ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{default_keypair} #{connection_string}"
-        else
+        elsif SSHUtil.ssh_reachable?(remote_user, public_dns)
+          # it has PUB key access
           ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" #{connection_string}"
+        else
+          # using default keypair
+          if default_keypair
+            ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{default_keypair} #{connection_string}"
+          end
         end
+
+        raise ::DTK::Client::DtkError, "No public key access or PEM provided, please grant access or provide valid PEM key" if ssh_command.nil?
 
         OsUtil.print("You are entering SSH terminal (#{connection_string}) ...", :yellow)
         Kernel.system(ssh_command)
