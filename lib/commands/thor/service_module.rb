@@ -213,7 +213,9 @@ module DTK::Client
       if (response.ok? && (missing_components = response.data(:missing_module_components)))
         opts = {:do_not_raise=>true}
         module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message=>true)
-        trigger_module_component_import(missing_components,module_opts)
+        continue = trigger_module_component_import(missing_components,module_opts)
+        return unless continue
+
         puts "Resuming DTK Network import for service module '#{remote_module_name}' ..."
         # repeat import call for service
         post_body.merge!(opts)

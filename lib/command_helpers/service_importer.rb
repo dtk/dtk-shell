@@ -25,7 +25,7 @@ module DTK::Client
       unless does_not_exist.empty?
         module_names = does_not_exist.collect{|x| "#{x['namespace']}/#{x['name']}"}
         OsUtil.print("Component modules '#{module_names}' required by service module does not exist on repo manager and will not be imported!", :yellow)
-        return unless Console.confirmation_prompt("Do you want to continue with import of available component modules and service module"+'?')
+        return false unless Console.confirmation_prompt("Do you want to continue with import of available component modules and service module"+'?')
       end
       
       modules_to_import.each do |m_module|
