@@ -126,6 +126,12 @@ module DTK::Client
       version = options.version
       component_module_name = get_module_name(component_module_id)
 
+      # if called from import-git first param will be git_url and second one will be component_module_id
+      git_import = context_params.get_forwarded_options()[:git_import] if context_params.get_forwarded_options()
+      if git_import
+        component_module_id = context_params.retrieve_arguments([:option_2!],method_argument_names)
+      end
+
       unless (options.force? || method_opts[:force_delete])
         # Ask user if really want to delete component module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module #{version.nil? ? '' : 'version '}'#{component_module_name}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
@@ -421,7 +427,6 @@ TODO: might deprecate
       context_params.forward_options({:git_import => true})
       # Reuse module create method to create module from local component_module
       create_response = import(context_params)
-
        
       if create_response.ok?
         if external_dependencies = create_response.data(:external_dependencies)
