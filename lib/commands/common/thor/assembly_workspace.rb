@@ -751,6 +751,10 @@ module DTK::Client
           end
       end
 
+      if components.empty?
+        components = nil 
+      end
+
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :node_id => node_id,
