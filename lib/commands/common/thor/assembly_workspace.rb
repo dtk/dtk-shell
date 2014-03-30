@@ -745,9 +745,14 @@ module DTK::Client
       end
 
       #Filter out request per specific component
+      #Filter works for two types of component notation provided: node/component and component
       if !options["component"].nil?
           components.reject! do |c|
-            c != options["component"]
+            if options["component"].include? "/" 
+              c.split("/").last != options["component"] 
+            else
+              c != options["component"]
+            end
           end
       end
 
