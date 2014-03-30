@@ -722,7 +722,7 @@ module DTK::Client
     end
 
     def execute_tests_aux(context_params)
-      execute_test_tries = 6
+      execute_test_tries = 10
       execute_test_sleep = 0.5
 
       assembly_or_workspace_id,node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id],method_argument_names)
@@ -738,11 +738,17 @@ module DTK::Client
       response = post(rest_url("assembly/info_about"),post_body)
 
       components = []
-
       if !response['data'].nil?
         response['data'].each do |c|
           components << c['display_name']
         end
+      end
+
+      #Filter out request per specific component
+      if !options["component"].nil?
+          components.reject! do |c|
+            c != options["component"]
+          end
       end
 
       post_body = {
@@ -776,16 +782,8 @@ module DTK::Client
           sleep execute_test_sleep
         end
       end
-      filtered = response.data(:results)
 
-      #Filter out results per specific component
-      if !options["component"].nil?
-          filtered.reject! do |element|
-            element["component_name"] != options["component"]
-          end
-      end
-
-      response.set_data(*filtered)
+      response.set_data(*response.data(:results))
       response.render_table(:execute_tests_data)
     end
 
