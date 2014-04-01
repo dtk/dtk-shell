@@ -723,7 +723,7 @@ module DTK::Client
 
     def execute_tests_aux(context_params)
       execute_test_tries = 10
-      execute_test_sleep = 0.5
+      execute_test_sleep = 1
 
       assembly_or_workspace_id,node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id],method_argument_names)
 
