@@ -727,10 +727,6 @@ module DTK::Client
 
       assembly_or_workspace_id,node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id],method_argument_names)
 
-      # we expect action result ID
-      response = post rest_url("assembly/start"), post_body
-      
-
       #Get list of components on particular node
       post_body = {
         :assembly_id => assembly_or_workspace_id,
