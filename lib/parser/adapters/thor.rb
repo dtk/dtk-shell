@@ -39,12 +39,39 @@ module DTK
 
       def self.execute_from_cli(conn,method_name,context_params,thor_options,shell_execution=false)
         @@shell_execution = shell_execution
-        
-        # I am sorry!
+
         if method_name == 'help'
           ret = start([method_name] + context_params.method_arguments,:conn => conn)      
         else
-          ret = start([method_name, context_params] + (thor_options||[]),:conn => conn)
+          start_ts = Time.now.to_i
+          printed  = false
+
+          t1 = Thread.new do
+            ret = start([method_name, context_params] + (thor_options||[]),:conn => conn)
+          end
+
+          # mechanism that detects if response is not returned in certain amount of time (::DTK::Client::Configurator.EXEC_TIME - default 3 seconds)
+          # probably will need to refactor and come up with better solution
+          loop do
+            begin
+              # do not print processing if response is returned
+              break if ret
+
+              # check if current time - time of request call is more or equal to EXEC_TIME, if 'Processing ... ' is not printed already and
+              # if option is not '--wait'
+              if ((Time.now.to_i - start_ts) >= ::DTK::Client::Configurator.EXEC_TIME && !printed && !thor_options.include?("--wait"))
+                puts "Processing ..."
+                puts "\n"
+                printed = true
+              end
+
+              sleep(0.5)
+            rescue Interrupt
+              # if ctrl+c is pressed stop waiting for response and terminate thread that is waiting for response
+              t1.exit()
+              break
+            end
+          end
         end
 
         # special case where we have validation reply
