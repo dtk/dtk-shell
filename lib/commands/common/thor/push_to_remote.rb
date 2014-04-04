@@ -1,36 +1,38 @@
+dtk_require_common_commands('thor/common')
 module DTK::Client
   module PushToRemoteMixin
 
     ##
     #
     # module_type: will be :component_module or :service_module
+    # def push_to_remote_aux(module_type,module_id, module_name,remote_namespace,version=nil)
+    def push_to_remote_aux(remote_module_info, module_type)
+      # commented out, because we perform this check before calling 'push_to_remote_aux' from service-module/component-module
+      # id_field = "#{module_type}_id"
 
-    def push_to_remote_aux(module_type,module_id, module_name,remote_namespace,version=nil)       
-      id_field = "#{module_type}_id"
+      # rsa_pub_value = SSHUtil.rsa_pub_key_content()
 
-      rsa_pub_value = SSHUtil.rsa_pub_key_content()
+      # post_body = {
+      #   id_field => module_id,
+      #   :rsa_pub_key => rsa_pub_value,
+      #   :access_rights => "rw",
+      #   :action => "push"
+      # }
+      # post_body.merge!(:version => version) if version
+      # post_body.merge!(:remote_namespace => remote_namespace) if remote_namespace
 
-      post_body = {
-        id_field => module_id,
-        :rsa_pub_key => rsa_pub_value,
-        :access_rights => "rw",
-        :action => "push"
-      }
-      post_body.merge!(:version => version) if version
-      post_body.merge!(:remote_namespace => remote_namespace) if remote_namespace
-      response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
+      # response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
+      # return response unless response.ok?
 
-      return response unless response.ok?
+      returned_module_name = remote_module_info.data(:module_name)
+      version = remote_module_info.data(:version)
 
-      returned_module_name = response.data(:module_name)
       opts = {
-        :remote_repo_url => response.data(:remote_repo_url),
-        :remote_repo => response.data(:remote_repo),
-        :remote_branch => response.data(:remote_branch),
-        :local_branch => response.data(:workspace_branch)
+        :remote_repo_url => remote_module_info.data(:remote_repo_url),
+        :remote_repo => remote_module_info.data(:remote_repo),
+        :remote_branch => remote_module_info.data(:remote_branch),
+        :local_branch => remote_module_info.data(:workspace_branch)
       }
-
-      version = response.data(:version)
 
       response = Helper(:git_repo).push_changes(module_type,returned_module_name,version,opts)
       return response unless response.ok?

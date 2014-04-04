@@ -13,6 +13,7 @@ dtk_require_from_base("commands/thor/assembly")
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 dtk_require_common_commands('thor/purge_clone')
+dtk_require_common_commands('thor/common')
 
 module DTK::Client
   class ServiceModule < CommandBaseThor
@@ -611,14 +612,20 @@ module DTK::Client
       modules_path    = OsUtil.service_clone_location()
       module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
       reparse_aux(module_location) unless internal_trigger
+
       if catalog.to_s.eql?("dtkn")
+        remote_module_info = get_remote_module_info_aux(:service_module, service_module_id, options["namespace"], version)
+        return remote_module_info unless remote_module_info.ok?
+
         unless File.directory?(module_location)
           if Console.confirmation_prompt("Unable to push to remote because module '#{service_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
-            response = clone_aux(:service_module,service_module_id,version,false)
+            response = clone_aux(:service_module,service_module_id,version,true)
             
             if(response.nil? || response.ok?)
               reparse_aux(module_location)
-              push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], version) if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
+              # push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], version) # if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
+              resp = push_to_remote_aux(remote_module_info, :service_module)
+              return resp unless resp.ok?
             end
 
             return response
@@ -628,7 +635,7 @@ module DTK::Client
           end
         end
         
-        push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
+        push_to_remote_aux(remote_module_info, :service_module)
       else
         raise DtkValidationError, "You have to provide valid catalog to push changes to!"
       end

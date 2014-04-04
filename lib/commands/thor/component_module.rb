@@ -6,6 +6,7 @@ dtk_require_common_commands('thor/push_clone_changes')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/reparse')
 dtk_require_common_commands('thor/purge_clone')
+dtk_require_common_commands('thor/common')
 dtk_require_from_base('configurator')
 dtk_require_from_base('command_helpers/service_importer')
 
@@ -759,13 +760,18 @@ TODO: might deprecate
 #      if catalog.to_s.eql?("origin")
 #        push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
       if catalog.to_s.eql?("dtkn")
+        remote_module_info = get_remote_module_info_aux(:component_module, component_module_id, options["namespace"], version)
+        return remote_module_info unless remote_module_info.ok?
+
         unless File.directory?(module_location)
           if Console.confirmation_prompt("Unable to push to remote because module '#{component_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
-            response = clone_aux(:component_module,component_module_id,version,false)
-          
+            response = clone_aux(:component_module,component_module_id,version,true)
+
             if(response.nil? || response.ok?)
               reparse_aux(module_location)
-              push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)  if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
+              # resp = push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)#  if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
+              resp = push_to_remote_aux(remote_module_info, :component_module)
+              return resp unless resp.ok?
             end
 
             return response
@@ -775,7 +781,7 @@ TODO: might deprecate
           end
         end
 
-        push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)
+        push_to_remote_aux(remote_module_info, :component_module)
       else
         raise DtkValidationError, "You have to provide valid catalog to push changes to! Valid catalogs: #{PushCatalogs}"
       end
