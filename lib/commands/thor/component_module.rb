@@ -764,21 +764,14 @@ TODO: might deprecate
         return remote_module_info unless remote_module_info.ok?
 
         unless File.directory?(module_location)
-          if Console.confirmation_prompt("Unable to push to remote because module '#{component_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
-            response = clone_aux(:component_module,component_module_id,version,true)
+          response = clone_aux(:component_module,component_module_id,version,true)
 
-            if(response.nil? || response.ok?)
-              reparse_aux(module_location)
-              # resp = push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)#  if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
-              resp = push_to_remote_aux(remote_module_info, :component_module)
-              return resp unless resp.ok?
-            end
-
-            return response
-          else
-            # user choose not to clone needed module
-            return
+          if(response.nil? || response.ok?)
+            reparse_aux(module_location)
+            response = push_to_remote_aux(remote_module_info, :component_module)
           end
+
+          return response
         end
 
         push_to_remote_aux(remote_module_info, :component_module)

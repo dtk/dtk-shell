@@ -618,21 +618,14 @@ module DTK::Client
         return remote_module_info unless remote_module_info.ok?
 
         unless File.directory?(module_location)
-          if Console.confirmation_prompt("Unable to push to remote because module '#{service_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
-            response = clone_aux(:service_module,service_module_id,version,true)
-            
-            if(response.nil? || response.ok?)
-              reparse_aux(module_location)
-              # push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], version) # if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
-              resp = push_to_remote_aux(remote_module_info, :service_module)
-              return resp unless resp.ok?
-            end
+          response = clone_aux(:service_module,service_module_id,version,true)
 
-            return response
-          else
-            # user choose not to clone needed module
-            return
+          if(response.nil? || response.ok?)
+            reparse_aux(module_location)
+            response = push_to_remote_aux(remote_module_info, :service_module)
           end
+
+          return response
         end
         
         push_to_remote_aux(remote_module_info, :service_module)
