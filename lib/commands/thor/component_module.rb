@@ -764,7 +764,7 @@ TODO: might deprecate
         return remote_module_info unless remote_module_info.ok?
 
         unless File.directory?(module_location)
-          response = clone_aux(:component_module,component_module_id,version,true)
+          response = clone_aux(:component_module, component_module_id, version, true, true)
 
           if(response.nil? || response.ok?)
             reparse_aux(module_location)
