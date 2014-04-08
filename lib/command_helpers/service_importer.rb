@@ -80,9 +80,11 @@ module DTK::Client
       module_component_list = post rest_url("service_module/list_component_modules"), { :service_module_id => service_module_id }
       local_modules, needed_modules = OsUtil.local_component_module_list(), Array.new
 
-      module_component_list.data.each do |dependency_module|
-        unless local_modules.include?(formated_name = formulate_module_name(dependency_module['display_name'], dependency_module['version']))
-          needed_modules << dependency_module.merge({'formated_name' => formated_name})
+      if module_component_list
+        module_component_list.data.each do |dependency_module|
+          unless local_modules.include?(formated_name = formulate_module_name(dependency_module['display_name'], dependency_module['version']))
+            needed_modules << dependency_module.merge({'formated_name' => formated_name})
+          end
         end
       end
 
