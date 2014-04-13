@@ -79,6 +79,11 @@ module DTK
           return (is_windows? ? "#{genv(:homedrive)}#{genv(:homepath)}" : "#{genv(:home)}")
         end
 
+        def current_dir
+          current_dir = Dir.getwd()
+          current_dir.gsub(home_dir, '~')
+        end
+
         def genv(name)
           return ENV[name.to_s.upcase].gsub(/\\/,'/')
         end
