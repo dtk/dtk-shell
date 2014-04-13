@@ -171,7 +171,7 @@ module DTK::Client
       Response::Ok.new()
     end
 
-=begin
+
     desc "COMPONENT-MODULE-NAME/ID set-attribute ATTRIBUTE-ID VALUE", "Set value of component module attributes"
     def set_attribute(context_params)
       if context_params.is_there_identifier?(:attribute)
@@ -184,12 +184,13 @@ module DTK::Client
 
       post_body = {
         :attribute_id => attribute_id,
-        :attribute_value => value
+        :attribute_value => value,
+        :component_module_id => component_module_id
       }
       
       post rest_url("attribute/set"), post_body
     end
-=end
+
     #### end: create and delete commands ###
 
 =begin
