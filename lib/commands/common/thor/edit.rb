@@ -79,15 +79,19 @@ module DTK::Client
           end
         confirmed_ok = Console.confirmation_prompt(confirm_msg)
       end
-
       if (auto_commit || confirmed_ok)
         if auto_commit 
           puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
         end
         commit_msg = user_input("Commit message")
+
+        # remove qoutes if they are not closed properly in commit_msg
+        commit_msg.gsub!(/\"/,'') unless commit_msg.count('"') % 2 ==0
+
         internal_trigger=true
         reparse_aux(module_location)
         response = push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger,opts)
+        
         # if error return
         return response unless response.ok?
       end
