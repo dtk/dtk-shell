@@ -11,6 +11,16 @@ module DTK::Client
       module_name,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version,opts)
       return not_ok_response if not_ok_response
 
+      module_location  = OsUtil.module_location(module_type,module_name,version,opts)
+      
+      unless File.directory?(module_location)
+        if Console.confirmation_prompt("Push not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
+          clone_aux(module_type,module_id, version, true, true, opts)
+        else
+          return
+        end
+      end
+
       push_opts = opts.merge(:commit_msg => commit_msg, :local_branch => branch)
       response = Helper(:git_repo).push_changes(module_type,module_name,version,push_opts)
       return response unless response.ok?

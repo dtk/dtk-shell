@@ -191,6 +191,10 @@ module DTK
         @git_repo.dir.path
       end
 
+      def repo_exists?
+        Dir.exists?(repo_dir)
+      end
+
       def current_branch_name
         current_branch.name
       end

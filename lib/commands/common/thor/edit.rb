@@ -56,6 +56,11 @@ module DTK::Client
         Console.unix_shell(module_location, module_id, module_type, version)
       end
 
+      unless grit_adapter.repo_exists?
+        puts "Local module has been removed, skipping changes."
+        return Response::Ok.new()
+      end
+
       unless grit_adapter.changed?
         puts "No changes to repository"
         return Response::Ok.new()
