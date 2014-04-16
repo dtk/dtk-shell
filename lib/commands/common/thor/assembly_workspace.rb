@@ -722,10 +722,18 @@ module DTK::Client
     end
 
     def execute_tests_aux(context_params)
-      execute_test_tries = 10
+      assembly_or_workspace_id,node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id],method_argument_names)
+
+      execute_test_tries = 30
       execute_test_sleep = 1
 
-      assembly_or_workspace_id,node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id],method_argument_names)
+      if !options['timeout'].nil?
+        begin
+          execute_test_tries = Integer(options['timeout'])
+        rescue
+          raise DTK::Client::DtkValidationError, "Timeout value is not valid"
+        end
+      end
 
       #Get list of components on particular node
       post_body = {
@@ -755,10 +763,7 @@ module DTK::Client
             end
           end
       end
-
-      if components.empty?
-        components = nil 
-      end
+      components = nil if components.empty?
 
       post_body = {
         :assembly_id => assembly_or_workspace_id,
@@ -767,6 +772,7 @@ module DTK::Client
       }  
 
       response = post(rest_url("assembly/initiate_execute_tests"),post_body)
+
       raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
       return response unless response.ok?
 
@@ -793,8 +799,14 @@ module DTK::Client
         end
       end
 
-      response.set_data(*response.data(:results))
-      response.render_table(:execute_tests_data)
+      if (response.data(:results).empty? && options['timeout'].nil?)
+        raise DTK::Client::DtkValidationError, "Could not finish execution of tests in default timeframe (#{execute_test_tries} seconds). Try again with passing --timeout TIMEOUT parameter" 
+      elsif (response.data(:results).empty? && !options['timeout'].nil?)
+        raise DTK::Client::DtkValidationError, "Could not finish execution of tests in set timeframe (#{execute_test_tries} seconds). Try again with increasing --timeout TIMEOUT parameter"
+      else
+        response.set_data(*response.data(:results))
+        response.render_table(:execute_tests_data)
+      end
     end
 
     def get_ps_aux(context_params)
