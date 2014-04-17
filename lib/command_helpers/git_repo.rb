@@ -277,7 +277,8 @@ module DTK; module Client; class CommandHelper
         repo.fetch(remote(opts[:remote_repo]))
       end
 
-      local_branch      = repo.current_branch.name
+      local_branch      = repo.current_branch_name
+
       remote_branch_ref = remote_branch_ref(local_branch, opts)
 
       commit_shas = Hash.new
