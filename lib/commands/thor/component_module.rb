@@ -585,25 +585,27 @@ TODO: might deprecate
       :type => :string, 
       :banner => "NAMESPACE",
       :desc => "Remote namespace"
-
     def pull_dtkn(context_params)     
       component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!,:component_module_name,:option_1],method_argument_names)
       catalog = 'dtkn'
       version = options["version"]
+
       raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PullCatalogs}" unless catalog
 
+      if component_module_name.to_s =~ /^[0-9]+$/
+        component_module_id = component_module_name
+        component_module_name = get_module_name(component_module_id)
+      end
+
+      modules_path    = OsUtil.module_clone_location()
+      module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
+
       if catalog.to_s.eql?("dtkn")
+        clone_aux(:component_module, component_module_id, version, true, true) unless File.directory?(module_location)
+
         opts = {:version => version, :remote_namespace => options.namespace}
         response = pull_from_remote_aux(:component_module,component_module_id,opts)
         return response unless response.ok?
-
-        if component_module_name.to_s =~ /^[0-9]+$/
-          component_module_id = component_module_name
-          component_module_name = get_module_name(component_module_id)
-        end
-
-        modules_path    = OsUtil.module_clone_location()
-        module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
 
         push_clone_changes_aux(:component_module,component_module_id,version,nil,true) if File.directory?(module_location)
         Response::Ok.new()

@@ -360,18 +360,20 @@ module DTK::Client
       
       raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PullCatalogs}" unless catalog
 
+      if service_module_name.to_s =~ /^[0-9]+$/
+        service_module_id   = service_module_name
+        service_module_name = get_service_module_name(service_module_id)
+      end
+
+      modules_path    = OsUtil.service_clone_location()
+      module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
+
       if catalog.to_s.eql?("dtkn")
+        clone_aux(:service_module, service_module_id, version, true, true) unless File.directory?(module_location)
+
         opts = {:version => version, :remote_namespace => options.namespace}
         response = pull_from_remote_aux(:service_module,service_module_id,opts)
         return response unless response.ok?
-
-        if service_module_name.to_s =~ /^[0-9]+$/
-          service_module_id   = service_module_name
-          service_module_name = get_service_module_name(service_module_id)
-        end
-
-        modules_path    = OsUtil.service_clone_location()
-        module_location = "#{modules_path}/#{service_module_name}#{version && "-#{version}"}"
 
         # server repo needs to be sync with local clone, so we will use push-clone-changes when pull changes from remote to local
         # to automatically sync local with server repo
