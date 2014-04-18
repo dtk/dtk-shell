@@ -138,7 +138,7 @@ module DTK::Client
       response = post rest_url("account/remove_user_direct_access"), post_body
       return response unless response.ok?
 
-      OsUtil.print("Ssh key '#{name}' removed successfully!", :yellow)
+      OsUtil.print("SSH key '#{name}' removed successfully!", :yellow)
       nil
     end
 
