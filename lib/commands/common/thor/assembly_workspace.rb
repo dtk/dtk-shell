@@ -13,6 +13,7 @@ LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
 module DTK::Client
   module AssemblyWorkspaceMixin
     REQ_ASSEMBLY_OR_WS_ID = [:service_id!, :workspace_id!]
+
     def get_name(assembly_or_workspace_id)
       get_name_from_id_helper(assembly_or_workspace_id)
     end
@@ -789,6 +790,13 @@ module DTK::Client
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
         if count > execute_test_tries or response.data(:is_complete)
+          error_msg = ""
+          response.data(:results).each do |k,v|
+            unless v.nil?
+              error_msg << v['test_error'] if v.to_s.include?('test_error')
+            end
+          end
+          raise DTK::Client::DtkError, "Error while executing test script:\n" + error_msg + "Please fix test script with edit-component-module command and try again." unless error_msg.empty?
           end_loop = true
         else
           #last time in loop return whetever is there
