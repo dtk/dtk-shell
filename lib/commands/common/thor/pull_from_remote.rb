@@ -21,7 +21,7 @@ module DTK::Client
       remote_params = response.data_hash_form(:remote_repo_url,:remote_repo,:remote_branch)
       remote_params.merge!(:version => version) if version
 
-      #check and import component module dependencies before importing service itself
+      # check and import component module dependencies before importing service itself
       if (module_type == :service_module)
         import_module_component_dependencies(module_id,remote_namespace) 
       end
