@@ -879,8 +879,8 @@ module DTK
           end
         end
 
-        # remove thor_options
-        args = args - options_param_args unless options_param_args.nil?
+        # remove thor_options but only once
+        args = Client::CommonUtil.substract_array_once(args, options_param_args, true) unless options_param_args.nil?
 
         return args, options_param_args, invalid_options
       end
