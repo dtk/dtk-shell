@@ -25,7 +25,7 @@ module DTK::Client
         :identifier_only => {
           :target      => [
             ['list-nodes',"list-nodes","# Lists node instances in given targets."],
-            ['list-assemblies',"list-assemblies","# Lists assembly instances in given targets."]
+            ['list-services',"list-services","# Lists assembly instances in given targets."]
           ]
         }
       })
