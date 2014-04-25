@@ -15,6 +15,27 @@ module DTK::Client
       list_targets(context_params)
     end
 
+    desc "TARGET-NAME/ID import-nodes","Reads from inventory dsl and populates the node instance objects in the dtk server."
+    def import_nodes(context_params)
+      target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
+
+      post_body = {
+          :target_id => target_id
+        }
+
+      response  = post rest_url("target/import_nodes"), post_body
+      return response unless response.ok?
+
+      if response.data.empty?
+        OsUtil.print("No new nodes to import!", :yellow)
+      else
+        OsUtil.print("Successfully imported nodes:", :yellow)
+        response.data.each do |node|
+          OsUtil.print("#{node}", :yellow)
+        end
+      end
+    end
+
     desc "TARGET-NAME/ID list-services","Lists service instances in given targets."
     def list_services(context_params)
       context_params.method_arguments = ["assemblies"]
