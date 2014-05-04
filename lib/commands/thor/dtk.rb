@@ -58,10 +58,10 @@ module DTK::Client
     #   # API descriptor
     # end    
 
-    desc "node-group", "Add/Destroy/List available groups of nodes."
-    def node_group
+    # desc "node-group", "Add/Destroy/List available groups of nodes."
+    # def node_group
     #   # API descriptor
-    end
+    # end
 
     desc "node-template", "Node Templates that map to machine images and containers."
     def node_template
