@@ -465,7 +465,7 @@ TODO: will put in dot release and will rename to 'extend'
       nil
     end
 
-    desc "SERVICE-NAME/ID revoke-access SYS-USER NAME", "Revoke access to given service and its nodes"
+    desc "SERVICE-NAME/ID revoke-access SYS-USER NAME [--nodes NODE-NAMES]", "Revoke access to given service and its nodes"
     method_option :nodes, :type => :string, :default => nil
     def revoke_access(context_params)
       service_id, system_user, rsa_key_name = context_params.retrieve_arguments([:service_id!,:option_1!, :option_2!],method_argument_names)

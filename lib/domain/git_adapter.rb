@@ -192,7 +192,7 @@ module DTK
       end
 
       def repo_exists?
-        Dir.exists?(repo_dir)
+        File.exists?(repo_dir)
       end
 
       def current_branch_name
