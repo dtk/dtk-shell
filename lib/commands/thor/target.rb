@@ -104,13 +104,14 @@ module DTK::Client
 
         case about
           when "nodes"
-          response  = post rest_url("target/info_about"), post_body
-          data_type =  :node
+            response  = post rest_url("target/info_about"), post_body
+            data_type =  :node
           when "assemblies"
-          response  = post rest_url("target/info_about"), post_body
-          data_type =  :assembly
-         else
-          raise_validation_error_method_usage('list')
+            post_body.merge!(:detail_level => 'nodes', :include_workspace => true)
+            response  = post rest_url("target/info_about"), post_body
+            data_type =  :assembly
+          else
+            raise_validation_error_method_usage('list')
         end
 
         response.render_table(data_type)
