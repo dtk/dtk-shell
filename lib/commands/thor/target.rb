@@ -1,5 +1,7 @@
+dtk_require_common_commands('thor/inventory_parser')
 module DTK::Client
   class Target < CommandBaseThor
+    include InventoryParserMixin
 
     def self.pretty_print_cols()
       PPColumns.get(:target)
@@ -15,14 +17,27 @@ module DTK::Client
       list_targets(context_params)
     end
 
-    desc "TARGET-NAME/ID import-nodes","Reads from inventory dsl and populates the node instance objects in the dtk server."
+    desc "TARGET-NAME/ID import-nodes --source SOURCE","Reads from inventory dsl and populates the node instance objects in the dtk server."
+    method_option :source, :type => :string
     def import_nodes(context_params)
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
+      source = context_params.retrieve_thor_options([:source!], options)
+      
+      parsed_source = source.match(/^(\w+):(.+)/)
+      import_type = parsed_source[1]
+      path = parsed_source[2]
+      
+      raise DTK::Client::DtkValidationError, "We do not support '#{import_type}' as import source at the moment. Valid sources: #{ValidImportTypes}" unless ValidImportTypes.include?(import_type)
 
-      post_body = {
-          :target_id => target_id
-        }
+      post_body = {:target_id => target_id}
 
+      if import_type.eql?('file')
+        inventory_data = parse_inventory_file(path)
+        post_body.merge!(:inventory_data => inventory_data)
+      end
+
+      # raise
+      
       response  = post rest_url("target/import_nodes"), post_body
       return response unless response.ok?
 
@@ -35,10 +50,11 @@ module DTK::Client
         end
       end
     end
+    ValidImportTypes = ["file"]
 
     desc "create-target [TARGET-NAME] --provider PROVIDER --region REGION", "Create target based on given provider"
-    method_option :region, :type => :string
     method_option :provider, :type => :string
+    method_option :region, :type => :string
     def create_target(context_params)
       # we use :target_id but that will retunr provider_id (another name for target template ID)
       target_name = context_params.retrieve_arguments([:option_1],method_argument_names)
