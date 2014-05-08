@@ -40,7 +40,6 @@ module DTK::Client
     def import_nodes(context_params)
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
       source = context_params.retrieve_thor_options([:source!], options)
-
       parsed_source = source.match(/^(\w+):(.+)/)
       import_type = parsed_source[1]
       path = parsed_source[2]
@@ -123,8 +122,8 @@ module DTK::Client
     end
 
     desc "create-target [TARGET-NAME] --provider PROVIDER --region REGION", "Create target based on given provider"
-    method_option :region, :type => :string
     method_option :provider, :type => :string
+    method_option :region, :type => :string
     def create_target(context_params)
       # we use :target_id but that will retunr provider_id (another name for target template ID)
       target_name = context_params.retrieve_arguments([:option_1],method_argument_names)
