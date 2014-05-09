@@ -3,6 +3,7 @@ dtk_require_common_commands('thor/list_diffs')
 dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
+dtk_require_common_commands('thor/access_control')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/reparse')
 dtk_require_common_commands('thor/purge_clone')
@@ -71,6 +72,7 @@ module DTK::Client
       include PurgeCloneMixin
       include ListDiffsMixin
       include ServiceImporter
+      include AccessControlMixin
 
       def get_module_name(module_id)
         get_name_from_id_helper(module_id)
@@ -539,47 +541,6 @@ TODO: might deprecate
       return response         
     end
 
-      # commented out for now -> changed to push but leaving commented out if run into some issues with push
-# #   desc "COMPONENT-MODULE-NAME/ID push-to-dtkn [-n NAMESPACE] [-v VERSION]", "Push local copy of component module to remote repository."
-#     # version_method_option
-#     desc "COMPONENT-MODULE-NAME/ID push-to-dtkn [-n NAMESPACE]", "Push local copy of component module to remote repository."
-#     method_option "namespace",:aliases => "-n",
-#         :type => :string, 
-#         :banner => "NAMESPACE",
-#         :desc => "Remote namespace"
-#     def push_to_dtkn(context_params)
-#       component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!, :component_module_name!],method_argument_names)
-#       version = options["version"]
-
-#       if component_module_name.to_s =~ /^[0-9]+$/
-#         component_module_id   = component_module_name
-#         component_module_name = get_module_name(component_module_id)
-#       end
-
-#       modules_path    = OsUtil.module_clone_location()
-#       module_location = "#{modules_path}/#{component_module_name}#{version && "-#{version}"}"
-
-#       unless File.directory?(module_location)
-#         if Console.confirmation_prompt("Unable to push to remote because module '#{component_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
-#           response = clone_aux(:component_module,component_module_id,version,false)
-          
-#           if(response.nil? || response.ok?)
-#             reparse_aux(module_location)
-#             push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)  if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
-#           end
-
-#           return response
-#         else
-#           # user choose not to clone needed module
-#           return
-#         end
-#       end
-
-#       reparse_aux(module_location)
-#       push_to_remote_aux(:component_module, component_module_id, component_module_name, options["namespace"], version)
-#     end
-
-#   desc "COMPONENT-MODULE-NAME/ID pull-from-dtkn [-n NAMESPACE] [-v VERSION]", "Update local component module from remote repository."
     desc "COMPONENT-MODULE-NAME/ID pull-dtkn [-n NAMESPACE]", "Update local component module from remote repository."
     method_option "namespace",:aliases => "-n",
       :type => :string, 
@@ -615,7 +576,56 @@ TODO: might deprecate
         raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PullCatalogs}"
       end
     end
+
     PullCatalogs = ["dtkn"]
+
+    desc "COMPONENT-MODULE-NAME/ID chown REMOTE-USER", "Set remote module owner"
+    method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    def chown(context_params)
+      component_module_id, remote_user = context_params.retrieve_arguments([:component_module_id!,:option_1!],method_argument_names)
+      chown_aux(component_module_id, remote_user, options.namespace)
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID chmod PERMISSION-SELECTOR", "Update remote permissions e.g. ug+rw , user and group get RW permissions"
+    method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    def chmod(context_params)
+      component_module_id, permission_selector = context_params.retrieve_arguments([:component_module_id!,:option_1!],method_argument_names)
+      chmod_aux(component_module_id, permission_selector, options.namespace)
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID make-public", "Make this module public"
+    method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    def make_public(context_params)
+      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
+      chmod_aux(component_module_id, "o+r", options.namespace)
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID make-private", "Make this module private"
+    method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    def make_private(context_params)
+      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
+      chmod_aux(component_module_id, "o-rwd", options.namespace)
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID add-collaborators", "Add collabrators users or groups comma seperated (--users or --groups)"
+    method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    method_option "users",:aliases => "-u", :type => :string, :banner => "USERS", :desc => "User collabrators"
+    method_option "groups",:aliases => "-g", :type => :string, :banner => "GROUPS", :desc => "Group collabrators"
+    def add_collaborators(context_params)
+      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
+      collaboration_aux(:add, component_module_id, options.users, options.groups, options.namespace)
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID remove-collaborators", "Remove collabrators users or groups comma seperated (--users or --groups)"
+    method_option "namespace",:aliases => "-n",:type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    method_option "users",:aliases => "-u", :type => :string, :banner => "USERS", :desc => "User collabrators"
+    method_option "groups",:aliases => "-g", :type => :string, :banner => "GROUPS", :desc => "Group collabrators"
+    def remove_collaborators(context_params)
+      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
+      collaboration_aux(:remove, component_module_id, options.users, options.groups, options.namespace)
+    end
+
+
 
     #### end: commands to interact with remote repo ###
 
