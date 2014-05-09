@@ -6,11 +6,16 @@ module DTK::Client
 
     # entities that are not available on root but later in n-context
     def self.additional_entities()
-      ['target','component','attribute','utils','node','task','component-template','assembly']
+      ['component','attribute','utils','node','task','component-template','assembly']
     end
 
     desc "workspace","Sandbox for development and testing"
     def workspace
+      # API descriptor, SYM_LINK!
+    end
+
+    desc "target","Targets"
+    def target
       # API descriptor, SYM_LINK!
     end
     
