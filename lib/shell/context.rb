@@ -170,12 +170,22 @@ module DTK
         # using extended_context when we want to use autocomplete from other context
         # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
         # component-templates to autocomplete
-        extended_candidates, new_context = {}, nil
+        extended_candidates, new_context, line_buffer_first = {}, nil, nil
         command_clazz = Context.get_command_class(active_context_copy.last_command_name)
-        
+        # require 'debugger'
+        # Debugger.start
+        # debugger
+        # unless (line_buffer.empty? || line_buffer.strip().empty?)
+        #   line_buffer_last = line_buffer.split(' ').last
+        #   line_buffer = line_buffer.split(' ').first
+        #   line_buffer.gsub!('-','_') unless (line_buffer.nil? || line_buffer.empty?)
+        # end
+
         unless (line_buffer.empty? || line_buffer.strip().empty?)
-          line_buffer = line_buffer.split(' ').first
-          line_buffer.gsub!('-','_') unless (line_buffer.nil? || line_buffer.empty?)
+          line_buffer = line_buffer.split(' ')
+          line_buffer_last = line_buffer.last
+          line_buffer_first = line_buffer.first
+          line_buffer_first.gsub!('-','_') unless (line_buffer_first.nil? || line_buffer_first.empty?)
         end
 
         unless command_clazz.nil?
@@ -183,14 +193,22 @@ module DTK
           
           unless extended_context.empty?
             extended_context = extended_context[:context]
-            extended_context.reject!{|k,v| k.to_s!=line_buffer}
+            # extended_context.reject!{|k,v| k.to_s!=line_buffer}
+            # extended_context.select!{|k,v| k.to_s.eql?(line_buffer_first) || k.to_s.eql?(line_buffer_last)}
+            extended_context.select!{|k,v| line_buffer.include?(k.to_s)}
 
-            new_context = extended_context[line_buffer.to_sym] unless line_buffer.nil? || line_buffer.empty?
+            if (extended_context[line_buffer_last] && !line_buffer_first.eql?(line_buffer_last))
+              new_context = extended_context[line_buffer_last]
+            elsif (extended_context[line_buffer[line_buffer.size-2]] && !line_buffer_first.eql?(extended_context[line_buffer[line_buffer.size-2]]))
+              new_context = extended_context[line_buffer[line_buffer.size-2]]
+            else
+              new_context = extended_context[line_buffer_first.to_sym] unless line_buffer_first.nil? || line_buffer_first.empty?
+            end
             active_context_copy.push_new_context(new_context, new_context) unless new_context.nil?
           end
         end
         
-        return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root, line_buffer)
+        return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root, line_buffer_first||{})
       end
 
       # TODO: this is hack used this to hide 'node' context and use just node_identifier

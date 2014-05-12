@@ -11,18 +11,36 @@ module DTK::Client
       return ['PROVIDER']
     end
 
+    def self.extended_context()
+      {
+        :context => {
+          # want auto complete for --provider option
+          "--provider" => "provider"
+        }
+      }
+    end
+
     desc "TARGET-NAME/ID list-nodes","Lists node instances in given targets."
     def list_nodes(context_params)
       context_params.method_arguments = ["nodes"]
       list_targets(context_params)
     end
 
-    desc "TARGET-NAME/ID import-nodes --source SOURCE","Reads from inventory dsl and populates the node instance objects in the dtk server."
+    desc "TARGET-NAME/ID info","Provides information about specified target"
+    def info(context_params)
+      target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
+
+      post_body = {:target_id => target_id}
+      response = post rest_url('target/info'), post_body
+      response.render_custom_info("target")
+    end
+
+    desc "TARGET-NAME/ID import-nodes --source SOURCE","Reads from inventory dsl and populates the node instance objects (SOURCE: file:/path/to/file.yaml)."
     method_option :source, :type => :string
     def import_nodes(context_params)
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
       source = context_params.retrieve_thor_options([:source!], options)
-      
+
       parsed_source = source.match(/^(\w+):(.+)/)
       import_type = parsed_source[1]
       path = parsed_source[2]
