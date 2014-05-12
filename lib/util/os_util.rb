@@ -243,9 +243,14 @@ module DTK
             load File.expand_path('../../lib/shell/domain.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/domain/git_adapter.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/command_helpers/git_repo.rb', File.dirname(__FILE__))
-            path = File.expand_path('../../lib/commands/thor/*.rb', File.dirname(__FILE__))
-            Dir[path].each do |thor_class_file|
-              load thor_class_file
+            paths = []
+            paths << File.expand_path('../../lib/commands/thor/*.rb', File.dirname(__FILE__))
+            paths << File.expand_path('../../lib/commands/common/thor/*.rb', File.dirname(__FILE__))
+
+            paths.each do |path|
+              Dir[path].each do |thor_class_file|
+                load thor_class_file
+              end
             end
           end
         end

@@ -5,6 +5,7 @@ dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
+dtk_require_common_commands('thor/access_control')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/reparse')
 dtk_require_from_base("dtk_logger")
@@ -27,6 +28,7 @@ module DTK::Client
       include ReparseMixin
       include ServiceImporter
       include PurgeCloneMixin
+      include AccessControlMixin
 
       def get_service_module_name(service_module_id)
         get_name_from_id_helper(service_module_id)
@@ -386,6 +388,52 @@ module DTK::Client
       end
     end
     PullCatalogs = ["dtkn"]
+
+    desc "SERVICE-MODULE-NAME/ID chown REMOTE-USER", "Set remote module owner"
+    method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    def chown(context_params)
+      service_module_id, remote_user = context_params.retrieve_arguments([:service_module_id!,:option_1!],method_argument_names)
+      chown_aux(service_module_id, remote_user, options.namespace)
+    end
+
+    desc "SERVICE-MODULE-NAME/ID chmod PERMISSION-SELECTOR", "Update remote permissions e.g. ug+rw , user and group get RW permissions"
+    method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    def chmod(context_params)
+      service_module_id, permission_selector = context_params.retrieve_arguments([:service_module_id!,:option_1!],method_argument_names)
+      chmod_aux(service_module_id, permission_selector, options.namespace)
+    end
+
+    desc "SERVICE-MODULE-NAME/ID make-public", "Make this module public"
+    method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    def make_public(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
+      chmod_aux(service_module_id, "o+r", options.namespace)
+    end
+
+    desc "SERVICE-MODULE-NAME/ID make-private", "Make this module private"
+    method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    def make_private(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
+      chmod_aux(service_module_id, "o-rwd", options.namespace)
+    end
+
+    desc "SERVICE-MODULE-NAME/ID add-collaborators", "Add collabrators users or groups comma seperated (--users or --groups)"
+    method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    method_option "users",:aliases => "-u", :type => :string, :banner => "USERS", :desc => "User collabrators"
+    method_option "groups",:aliases => "-g", :type => :string, :banner => "GROUPS", :desc => "Group collabrators"
+    def add_collaborators(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
+      collaboration_aux(:add, service_module_id, options.users, options.groups, options.namespace)
+    end
+
+    desc "SERVICE-MODULE-NAME/ID remove-collaborators", "Remove collabrators users or groups comma seperated (--users or --groups)"
+    method_option "namespace",:aliases => "-n",:type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    method_option "users",:aliases => "-u", :type => :string, :banner => "USERS", :desc => "User collabrators"
+    method_option "groups",:aliases => "-g", :type => :string, :banner => "GROUPS", :desc => "Group collabrators"
+    def remove_collaborators(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
+      collaboration_aux(:remove, service_module_id, options.users, options.groups, options.namespace)
+    end
 
     ##
     #

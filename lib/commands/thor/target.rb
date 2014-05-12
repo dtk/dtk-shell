@@ -92,6 +92,28 @@ module DTK::Client
       return response
     end
 
+    desc "create-target [TARGET-NAME] --provider PROVIDER --region REGION", "Create target based on given provider"
+    method_option :region, :type => :string
+    method_option :provider, :type => :string
+    def create_target(context_params)
+      # we use :target_id but that will retunr provider_id (another name for target template ID)
+      target_name = context_params.retrieve_arguments([:option_1],method_argument_names)
+      region   = context_params.retrieve_thor_options([:region!], options)
+      provider = context_params.retrieve_thor_options([:provider!], options)
+
+      DTK::Shell::InteractiveWizard.validate_region(region)
+
+      post_body = {
+        :provider_id => provider,
+        :region => region
+      }
+      post_body.merge!(:target_name => target_name) if target_name
+      response = post rest_url("target/create"), post_body
+      @@invalidate_map << :target
+
+      return response
+    end
+
     desc "TARGET-NAME/ID list-services","Lists service instances in given targets."
     def list_services(context_params)
       context_params.method_arguments = ["assemblies"]
