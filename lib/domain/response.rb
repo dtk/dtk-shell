@@ -116,14 +116,25 @@ module DTK
       end
 
       def get_custom_labels(label, type)
-        mappings = {
+        mappings = {}
+
+        mappings["module"] = {
           "id" => "ID:",
           "display_name" => "NAME:",
           "versions" => "VERSION(S):",
           "remote_repos" => "LINKED REMOTE(S):",
           "dsl_parsed" => "DSL PARSED:"
         }
-        mappings[label]
+
+        mappings["target"] = {
+          "id" => "ID:",
+          "display_name" => "NAME:",
+          "type" => "TYPE:",
+          "iaas_type" => "PROVIDER_TYPE:",
+          "provider_name" => "PROVIDER_NAME:"
+        }
+
+        mappings[type][label] if mappings[type]
       end
 
       def array_to_string(array_data)
