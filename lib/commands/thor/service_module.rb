@@ -109,7 +109,7 @@ module DTK::Client
 
     desc "SERVICE-MODULE-NAME/ID list-component-modules","List component modules associated with service module."
     method_option :remote, :type => :boolean, :default => false
-    def list_comoponent_modules(context_params)
+    def list_component_modules(context_params)
       context_params.method_arguments = ["modules"]
       list(context_params)
     end
