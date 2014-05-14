@@ -70,6 +70,14 @@ module DTK::Client
     end
     ValidImportTypes = ["file"]
 
+    desc "TARGET-NAME/ID import-nodes --source SOURCE","Install node agents on imported physical nodes."
+    def install_agents(context_params)
+      target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
+
+      post_body = {:target_id => target_id}
+      post rest_url("target/install_agents"), post_body
+    end
+
     desc "create-target [TARGET-NAME] --provider PROVIDER --region REGION", "Create target based on given provider"
     method_option :provider, :type => :string
     method_option :region, :type => :string
