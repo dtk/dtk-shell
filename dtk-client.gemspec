@@ -4,7 +4,7 @@ require File.expand_path('../lib/dtk-client/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Rich PELAVIN"]
   gem.email         = ["rich@reactor8.com"]
-  gem.description   = %q{Dtk client is CLI tool used for communication with Reactor8.}
+  gem.description   = %q{The DTK Client is a command line tool to interact with your DTK Server and DTK Service Catalog instance(s).}
   gem.summary       = %q{DTK CLI client for DTK server interaction.}
   gem.homepage      = "https://github.com/rich-reactor8/dtk-client"
   gem.licenses      = ["GPL-3.0"]
