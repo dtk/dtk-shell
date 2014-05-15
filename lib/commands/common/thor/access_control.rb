@@ -35,6 +35,15 @@ module DTK::Client
       post rest_url("#{resolve_module_type}/remote_collaboration"), post_body
     end
 
+    def collaboration_list_aux(module_id, namespace = nil)
+      post_body = {
+        :module_id => module_id,
+        :remote_module_namespace => namespace,
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
+      }
+      post rest_url("#{resolve_module_type}/list_remote_collaboration"), post_body
+    end
+
   private
 
     def resolve_module_type
