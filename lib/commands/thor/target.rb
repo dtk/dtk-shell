@@ -70,7 +70,7 @@ module DTK::Client
     end
     ValidImportTypes = ["file"]
 
-    desc "TARGET-NAME/ID import-nodes --source SOURCE","Install node agents on imported physical nodes."
+    desc "TARGET-NAME/ID install-agents","Install node agents on imported physical nodes."
     def install_agents(context_params)
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
 
