@@ -231,8 +231,8 @@ module DTK
       include ParseFile
       dtk_require_from_base('configurator')
 
-      CONFIG_FILE = ::DTK::Client::Configurator.CONFIG_FILE
-      CRED_FILE = ::DTK::Client::Configurator.CRED_FILE
+      CONFIG_FILE = ::DTK::Client::Configurator::CONFIG_FILE
+      CRED_FILE = ::DTK::Client::Configurator::CRED_FILE
       
       REQUIRED_KEYS = [:server_host]
 
