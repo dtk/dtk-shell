@@ -16,11 +16,14 @@ class DiskCacher
 
   def initialize(cache_dir=DTK::Client::OsUtil.get_temp_location())
     @cache_dir = cache_dir
+    @current_user = ::DTK::Client::Configurator.client_username
   end
 
   def fetch(file_name, max_age=0, use_mock_up=true)
     file = Digest::MD5.hexdigest(file_name)
-    file_path = File.join(@cache_dir, file)
+    # current user is important so that there are no clashes in writting to temp file
+    # between multiple users on same machine
+    file_path = File.join(@cache_dir, "#{@current_user}::#{file}")
 
     # we check if the file -- a MD5 hexdigest of the URL -- exists
     #  in the dir. If it does and the data is fresh, we just read

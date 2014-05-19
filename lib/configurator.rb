@@ -13,14 +13,6 @@ module DTK
 			require 'fileutils'
 			FileUtils.mkdir(OsUtil.dtk_local_folder) unless File.directory?(OsUtil.dtk_local_folder)
 
-	    def self.CONFIG_FILE
-	    	CONFIG_FILE
-	    end
-
-	    def self.CRED_FILE
-	    	CRED_FILE
-	    end
-
 			def self.check_config_exists
 				exists = true
 				if !File.exists?(CONFIG_FILE)
