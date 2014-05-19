@@ -435,6 +435,15 @@ module DTK::Client
       collaboration_aux(:remove, service_module_id, options.users, options.groups, options.namespace)
     end
 
+    desc "SERVICE-MODULE-NAME/ID list-collaborators", "List collaborators for given module"
+    method_option "namespace",:aliases => "-n",:type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
+    def list_collaborators(context_params)
+      service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
+      response = collaboration_list_aux(component_module_id, options.namespace)
+      response.render_table(:module_collaborators)
+      response
+    end
+
     ##
     #
     # internal_trigger: this flag means that other method (internal) has trigger this.
