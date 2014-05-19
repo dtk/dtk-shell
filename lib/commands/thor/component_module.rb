@@ -579,12 +579,14 @@ TODO: might deprecate
 
     PullCatalogs = ["dtkn"]
 
+=begin
     desc "COMPONENT-MODULE-NAME/ID chown REMOTE-USER", "Set remote module owner"
     method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
     def chown(context_params)
       component_module_id, remote_user = context_params.retrieve_arguments([:component_module_id!,:option_1!],method_argument_names)
       chown_aux(component_module_id, remote_user, options.namespace)
     end
+=end
 
     desc "COMPONENT-MODULE-NAME/ID chmod PERMISSION-SELECTOR", "Update remote permissions e.g. ug+rw , user and group get RW permissions"
     method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
