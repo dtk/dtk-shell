@@ -48,7 +48,8 @@ module DTK
     private
 
       def self.ssh_base_dir()
-        "#{ENV['HOME']}/.ssh" #TODO: very brittle
+        # "#{ENV['HOME']}/.ssh" #TODO: very brittle
+        "#{OsUtil.dtk_home_dir}/.ssh"
       end
       
       def self.ssh_known_hosts_path()
