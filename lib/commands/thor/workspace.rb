@@ -382,7 +382,7 @@ module DTK::Client
     end
 
     desc "WORKSPACE-NAME/ID list-component-modules","List component modules associated with workspace."
-    def list_modules(context_params)
+    def list_component_modules(context_params)
       list_modules_aux(context_params)
     end
 

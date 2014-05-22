@@ -69,7 +69,7 @@ module DTK::Client
     desc "set-password", "Change password for your dtk user account"
     def set_password(context_params)
       old_pass_prompt, old_pass, new_pass_prompt, confirm_pass_prompt = nil
-      cred_file = ::DTK::Client::Configurator.CRED_FILE
+      cred_file = ::DTK::Client::Configurator::CRED_FILE
       old_pass = parse_key_value_file(cred_file)[:password]
       username = parse_key_value_file(cred_file)[:username]
 
@@ -105,7 +105,7 @@ module DTK::Client
 
     desc "list-ssh-keys", "Show list of key pairs that your account profile has saved"
     def list_ssh_keys(context_params)
-      username  = parse_key_value_file(::DTK::Client::Configurator.CRED_FILE)[:username]
+      username  = parse_key_value_file(::DTK::Client::Configurator::CRED_FILE)[:username]
       post_body = {:username => username}
 
       response = post rest_url("account/list_ssh_keys"), post_body
