@@ -35,10 +35,10 @@ module DTK::Client
       return Provider.valid_children().include?(name_of_sub_context.to_sym)
     end
 
-    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME --keypair KEYPAIR --security-group SECURITY-GROUP [--no-bootstrap]", "Create provider"
+    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME --keypair KEYPAIR --security-group SECURITY-GROUP [--bootstrap]", "Create provider"
     method_option :keypair,    :type => :string
     method_option :security_group, :type => :string
-    method_option :no_bootstrap, :type => :boolean, :default => false
+    method_option :bootstrap, :type => :boolean, :default => false
     def create_provider(context_params)
       composed_provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
@@ -67,7 +67,7 @@ module DTK::Client
         },
           :provider_name => provider_name,
           :iaas_type => provider_type.downcase,
-          :no_bootstrap => options.no_bootstrap?
+          :no_bootstrap => ! options.bootstrap?
       }
 
       response = post rest_url("target/create_provider"), post_body
