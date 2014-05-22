@@ -5,7 +5,7 @@ module DTK::Client
 
     def parse_inventory_file(file_path)
       hash = YAML.load_file(file_path)
-      ssh_creds_path = ::DTK::Client::Configurator.NODE_SSH_CREDENTIALS
+      ssh_creds_path = ::DTK::Client::Configurator::NODE_SSH_CREDENTIALS
       ssh_creds_data = YAML.load_file(ssh_creds_path)
 
       ret = Hash.new
