@@ -43,15 +43,17 @@ module DTK::Client
       composed_provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       provider_type, provider_name = decompose_provider_type_and_name(composed_provider_name)
-      keypair, security_group = context_params.retrieve_thor_options([:keypair!, :security_group!], options)
 
-      result = DTK::Shell::InteractiveWizard::interactive_user_input(
-        {'IAAS Credentials' => { :type => :group, :options => [
-              {:key    => {}},
-              {:secret => {}}
-          ]}})
-      
-      access_key, secret_key = result['IAAS Credentials'].values_at(:key, :secret)
+      unless provider_type.eql?('physical')
+        keypair, security_group = context_params.retrieve_thor_options([:keypair!, :security_group!], options)
+
+        result = DTK::Shell::InteractiveWizard::interactive_user_input(
+          {'IAAS Credentials' => { :type => :group, :options => [
+                {:key    => {}},
+                {:secret => {}}
+            ]}})
+        access_key, secret_key = result['IAAS Credentials'].values_at(:key, :secret)
+      end
 
       # Remove sensitive readline history
       OsUtil.pop_readline_history(2)
