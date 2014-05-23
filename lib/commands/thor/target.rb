@@ -23,7 +23,7 @@ module DTK::Client
     desc "TARGET-NAME/ID list-nodes","Lists node instances in given targets."
     def list_nodes(context_params)
       context_params.method_arguments = ["nodes"]
-      list_targets(context_params)
+      list(context_params)
     end
 
     desc "TARGET-NAME/ID info","Provides information about specified target"
@@ -101,7 +101,7 @@ module DTK::Client
     desc "TARGET-NAME/ID list-services","Lists service instances in given targets."
     def list_services(context_params)
       context_params.method_arguments = ["assemblies"]
-      list_targets(context_params)
+      list(context_params)
     end
 
 
@@ -124,8 +124,8 @@ module DTK::Client
       response
     end
 
-    desc "list-targets","Lists available targets."
-    def list_targets(context_params)
+    desc "list","Lists available targets."
+    def list(context_params)
       provider_id, target_id, about = context_params.retrieve_arguments([:provider_id, :target_id, :option_1],method_argument_names||="")
 
       if target_id.nil?
