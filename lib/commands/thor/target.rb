@@ -42,6 +42,8 @@ module DTK::Client
       source = context_params.retrieve_thor_options([:source!], options)
 
       parsed_source = source.match(/^(\w+):(.+)/)
+      raise DTK::Client::DtkValidationError, "Invalid source! Valid source should contain source_type:source_path (e.g. --source file:path/to/file.yaml)." unless parsed_source
+
       import_type = parsed_source[1]
       path = parsed_source[2]
       
