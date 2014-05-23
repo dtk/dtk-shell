@@ -82,19 +82,19 @@ module DTK::Client
     def create_target(context_params)
       # we use :target_id but that will retunr provider_id (another name for target template ID)
       target_name = context_params.retrieve_arguments([:option_1],method_argument_names)
-      region   = context_params.retrieve_thor_options([:region!], options)
-      provider = context_params.retrieve_thor_options([:provider!], options)
+      provider    = context_params.retrieve_thor_options([:provider!], options)
+      region      = context_params.retrieve_thor_options([:region], options)
 
-      DTK::Shell::InteractiveWizard.validate_region(region)
+      DTK::Shell::InteractiveWizard.validate_region(region) if region
 
       post_body = {
-        :provider_id => provider,
-        :region => region
+        :provider_id => provider
       }
       post_body.merge!(:target_name => target_name) if target_name
+      post_body.merge!(:region => region) if region
       response = post rest_url("target/create"), post_body
-      @@invalidate_map << :target
 
+      @@invalidate_map << :target
       return response
     end
 
