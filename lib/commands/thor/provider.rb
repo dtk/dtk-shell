@@ -18,7 +18,7 @@ module DTK::Client
         :command_only => {
           :target => [
             ['delete-target',"delete-target TARGET-IDENTIFIER","# Deletes target"],
-            ['list-targets',"list-targets","# Lists available targets."]
+            ['list',"list","# Lists available targets."]
 
           ]
         },
@@ -100,8 +100,12 @@ module DTK::Client
 
     desc "list","Lists available providers."
     def list(context_params)
-      response  = post rest_url("target/list"), { :subtype => :template }
-      response.render_table(:provider)
+      if context_params.is_there_command?(:"target")
+        list_targets(context_params)
+      else
+        response  = post rest_url("target/list"), { :subtype => :template }
+        response.render_table(:provider)
+      end
     end
 
     #TODO: Aldin; wanted to name this list_targets, but did not know how to do so w/o conflicting with desc "PROVIDER-ID/NAME list-targets
@@ -115,8 +119,7 @@ module DTK::Client
     def list_targets(context_params)
       provider_id = context_params.retrieve_arguments([:provider_id!],method_argument_names)
 
-      response  = post rest_url("target/list"), { :subtype => :instance, :parent_id => provider_id }
-
+      response = post rest_url("target/list"), { :subtype => :instance, :parent_id => provider_id }
       response.render_table(:target)
     end
 
