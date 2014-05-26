@@ -35,7 +35,7 @@ module DTK::Client
       return Provider.valid_children().include?(name_of_sub_context.to_sym)
     end
 
-    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME --keypair KEYPAIR --security-group SECURITY-GROUP [--bootstrap]", "Create provider"
+    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME [--keypair KEYPAIR] [--security-group SECURITY-GROUP] [--bootstrap]", "Create provider"
     method_option :keypair,    :type => :string
     method_option :security_group, :type => :string
     method_option :bootstrap, :type => :boolean, :default => false
@@ -43,31 +43,28 @@ module DTK::Client
       composed_provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       provider_type, provider_name = decompose_provider_type_and_name(composed_provider_name)
-
+      iaas_properties = Hash.new
+      #TODO: daat-driven check if legal provider type and then what options needed depending on provider type
       unless provider_type.eql?('physical')
         keypair, security_group = context_params.retrieve_thor_options([:keypair!, :security_group!], options)
-
+        iaas_properties.merge!(:keypair_name => keypair,:security_group => security_group)
         result = DTK::Shell::InteractiveWizard::interactive_user_input(
           {'IAAS Credentials' => { :type => :group, :options => [
                 {:key    => {}},
                 {:secret => {}}
             ]}})
         access_key, secret_key = result['IAAS Credentials'].values_at(:key, :secret)
+        iaas_properties.merge!(:key => access_key,:secret => secret_key)
       end
 
       # Remove sensitive readline history
       OsUtil.pop_readline_history(2)
 
-      post_body = {
-        :iaas_properties => {
-          :key     => access_key,
-          :secret  => secret_key,
-          :keypair_name => keypair,
-          :security_group => security_group
-        },
-          :provider_name => provider_name,
-          :iaas_type => provider_type.downcase,
-          :no_bootstrap => ! options.bootstrap?
+      post_body =  {
+        :iaas_properties => iaas_properties,
+        :provider_name => provider_name,
+        :iaas_type => provider_type.downcase,
+        :no_bootstrap => ! options.bootstrap?
       }
 
       response = post rest_url("target/create_provider"), post_body
