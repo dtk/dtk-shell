@@ -109,11 +109,13 @@ module DTK::Client
     end
 
     #TODO: Aldin; wanted to name this list_targets, but did not know how to do so w/o conflicting with desc "PROVIDER-ID/NAME list-targets
-    desc "list-all-targets","Lists all targets for all providers."
-    def list_all_targets(context_params)
-      response  = post rest_url("target/list"), { :subtype => :instance }
-      response.render_table(:target)
-    end
+    # Aldin: moved this to target base context (target>list)
+    #
+    # desc "list-all-targets","Lists all targets for all providers."
+    # def list_all_targets(context_params)
+    #   response  = post rest_url("target/list"), { :subtype => :instance }
+    #   response.render_table(:target)
+    # end
 
     desc "PROVIDER-ID/NAME list-targets", "List targets"
     def list_targets(context_params)
@@ -123,11 +125,13 @@ module DTK::Client
       response.render_table(:target)
     end
 
-    desc "set-default-target TARGET-NAME/ID","Sets the default target."
-    def set_default_target(context_params)
-      target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      post rest_url("target/set_default"), { :target_id => target_id }
-    end
+    # Aldin: moved to target base context (target>set-default-target)
+    #
+    # desc "set-default-target TARGET-NAME/ID","Sets the default target."
+    # def set_default_target(context_params)
+    #   target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+    #   post rest_url("target/set_default"), { :target_id => target_id }
+    # end
 
     desc "delete-provider PROVIDER-IDENTIFIER [-y]","Deletes targets provider"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false

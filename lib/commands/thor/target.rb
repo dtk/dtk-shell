@@ -70,6 +70,12 @@ module DTK::Client
     end
     ValidImportTypes = ["file"]
 
+    desc "set-default-target TARGET-IDENTIFIER","Sets the default target."
+    def set_default_target(context_params)
+      target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      post rest_url("target/set_default"), { :target_id => target_id }
+    end
+
     desc "TARGET-NAME/ID install-agents","Install node agents on imported physical nodes."
     def install_agents(context_params)
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
@@ -105,7 +111,6 @@ module DTK::Client
       context_params.method_arguments = ["assemblies"]
       list(context_params)
     end
-
 
     def self.validation_list(context_params)
       provider_id = context_params.retrieve_arguments([:provider_id])
