@@ -908,7 +908,7 @@ module DTK::Client
         raise DTK::Client::DtkValidationError, "Could not finish execution of tests in set timeframe (#{execute_test_tries} seconds). Try again with increasing --timeout TIMEOUT parameter"
       else
         response.set_data(*response.data(:results))
-        response.render_table(:execute_tests_data)
+        response.render_table(:execute_tests_data_v2)
       end
     end
 
