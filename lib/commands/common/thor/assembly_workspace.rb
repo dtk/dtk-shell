@@ -817,6 +817,101 @@ module DTK::Client
       end
     end
 
+    def execute_tests_v2_aux(context_params)
+      assembly_or_workspace_id,node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id],method_argument_names)
+
+      execute_test_tries = 30
+      execute_test_sleep = 1
+
+      if !options['timeout'].nil?
+        begin
+          execute_test_tries = Integer(options['timeout'])
+        rescue
+          raise DTK::Client::DtkValidationError, "Timeout value is not valid"
+        end
+      end
+
+      #Get list of components on particular node
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :node_id => node_id,
+        :subtype => "instance",
+        :about => "components"
+      }
+
+      response = post(rest_url("assembly/info_about"),post_body)
+
+      components = []
+      if !response['data'].nil?
+        response['data'].each do |c|
+          components << c['display_name']
+        end
+      end
+
+      #Filter out request per specific component
+      #Filter works for two types of component notation provided: node/component and component
+      if !options["component"].nil?
+          components.reject! do |c|
+            if options["component"].include? "/" 
+              c != options["component"] 
+            else
+              c.split("/").last != options["component"]
+            end
+          end
+      end
+      components = nil if components.empty?
+
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :node_id => node_id,
+        :components => components
+      }  
+
+      response = post(rest_url("assembly/initiate_execute_tests_v2"),post_body)
+
+      raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
+      return response unless response.ok?
+
+      action_results_id = response.data(:action_results_id)
+      end_loop, response, count, ret_only_if_complete = false, nil, 0, true
+
+      until end_loop do
+        post_body = {
+          :action_results_id => action_results_id,
+          :return_only_if_complete => ret_only_if_complete,
+          :disable_post_processing => false,
+          :sort_key => "module_name"
+        }
+        response = post(rest_url("assembly/get_action_results"),post_body)
+        count += 1
+        if count > execute_test_tries or response.data(:is_complete)
+          error_msg = ""
+          response.data(:results).each do |k,v|
+            unless v.nil?
+              error_msg << v['test_error'] if v.to_s.include?('test_error')
+            end
+          end
+          raise DTK::Client::DtkError, "Error while executing test script:\n" + error_msg + "Please fix test script with edit-component-module command and try again." unless error_msg.empty?
+          end_loop = true
+        else
+          #last time in loop return whetever is there
+          if count == execute_test_tries
+            ret_only_if_complete = false
+          end
+          sleep execute_test_sleep
+        end
+      end
+
+      if (response.data(:results).empty? && options['timeout'].nil?)
+        raise DTK::Client::DtkValidationError, "Could not finish execution of tests in default timeframe (#{execute_test_tries} seconds). Try again with passing --timeout TIMEOUT parameter" 
+      elsif (response.data(:results).empty? && !options['timeout'].nil?)
+        raise DTK::Client::DtkValidationError, "Could not finish execution of tests in set timeframe (#{execute_test_tries} seconds). Try again with increasing --timeout TIMEOUT parameter"
+      else
+        response.set_data(*response.data(:results))
+        response.render_table(:execute_tests_data_v2)
+      end
+    end
+
     def get_ps_aux(context_params)
       get_ps_tries = 6
       get_ps_sleep = 0.5

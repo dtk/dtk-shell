@@ -9,6 +9,7 @@ module DTK
 			CONFIG_FILE   = File.join(OsUtil.dtk_local_folder, "client.conf")
 	  	CRED_FILE 	  = File.join(OsUtil.dtk_local_folder, ".connection")
 	  	DIRECT_ACCESS = File.join(OsUtil.dtk_local_folder, ".add_direct_access")
+	  	NODE_SSH_CREDENTIALS = File.join(OsUtil.dtk_local_folder, "ssh_credentials.yaml")
 
 			require 'fileutils'
 			FileUtils.mkdir(OsUtil.dtk_local_folder) unless File.directory?(OsUtil.dtk_local_folder)

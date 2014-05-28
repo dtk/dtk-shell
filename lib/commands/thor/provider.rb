@@ -18,7 +18,7 @@ module DTK::Client
         :command_only => {
           :target => [
             ['delete-target',"delete-target TARGET-IDENTIFIER","# Deletes target"],
-            ['list-targets',"list-targets","# Lists available targets."]
+            ['list',"list","# Lists available targets."]
 
           ]
         },
@@ -35,37 +35,36 @@ module DTK::Client
       return Provider.valid_children().include?(name_of_sub_context.to_sym)
     end
 
-    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME --keypair KEYPAIR --security-group SECURITY-GROUP [--no-bootstrap]", "Create provider"
+    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME [--keypair KEYPAIR] [--security-group SECURITY-GROUP] [--bootstrap]", "Create provider"
     method_option :keypair,    :type => :string
     method_option :security_group, :type => :string
-    method_option :no_bootstrap, :type => :boolean, :default => false
+    method_option :bootstrap, :type => :boolean, :default => false
     def create_provider(context_params)
       composed_provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       provider_type, provider_name = decompose_provider_type_and_name(composed_provider_name)
-      keypair, security_group = context_params.retrieve_thor_options([:keypair!, :security_group!], options)
-
-      result = DTK::Shell::InteractiveWizard::interactive_user_input(
-        {'IAAS Credentials' => { :type => :group, :options => [
-              {:key    => {}},
-              {:secret => {}}
-          ]}})
-      
-      access_key, secret_key = result['IAAS Credentials'].values_at(:key, :secret)
+      iaas_properties = Hash.new
+      #TODO: daat-driven check if legal provider type and then what options needed depending on provider type
+      unless provider_type.eql?('physical')
+        keypair, security_group = context_params.retrieve_thor_options([:keypair!, :security_group!], options)
+        iaas_properties.merge!(:keypair_name => keypair,:security_group => security_group)
+        result = DTK::Shell::InteractiveWizard::interactive_user_input(
+          {'IAAS Credentials' => { :type => :group, :options => [
+                {:key    => {}},
+                {:secret => {}}
+            ]}})
+        access_key, secret_key = result['IAAS Credentials'].values_at(:key, :secret)
+        iaas_properties.merge!(:key => access_key,:secret => secret_key)
+      end
 
       # Remove sensitive readline history
       OsUtil.pop_readline_history(2)
 
-      post_body = {
-        :iaas_properties => {
-          :key     => access_key,
-          :secret  => secret_key,
-          :keypair_name => keypair,
-          :security_group => security_group
-        },
-          :provider_name => provider_name,
-          :iaas_type => provider_type.downcase,
-          :no_bootstrap => options.no_bootstrap?
+      post_body =  {
+        :iaas_properties => iaas_properties,
+        :provider_name => provider_name,
+        :iaas_type => provider_type.downcase,
+        :no_bootstrap => ! options.bootstrap?
       }
 
       response = post rest_url("target/create_provider"), post_body
@@ -98,31 +97,38 @@ module DTK::Client
 
     desc "list","Lists available providers."
     def list(context_params)
-      response  = post rest_url("target/list"), { :subtype => :template }
-      response.render_table(:provider)
+      if context_params.is_there_command?(:"target")
+        list_targets(context_params)
+      else
+        response  = post rest_url("target/list"), { :subtype => :template }
+        response.render_table(:provider)
+      end
     end
 
     #TODO: Aldin; wanted to name this list_targets, but did not know how to do so w/o conflicting with desc "PROVIDER-ID/NAME list-targets
-    desc "list-all-targets","Lists all targets for all providers."
-    def list_all_targets(context_params)
-      response  = post rest_url("target/list"), { :subtype => :instance }
-      response.render_table(:target)
-    end
+    # Aldin: moved this to target base context (target>list)
+    #
+    # desc "list-all-targets","Lists all targets for all providers."
+    # def list_all_targets(context_params)
+    #   response  = post rest_url("target/list"), { :subtype => :instance }
+    #   response.render_table(:target)
+    # end
 
     desc "PROVIDER-ID/NAME list-targets", "List targets"
     def list_targets(context_params)
       provider_id = context_params.retrieve_arguments([:provider_id!],method_argument_names)
 
-      response  = post rest_url("target/list"), { :subtype => :instance, :parent_id => provider_id }
-
+      response = post rest_url("target/list"), { :subtype => :instance, :parent_id => provider_id }
       response.render_table(:target)
     end
 
-    desc "set-default-target TARGET-NAME/ID","Sets the default target."
-    def set_default_target(context_params)
-      target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      post rest_url("target/set_default"), { :target_id => target_id }
-    end
+    # Aldin: moved to target base context (target>set-default-target)
+    #
+    # desc "set-default-target TARGET-NAME/ID","Sets the default target."
+    # def set_default_target(context_params)
+    #   target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+    #   post rest_url("target/set_default"), { :target_id => target_id }
+    # end
 
     desc "delete-provider PROVIDER-IDENTIFIER [-y]","Deletes targets provider"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false

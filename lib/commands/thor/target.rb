@@ -1,5 +1,7 @@
+dtk_require_common_commands('thor/inventory_parser')
 module DTK::Client
   class Target < CommandBaseThor
+    include InventoryParserMixin
 
     def self.pretty_print_cols()
       PPColumns.get(:target)
@@ -9,20 +11,51 @@ module DTK::Client
       return ['PROVIDER']
     end
 
+    def self.extended_context()
+      {
+        :context => {
+          # want auto complete for --provider option
+          "--provider" => "provider"
+        }
+      }
+    end
+
     desc "TARGET-NAME/ID list-nodes","Lists node instances in given targets."
     def list_nodes(context_params)
       context_params.method_arguments = ["nodes"]
-      list_targets(context_params)
+      list(context_params)
     end
 
-    desc "TARGET-NAME/ID import-nodes","Reads from inventory dsl and populates the node instance objects in the dtk server."
-    def import_nodes(context_params)
+    desc "TARGET-NAME/ID info","Provides information about specified target"
+    def info(context_params)
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
 
-      post_body = {
-          :target_id => target_id
-        }
+      post_body = {:target_id => target_id}
+      response = post rest_url('target/info'), post_body
+      response.render_custom_info("target")
+    end
 
+    desc "TARGET-NAME/ID import-nodes --source SOURCE","Reads from inventory dsl and populates the node instance objects (SOURCE: file:/path/to/file.yaml)."
+    method_option :source, :type => :string
+    def import_nodes(context_params)
+      target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
+      source = context_params.retrieve_thor_options([:source!], options)
+
+      parsed_source = source.match(/^(\w+):(.+)/)
+      raise DTK::Client::DtkValidationError, "Invalid source! Valid source should contain source_type:source_path (e.g. --source file:path/to/file.yaml)." unless parsed_source
+
+      import_type = parsed_source[1]
+      path = parsed_source[2]
+      
+      raise DTK::Client::DtkValidationError, "We do not support '#{import_type}' as import source at the moment. Valid sources: #{ValidImportTypes}" unless ValidImportTypes.include?(import_type)
+
+      post_body = {:target_id => target_id}
+
+      if import_type.eql?('file')
+        inventory_data = parse_inventory_file(path)
+        post_body.merge!(:inventory_data => inventory_data)
+      end
+      
       response  = post rest_url("target/import_nodes"), post_body
       return response unless response.ok?
 
@@ -35,13 +68,49 @@ module DTK::Client
         end
       end
     end
+    ValidImportTypes = ["file"]
+
+    desc "set-default-target TARGET-IDENTIFIER","Sets the default target."
+    def set_default_target(context_params)
+      target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      post rest_url("target/set_default"), { :target_id => target_id }
+    end
+
+    desc "TARGET-NAME/ID install-agents","Install node agents on imported physical nodes."
+    def install_agents(context_params)
+      target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
+
+      post_body = {:target_id => target_id}
+      post rest_url("target/install_agents"), post_body
+    end
+
+    desc "create-target [TARGET-NAME] --provider PROVIDER --region REGION", "Create target based on given provider"
+    method_option :provider, :type => :string
+    method_option :region, :type => :string
+    def create_target(context_params)
+      # we use :target_id but that will retunr provider_id (another name for target template ID)
+      target_name = context_params.retrieve_arguments([:option_1],method_argument_names)
+      provider    = context_params.retrieve_thor_options([:provider!], options)
+      region      = context_params.retrieve_thor_options([:region], options)
+
+      DTK::Shell::InteractiveWizard.validate_region(region) if region
+
+      post_body = {
+        :provider_id => provider
+      }
+      post_body.merge!(:target_name => target_name) if target_name
+      post_body.merge!(:region => region) if region
+      response = post rest_url("target/create"), post_body
+
+      @@invalidate_map << :target
+      return response
+    end
 
     desc "TARGET-NAME/ID list-services","Lists service instances in given targets."
     def list_services(context_params)
       context_params.method_arguments = ["assemblies"]
-      list_targets(context_params)
+      list(context_params)
     end
-
 
     def self.validation_list(context_params)
       provider_id = context_params.retrieve_arguments([:provider_id])
@@ -62,8 +131,8 @@ module DTK::Client
       response
     end
 
-    desc "list-targets","Lists available targets."
-    def list_targets(context_params)
+    desc "list","Lists available targets."
+    def list(context_params)
       provider_id, target_id, about = context_params.retrieve_arguments([:provider_id, :target_id, :option_1],method_argument_names||="")
 
       if target_id.nil?
@@ -82,13 +151,14 @@ module DTK::Client
 
         case about
           when "nodes"
-          response  = post rest_url("target/info_about"), post_body
-          data_type =  :node
+            response  = post rest_url("target/info_about"), post_body
+            data_type =  :node
           when "assemblies"
-          response  = post rest_url("target/info_about"), post_body
-          data_type =  :assembly
-         else
-          raise_validation_error_method_usage('list')
+            post_body.merge!(:detail_level => 'nodes', :include_workspace => true)
+            response  = post rest_url("target/info_about"), post_body
+            data_type =  :assembly
+          else
+            raise_validation_error_method_usage('list')
         end
 
         response.render_table(data_type)
