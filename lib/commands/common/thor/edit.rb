@@ -80,7 +80,7 @@ module DTK::Client
           if file_to_edit
             "Would you like to commit changes to the file?"
           else
-            "Would you like to commit and push ALL the changes?"
+            "Would you like to commit ALL the changes?"
           end
         confirmed_ok = Console.confirmation_prompt(confirm_msg)
       end
