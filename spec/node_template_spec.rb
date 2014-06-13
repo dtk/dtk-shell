@@ -7,7 +7,6 @@ include SpecThor
 describe DTK::Client::NodeTemplate do
   $node_template_id = nil
 
-  #list all assemblies and take one assembly_id
   context '#list' do
     $node_template_list = run_from_dtk_shell('node-template list')
 
