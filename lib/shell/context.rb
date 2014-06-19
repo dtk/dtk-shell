@@ -392,7 +392,7 @@ module DTK
         entries = args.first.split(/\//)
         invalid_context = ["workspace/node", "service/node"]
         double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
-        only_double_dots = entries.select{|e| e.to_s!=".."}||[]
+        only_double_dots = entries.select{|e| !e.to_s.include?('..')}||[]
         back_flag = false
 
         last_from_current, message = nil, nil

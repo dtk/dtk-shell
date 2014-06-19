@@ -19,6 +19,8 @@ dtk_require_common_commands('thor/common')
 module DTK::Client
   class ServiceModule < CommandBaseThor
 
+    PULL_CATALOGS = ["dtkn"]
+
     no_tasks do
       include CloneMixin
       include PushToRemoteMixin
@@ -307,7 +309,10 @@ module DTK::Client
        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
 
-      post rest_url("service_module/export"), post_body
+      response = post rest_url("service_module/export"), post_body
+      return response unless response.ok?
+      RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published!")
+      nil
     end    
 
     # desc "SERVICE-MODULE-NAME/ID push-to-dtkn [-n NAMESPACE] [-v VERSION]", "Push local copy of service module to remote repository."
@@ -360,7 +365,7 @@ module DTK::Client
       catalog = 'dtkn'
       version = options["version"]
       
-      raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PullCatalogs}" unless catalog
+      raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PULL_CATALOGS}" unless catalog
 
       if service_module_name.to_s =~ /^[0-9]+$/
         service_module_id   = service_module_name
@@ -384,19 +389,9 @@ module DTK::Client
       #elsif catalog.to_s.eql?("origin")
         #needs to be implemented
       else
-        raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PullCatalogs}"
+        raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PULL_CATALOGS}"
       end
     end
-    PullCatalogs = ["dtkn"]
-
-=begin
-    desc "SERVICE-MODULE-NAME/ID chown REMOTE-USER", "Set remote module owner"
-    method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
-    def chown(context_params)
-      service_module_id, remote_user = context_params.retrieve_arguments([:service_module_id!,:option_1!],method_argument_names)
-      chown_aux(service_module_id, remote_user, options.namespace)
-    end
-=end
 
     desc "SERVICE-MODULE-NAME/ID chmod PERMISSION-SELECTOR", "Update remote permissions e.g. ug+rw , user and group get RW permissions"
     method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
@@ -675,7 +670,8 @@ module DTK::Client
       reparse_aux(module_location) unless internal_trigger
 
       if catalog.to_s.eql?("dtkn")
-        remote_module_info = get_remote_module_info_aux(:service_module, service_module_id, options["namespace"], version)
+        module_refs_content = RemoteDependencyUtil.module_ref_content(module_location)
+        remote_module_info = get_remote_module_info_aux(:service_module, service_module_id, options["namespace"], version, module_refs_content)
         return remote_module_info unless remote_module_info.ok?
 
         unless File.directory?(module_location)

@@ -14,6 +14,8 @@ dtk_require_from_base('util/os_util')
 dtk_require_from_base('util/ssh_util')
 dtk_require_from_base('util/common_util')
 dtk_require_from_base('util/permission_util')
+dtk_require_from_base('util/remote_dependency_util')
+
 dtk_require("config/configuration")
 
 def top_level_execute(entity_name, method_name, context_params=nil, options_args=nil, shell_execute=false)
