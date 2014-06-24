@@ -48,7 +48,6 @@ module DTK
     private
 
       def self.ssh_base_dir()
-        # "#{ENV['HOME']}/.ssh" #TODO: very brittle
         "#{OsUtil.dtk_home_dir}/.ssh"
       end
       
@@ -67,6 +66,7 @@ module DTK
       end
 
       def self.is_ssh_key_content_valid?(rsa_pub_key)
+        # checking know ssh rsa pub key content
         if(rsa_pub_key.empty? || !rsa_pub_key.include?("AAAAB3NzaC1yc2EA"))
           raise DtkError, "[ERROR] SSH public key (#{path_to_key}) does not have valid content. Please check your key and try again."
         end

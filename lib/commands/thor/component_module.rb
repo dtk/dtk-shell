@@ -17,6 +17,7 @@ module DTK::Client
   class ComponentModule < CommandBaseThor
 
     DEFAULT_COMMIT_MSG = "Initial commit."
+    PULL_CATALOGS = ["dtkn"]
 
     def self.valid_children()
       # [:"component-template"]
@@ -48,7 +49,7 @@ module DTK::Client
             :"component" => [
               ["list","list","# List all component templates."],
               ["list-attributes","list-attributes", "# List all attributes for given component."]
-            ]            
+            ]
             #:attribute => [
             #  ['list',"list","List attributes for given component"]
             #]
@@ -140,7 +141,7 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete component-module #{version.nil? ? '' : 'version '}'#{component_module_name}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
       end
 
-      response = 
+      response =
         if options.purge?
           opts = {:module_name => component_module_name}
           if version then opts.merge!(:version => version)
@@ -157,10 +158,10 @@ module DTK::Client
       }
       action = (version ? "delete_version" : "delete")
       post_body[:version] = version if version
-      
+
       response = post(rest_url("component_module/#{action}"), post_body)
       return response unless response.ok?
-      
+
       # when changing context send request for getting latest modules instead of getting from cache
       @@invalidate_map << :component_module
 
@@ -189,7 +190,7 @@ module DTK::Client
         :attribute_value => value,
         :component_module_id => component_module_id
       }
-      
+
       post rest_url("attribute/set"), post_body
     end
 
@@ -201,7 +202,7 @@ TODO: might deprecate
     desc "COMPONENT-MODULE-NAME/ID info", "Get information about given component module."
     def info(context_params)
       component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
-      
+
       post_body = {
         :component_module_id => component_module_id
       }
@@ -231,7 +232,7 @@ TODO: might deprecate
       post_body        = (remote ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
       post_body[:diff] = options.diff? ? options.diff : {}
       response         = post rest_url("component_module/#{action}"),post_body
-      
+
       return response unless response.ok?
       response.render_table()
     end
@@ -276,7 +277,7 @@ TODO: might deprecate
       git_import = context_params.get_forwarded_options()[:git_import] if context_params.get_forwarded_options()
       name_option = git_import ? :option_2! : :option_1!
       module_name = context_params.retrieve_arguments([name_option],method_argument_names)
-      
+
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
       response = Helper(:git_repo).check_local_dir_exists_with_content(:component_module,module_name)
       return response unless response.ok?
@@ -292,7 +293,7 @@ TODO: might deprecate
 
       repo_url,repo_id,module_id,branch = response.data(:repo_url,:repo_id,:module_id,:workspace_branch)
       response = Helper(:git_repo).initialize_client_clone_and_push(:component_module,module_name,branch,repo_url,module_directory)
-      
+
       return response unless response.ok?
       repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
 
@@ -311,7 +312,7 @@ TODO: might deprecate
       # which will always be called from this method
       # if error = response.data(:dsl_parsed_info)
       #   dsl_parsed_message = ServiceImporter.error_message(module_name, error)
-      #   DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+      #   DTK::Client::OsUtil.print(dsl_parsed_message, :red)
       # end
 
       dsl_created_info = response.data(:dsl_created_info)
@@ -325,9 +326,9 @@ TODO: might deprecate
       # we push clone changes anyway, user can change and push again
       context_params.add_context_to_params(module_name, :"component-module", module_id)
       response = push(context_params, true)
-      
+
       if git_import
-        response[:module_id] = module_id 
+        response[:module_id] = module_id
         response.add_data_value!(:external_dependencies,external_dependencies) if external_dependencies
       end
 
@@ -355,14 +356,14 @@ TODO: might deprecate
       reparse_aux(module_location)
     end
 =end
-    
+
     # TODO: put in back support for:desc "import REMOTE-MODULE[,...] [LIBRARY-NAME/ID]", "Import remote component module(s) into library"
     # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     # if multiple items and failire; stops on first failure
 #    desc "install [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-r DTK-REPO-MANAGER]","Install remote component module into local environment"
     desc "install [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME","Install remote component module into local environment"
     method_option "repo-manager",:aliases => "-r" ,
-      :type => :string, 
+      :type => :string,
       :banner => "REPO-MANAGER",
       :desc => "DTK Repo Manager from which to resolve requested module."
     def install(context_params)
@@ -374,7 +375,7 @@ TODO: might deprecate
       do_not_raise = context_params.get_forwarded_options()[:do_not_raise] if context_params.get_forwarded_options()
       ignore_component_error = context_params.get_forwarded_options()[:ignore_component_error] if context_params.get_forwarded_options()
       additional_message = context_params.get_forwarded_options()[:additional_message] if context_params.get_forwarded_options()
-      
+
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(:component_module,local_module_name,version)
         message = "Component module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed"
@@ -390,16 +391,16 @@ TODO: might deprecate
       post_body.merge!(:do_not_raise => do_not_raise) if do_not_raise
       post_body.merge!(:ignore_component_error => ignore_component_error) if ignore_component_error
       post_body.merge!(:additional_message => additional_message) if additional_message
-      
+
       response = post rest_url("component_module/import"), post_body
       return response unless response.ok?
 
-      return response if response.data(:does_not_exist)      
+      return response if response.data(:does_not_exist)
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
-      
+
       if error = response.data(:dsl_parsed_info)
         dsl_parsed_message = ServiceImporter.error_message(module_name, error)
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red)
       end
 
       response = ""
@@ -417,21 +418,21 @@ TODO: might deprecate
     desc "import-git GIT-SSH-REPO-URL COMPONENT-MODULE-NAME", "Create new local component module by importing from provided git repo URL"
     def import_git(context_params)
       git_repo_url, module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
-      
+
       # Create component module from user's input git repo
       response = Helper(:git_repo).create_clone_with_branch(:component_module, module_name, git_repo_url)
-      
+
       # Raise error if git repository is invalid
       # raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless response.ok?
       return response unless response.ok?
 
       # Remove .git directory to rid of git pointing to user's github
       FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
-      
+
       context_params.forward_options({:git_import => true})
       # Reuse module create method to create module from local component_module
       create_response = import(context_params)
-       
+
       if create_response.ok?
         if external_dependencies = create_response.data(:external_dependencies)
           inconsistent = external_dependencies["inconsistent"]
@@ -445,11 +446,11 @@ TODO: might deprecate
         delete(context_params,:force_delete => true, :no_error_msg => true)
         return create_response
       end
-      
+
       Response::Ok.new()
     end
 
-=begin 
+=begin
     => DUE TO DEPENDENCY TO PUPPET GEM WE OMMIT THIS <=
     desc "import-puppet-forge PUPPET-FORGE-MODULE-NAME", "Imports puppet module from puppet forge via puppet gem"
     def import_puppet_forge(context_params)
@@ -483,14 +484,14 @@ TODO: might deprecate
 
       if error = response.data(:dsl_parsed_info)
         dsl_parsed_message = ServiceImporter.error_message(module_name, error)
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red)
       end
 
       #TODO: need to check if local clone directory exists
       Helper(:git_repo).create_clone_with_branch(:component_module,module_name,repo_url,branch,version)
     end
 =end
-    
+
     desc "delete-from-catalog [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-y]", "Delete the component module from the DTK Network catalog"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_from_catalog(context_params)
@@ -522,8 +523,8 @@ TODO: might deprecate
     #   }
 
     #   response = post rest_url("component_module/export"), post_body
-      
-    #   return response         
+
+    #   return response
     # end
 
     desc "COMPONENT-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME]", "Publish component module to remote repository."
@@ -537,21 +538,22 @@ TODO: might deprecate
       }
 
       response = post rest_url("component_module/export"), post_body
-      
-      return response         
+      return response unless response.ok?
+      DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published!")
+      nil
     end
 
     desc "COMPONENT-MODULE-NAME/ID pull-dtkn [-n NAMESPACE]", "Update local component module from remote repository."
     method_option "namespace",:aliases => "-n",
-      :type => :string, 
+      :type => :string,
       :banner => "NAMESPACE",
       :desc => "Remote namespace"
-    def pull_dtkn(context_params)     
+    def pull_dtkn(context_params)
       component_module_id, component_module_name = context_params.retrieve_arguments([:component_module_id!,:component_module_name,:option_1],method_argument_names)
       catalog = 'dtkn'
       version = options["version"]
 
-      raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PullCatalogs}" unless catalog
+      raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PULL_CATALOGS}" unless catalog
 
       if component_module_name.to_s =~ /^[0-9]+$/
         component_module_id = component_module_name
@@ -573,11 +575,10 @@ TODO: might deprecate
       #elsif catalog.to_s.eql?("origin")
         #needs to be implemented
       else
-        raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PullCatalogs}"
+        raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PULL_CATALOGS}"
       end
     end
 
-    PullCatalogs = ["dtkn"]
 
 =begin
     desc "COMPONENT-MODULE-NAME/ID chown REMOTE-USER", "Set remote module owner"
@@ -677,7 +678,7 @@ TODO: might deprecate
     ##
     #
     # internal_trigger: this flag means that other method (internal) has trigger this.
-    #                   This will change behaviour of method in such way that edit will not be 
+    #                   This will change behaviour of method in such way that edit will not be
     #                   triggered after it.
     #
     #desc "COMPONENT-MODULE-NAME/ID clone [-v VERSION] [-n]", "Locally clone component module and component files. Use -n to skip edit prompt"
@@ -689,7 +690,7 @@ TODO: might deprecate
       component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
       module_name         = context_params.retrieve_arguments([:component_module_name],method_argument_names)
       version             = thor_options["version"]
-      internal_trigger    = true if thor_options['skip_edit']   
+      internal_trigger    = true if thor_options['skip_edit']
 
       # if this is not name it will not work, we need module name
       if module_name.to_s =~ /^[0-9]+$/
@@ -731,7 +732,7 @@ TODO: might deprecate
     desc "COMPONENT-MODULE-NAME/ID push", "Push changes from local copy of component module to server"
      version_method_option
      method_option "message",:aliases => "-m" ,
-       :type => :string, 
+       :type => :string,
        :banner => "COMMIT-MSG",
        :desc => "Commit message"
      # hidden option for dev
@@ -754,11 +755,11 @@ TODO: might deprecate
 #    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to remote repository (dtkn)."
     desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE]", "Push changes from local copy of component module to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
-      :type => :string, 
+      :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     method_option "namespace",:aliases => "-n",
-        :type => :string, 
+        :type => :string,
         :banner => "NAMESPACE",
         :desc => "Remote namespace"
     #hidden option for dev
@@ -823,7 +824,7 @@ TODO: might deprecate
       modules_path    = OsUtil.module_clone_location()
       module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
 
-      # check if there is repository cloned 
+      # check if there is repository cloned
       if File.directory?(module_location)
         list_diffs_aux(:component_module, component_module_id, options.remote?, version)
       else

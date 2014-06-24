@@ -68,7 +68,8 @@ module DTK::Client
     def import_service_module(context_params)
       library_id, service_modules = context_params.retrieve_arguments([:library_id, :option_1!],method_argument_names)
       post_body = {
-       :remote_module_name => service_modules
+        :remote_module_name => service_modules,
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
       post_body.merge!(:library_id => library_id) if library_id
 

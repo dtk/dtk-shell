@@ -28,7 +28,6 @@ module DTK
           is_windows? ? genv(:temp) : '/tmp'
         end
 
-
         def pop_readline_history(number_of_last_commands)
           number_of_last_commands.downto(1) do
             Readline::HISTORY.pop
@@ -100,11 +99,11 @@ module DTK
         end
         
         def module_location(module_type,module_name,version=nil,opts={})
-          #compact used because module_name can be nil
+          # compact used because module_name can be nil
           module_location_parts(module_type,module_name,version,opts).compact.join('/')
         end
         
-        #if module location is /a/b/d/mod it returns ['/a/b/d','mod']
+        # if module location is /a/b/d/mod it returns ['/a/b/d','mod']
         def module_location_parts(module_type,module_name,version=nil,opts={})
           base_path = clone_base_path(opts[:assembly_module] ? :assembly_module : module_type)
           if assembly_module = opts[:assembly_module]
@@ -206,9 +205,9 @@ module DTK
           if is_windows?
             retval = yield
           else
+            orig_stderr = $stderr.clone
+            orig_stdout = $stdout.clone
             begin
-              orig_stderr = $stderr.clone
-              orig_stdout = $stdout.clone
               $stderr.reopen File.new('/dev/null', 'w')
               $stdout.reopen File.new('/dev/null', 'w')
               retval = yield
@@ -239,6 +238,7 @@ module DTK
           suspend_output do
             load File.expand_path('../../lib/util/os_util.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/util/ssh_util.rb', File.dirname(__FILE__))
+            load File.expand_path('../../lib/util/remote_dependency_util.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/shell/help_monkey_patch.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/shell/domain.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/domain/git_adapter.rb', File.dirname(__FILE__))

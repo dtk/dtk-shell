@@ -15,7 +15,7 @@ module DTK::Client
         :remote_namespace? => remote_namespace,
         :rsa_pub_key? => rsa_pub_key
       )
-      response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)      
+      response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
       return response unless response.ok?
       module_name = response.data(:module_name)
       remote_params = response.data_hash_form(:remote_repo_url,:remote_repo,:remote_branch)
@@ -23,7 +23,7 @@ module DTK::Client
 
       # check and import component module dependencies before importing service itself
       if (module_type == :service_module)
-        import_module_component_dependencies(module_id,remote_namespace) 
+        import_module_component_dependencies(module_id,remote_namespace)
       end
       # check whether a local module exists to determine whether pull from local clone or try to pull from server
       if Helper(:git_repo).local_clone_exists?(module_type,module_name,version)
@@ -44,12 +44,13 @@ module DTK::Client
     def import_module_component_dependencies(module_id,remote_namespace=nil)
       post_body = PostBody.new(
         :service_module_id => module_id,
-        :remote_namespace? => remote_namespace
+        :remote_namespace? => remote_namespace,
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       )
       response = post(rest_url("service_module/resolve_pull_from_remote"),post_body)
 
       print "Resolving dependencies please wait ... "
-      
+
       if (response.ok? && !(missing_components = response.data(:missing_modules)).empty?)
         puts " New dependencies found, Installing."
 
@@ -58,9 +59,12 @@ module DTK::Client
       else
         puts 'Done.'
       end
+
+      RemoteDependencyUtil.print_dependency_warnings(response)
+      nil
     end
 
-    module PullFromRemote 
+    module PullFromRemote
       extend CommandBase
       def self.perform_locally(cmd_obj,module_type,module_id,module_name,remote_params)
         opts = remote_params
@@ -71,8 +75,8 @@ module DTK::Client
         end
 
         return response
-        
-        # removing this for now, because we will use push-clone-changes as part of pull-from-remote command 
+
+        # removing this for now, because we will use push-clone-changes as part of pull-from-remote command
         # post_body = {
         #   id_field(module_type) => module_id,
         #   :commit_sha => response.data[:commit_sha],
@@ -91,12 +95,12 @@ module DTK::Client
         }
         post_body.merge!(:version => remote_params[:version]) if remote_params[:version]
         response = post rest_url("#{module_type}/pull_from_remote"), post_body
-        
-        
+
+
         puts "You have successfully pulled code on server instance." if response.ok?
         response
       end
-      
+
       def self.id_field(module_type)
         "#{module_type}_id"
       end
