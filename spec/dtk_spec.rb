@@ -13,7 +13,7 @@ describe DTK::Client::Dtk do
     f = IO.popen('dtk')
     output = f.readlines.join('')
 
-    it "should have assembly listing" do
+    it "should have service listing" do
       output.should match(/(dtk|service|ok|status|empty|INFO|WARNING)/)
     end
 
