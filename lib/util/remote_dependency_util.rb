@@ -10,6 +10,7 @@ module DTK
       class << self
 
         def print_dependency_warnings(response, success_msg=nil)
+          return if response.nil? || response.data.nil?
           warnings = response.data['dependency_warnings']
           if warnings && !warnings.empty?
             print_out "Following warnings have been detected for current module by Repo Manager:\n"
