@@ -84,15 +84,15 @@ module DTK::Client
 
       })
     end
-    
+
     ##MERGE-QUESTION: need to add options of what info is about
     desc "SERVICE-MODULE-NAME/ID info", "Provides information about specified service module"
     def info(context_params)
       if context_params.is_there_identifier?(:assembly)
         response = DTK::Client::ContextRouter.routeTask("assembly", "info", context_params, @conn)
-      else  
+      else
         service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
-        
+
         post_body = {
          :service_module_id => service_module_id
         }
@@ -130,20 +130,20 @@ module DTK::Client
       if service_module_id.nil? && !service_module_name.nil?
         service_module_id = service_module_name
       end
-      
+
       # If user is on service level, list task can't have about value set
       if (context_params.last_entity_name == :"service-module") and about.nil?
         action    = options.remote? ? "list_remote" : "list"
         post_body = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
         post_body[:diff] = options.diff? ? options.diff : {}
-        
+
         response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
       else
         # TODO: this is temp; will shortly support this
         raise DTK::Client::DtkValidationError.new("Not supported '--remote' option when listing service module assemblies, component templates or modules", true) if options.remote?
         raise DTK::Client::DtkValidationError.new("Not supported type '#{about}' for list for current context level. Possible type options: 'assembly'", true) unless(about == "assembly" || about == "modules")
-      
+
         if about
           case about
           when "assembly"
@@ -155,7 +155,7 @@ module DTK::Client
             action           = "list_component_modules"
           else
             raise_validation_error_method_usage('list')
-          end 
+          end
         end
         response = post rest_url("service_module/#{action}"), { :service_module_id => service_module_id }
       end
@@ -172,7 +172,7 @@ module DTK::Client
         :service_module_id => service_module_id,
       }
       response = post rest_url("service_module/list_instances"), post_body
-      
+
       response.render_table(:assembly_template)
     end
 
@@ -198,7 +198,7 @@ module DTK::Client
       resolve_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       ignore_component_error = options.ignore?
-      
+
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
 
       version = options["version"]
@@ -211,7 +211,7 @@ module DTK::Client
         :local_module_name => local_module_name,
         :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
-      
+
       response = post rest_url("service_module/import"), post_body
 
       # case when we need to import additional components
@@ -226,13 +226,13 @@ module DTK::Client
         post_body.merge!(opts)
         response = post rest_url("service_module/import"), post_body
       end
-      
+
       return response unless response.ok?
       @@invalidate_map << :service_module
 
       if error = response.data(:dsl_parsed_info)
         dsl_parsed_message = ServiceImporter.error_message(remote_module_name, error)
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red)
       end
 
       service_module_id, module_name, namespace, repo_url, branch = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch)
@@ -279,7 +279,7 @@ module DTK::Client
 
     #   if error = response.data(:dsl_parsed_info)
     #     dsl_parsed_message = ServiceImporter.error_message("#{module_name}-#{version}", error)
-    #     DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+    #     DTK::Client::OsUtil.print(dsl_parsed_message, :red)
     #   end
 
     #   #TODO: need to check if local clone directory exists
@@ -313,13 +313,13 @@ module DTK::Client
       return response unless response.ok?
       RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published!")
       nil
-    end    
+    end
 
     # desc "SERVICE-MODULE-NAME/ID push-to-dtkn [-n NAMESPACE] [-v VERSION]", "Push local copy of service module to remote repository."
     # version_method_option
     # desc "SERVICE-MODULE-NAME/ID push-to-dtkn [-n NAMESPACE]", "Push local copy of service module to remote repository."
     #     method_option "namespace",:aliases => "-n",
-    #     :type => :string, 
+    #     :type => :string,
     #     :banner => "NAMESPACE",
     #     :desc => "Remote namespace"
     # def push_to_dtkn(context_params)
@@ -337,7 +337,7 @@ module DTK::Client
     #   unless File.directory?(module_location)
     #     if Console.confirmation_prompt("Unable to push to remote because module '#{service_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
     #       response = clone_aux(:service_module,service_module_id,version,false)
-          
+
     #       if(response.nil? || response.ok?)
     #         reparse_aux(module_location)
     #         push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], version) if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
@@ -349,7 +349,7 @@ module DTK::Client
     #       return
     #     end
     #   end
-      
+
     #   reparse_aux(module_location)
     #   push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
     # end
@@ -357,14 +357,14 @@ module DTK::Client
     # desc "SERVICE-MODULE-NAME/ID pull-from-dtkn [-n NAMESPACE] [-v VERSION]", "Update local service module from remote repository."
     desc "SERVICE-MODULE-NAME/ID pull-dtkn [-n NAMESPACE]", "Update local service module from remote repository."
     method_option "namespace",:aliases => "-n",
-      :type => :string, 
+      :type => :string,
       :banner => "NAMESPACE",
       :desc => "Remote namespace"
     def pull_dtkn(context_params)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!,:service_module_name],method_argument_names)
       catalog = 'dtkn'
       version = options["version"]
-      
+
       raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PULL_CATALOGS}" unless catalog
 
       if service_module_name.to_s =~ /^[0-9]+$/
@@ -436,7 +436,7 @@ module DTK::Client
     method_option "namespace",:aliases => "-n",:type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
     def list_collaborators(context_params)
       service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
-      response = collaboration_list_aux(component_module_id, options.namespace)
+      response = collaboration_list_aux(service_module_id, options.namespace)
       response.render_table(:module_collaborators)
       response
     end
@@ -522,7 +522,7 @@ module DTK::Client
     #   post_body = {
     #     :service_module_id => service_module_id,
     #     :component_module_id => component_module_id,
-    #     :version => version                                                                                          
+    #     :version => version
     #   }
     #   response = post rest_url("service_module/set_component_module_version"), post_body
     #   @@invalidate_map << :service_module
@@ -540,18 +540,18 @@ module DTK::Client
       response = Helper(:git_repo).check_local_dir_exists_with_content(:service_module,module_name)
       return response unless response.ok?
       service_directory = response.data(:module_directory)
-      
+
       #check for yaml/json parsing errors before import
       reparse_aux(service_directory)
 
       # first call to create empty module
-      response = post rest_url("service_module/create"), { :module_name => module_name }        
+      response = post rest_url("service_module/create"), { :module_name => module_name }
       return response unless response.ok?
       @@invalidate_map << :service_module
-      
+
       if error = response.data(:dsl_parsed_info)
         dsl_parsed_message = ServiceImporter.error_message(module_name, error)
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red)
       end
 
       # initial commit for given service module
@@ -571,11 +571,11 @@ module DTK::Client
 =begin
     desc "SERVICE-MODULE-NAME/ID push origin|dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of service module to server (origin) or to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
-      :type => :string, 
+      :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     method_option "namespace",:aliases => "-n",
-        :type => :string, 
+        :type => :string,
         :banner => "NAMESPACE",
         :desc => "Remote namespace"
     #hidden option for dev
@@ -583,7 +583,7 @@ module DTK::Client
     def push(context_params, internal_trigger=false)
       service_module_id, service_module_name, catalog = context_params.retrieve_arguments([:service_module_id!, :service_module_name, :option_1],method_argument_names)
       version = options["version"]
-      
+
       raise DtkValidationError, "You have to provide valid catalog to push changes to! Valid catalogs: #{PushCatalogs}" unless catalog
 
       if service_module_name.to_s =~ /^[0-9]+$/
@@ -601,7 +601,7 @@ module DTK::Client
         unless File.directory?(module_location)
           if Console.confirmation_prompt("Unable to push to remote because module '#{service_module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
             response = clone_aux(:service_module,service_module_id,version,false)
-            
+
             if(response.nil? || response.ok?)
               reparse_aux(module_location)
               push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], version) if Console.confirmation_prompt("Would you like to push changes to remote"+'?')
@@ -613,7 +613,7 @@ module DTK::Client
             return
           end
         end
-        
+
       push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
       else
         raise DtkValidationError, "You have to provide valid catalog to push changes to! Valid catalogs: #{PushCatalogs}"
@@ -625,7 +625,7 @@ module DTK::Client
 #    desc "SERVICE-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy to server (origin)."
     desc "SERVICE-MODULE-NAME/ID push", "Push changes from local copy to server."
     method_option "message",:aliases => "-m" ,
-      :type => :string, 
+      :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     #hidden option for dev
@@ -648,18 +648,18 @@ module DTK::Client
 #    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of service module to remote repository (dtkn)."
     desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE]", "Push changes from local copy of service module to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
-      :type => :string, 
+      :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     method_option "namespace",:aliases => "-n",
-        :type => :string, 
+        :type => :string,
         :banner => "NAMESPACE",
         :desc => "Remote namespace"
     def push_dtkn(context_params, internal_trigger=false)
       service_module_id, service_module_name = context_params.retrieve_arguments([:service_module_id!, :service_module_name],method_argument_names)
       catalog = 'dtkn'
       version = options["version"]
-      
+
       if service_module_name.to_s =~ /^[0-9]+$/
         service_module_id   = service_module_name
         service_module_name = get_service_module_name(service_module_id)
@@ -684,7 +684,7 @@ module DTK::Client
 
           return response
         end
-        
+
         push_to_remote_aux(remote_module_info, :service_module)
       else
         raise DtkValidationError, "You have to provide valid catalog to push changes to!"
@@ -708,13 +708,13 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete service-module #{version.nil? ? '' : 'version '}'#{service_module_name}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
       end
 
-      response = 
+      response =
         if options.purge?
           opts = {:module_name => service_module_name}
           if version then opts.merge!(:version => version)
           else opts.merge!(:delete_all_versions => true)
           end
-          
+
           purge_clone_aux(:service_module,opts)
         else
           Helper(:git_repo).unlink_local_clone?(:service_module,service_module_name,version)
@@ -731,7 +731,7 @@ module DTK::Client
       response = post rest_url("service_module/#{action}"), post_body
       return response unless response.ok?
       module_name = response.data(:module_name)
-      
+
       # when changing context send request for getting latest services instead of getting from cache
       @@invalidate_map << :service_module
 
@@ -747,7 +747,7 @@ module DTK::Client
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_from_catalog(context_params)
       remote_service_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      
+
       unless options.force?
         # Ask user if really want to delete service module and all items contained in it, if not then return to dtk-shell without deleting
         return unless Console.confirmation_prompt("Are you sure you want to delete remote service-module '#{remote_service_name}' and all items contained in it"+'?')
@@ -777,20 +777,20 @@ module DTK::Client
       end
 
       return unless Console.confirmation_prompt("Are you sure you want to delete assembly '#{assembly_template_name||assembly_template_id}'"+'?') unless options.force?
-      
+
       post_body = {
         :service_module_id => service_module_id,
         :assembly_id => assembly_template_id,
-        :subtype => :template                                                                                       
+        :subtype => :template
       }
 
       response = post rest_url("service_module/delete_assembly_template"), post_body
       return response unless response.ok?
-      
+
       modules_path               = OsUtil.service_clone_location()
       module_location            = "#{modules_path}/#{service_module_name}" if service_module_name
-      assembly_template_location = "#{module_location}/assemblies/#{assembly_template_name}" if (module_location && assembly_template_name) 
-      
+      assembly_template_location = "#{module_location}/assemblies/#{assembly_template_name}" if (module_location && assembly_template_name)
+
       if File.directory?(assembly_template_location)
         unless (assembly_template_location.nil? || ("#{module_location}/assemblies/" == assembly_template_location))
           FileUtils.rm_rf("#{assembly_template_location}")
@@ -804,17 +804,17 @@ module DTK::Client
       Response::Ok.new()
     end
 =begin
-    desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME." 
+    desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME."
     def assembly_template(context_params)
 
       service_id, method_name = context_params.retrieve_arguments([:service_name!, :option_1!],method_argument_names)
 
       options_args = ["-s", service_id]
-      
+
       entity_name = "assembly_template"
       load_command(entity_name)
       entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
-      
+
       response = entity_class.execute_from_cli(@conn, method_name, DTK::Shell::ContextParams.new, options_args, false)
 
     end
@@ -838,7 +838,7 @@ TODO: needs to be rewritten
       #TODO: right now JenkinsClient wil throw error if problem; better to create an error resonse
       response
     end
-=end        
+=end
   end
 end
 
