@@ -213,6 +213,7 @@ module DTK::Client
       }
 
       response = post rest_url("service_module/import"), post_body
+      RemoteDependencyUtil.print_dependency_warnings(response)
 
       # case when we need to import additional components
       if (response.ok? && (missing_components = response.data(:missing_module_components)))
