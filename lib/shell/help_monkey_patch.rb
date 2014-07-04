@@ -80,10 +80,10 @@ class Thor
           # alternative providers
           alt_identifiers = get_alternative_identifiers(command)
 
-          
+
           filtered_list = []
 
-          # case when we are not on first level and it is not identifier we skip help 
+          # case when we are not on first level and it is not identifier we skip help
           # since it needs to be empty
           # e.g. assembly/bootstrap1/node> ... HELP IS EMPTY FOR THIS
 
@@ -106,14 +106,14 @@ class Thor
 
             list.each do |help_item|
               help_item.first.gsub!("^^", '') if help_item.first.include?("^^")
-              
-              # this will match entity_name (command) and alternative identifiers  
+
+              # this will match entity_name (command) and alternative identifiers
               identifers = [command] + alt_identifiers
 
               # matches identifiers for ID/NAME
               matched_data          = help_item.first.match(/^\s\[?(#{identifers.join('|')}).?(NAME\/ID|ID\/NAME)\]?\s/)
               alt_matched_data      = help_item.first.match(/^\s\[?(#{alt_identifiers.join('|')}).?(NAME\/ID|ID\/NAME)\]?\s/)
-        
+
               if matched_data.nil?
                 # not found and tier 1 we add it to help list
                 filtered_list << overriden_help(override_tasks_obj, help_item, true) if @@shell_context.current_command?
@@ -156,17 +156,19 @@ class Thor
             # we do not need first one, since above code takes care of that one
             filtered_list = filtered_list.select do |filtered_help_item|
               #next unless filtered_help_item
-              commands_that_have_identifiers[1..-1].each_with_index do |entity,i|                 
-                matched = match_help_item_changes(filtered_help_item, entity)
-                filtered_help_item = replace_if_matched!(filtered_help_item, matched)
+              unless commands_that_have_identifiers.empty?
+                commands_that_have_identifiers[1..-1].each_with_index do |entity,i|
+                  matched = match_help_item_changes(filtered_help_item, entity)
+                  filtered_help_item = replace_if_matched!(filtered_help_item, matched)
 
-                # if it is last command, and there were changes                 
-                if (i == (commands_that_have_identifiers.size - 2) && matched)
-                  n_filter_list << filtered_help_item
+                  # if it is last command, and there were changes
+                  if (i == (commands_that_have_identifiers.size - 2) && matched)
+                    n_filter_list << filtered_help_item
+                  end
                 end
               end
             end
-            
+
             if override_tasks_obj && is_n_level_context
               last_entity_name = active_context.last_context_entity_name.to_sym
 
@@ -184,7 +186,7 @@ class Thor
               end
             end
 
-            # we have just filtered those methods that have attribute for given entity 
+            # we have just filtered those methods that have attribute for given entity
             # and also are last in the list
             filtered_list = n_filter_list
           end
@@ -198,7 +200,7 @@ class Thor
 
           #
           # e.g.
-          # dtk assembly_template info 
+          # dtk assembly_template info
           # dtk assembly-template info
           #
           item[0] = item[0].gsub(/^dtk ([a-zA-Z]+)_([a-zA-Z]+) /,'dtk \1-\2 ')
@@ -208,7 +210,7 @@ class Thor
 
       if list.empty?
         shell.say ""
-        shell.say "No tasks for current context '#{@@shell_context.active_context.full_path}'." 
+        shell.say "No tasks for current context '#{@@shell_context.active_context.full_path}'."
       end
 
       # remove helper 3. element in help item list
@@ -237,7 +239,7 @@ class Thor
         end
 
         unless sub_children.empty?
-          shell.say("  Change context (cc) to: #{sub_children.join(', ')}", :BOLD) 
+          shell.say("  Change context (cc) to: #{sub_children.join(', ')}", :BOLD)
           shell.say
         end
       end

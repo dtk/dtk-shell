@@ -97,12 +97,12 @@ module DTK
 
           system("#{editor} #{file}")
         end
-        
+
         def module_location(module_type,module_name,version=nil,opts={})
           # compact used because module_name can be nil
           module_location_parts(module_type,module_name,version,opts).compact.join('/')
         end
-        
+
         # if module location is /a/b/d/mod it returns ['/a/b/d','mod']
         def module_location_parts(module_type,module_name,version=nil,opts={})
           base_path = clone_base_path(opts[:assembly_module] ? :assembly_module : module_type)
@@ -140,7 +140,7 @@ module DTK
 
         def clone_base_path(module_type)
 
-          path = 
+          path =
             case module_type
               when :service_module then Config[:service_location]
               when :component_module then Config[:module_location]
@@ -173,12 +173,12 @@ module DTK
           component_module_dir = module_clone_location()
           Dir.entries(component_module_dir).select {|entry| File.directory? File.join(component_module_dir,entry) and !(entry =='.' || entry == '..') }
         end
-        
+
         # Public method will convert given string, to string with colorize output
         #
         # message - String to be colorized
         # color   - Symbol describing color to be used
-        # 
+        #
         # Returns String with colorize output
         def colorize(message, color)
           # at the moment we do not support colors in windows
@@ -199,7 +199,7 @@ module DTK
         #
         # Example
         # suspend_output do
-        #   # some calls 
+        #   # some calls
         # end
         def suspend_output
           if is_windows?
@@ -291,7 +291,7 @@ module DTK
         end
 
         private
-        
+
         def seperator
           return (is_windows? ? "\\" : "/")
         end

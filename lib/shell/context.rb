@@ -732,7 +732,8 @@ module DTK
       def get_command_identifiers(thor_command_name, active_context_copy=nil)
         begin
           command_clazz = Context.get_command_class(thor_command_name)
-          if command_clazz.list_method_supported?
+
+          if command_clazz && command_clazz.list_method_supported?
             # take just hashed arguemnts from multi return method
             hashed_args = get_command_parameters(thor_command_name, [], active_context_copy)[2]
             return command_clazz.get_identifiers(@conn, hashed_args)
@@ -860,9 +861,9 @@ module DTK
 
         if ((current_context_command != entity_name) && !current_context_command.eql?("utils"))
           current_context_clazz = Context.get_command_class(current_context_command)
-          options = Context.get_thor_options(current_context_clazz, cmd) unless current_context_command.nil?
+          options = Context.get_thor_options(current_context_clazz, cmd) if current_context_clazz
         else
-          options = Context.get_thor_options(clazz, cmd) unless clazz.nil?
+          options = Context.get_thor_options(clazz, cmd) if clazz
         end
 
         # set rest of arguments as method options
