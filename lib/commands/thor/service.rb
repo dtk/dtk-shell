@@ -46,7 +46,7 @@ module DTK::Client
       end
 
 
-      
+
     end
 
     def self.whoami()
@@ -66,24 +66,24 @@ module DTK::Client
     end
 
     # using extended_context when we want to use autocomplete from other context
-    # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
+    # e.g. we are in assembly/apache context and want to create-component we will use extended context to add
     # component-templates to autocomplete
     def self.extended_context()
       {
         :context => {
           :add_component => "component_template",
           :create_node => "node_template",
-          :add_component_dependency => "component_template"  
+          :add_component_dependency => "component_template"
         },
         :command => {
           :edit_component_module => {
-            :endpoint => "assembly", 
-            :url => "assembly/info_about", 
+            :endpoint => "assembly",
+            :url => "assembly/info_about",
             :opts => {:subtype=>"instance", :about=>"modules"}
           },
           :push_component_module_updates => {
-            :endpoint => "assembly", 
-            :url => "assembly/info_about", 
+            :endpoint => "assembly",
+            :url => "assembly/info_about",
             :opts => {:subtype=>"instance", :about=>"modules"}
           }
         }
@@ -143,7 +143,7 @@ TODO: overlaps with different meaning
             ['delete',"delete COMPONENT-NAME/ID [-y] ","# Delete component from workspace."],
             ['list-components',"list-components","# List components."]
           ],
-          :utils => [ 
+          :utils => [
             ['execute-tests',"execute-tests [--component COMPONENT-NAME] [--timeout TIMEOUT]","# Execute tests. --component filters execution per component, --timeout changes default execution timeout."],
             ['execute-tests-v2',"execute-tests-v2 [--component COMPONENT-NAME] [--timeout TIMEOUT]","# Execute tests. --component filters execution per component, --timeout changes default execution timeout."],
             ['get-netstats',"get-netstats","# Get netstats."],
@@ -214,19 +214,19 @@ TODO: overlaps with different meaning
 
       Response::Ok.new()
     end
-    
+
     desc "SERVICE-NAME/ID converge [-m COMMIT-MSG]", "Converge service instance."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
-      :desc => "Commit message" 
+      :desc => "Commit message"
     def converge(context_params)
       converge_aux(context_params)
     end
 
     desc "SERVICE-NAME/ID push-assembly-updates [SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push changes made to this service instance to the designated assembly; default is parent assembly."
     def push_assembly_updates(context_params)
-      assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:service_id!,:option_1],method_argument_names) 
+      assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:service_id!,:option_1],method_argument_names)
       service_module_name, assembly_template_name =
         if qualified_assembly_name
           if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
@@ -276,7 +276,7 @@ TODO: overlaps with different meaning
 TODO: will put in dot release and will rename to 'extend'
     desc "ASSEMBLY-NAME/ID add EXTENSION-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly"
     method_option "count",:aliases => "-n" ,
-      :type => :string, #integer 
+      :type => :string, #integer
       :banner => "COUNT",
       :desc => "Number of sub-assemblies to add"
     def add_node(context_params)
@@ -297,7 +297,7 @@ TODO: will put in dot release and will rename to 'extend'
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to the assembly" 
+    desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to the assembly"
     def possible_extensions(context_params)
       assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
 
@@ -378,7 +378,7 @@ TODO: will put in dot release and will rename to 'extend'
             data_type = :task
           else
             raise_validation_error_method_usage('list')
-        end 
+        end
       end
 
       post_body = {
@@ -390,7 +390,7 @@ TODO: will put in dot release and will rename to 'extend'
       post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
       rest_endpoint = "assembly/info_about"
 
-      if context_params.is_last_command_eql_to?(:attribute)        
+      if context_params.is_last_command_eql_to?(:attribute)
         raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
         about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
       elsif context_params.is_last_command_eql_to?(:component)
@@ -412,7 +412,7 @@ TODO: will put in dot release and will rename to 'extend'
           data_type = :assembly
           post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
           rest_endpoint = "assembly/list"
-        end  
+        end
       end
 
       post_body[:about] = about
@@ -447,12 +447,12 @@ TODO: will put in dot release and will rename to 'extend'
 
       path_to_rsa_pub_key ||= SSHUtil.default_rsa_pub_key_path()
       rsa_pub_key_content = SSHUtil.read_and_validate_pub_key(path_to_rsa_pub_key)
-    
+
       response = post_file rest_url("assembly/initiate_ssh_pub_access"), {
         :agent_action => :grant_access,
-        :system_user => system_user, 
-        :rsa_pub_name => rsa_key_name, 
-        :rsa_pub_key => rsa_pub_key_content, 
+        :system_user => system_user,
+        :rsa_pub_name => rsa_key_name,
+        :rsa_pub_key => rsa_pub_key_content,
         :assembly_id => service_id,
         :target_nodes => options.nodes
       }
@@ -470,10 +470,10 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :nodes, :type => :string, :default => nil
     def revoke_access(context_params)
       service_id, system_user, rsa_key_name = context_params.retrieve_arguments([:service_id!,:option_1!, :option_2!],method_argument_names)
-      
-      response = post_file rest_url("assembly/initiate_ssh_pub_access"), { 
+
+      response = post_file rest_url("assembly/initiate_ssh_pub_access"), {
         :agent_action => :revoke_access,
-        :system_user => system_user, 
+        :system_user => system_user,
         :rsa_pub_name => rsa_key_name,
         :assembly_id => service_id,
         :target_nodes => options.nodes
@@ -488,12 +488,12 @@ TODO: will put in dot release and will rename to 'extend'
       nil
     end
 
-    desc "SERVICE-NAME/ID list-ssh-access", "List SSH access for each of the nodes" 
+    desc "SERVICE-NAME/ID list-ssh-access", "List SSH access for each of the nodes"
     def list_ssh_access(context_params)
       service_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
 
-      response = post_file rest_url("assembly/list_ssh_access"), { 
-        :assembly_id => service_id 
+      response = post_file rest_url("assembly/list_ssh_access"), {
+        :assembly_id => service_id
       }
 
       response.render_table(:ssh_access)
@@ -539,7 +539,7 @@ TODO: will put in dot release and will rename to 'extend'
       }
 
       response = post rest_url("assembly/delete"), post_body
-         
+
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :service
       @@invalidate_map << :assembly
@@ -625,7 +625,7 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
       response = delete_component_aux(context_params)
-      
+
       @@invalidate_map << :service
       @@invalidate_map << :service_node
       @@invalidate_map << :service_node_component
@@ -641,7 +641,7 @@ TODO: will put in dot release and will rename to 'extend'
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
     desc "HIDE_FROM_BASE execute-tests [--component COMPONENT-NAME] [--timeout TIMEOUT]", "Execute tests. --component filters execution per component, --timeout changes default execution timeout"
-    method_option :component, :type => :string, :desc => "Component name" 
+    method_option :component, :type => :string, :desc => "Component name"
     method_option :timeout, :type => :string, :desc => "Timeout"
     def execute_tests(context_params)
       execute_tests_aux(context_params)
@@ -649,7 +649,7 @@ TODO: will put in dot release and will rename to 'extend'
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
     desc "HIDE_FROM_BASE execute-tests-v2 [--component COMPONENT-NAME] [--timeout TIMEOUT]", "Execute tests. --component filters execution per component, --timeout changes default execution timeout"
-    method_option :component, :type => :string, :desc => "Component name" 
+    method_option :component, :type => :string, :desc => "Component name"
     method_option :timeout, :type => :string, :desc => "Timeout"
     def execute_tests_v2(context_params)
       execute_tests_v2_aux(context_params)
@@ -682,7 +682,7 @@ TODO: will put in dot release and will rename to 'extend'
       grep_aux(context_params)
     end
 
-    
+
   end
 end
 

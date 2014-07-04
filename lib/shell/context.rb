@@ -7,7 +7,7 @@ module DTK
 
     class Context
       include DTK::Client::Auxiliary
-      
+
       # client commands
       CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs','help']
       # CLIENT_COMMANDS       = ['cc','exit','clear','help']
@@ -80,7 +80,7 @@ module DTK
             end
           end
         end
-        
+
         entries
       end
 
@@ -96,7 +96,7 @@ module DTK
           init_context = context_list.first.name
           command_clazz = Context.get_command_class(init_context)
           invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context() : {}
-          
+
           invisible_context.each do |ic|
             path = path.gsub(/\/#{ic}\//,'/')
           end
@@ -104,7 +104,7 @@ module DTK
 
         path
       end
-      
+
       # Validates and changes context
       def change_context(args, cmd=[])
         begin
@@ -123,7 +123,7 @@ module DTK
 
           # jump to root
           reset if args.join('').match(/^\//)
-          
+
           # begin
           # hack: used just to avoid entering assembly/id/node or workspace/node context (remove when include this contexts again)
           first_c, warning_message = nil, nil
@@ -163,12 +163,12 @@ module DTK
         active_context_copy.clear if goes_from_root
         # Invalid context is user leftover to be matched; i.e. 'cc /assembly/te' - 'te' is leftover
         invalid_context = ""
-        
+
         # Validate and change context; skip step if user's input is empty or it is equal to '/'
         active_context_copy, error_message, invalid_context = prepare_context_change([readline_input], active_context_copy, nil, line_buffer) unless (readline_input.empty? || readline_input == "/")
-        
+
         # using extended_context when we want to use autocomplete from other context
-        # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
+        # e.g. we are in assembly/apache context and want to create-component we will use extended context to add
         # component-templates to autocomplete
         extended_candidates, new_context, line_buffer_first = {}, nil, nil
         command_clazz = Context.get_command_class(active_context_copy.last_command_name)
@@ -190,12 +190,12 @@ module DTK
 
         unless command_clazz.nil?
           extended_context = command_clazz.respond_to?(:extended_context) ? command_clazz.extended_context() : {}
-          
+
           unless extended_context.empty?
             extended_context = extended_context[:context]
             # extended_context.reject!{|k,v| k.to_s!=line_buffer}
             # extended_context.select!{|k,v| k.to_s.eql?(line_buffer_first) || k.to_s.eql?(line_buffer_last)}
-            extended_context.select!{|k,v| line_buffer.include?(k.to_s)}
+            extended_context.select!{|k,v| line_buffer.include?(k.to_s)} if extended_context.respond_to?(:select!)
 
             if (extended_context[line_buffer_last] && !line_buffer_first.eql?(line_buffer_last))
               new_context = extended_context[line_buffer_last]
@@ -207,7 +207,7 @@ module DTK
             active_context_copy.push_new_context(new_context, new_context) unless new_context.nil?
           end
         end
-        
+
         return get_ac_candidates(active_context_copy, readline_input, invalid_context, goes_from_root, line_buffer_first||{})
       end
 
@@ -228,7 +228,7 @@ module DTK
             command_from_args = goes_from_root ? args.first.split('/')[1] : args.first.split('/').first
             clazz_from_args = DTK::Shell::Context.get_command_class(command_from_args) if command_from_args
           end
-          
+
           if (command.eql?('cd') || command.eql?('cc') || command.eql?('popc') || command.eql?('pushc'))
             if is_root
               if entries.size >= 3
@@ -242,7 +242,7 @@ module DTK
               end
             else
               double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
-              
+
               unless double_dots_count > 0
                 if clazz.respond_to?(:invisible_context)
                   if current_context.is_command?
@@ -269,7 +269,7 @@ module DTK
           end
 
         end
-        
+
         entries
       end
 
@@ -288,9 +288,9 @@ module DTK
         current_context_clazz, error_message, current_index = nil, nil, 0
         double_dots_count = DTK::Shell::ContextAux.count_double_dots(entries)
 
-        # we remove '..' from our entries 
+        # we remove '..' from our entries
         entries = entries.select { |e| !(e.empty? || DTK::Shell::ContextAux.is_double_dot?(e)) }
-        
+
         # we go back in context based on '..'
         active_context_copy.pop_context(double_dots_count)
 
@@ -305,23 +305,23 @@ module DTK
           count_workspaces = active_context_copy.name_list.inject(Hash.new(0)) {|h,i| h[i] += 1; h }
           active_context_copy.pop_context(1) if count_workspaces['workspace']==1
         end
-        
+
         # we add active commands array to begining, using dup to avoid change by ref.
         context_name_list = active_context_copy.name_list
         entries = context_name_list + entries
 
         # we check the size of active commands
         ac_size = context_name_list.size
-        
+
         invalid_context = ""
         # check each par for command / value
         (0..(entries.size-1)).step(2) do |i|
           command       = entries[i]
           value         = entries[i+1]
-          
+
           clazz = DTK::Shell::Context.get_command_class(command)
           error_message, invalid_context = validate_command(clazz, current_context_clazz, command, active_context_copy)
-          
+
           break if error_message
           # if we are dealing with new entries add them to active_context
           active_context_copy.push_new_context(command, command) if (i >= ac_size)
@@ -337,7 +337,7 @@ module DTK
               end
               break
             end
-            
+
             active_context_copy.push_new_context(context_hash_data[:name], command, context_hash_data[:identifier]) if ((i+1) >= ac_size)
           end
         end
@@ -354,7 +354,7 @@ module DTK
           error_message = "Context for '#{command}' could not be loaded.";
           invalid_context = command
         end
-          
+
         # check if previous context support this one as a child
         unless current_context_clazz.nil?
           # valid child method is necessery to define parent-child relet.
@@ -364,10 +364,10 @@ module DTK
 
             valid_all_children = (root_clazz != current_context_clazz) ? all_children.include?(command.to_sym) : true
             unless (current_context_clazz.valid_child?(command) && valid_all_children)
-              
+
               error_message = "'#{command}' context is not valid."
               invalid_context = command
-              
+
               if current_context_clazz.respond_to?(:invisible_context)
                 ic = current_context_clazz.invisible_context()
                 ic.each do |c|
@@ -402,7 +402,7 @@ module DTK
           last_from_current = test_c.last_context_name
           back_flag = true
         end
-        
+
         unless args.empty?
           first_c ||= entries.first
           last_c = last_from_current||entries.last
@@ -418,14 +418,14 @@ module DTK
               end
               message = "'#{last_c}' context is not valid."
               is_valid_id = check_for_id(first_c, last_c, tmp_active_context, args)
-              
+
               # if ../ to node context, add one more .. to go to previous context (assembly/id or workspace)
               if back_flag
                 message = nil
                 entries << ".." if is_valid_id==false
               else
                 if is_valid_id==false
-                  entries.pop 
+                  entries.pop
                 else
                   message = nil
                 end
@@ -442,7 +442,7 @@ module DTK
             end
           end
         end
-        
+
         return {:args => args, :message => message}
       end
 
@@ -450,26 +450,26 @@ module DTK
         command_clazz = Context.get_command_class(context)
         invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context.map { |e| e.to_s } : []
         entries = args.first.split(/\//)
-        
+
         entries = Context.check_for_sym_link(entries) if root?
         unless invisible_context.empty?
           if root?
             tmp_active_context.push_new_context(entries[0], entries[0])
             context_hash_data, error_message, invalid_context = validate_value(entries[0], entries[1], tmp_active_context)
-            
+
             return if error_message
             tmp_active_context.push_new_context(context_hash_data[:name], entries[0], context_hash_data[:identifier])
             context_hash_data, error_message, invalid_context = validate_value(command, command, tmp_active_context)
-            
+
             return if error_message
             tmp_active_context.push_new_context(context_hash_data[:name], command, context_hash_data[:identifier])
           end
 
-          
+
           node_ids = get_command_identifiers(invisible_context.first.to_s, tmp_active_context)
           node_names = node_ids ? node_ids.collect { |e| e[:name] } : []
         end
-        
+
         return node_names.include?(command)
       end
 
@@ -498,10 +498,10 @@ module DTK
         # e.g. cc library/public, we are caching context under library_1, library_2
         # so getting context for 'public' will not work and we use than library
         command_name = root? ? 'dtk' : @active_context.last_command_name
-        
+
         # if there is no new context (current) we use old one
         @current = current_context_task_names() || @current
-        
+
         client_commands = CLIENT_COMMANDS
         client_commands.concat(DEV_COMMANDS) if DTK::Configuration.get(:development_mode)
 
@@ -513,7 +513,7 @@ module DTK
 
         # we load thor command class identifiers for autocomplete context list
         command_context = get_command_identifiers(command_name)
-        
+
         command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
         @context_commands.concat(command_name_list) if current_command?
 
@@ -556,7 +556,7 @@ module DTK
       def root?
         return @active_context.empty?
       end
-      
+
       def current_command?
         return @active_context.current_command?
       end
@@ -575,7 +575,7 @@ module DTK
       end
 
       # checks if method name is valid in current context
-      def method_valid?(method_name)           
+      def method_valid?(method_name)
         # validate method, see if we support given method in current tasks
         (current_context_task_names() + ['help']).include?(method_name)
       end
@@ -593,15 +593,15 @@ module DTK
 
       # calls 'valid_id?' method in Thor class to validate ID/NAME
       def valid_id?(thor_command_name,value, override_context_params=nil, active_context_copy=nil)
-         
+
         command_clazz = Context.get_command_class(thor_command_name)
-        if command_clazz.list_method_supported?          
+        if command_clazz.list_method_supported?
           if override_context_params
             context_params = override_context_params
           else
             context_params = get_command_parameters(thor_command_name, [], active_context_copy)[2]
           end
-          
+
           tmp = command_clazz.valid_id?(value, @conn, context_params)
           return tmp
         end
@@ -615,13 +615,13 @@ module DTK
         # input string segment used to filter results candidates
         results_filter = (readline_input.match(/\/$/) && invalid_context.empty?) ? "" : readline_input.split("/").last
         results_filter ||= ""
-        
+
         command_clazz = Context.get_command_class(active_context_copy.last_command_name)
         extended_context_commands = nil
 
         unless command_clazz.nil?
           extended_context = command_clazz.respond_to?(:extended_context) ? command_clazz.extended_context() : {}
-          
+
           unless extended_context.empty?
             extended_context = extended_context[:command]
             extended_context.reject!{|k,v| k.to_s!=line_buffer} if extended_context
@@ -643,18 +643,18 @@ module DTK
             context_candidates = get_ac_candidates_for_context(active_context_copy.last_context(), active_context_copy)
           end
         end
-        
+
         # checking if results will contain context candidates based on input string segment
         context_candidates = context_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
-        
-        # Show all context tasks if active context orignal and it's copy are on same context, and are not on root, 
+
+        # Show all context tasks if active context orignal and it's copy are on same context, and are not on root,
         # and if readline has one split result indicating user is not going trough n-level, but possibly executing a task
         task_candidates = []
 
         #task_candidates = @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty?)
         task_candidates = @context_commands if (active_context_copy.last_context_name() == @active_context.last_context_name() && !active_context_copy.empty? && readline_input.split("/").size <= 1)
-        
-        # create results object filtered by user input segment (results_filter) 
+
+        # create results object filtered by user input segment (results_filter)
         task_candidates = task_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
 
         # autocomplete candidates are both context and task candidates; remove duplicates in results
@@ -671,7 +671,7 @@ module DTK
         # remove duplicate context or task candidates
         results.uniq!
 
-        # Send system beep if there are no candidates 
+        # Send system beep if there are no candidates
         if results.empty?
           print "\a"
           return []
@@ -680,7 +680,7 @@ module DTK
         # default value of input user string
         input_context_path = readline_input
 
-        # cut off last context if it is leftover (invalid_context), 
+        # cut off last context if it is leftover (invalid_context),
         # or if last context is not finished with '/' and it can have more than option for current context
         # i.e. dtk> cc assembly - have 2 candidates: 'assembly' and 'assembly-template'
         if !invalid_context.empty? || cutoff_forcely
@@ -699,7 +699,7 @@ module DTK
 
       end
 
-      def get_ac_candidates_for_context(context, active_context_copy)        
+      def get_ac_candidates_for_context(context, active_context_copy)
         # If last context is command, load all identifiers, otherwise, load next possible context command; if no contexts, load root tasks
         if context
           if context.is_command?
@@ -713,11 +713,11 @@ module DTK
 
             n_level_ac_candidates.select {|v| valid_all_children.include?(v.to_sym)} unless valid_all_children.empty?
             invisible_context = command_clazz.respond_to?(:invisible_context) ? command_clazz.invisible_context.map { |e| e.to_s } : []
-            
+
             unless invisible_context.empty?
               node_ids = get_command_identifiers(invisible_context.first.to_s, active_context_copy)
               node_names = node_ids ? node_ids.collect { |e| e[:name] } : []
-              
+
               n_level_ac_candidates.concat(node_names)
             end
 
@@ -732,13 +732,13 @@ module DTK
       def get_command_identifiers(thor_command_name, active_context_copy=nil)
         begin
           command_clazz = Context.get_command_class(thor_command_name)
-          if command_clazz.list_method_supported?             
+          if command_clazz.list_method_supported?
             # take just hashed arguemnts from multi return method
             hashed_args = get_command_parameters(thor_command_name, [], active_context_copy)[2]
             return command_clazz.get_identifiers(@conn, hashed_args)
           end
         rescue DTK::Client::DtkValidationError => e
-          # TODO Check if handling needed. Error should happen only when autocomplete ID search illigal 
+          # TODO Check if handling needed. Error should happen only when autocomplete ID search illigal
         end
 
         return []
@@ -752,7 +752,7 @@ module DTK
           endpoint = extended_context_commands[:endpoint]
           url = extended_context_commands[:url]
           opts = extended_context_commands[:opts]||{}
-        
+
           id_label = "#{endpoint}_id".to_sym
           id = entity_name.identifier
           opts[id_label] = id
@@ -768,7 +768,7 @@ module DTK
         candidates
       end
 
-      # changes command and argument if argument is plural of one of 
+      # changes command and argument if argument is plural of one of
       # the possible commands on tier1 e.g. libraries, assemblies
       # return 2 values cmd, args
       def reverse_commands(cmd, args)
@@ -804,8 +804,8 @@ module DTK
         # if no method specified use help
         method_name ||= 'help'
 
-        context_params.add_context_to_params(entity_name, entity_name) 
-        
+        context_params.add_context_to_params(entity_name, entity_name)
+
         if entity_name_id
           identifier_response = valid_id?(entity_name, entity_name_id, context_params)
           if identifier_response
@@ -842,7 +842,7 @@ module DTK
         entity_name, method_name, option_types = nil, nil, nil
 
         context_params = ContextParams.new
-        
+
         if root? && !args.empty?
           # this means that somebody is calling command with assembly/.. method_name
           entity_name = cmd
@@ -864,7 +864,7 @@ module DTK
         else
           options = Context.get_thor_options(clazz, cmd) unless clazz.nil?
         end
-        
+
         # set rest of arguments as method options
         args, thor_options, invalid_options = Context.parse_thor_options(args, options)
         context_params.method_arguments = args
@@ -879,7 +879,7 @@ module DTK
       #
       def self.parse_thor_options(args, options=nil)
         type, invalid_options = nil, []
-        
+
         # options to handle thor options -m MESSAGE and --list
         options_param_args = []
         args.each_with_index do |e,i|
@@ -907,13 +907,13 @@ module DTK
         command = command.gsub('-','_')
         options = nil
         options = clazz.all_tasks[command].options.collect{|k,v|{:alias=>v.aliases,:name=>v.name,:type=>v.type,:switch=>v.switch_name}} unless clazz.all_tasks[command].nil?
-        
+
         return options
       end
 
-      def self.get_option_type(options, option)       
+      def self.get_option_type(options, option)
         @ret = nil
-        
+
         options.each do |opt|
           @ret = opt[:type] if(opt[:alias].first == option || opt[:switch] == option)
         end
@@ -943,7 +943,7 @@ module DTK
           puts "[INFO] History file is missing, shell history will be disabled. To enable it create file: '#{HISTORY_LOCATION}'"
           return []
         end
-   
+
         content = File.open(HISTORY_LOCATION,'r').read
         return (content.empty? ? [] : JSON.parse(content))
       end
@@ -955,7 +955,7 @@ module DTK
         array_of_commands.each_with_index do |a,i|
           filtered_commands << a if (a != array_of_commands[i+1] && is_allowed_command?(a))
         end
-             
+
         # make sure we only save up to 'COMMAND_HISTORY_LIMIT' commands
         if filtered_commands.size > COMMAND_HISTORY_LIMIT
           filtered_commands = filtered_commands[-COMMAND_HISTORY_LIMIT,COMMAND_HISTORY_LIMIT+1]

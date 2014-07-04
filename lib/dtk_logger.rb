@@ -25,7 +25,7 @@ class DtkLogger
         file = File.open(file_path(), "a")
         file.sync = true
         @logger = Logger.new(file, LOG_NUMBER_OF_OLD_FILES, LOG_MB_SIZE * 1024000)
-        
+
         @logger.formatter = proc do |severity, datetime, progname, msg|
           "[#{datetime}] #{severity} -- : #{msg}\n"
         end
@@ -63,14 +63,14 @@ class DtkLogger
 
   def error_pp(message, backtrace, sttdout_out = true)
     error(message, sttdout_out)
-    # we do not print this to STDOUT (will be overriden with DEVELOPMENT_MODE)
-    error(PP.pp(backtrace, ""), false) if backtrace
+    # we do not print this to STDOUT (will be overriden with DEVELOPMENT_MODE)s
+    error("#{message}\n" + PP.pp(backtrace, ""), false) if backtrace
   end
 
   def fatal_pp(message, backtrace, sttdout_out = true)
     fatal(message, sttdout_out)
     # we do not print this to STDOUT (will be overriden with DEVELOPMENT_MODE)
-    fatal(PP.pp(backtrace, ""), false) if backtrace
+    fatal("#{message}\n" + PP.pp(backtrace, ""), false) if backtrace
   end
 
 
