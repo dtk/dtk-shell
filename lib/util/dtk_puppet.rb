@@ -6,7 +6,7 @@ module DTK
     #
     class DtkPuppet
 
-      MODULE_PATH = OsUtil.module_clone_location()
+      MODULE_PATH = OsUtil.component_clone_location()
 
       # installs puppet module from puppet forge via puppet module
       # method will print out progress or errrors

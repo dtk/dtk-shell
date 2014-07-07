@@ -126,12 +126,29 @@ module DTK
           module_versions.map{|version|"#{base_path}/#{version}"}
         end
 
-        def module_clone_location()
+        def module_clone_location(module_type)
+          case module_type
+            when "component_module"
+              return component_clone_location
+            when "service_module"
+              return service_clone_location
+            when "test_module"
+              test_clone_location
+            else
+              raise Client::DtkError, "Unexpected module_type (#{module_type})"
+            end
+        end
+
+        def component_clone_location()
           clone_base_path(:component_module)
         end
 
         def service_clone_location()
           clone_base_path(:service_module)
+        end
+
+        def test_clone_location()
+          clone_base_path(:test_module)
         end
 
         def assembly_module_base_location()
@@ -144,6 +161,7 @@ module DTK
             case module_type
               when :service_module then Config[:service_location]
               when :component_module then Config[:module_location]
+              when :test_module then Config[:test_module_location]
               when :assembly_module then Config[:assembly_module_base_location]
               else raise Client::DtkError, "Unexpected module_type (#{module_type})"
             end
@@ -170,7 +188,7 @@ module DTK
         #
         #
         def local_component_module_list()
-          component_module_dir = module_clone_location()
+          component_module_dir = component_clone_location()
           Dir.entries(component_module_dir).select {|entry| File.directory? File.join(component_module_dir,entry) and !(entry =='.' || entry == '..') }
         end
 

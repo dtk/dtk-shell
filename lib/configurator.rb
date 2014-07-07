@@ -81,8 +81,9 @@ module DTK
 			end
 
 			def self.create_missing_clone_dirs
-				FileUtils.mkdir(OsUtil.module_clone_location) unless File.directory?(OsUtil.module_clone_location)
+				FileUtils.mkdir(OsUtil.component_clone_location) unless File.directory?(OsUtil.component_clone_location)
 				FileUtils.mkdir(OsUtil.service_clone_location) unless File.directory?(OsUtil.service_clone_location)
+				FileUtils.mkdir(OsUtil.test_clone_location) unless File.directory?(OsUtil.test_clone_location)
 			end
 
 

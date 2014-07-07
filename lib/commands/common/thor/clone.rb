@@ -18,12 +18,15 @@ module DTK::Client
         puts "Module '#{module_name}' has been successfully cloned!" unless omit_output
         unless internal_trigger
           if Console.confirmation_prompt("Would you like to edit cloned module now?")
-            if module_type.to_s.start_with?("service")
-              context_params_for_module = create_context_for_module(module_name, :"service-module")
-            else
-              context_params_for_module = create_context_for_module(module_name, :"component-module")
-            end
+            context_params_for_module = create_context_for_module(module_name, module_type.to_s.gsub!(/\_/,'-').to_sym)
             return edit(context_params_for_module)
+            # if module_type.to_s.eql?("service_module")
+            #   context_params_for_module = create_context_for_module(module_name, :"service-module")
+            # elsif module_type.to_s.eql?("component_module")
+            #   context_params_for_module = create_context_for_module(module_name, :"component-module")
+            # elsif module_type.to_s.eql?("test_module")
+            #   context_params_for_module = create_context_for_module(module_name, :"test-module")
+            # end
           end
         end
       end
@@ -32,7 +35,7 @@ module DTK::Client
 
     def create_context_for_module(module_name, module_type)
       context_params_for_module = DTK::Shell::ContextParams.new
-      context_params_for_module.add_context_to_params(module_name, "#{module_type}", module_name)
+      context_params_for_module.add_context_to_params(module_name, module_type, module_name)
       return context_params_for_module
     end
   end
