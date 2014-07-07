@@ -47,7 +47,15 @@ module DTK::Client
   private
 
     def resolve_module_type
-      self.class == DTK::Client::ComponentModule ? 'component_module' : 'service_module'
+      case self
+        when DTK::Client::ComponentModule
+          return 'component_module'
+        when DTK::Client::TestModule
+          return 'test_module'
+        else
+          return 'service_module'
+        end
+      # self.class == DTK::Client::ComponentModule ? 'component_module' : 'service_module'
     end
 
   end

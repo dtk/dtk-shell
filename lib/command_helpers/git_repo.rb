@@ -10,7 +10,7 @@ module DTK; module Client; class CommandHelper
     end
 
     def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil, opts={})
-      Response.wrap_helper_actions do 
+      Response.wrap_helper_actions do
         modules_dir = modules_dir(type,module_name,version,opts)
         FileUtils.mkdir_p(modules_dir) unless File.directory?(modules_dir)
         target_repo_dir = local_repo_dir(type,module_name,version,opts)
@@ -367,9 +367,11 @@ module DTK; module Client; class CommandHelper
       if assembly_module = opts[:assembly_module]
         OsUtil.module_location_parts(type,module_name,version,opts)[0]
       elsif type == :component_module
-        OsUtil.module_clone_location()
+        OsUtil.component_clone_location()
       elsif type == :service_module
         OsUtil.service_clone_location()
+      elsif type == :test_module
+        OsUtil.test_clone_location()
       else
         raise Error.new("Unexpected module type (#{type})")
       end

@@ -111,7 +111,7 @@ module DTK
                 element = check_context_for_element(alternative_key)
                 break if element
                 if context_name
-                  if alternative_key.to_s.include?(context_name.downcase!)
+                  if alternative_key.to_s.include?(context_name.downcase)
                     required = alternative_key.to_s.match(/.+!$/) 
                     selected_key = alternative_key
                   end
