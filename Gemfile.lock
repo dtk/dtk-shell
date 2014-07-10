@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dtk-client (0.5.14)
+    dtk-client (0.5.15)
       awesome_print (= 1.1.0)
       bundler (>= 1.2.4)
       colorize (~> 0.5.8)
@@ -24,7 +24,7 @@ GEM
     dtk-common-core (0.5.11)
       rest-client (~> 1.6.7)
     erubis (2.7.0)
-    git (1.2.7)
+    git (1.2.6)
     highline (1.6.16)
     hirb (0.7.1)
     json_pure (1.7.4)

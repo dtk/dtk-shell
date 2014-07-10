@@ -32,7 +32,8 @@ module DTK::Client
     REQ_MODULE_ID = [:service_module_id!, :component_module_id!, :test_module_id!]
 
     def get_module_type(context_params)
-      module_type = context_params.root_command_name.gsub(/\-/, "_")
+      forwarded_type = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:module_type] : ''
+      module_type = (context_params.root_command_name||forwarded_type).gsub(/\-/, "_")
     end
 
     def module_info_about(context_params, about, data_type)
@@ -279,6 +280,8 @@ module DTK::Client
       if (response.ok? && (missing_components = response.data(:missing_module_components)))
         opts = {:do_not_raise=>true}
         module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message=>true)
+        module_opts.merge!(:module_type => 'component-module')
+
         continue = trigger_module_component_import(missing_components,module_opts)
         return unless continue
 

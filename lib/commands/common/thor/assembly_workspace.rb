@@ -758,7 +758,7 @@ module DTK::Client
       if !options["component"].nil?
           components.reject! do |c|
             if options["component"].include? "/" 
-              c != options["component"] 
+              c != options["component"]
             else
               c.split("/").last != options["component"]
             end

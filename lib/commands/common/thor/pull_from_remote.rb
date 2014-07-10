@@ -54,7 +54,9 @@ module DTK::Client
       if (response.ok? && !(missing_components = response.data(:missing_modules)).empty?)
         puts " New dependencies found, Installing."
 
-        trigger_module_component_import(missing_components)
+        module_opts = {:module_type => 'component-module'}
+        trigger_module_component_import(missing_components, module_opts)
+
         puts "Resuming pull from remote ..."
       else
         puts 'Done.'
