@@ -6,4 +6,3 @@ test.rb
 .gitattributes
 Gemfile_dev.lock
 sftp-config*.json
-test_*rb
