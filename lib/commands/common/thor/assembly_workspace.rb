@@ -882,6 +882,7 @@ module DTK::Client
           :disable_post_processing => false,
           :sort_key => "module_name"
         }
+
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
 
@@ -889,9 +890,8 @@ module DTK::Client
           response.data(:results).each do |res|
             if res.key?('test_error')
               test_error = res.delete('test_error')     
-              res['errors'] = { "message" => test_error, "type" => "user_error" }
+              res['errors'] = { "message" => test_error, "type" => "test_error" }
             end
-            pp res
           end
           end_loop = true
         else

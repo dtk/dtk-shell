@@ -91,6 +91,7 @@ module DTK
                             
                 # here we see if there was an error if not we will skip this
                 # if so we add it to @error_data
+
                 if error_message.empty?
                   # no error message just add it as regular element
                   evaluated_element.send("#{k}=",value_of(structured_element, v))
@@ -99,7 +100,7 @@ module DTK
                   error_type = value_of(structured_element,'errors.dtk_type') || ""
 
                   # we set index for each message first => [ 1 ], second => [ 2 ], etc.
-                  if error_type == "user_error"
+                  if error_type == "user_error" || error_type == "test_error"
                     error_index = "[ #{@error_data.size + 1} ]"
                   end
 
@@ -107,7 +108,12 @@ module DTK
                   evaluated_element.send("#{k}=", error_index)
                   # we set new error element
                   error_element.id       = error_index
-                  error_element.message  = (error_index.empty? ? "[SERVER ERROR] " : "[USER ERROR] ") + error_message
+                  if error_index.empty?  
+                    error_element.message = "[SERVER ERROR] " + error_message 
+                  else
+                    error_element.message = "[USER ERROR] " + error_message if error_type == "user_error"
+                    error_element.message = "[TEST ERROR] " + error_message if error_type == "test_error"  
+                  end
 
                   # add it with other
                   @error_data << error_element
