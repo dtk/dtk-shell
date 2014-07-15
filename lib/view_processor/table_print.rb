@@ -34,16 +34,12 @@ module DTK
       include Hirb::Console
       include CommandBase
       extend  CommandBase
-
-
-
       attr_accessor :command_name, :order_defintion, :evaluated_data
 
       # when adding class to table view you need to define mapping and order to be displayed in table
       # this can be fixed with facets, but that is todo for now TODO: use facets with ordered hashes
 
       def initialize(data, data_type, forced_metadata, print_error_table)
-           
         # if there is no custom metadata, then we use metadata predefined in meta-response.json file
         if forced_metadata.nil?
           # get all table definitions from json file
@@ -91,12 +87,11 @@ module DTK
               # in such a way that those error will be specially printed later on
 
               if print_error_table && k.include?('error')
-
                 error_message = value_of(structured_element, v)
                             
-
                 # here we see if there was an error if not we will skip this
                 # if so we add it to @error_data
+
                 if error_message.empty?
                   # no error message just add it as regular element
                   evaluated_element.send("#{k}=",value_of(structured_element, v))
@@ -105,24 +100,27 @@ module DTK
                   error_type = value_of(structured_element,'errors.dtk_type') || ""
 
                   # we set index for each message first => [ 1 ], second => [ 2 ], etc.
-                  if error_type == "user_error"
+                  if error_type == "user_error" || error_type == "test_error"
                     error_index = "[ #{@error_data.size + 1} ]"
                   end
 
                   # original table takes that index
                   evaluated_element.send("#{k}=", error_index)
-
                   # we set new error element
                   error_element.id       = error_index
-                  error_element.message  = (error_index.empty? ? "[SERVER ERROR] " : "[USER ERROR] ") + error_message
+                  if error_index.empty?  
+                    error_element.message = "[SERVER ERROR] " + error_message 
+                  else
+                    error_element.message = "[USER ERROR] " + error_message if error_type == "user_error"
+                    error_element.message = "[TEST ERROR] " + error_message if error_type == "test_error"  
+                  end
 
                   # add it with other
                   @error_data << error_element
                 end
-
               else
                 evaluated_element.send("#{k}=", value_of(structured_element, v))
-                #eval "evaluated_element.#{k}=structured_element.#{v}"
+                # eval "evaluated_element.#{k}=structured_element.#{v}"
               end
             rescue NoMethodError => e
               unless e.message.include? "nil:NilClass"
@@ -139,11 +137,9 @@ module DTK
 
       def get_metadata
         content = DiskCacher.new.fetch("table_metadata", ::DTK::Configuration.get(:meta_table_ttl))
-
         raise DTK::Client::DtkError, "Table metadata is empty, please contact DTK team." if content.empty?
         return JSON.parse(content)
       end
-
 
       def to_ostruct(data)
         result = data.inject({}) do |res, (k, v)|
@@ -191,7 +187,6 @@ module DTK
       end
 
       def print
-
         filter_remove_underscore = Proc.new { |header| header.gsub('_',' ').upcase }
         # hirb print out of our evaluated data in order defined
         # Available options can be viewed here: http://tagaholic.me/hirb/doc/classes/Hirb/Helpers/Table.html#M000008
@@ -262,13 +257,9 @@ module DTK
           else 
             value = value.send(command)
         end
-        
         return value
       end
-
-
     end
-
   end
 end
 

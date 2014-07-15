@@ -882,16 +882,17 @@ module DTK::Client
           :disable_post_processing => false,
           :sort_key => "module_name"
         }
+
         response = post(rest_url("assembly/get_action_results"),post_body)
         count += 1
+
         if count > execute_test_tries or response.data(:is_complete)
-          error_msg = ""
-          response.data(:results).each do |k,v|
-            unless v.nil?
-              error_msg << v['test_error'] if v.to_s.include?('test_error')
+          response.data(:results).each do |res|
+            if res.key?('test_error')
+              test_error = res.delete('test_error')     
+              res['errors'] = { "message" => test_error, "type" => "test_error" }
             end
           end
-          raise DTK::Client::DtkError, "Error while executing test script:\n" + error_msg + "Please fix test script with edit-component-module command and try again." unless error_msg.empty?
           end_loop = true
         else
           #last time in loop return whetever is there
@@ -907,6 +908,7 @@ module DTK::Client
       elsif (response.data(:results).empty? && !options['timeout'].nil?)
         raise DTK::Client::DtkValidationError, "Could not finish execution of tests in set timeframe (#{execute_test_tries} seconds). Try again with increasing --timeout TIMEOUT parameter"
       else
+        response.print_error_table = true
         response.set_data(*response.data(:results))
         response.render_table(:execute_tests_data_v2)
       end
