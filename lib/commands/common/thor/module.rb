@@ -129,6 +129,7 @@ module DTK::Client
       post_body = {
         :attribute_id => attribute_id,
         :attribute_value => value,
+        :attribute_type => module_type,
         "#{module_type}_id".to_sym => module_id
       }
 
