@@ -305,7 +305,7 @@ module DTK::Client
         response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, module_name, repo_url, branch, version)
       end
 
-      resolve_missing_components(service_module_id, module_name, namespace, options.force?) if module_type == :service_module
+      resolve_missing_components(module_id, module_name, namespace, options.force?) if module_type.to_s.eql?('service_module')
       response
     end
 
