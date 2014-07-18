@@ -296,16 +296,16 @@ module DTK::Client
       # module_name,repo_url,branch,version = response.data(:module_name, :repo_url, :workspace_branch, :version)
 
       if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.error_message(module_name, error)
+        dsl_parsed_message = ServiceImporter.error_message(local_module_name, error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red)
       end
 
-      module_id, module_name, namespace, repo_url, branch, version = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch, :version)
+      module_id, local_module_name, namespace, repo_url, branch, version = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch, :version)
       unless skip_cloning
-        response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, module_name, repo_url, branch, version)
+        response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, local_module_name, repo_url, branch, version)
       end
 
-      resolve_missing_components(service_module_id, module_name, namespace, options.force?) if module_type == :service_module
+      resolve_missing_components(service_module_id, local_module_name, namespace, options.force?) if module_type == :service_module
       response
     end
 
