@@ -1,0 +1,10 @@
+module: <%= module_name %>
+dsl_version: 0.9.1
+module_type: serverspec
+components:
+  temp_component:
+    external_ref:
+      serverspec_test: temp_component_spec.rb
+    attributes:
+      temp_attribute:
+        type: string

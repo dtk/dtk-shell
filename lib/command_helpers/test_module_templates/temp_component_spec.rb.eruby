@@ -1,0 +1,5 @@
+require File.expand_path('../spec_helper', File.dirname(__FILE__))
+
+# Gets attribute defined in dtk.model.yaml
+# This attribute value can be used further in spec examples
+attribute = DtkAttribute.get(:temp_attribute)

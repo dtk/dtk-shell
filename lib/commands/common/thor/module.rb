@@ -10,6 +10,7 @@ dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/common')
 dtk_require_from_base('configurator')
 dtk_require_from_base('command_helpers/service_importer')
+dtk_require_from_base('command_helpers/test_module_creator')
 
 require 'fileutils'
 
@@ -152,6 +153,25 @@ module DTK::Client
       reparse_aux(module_location)
       push_clone_changes_aux(module_type.to_sym, module_id, version, options["message"]||DEFAULT_COMMIT_MSG, internal_trigger)
      end
+
+    def create_test_module_aux(context_params)
+      test_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
+      module_type = get_module_type(context_params)
+
+      response = DTK::Client::TestModuleCreator.create_clone(module_type.to_sym, test_module_name)
+      return response unless response.ok?
+
+      create_response = import(context_params)
+      unless create_response.ok?
+        error_msg = create_response['errors'].select { |er| er['message'].include? "cannot be created since it exists already" }
+        if error_msg.empty?
+          # If server response is not ok and module does not exist on server, delete cloned module, invoke delete method
+          FileUtils.rm_rf("#{response['data']['module_directory']}")
+          delete(context_params,:force_delete => true, :no_error_msg => true)
+        end
+        return create_response
+      end
+    end
 
      def import_git_module_aux(context_params)
       git_repo_url, module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)

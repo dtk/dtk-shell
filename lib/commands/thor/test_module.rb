@@ -115,6 +115,11 @@ module DTK::Client
       import_git_module_aux(context_params)
     end
 
+    desc "create TEST-MODULE-NAME", "Create template test module and generate all needed test module helper files"
+    def create(context_params)
+      create_test_module_aux(context_params)
+    end
+
     desc "delete-from-catalog [NAMESPACE/]REMOTE-TEST-MODULE-NAME [-y]", "Delete the test module from the DTK Network catalog"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_from_catalog(context_params)

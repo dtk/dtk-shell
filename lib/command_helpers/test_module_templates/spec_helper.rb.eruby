@@ -1,0 +1,10 @@
+require 'serverspec'
+
+include SpecInfra::Helper::Exec
+include SpecInfra::Helper::DetectOS
+
+class DtkAttribute
+	def DtkAttribute.get(name)
+		Thread.current[name.to_sym]
+	end
+end
