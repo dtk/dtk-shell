@@ -1180,6 +1180,7 @@ module DTK::Client
 
       # we expect action result ID
       response = post rest_url("assembly/start"), post_body
+      return response unless response.ok?()
       raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
       
       task_id = response.data(:task_id)
@@ -1193,9 +1194,10 @@ module DTK::Client
       }
 
       response = post rest_url("assembly/stop"), post_body
+      return response unless response.ok?()
       raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
 
-      return response
+      response
     end
 
     def list_aux(context_params)
