@@ -148,7 +148,7 @@ TODO: overlaps with different meaning
             ['get-netstats',"get-netstats","# Get netstats."],
             ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
             ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."],
-            ['tail',"tail NODE-ID LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."]
+            ['tail',"tail NODE-NAME LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."]
           ]
         },
         :identifier_only => {
@@ -660,7 +660,7 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE tail NODES-IDENTIFIER LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
+    desc "HIDE_FROM_BASE tail NODE-NAME LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
     method_option :more, :type => :boolean, :default => false
     def tail(context_params)
       tail_aux(context_params)
