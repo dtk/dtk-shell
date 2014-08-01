@@ -9,12 +9,12 @@ module DTK::Client
       if opts[:delete_all_versions]
         dirs_to_delete += OsUtil.module_version_locations(module_type,module_name,version,opts)
       end
-      response = Response::Ok.new()  
+      response = Response::Ok.new()
       pwd = Dir.getwd()
       dirs_to_delete.each do |dir|
         if File.directory?(dir)
           if ((pwd == dir) || (pwd.include?("#{dir}/")))
-            OsUtil.print("Local directory '#{dir}' is not deleted because it is your current working directory.", :yellow) 
+            OsUtil.print("Local directory '#{dir}' is not deleted because it is your current working directory.", :yellow)
           else
             FileUtils.rm_rf(dir)
           end

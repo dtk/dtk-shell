@@ -49,13 +49,14 @@ module DTK::Client
     def resolve_module_type
       case self
         when DTK::Client::ComponentModule
-          return 'component_module'
+          return :component_module
+        when DTK::Client::service_module
+          return :service_module
         when DTK::Client::TestModule
-          return 'test_module'
+          return :test_module
         else
-          return 'service_module'
+          raise DtkError, "Module type cannot be resolved for this class (#{self})"
         end
-      # self.class == DTK::Client::ComponentModule ? 'component_module' : 'service_module'
     end
 
   end

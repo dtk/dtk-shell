@@ -15,6 +15,7 @@ dtk_require_from_base('util/ssh_util')
 dtk_require_from_base('util/common_util')
 dtk_require_from_base('util/permission_util')
 dtk_require_from_base('util/remote_dependency_util')
+dtk_require_from_base('util/module_util')
 
 dtk_require("config/configuration")
 
@@ -43,7 +44,7 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
 
     # if connection parameters are not set up properly then don't execute any command
     return if validate_connection(conn)
-    
+
     # call proper thor class and task
     entity_class = DTK::Client.const_get "#{cap_form(entity_name)}"
 
@@ -53,12 +54,12 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
     end
 
     response_ruby_obj = entity_class.execute_from_cli(conn,method_name,context_params,options_args,shell_execute)
-    
+
     # this will raise error if found
     DTK::Client::ResponseErrorHandler.check(response_ruby_obj)
 
     # this will find appropriate render adapter and give output, returns boolean
-    if print = response_ruby_obj.render_data() 
+    if print = response_ruby_obj.render_data()
       print = [print] unless print.kind_of?(Array)
       print.each do |el|
 
@@ -76,7 +77,7 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
     DTK::Client::OsUtil.print(e.message, :red)
   rescue DTK::Client::DtkValidationError => e
     validation_message = e.message
-    
+
     # if !e.skip_usage_info && entity_class && method_name
     #   usage_info = entity_class.get_usage_info(entity_name, method_name)
     #   validation_message += ", usage: #{usage_info}"
@@ -122,9 +123,9 @@ def resolve_direct_access(params, config_exists=nil)
   puts "Processing..." if config_exists
   # response = DTK::Client::Account.add_access(params[:ssh_key_path])
   response, matched_pub_key, matched_username = DTK::Client::Account.add_key(params[:ssh_key_path])
-  
+
   if !response.ok?
-    DTK::Client::OsUtil.print("We were not able to add access for current user. #{response.error_message}. In order to properly use dtk-shell you will have to add access manually ('dtk account add-ssh-key').\n", :yellow) 
+    DTK::Client::OsUtil.print("We were not able to add access for current user. #{response.error_message}. In order to properly use dtk-shell you will have to add access manually ('dtk account add-ssh-key').\n", :yellow)
   elsif matched_pub_key
     # message will be displayed by add key # TODO: Refactor this flow
     DTK::Client::OsUtil.print("Provided SSH PUB key has already been added.", :yellow)
@@ -136,7 +137,7 @@ def resolve_direct_access(params, config_exists=nil)
     # DTK::Client::OsUtil.print("Your SSH PUB key has been successfully added.", :yellow)
     DTK::Client::Configurator.add_current_user_to_direct_access()
   end
-  
+
 
   response
 end
@@ -159,7 +160,7 @@ module DTK
 
         def check(response_ruby_obj)
           # check for errors in response
-             
+
           unless response_ruby_obj["errors"].nil?
             error_msg       = ""
             error_internal  = nil
@@ -179,7 +180,7 @@ module DTK
 
             # normalize it for display
             error_msg = error_msg.empty? ? 'Internal DTK Client error, please try again' : "#{error_msg}"
-            
+
             # if error_internal.first == true
             if error_code == "unauthorized"
               raise DTK::Client::DtkError, "[UNAUTHORIZED] Your session has been suspended, please log in again."
@@ -190,7 +191,7 @@ module DTK
             elsif error_code == "forbidden"
               raise DTK::Client::DtkLoginRequiredError, "[FORBIDDEN] Access not granted, please log in again."
             elsif error_code == "timeout"
-              raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond." 
+              raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond."
             elsif error_code == "connection_refused"
               raise DTK::Client::DtkError, "[CONNECTION REFUSED] Connection refused by server."
             elsif error_code == "resource_not_found"
@@ -235,7 +236,7 @@ module DTK
 
       CONFIG_FILE = ::DTK::Client::Configurator::CONFIG_FILE
       CRED_FILE = ::DTK::Client::Configurator::CRED_FILE
-      
+
       REQUIRED_KEYS = [:server_host]
 
       def self.[](k)
@@ -255,9 +256,9 @@ module DTK
       end
 
       def load_config_file()
-        parse_key_value_file(CONFIG_FILE).each{|k,v|self[k]=v}           
+        parse_key_value_file(CONFIG_FILE).each{|k,v|self[k]=v}
       end
-      
+
       def validate
         #TODO: need to check for legal values
         missing_keys = REQUIRED_KEYS - keys
@@ -318,12 +319,12 @@ module DTK
       def self.set_timeout(timeout_sec)
         DefaultRestOpts[:timeout] = timeout_sec
       end
-               
+
 
       def rest_url(route=nil)
         protocol, port = "http", Config[:server_port].to_s
         protocol, port = "https", Config[:secure_connection_server_port].to_s if Config[:secure_connection] == "true"
-        
+
         "#{protocol}://#{Config[:server_host]}:#{port}/rest/#{route}"
       end
 
@@ -444,10 +445,10 @@ module DTK
       # enable SSL verification
       DefaultRestOpts.merge!(:verify_ssl => OpenSSL::SSL::VERIFY_PEER)
       # Net:HTTP from Ruby 1.8.7 doesn't verify SSL certs correctly
-      # this is a CA bundle downloaded from http://curl.haxx.se/docs/caextract.html, 
+      # this is a CA bundle downloaded from http://curl.haxx.se/docs/caextract.html,
       # and it will only be used for 1.8.7, otherwise the default (system) CA will be used
       DefaultRestOpts.merge!(:ssl_ca_file => File.expand_path('../lib/config/cacert.pem', File.dirname(__FILE__)))
-    
+
       def get_raw(url)
         RestClientWrapper.get_raw(url, {}, DefaultRestOpts.merge(:cookies => @cookies))
       end

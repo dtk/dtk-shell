@@ -6,13 +6,14 @@ module DTK::Client
     include CommonMixin
     ##
     #
-    # module_type: will be :component_module or :service_module 
+    # module_type: will be :component_module or :service_module
     def push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger=false,opts={})
-      module_name,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version,opts)
+      module_name,module_namespace,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version,opts)
       return not_ok_response if not_ok_response
 
-      module_location  = OsUtil.module_location(module_type,module_name,version,opts)
-      
+      full_module_name = ModuleUtil.resolve_name(module_name, module_namespace)
+      module_location  = OsUtil.module_location(module_type,full_module_name,version,opts)
+
       unless File.directory?(module_location)
         if Console.confirmation_prompt("Push not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
           clone_aux(module_type,module_id, version, true, true, opts)
@@ -22,7 +23,7 @@ module DTK::Client
       end
 
       push_opts = opts.merge(:commit_msg => commit_msg, :local_branch => branch)
-      response = Helper(:git_repo).push_changes(module_type,module_name,version,push_opts)
+      response = Helper(:git_repo).push_changes(module_type,full_module_name,version,push_opts)
       return response unless response.ok?
 
       json_diffs = (response.data(:diffs).empty? ? {} : JSON.generate(response.data(:diffs)))
@@ -35,13 +36,13 @@ module DTK::Client
 
       response = post(rest_url("#{module_type}/update_model_from_clone"),post_body)
       return response unless response.ok?
-      
+
       if (!response.data.empty? && response.data(:dsl_parsed_info))
         dsl_parsed_message = ServiceImporter.error_message(module_name, response.data(:dsl_parsed_info))
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red) 
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red)
         return Response::NoOp.new() #NoOp fine because error reported by section above
       end
-      
+
       if module_type == :component_module
         dsl_created_info = response.data(:dsl_created_info)
         if dsl_created_info and !dsl_created_info.empty?

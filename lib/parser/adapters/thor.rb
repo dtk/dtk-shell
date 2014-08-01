@@ -31,7 +31,7 @@ module DTK
 
       # thor command specific constants
       ALT_IDENTIFIER_SEPARATOR = ':::'
-      
+
       def initialize(args, opts, config)
         @conn = config[:conn]
         super
@@ -41,7 +41,7 @@ module DTK
         @@shell_execution = shell_execution
 
         if method_name == 'help'
-          ret = start([method_name] + context_params.method_arguments,:conn => conn)      
+          ret = start([method_name] + context_params.method_arguments,:conn => conn)
         else
           ret = start([method_name, context_params] + (thor_options||[]),:conn => conn)
         end
@@ -103,15 +103,15 @@ module DTK
         subtype ||= {}
         current_ts = Time.now.to_i
         cache_id = (subtype.empty? ? :response : generate_cached_id(subtype))
-      
+
         # if @@cache_response is empty return true if not than return time difference between
         # current_ts and ts stored in cache
-        time_difference = @@cached_response[entity_name].nil? ? true : ((current_ts - @@cached_response[entity_name][:ts]) > TIME_DIFF) 
+        time_difference = @@cached_response[entity_name].nil? ? true : ((current_ts - @@cached_response[entity_name][:ts]) > TIME_DIFF)
 
         if (@@cached_response[entity_name])
           time_difference = true if @@cached_response[entity_name][cache_id].nil?
         end
-        
+
         if (time_difference || @@invalidate_map.include?(entity_name))
           response = post rest_url(url), subtype
 
@@ -149,8 +149,8 @@ module DTK
         # symbols don't have a <=> comparison operator in ruby 1.8.7
         subtype.map do |key,value|
           values += value.to_s
-        end  
-        
+        end
+
         Digest::SHA1.hexdigest(values)
       end
 
@@ -232,7 +232,7 @@ module DTK
             alternate_identifiers.each do |a_provider|
               if matched_alt_identifiers_data = task[1].usage.match(/\[?#{a_provider}.?(NAME\/ID|ID\/NAME)\]?/)
                 command_alt_sym = "#{command}_#{a_provider}".downcase.to_sym
-                cached_tasks[command_alt_sym] = cached_tasks.fetch(command_alt_sym,[]) 
+                cached_tasks[command_alt_sym] = cached_tasks.fetch(command_alt_sym,[])
                 cached_tasks[command_alt_sym] << task_name
                 # when found break
                 break
@@ -254,7 +254,7 @@ module DTK
               # if there are '[' it means it is optinal identifiers so it is tier 1 and tier 2 task
               cached_tasks[command_sym] << task_name if matched_data[0].include?('[')
             end
-            
+
             # n-level matching
             all_children.each do |child|
               current_children = []
@@ -268,7 +268,7 @@ module DTK
                 # n-context matching
                 matched_data = task[1].usage.match(/^\[?#{c.to_s.upcase}.?(NAME\/ID|ID\/NAME|ID|NAME)(\-?PATTERN)?\]?/)
                 if matched_data
-                  cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << task_name 
+                  cached_tasks[child_id_sym] = cached_tasks.fetch(child_id_sym,[]) << task_name
                 end
 
                 # override method list, we add these methods only once
@@ -290,7 +290,7 @@ module DTK
             end
           end
         end
-        
+
         # there is always help, and in all cases this is exception to the rule
         cached_tasks[command_id_sym] << 'help'
 
@@ -303,18 +303,18 @@ module DTK
 
         context_list = self.get_identifiers(conn, context_params)
         results = context_list.select { |e| e[:name].eql?(value) || e[:identifier].eql?(value.to_i)}
-        
+
         return results.empty? ? nil : results.first
       end
 
       def self.get_identifiers(conn, context_params)
         @conn    = conn if @conn.nil?
-  
+
         # we force raw output
         # options = Thor::CoreExt::HashWithIndifferentAccess.new({'list' => true})
 
         3.downto(1) do
-          # get list data from one of the methods             
+          # get list data from one of the methods
           if respond_to?(:validation_list)
             response = validation_list(context_params)
           else
@@ -324,12 +324,12 @@ module DTK
 
           unless (response.nil? || response.empty?)
             unless response['data'].nil?
-              identifiers = []           
+              identifiers = []
               response['data'].each do |element|
                 identifiers << { :name => element['display_name'], :identifier => element['id'] }
               end
               return identifiers
-            end          
+            end
           end
           unless response.nil?
             break if response["status"].eql?('ok')
@@ -379,7 +379,7 @@ module DTK
           name, usage = current_method_info
           results = usage.split(name.gsub(/_/,'-')).last || ""
           return results.split(' ')
-        end 
+        end
 
         #TODO: can make more efficient by having rest call that returns name from id, rather than using 'list path'
         #entity_id can be a name as well as an id
@@ -397,12 +397,12 @@ module DTK
             match = response['data'].find{|entity|entity_id == entity['id']}
           end
           unless match
-            raise DTK::Client::DtkError, "Not able to resolve entity name, please provide #{entity_type} name." 
+            raise DTK::Client::DtkError, "Not able to resolve entity name, please provide #{entity_type} name."
           end
           match['display_name']
         end
 
-        def is_numeric_id?(possible_id)             
+        def is_numeric_id?(possible_id)
           !possible_id.to_s.match(/^[0-9]+$/).nil?
         end
 
@@ -414,9 +414,9 @@ module DTK
               trap("INT", false)
               return line
             end
-          end          
+          end
         end
-        
+
         def get_type_and_raise_error_if_invalid(about, default_about, type_options)
           about ||= default_about
           raise DTK::Client::DtkError, "Not supported type '#{about}' for list for current context level. Possible type options: #{type_options.join(', ')}" unless type_options.include?(about)
@@ -448,7 +448,7 @@ module DTK
       end
 
       #
-      # Returns list of invisible contexts with sufix provided (if any) 
+      # Returns list of invisible contexts with sufix provided (if any)
       #
 
       def self.invisible_context_list(sufix = 'identifier')
@@ -459,7 +459,7 @@ module DTK
       def help(*args)
         puts # pretty print
         not_dtk_clazz = true
-        
+
         if defined?(DTK::Client::Dtk)
           not_dtk_clazz = !self.class.eql?(DTK::Client::Dtk)
         end

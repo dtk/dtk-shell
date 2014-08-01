@@ -9,14 +9,17 @@ module DTK; module Client; class CommandHelper
       GitAdapter.new(repo_dir,branch,opts)
     end
 
-    def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil, opts={})
+    def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil, module_namespace=nil, opts={})
       Response.wrap_helper_actions do
-        modules_dir = modules_dir(type,module_name,version,opts)
+        full_name = module_namespace ? ModuleUtil.resolve_name(module_name, module_namespace) : module_name
+
+        modules_dir = modules_dir(type,full_name,version,opts)
         FileUtils.mkdir_p(modules_dir) unless File.directory?(modules_dir)
-        target_repo_dir = local_repo_dir(type,module_name,version,opts)
+        target_repo_dir = local_repo_dir(type,full_name,version,opts)
+
         opts = {}
         opts = { :branch => branch } if branch
-        begin 
+        begin
           GitAdapter.clone(repo_url, target_repo_dir, opts[:branch])
         rescue => e
           # Handling Git error messages with more user friendly messages
@@ -27,7 +30,7 @@ module DTK; module Client; class CommandHelper
           error_msg = "Clone to directory (#{target_repo_dir}) failed"
 
           DtkLogger.instance.error_pp(e.message, e.backtrace)
-          
+
           raise ErrorUsage.new(error_msg,:log_error=>false)
         end
         {"module_directory" => target_repo_dir}
@@ -44,11 +47,13 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    def local_clone_dir_exists?(type,module_name,version=nil)
-      ret = local_repo_dir(type,module_name,version)
+    def local_clone_dir_exists?(type,module_name,namespace=nil,version=nil)
+      full_name = ModuleUtil.resolve_name(module_name, namespace)
+      ret = local_repo_dir(type,full_name,version)
       File.directory?(ret) && ret
     end
-    def local_clone_exists?(type,module_name,version=nil)                  
+
+    def local_clone_exists?(type,module_name,version=nil)
       repo_dir = local_repo_dir(type,module_name,version)
       ret = "#{repo_dir}/.git"
       File.directory?(ret) && ret
@@ -62,9 +67,9 @@ module DTK; module Client; class CommandHelper
     #:local_branch
     #:no_fetch
     #
-    def push_changes(type,module_name,version,opts={})
+    def push_changes(type,full_module_name,version,opts={})
       Response.wrap_helper_actions() do
-        repo_dir = local_repo_dir(type,module_name,version,opts)
+        repo_dir = local_repo_dir(type,full_module_name,version,opts)
         repo = create(repo_dir,opts[:local_branch])
         push_repo_changes_aux(repo,opts)
       end
@@ -101,7 +106,7 @@ module DTK; module Client; class CommandHelper
       if local_clone_exists?(type,module_name)
         pull_changes(type,module_name,opts)
       else
-        Response.wrap_helper_actions() 
+        Response.wrap_helper_actions()
       end
     end
 
@@ -125,7 +130,7 @@ module DTK; module Client; class CommandHelper
       Response.wrap_helper_actions() do
         ret = Hash.new
         local_repo_dir = local_repo_dir(type,module_name,version)
-        
+
         unless File.directory?(local_repo_dir)
           raise ErrorUsage.new("The content for module (#{module_name}) should be put in directory (#{local_repo_dir})")
         end
@@ -161,7 +166,7 @@ module DTK; module Client; class CommandHelper
         end
         # we return to normal flow, since .git dir is removed
       end
-      
+
       Response.wrap_helper_actions() do
         ret = Hash.new
         repo_dir = local_repo_dir(type,module_name)
@@ -186,7 +191,7 @@ module DTK; module Client; class CommandHelper
       def self.new_version(repo)
         new(repo.new_version())
       end
-      
+
       def self.diff(repo,local_branch,remote_reference)
         new(repo.diff_summary(local_branch,remote_reference))
       end
@@ -206,7 +211,7 @@ module DTK; module Client; class CommandHelper
         changes
       end
     end
-    
+
     #returns hash with keys
     #: diffs - hash with diffs
     # commit_sha - sha of currenet_commit
@@ -215,7 +220,7 @@ module DTK; module Client; class CommandHelper
 
       # adding untracked files (newly added files)
       repo.stage_changes()
-      
+
       # commit if there has been changes
       if repo.changed?
         repo.commit(opts[:commit_msg]||"Pushing changes from client") #TODO: make more descriptive
@@ -224,12 +229,12 @@ module DTK; module Client; class CommandHelper
       if opts[:remote_repo] and opts[:remote_repo_url]
         repo.add_remote(opts[:remote_repo],opts[:remote_repo_url])
       end
-      
+
       unless opts[:no_fetch]
         repo.fetch(remote(opts[:remote_repo]))
       end
 
-      local_branch = repo.current_branch_name 
+      local_branch = repo.current_branch_name
 
       remote_branch_ref = remote_branch_ref(local_branch, opts)
 
@@ -251,7 +256,7 @@ module DTK; module Client; class CommandHelper
 
         diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
 
-    
+
         if diffs.any_diffs?()
           repo.push(remote_branch_ref)
         end
@@ -284,7 +289,7 @@ module DTK; module Client; class CommandHelper
       commit_shas = Hash.new
       merge_rel   = repo.merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
       commit_sha  = nil
-      
+
       if merge_rel == :equal
         commit_sha = commit_shas[:other_sha]
       elsif merge_rel == :no_remote_ref
@@ -295,7 +300,7 @@ module DTK; module Client; class CommandHelper
       # diffs = DiffSummary.diff_remote(repo,"remotes/#{remote_branch_ref}")
       diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
       commit_sha = repo.find_remote_sha(remote_branch_ref)
-      
+
       {"diffs" => diffs, "commit_sha" => commit_sha, "repo_obj" => repo, "status" => repo.local_summary() }
     end
 
@@ -313,7 +318,7 @@ module DTK; module Client; class CommandHelper
 
       repo.fetch(remote(opts[:remote_repo]))
 
-      local_branch = repo.current_branch_name 
+      local_branch = repo.current_branch_name
       remote_branch_ref = remote_branch_ref(local_branch,opts)
 
       if opts[:hard_reset]

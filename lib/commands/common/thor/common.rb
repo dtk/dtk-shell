@@ -11,7 +11,7 @@ module DTK::Client
         unless response.ok?
           [nil,nil,nil,response]
         else
-          response.data(:module_name,:repo_url,:workspace_branch)
+          response.data(:module_name,:module_namespace,:repo_url,:workspace_branch)
         end
       end
     end
@@ -23,7 +23,7 @@ module DTK::Client
       }
       assembly_module = opts[:assembly_module]
       if version = version_explicit||(assembly_module && assembly_module[:version])
-        post_body.merge!(:version => version) 
+        post_body.merge!(:version => version)
       end
       if assembly_module
         post_body.merge!(:assembly_module => true,:assembly_name => assembly_module[:assembly_name])

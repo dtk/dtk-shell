@@ -100,7 +100,12 @@ module DTK
 
         def module_location(module_type,module_name,version=nil,opts={})
           # compact used because module_name can be nil
-          module_location_parts(module_type,module_name,version,opts).compact.join('/')
+          location = module_location_parts(module_type,module_name,version,opts).compact.join('/')
+          # DEBUG SNIPPET >>> REMOVE <<<
+          require 'ap'
+          ap ">>>>>>>>>> #{location}"
+          ap caller unless location.include?('::')
+          location
         end
 
         # if module location is /a/b/d/mod it returns ['/a/b/d','mod']
@@ -127,7 +132,7 @@ module DTK
         end
 
         def module_clone_location(module_type)
-          case module_type
+          case module_type.to_s
             when "component_module"
               return component_clone_location
             when "service_module"
@@ -135,7 +140,7 @@ module DTK
             when "test_module"
               test_clone_location
             else
-              raise Client::DtkError, "Unexpected module_type (#{module_type})"
+              raise Client::DtkError, "Unexpected module_type (#{module_type}) when determining module location"
             end
         end
 
@@ -158,12 +163,12 @@ module DTK
         def clone_base_path(module_type)
 
           path =
-            case module_type
+            case module_type.to_sym
               when :service_module then Config[:service_location]
               when :component_module then Config[:module_location]
               when :test_module then Config[:test_module_location]
               when :assembly_module then Config[:assembly_module_base_location]
-              else raise Client::DtkError, "Unexpected module_type (#{module_type})"
+              else raise Client::DtkError, "Unexpected module_type (#{module_type}) when determining base path"
             end
 
 

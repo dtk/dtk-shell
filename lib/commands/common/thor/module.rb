@@ -33,7 +33,7 @@ module DTK::Client
     REQ_MODULE_ID = [:service_module_id!, :component_module_id!, :test_module_id!]
 
     def get_module_type(context_params)
-      forwarded_type = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:module_type] : ''
+      forwarded_type = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:module_type] : nil
       module_type = (context_params.root_command_name||forwarded_type).gsub(/\-/, "_")
     end
 
@@ -71,6 +71,7 @@ module DTK::Client
     def delete_module_aux(context_params,method_opts={})
       module_location, modules_path = nil, nil
       module_id = context_params.retrieve_arguments([:option_1!], method_argument_names)
+      ModuleUtil.check_format!(module_id)
       version = options.version
       module_name = get_name_from_id_helper(module_id)
       module_type = get_module_type(context_params)
@@ -142,13 +143,7 @@ module DTK::Client
       module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID, "#{module_type}_name".to_sym],method_argument_names)
       version = options["version"]
 
-      if module_name.to_s =~ /^[0-9]+$/
-        module_id   = module_name
-        module_name = get_name_from_id_helper(module_id)
-      end
-
-      modules_path    = OsUtil.module_clone_location(module_type)
-      module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
+      module_location = OsUtil.module_location(module_type, module_name, version)
 
       reparse_aux(module_location)
       push_clone_changes_aux(module_type.to_sym, module_id, version, options["message"]||DEFAULT_COMMIT_MSG, internal_trigger)
@@ -278,7 +273,8 @@ module DTK::Client
       additional_message     = context_params.get_forwarded_options()[:additional_message] if context_params.get_forwarded_options()
 
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
-      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, version)
+
+      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, remote_namespace, version)
         message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed"
         message += ". To ignore this conflict and use existing component module please use -i switch (install REMOTE-SERVICE-NAME -i)." if additional_message
 
@@ -315,14 +311,14 @@ module DTK::Client
       return response if(!response.ok? || response.data(:does_not_exist))
       # module_name,repo_url,branch,version = response.data(:module_name, :repo_url, :workspace_branch, :version)
       module_id, module_name, namespace, repo_url, branch, version = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch, :version)
-      
+
       if error = response.data(:dsl_parsed_info)
         dsl_parsed_message = ServiceImporter.error_message(module_name, error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red)
       end
 
       unless skip_cloning
-        response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, module_name, repo_url, branch, version)
+        response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, module_name, repo_url, branch, version, remote_namespace)
       end
 
       resolve_missing_components(module_id, module_name, namespace, options.force?) if module_type.to_s.eql?('service_module')
@@ -368,19 +364,14 @@ module DTK::Client
 
     def pull_dtkn_aux(context_params)
       module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID,:component_module_name,:option_1],method_argument_names)
+
       catalog      = 'dtkn'
       version      = options["version"]
       module_type  = get_module_type(context_params)
 
       raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PULL_CATALOGS}" unless catalog
 
-      if module_name.to_s =~ /^[0-9]+$/
-        module_id = module_name
-        module_name = get_name_from_id_helper(module_id)
-      end
-
-      modules_path    = OsUtil.module_clone_location(module_type)
-      module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
+      module_location = OsUtil.module_location(resolve_module_type(), module_name, version)
 
       if catalog.to_s.eql?("dtkn")
         clone_aux(module_type.to_sym, module_id, version, true, true) unless File.directory?(module_location)
@@ -438,14 +429,7 @@ module DTK::Client
       version          = thor_options["version"]
       internal_trigger = true if thor_options['skip_edit']
 
-      # if this is not name it will not work, we need module name
-      if module_name.to_s =~ /^[0-9]+$/
-        module_id   = module_name
-        module_name = get_name_from_id_helper(module_id)
-      end
-
-      modules_path    = OsUtil.module_clone_location(module_type)
-      module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
+      module_location = OsUtil.module_location(module_type, module_name, version)
 
       raise DTK::Client::DtkValidationError, "Trying to clone a #{module_type} '#{module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
       clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'])
@@ -457,12 +441,6 @@ module DTK::Client
       module_name = context_params.retrieve_arguments(["#{module_type}_name".to_sym], method_argument_names)
       version     = options.version||context_params.retrieve_arguments([:option_1], method_argument_names)
       edit_dsl    = context_params.get_forwarded_options()[:edit_dsl] if context_params.get_forwarded_options()
-
-      # if this is not name it will not work, we need module name
-      if module_name.to_s =~ /^[0-9]+$/
-        module_id   = module_name
-        module_name = get_name_from_id_helper(module_id)
-      end
 
       #TODO: cleanup so dont need :base_file_name and get edit_file from server
       opts = {}
@@ -480,13 +458,8 @@ module DTK::Client
 
       raise DtkValidationError, "You have to provide valid catalog to push changes to! Valid catalogs: #{PushCatalogs}" unless catalog
 
-      if module_name.to_s =~ /^[0-9]+$/
-        module_id   = module_name
-        module_name = get_name_from_id_helper(module_id)
-      end
+      module_location = OsUtil.module_location(resolve_module_type(), module_name, version)
 
-      modules_path    = OsUtil.module_clone_location(module_type)
-      module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
       reparse_aux(module_location) unless internal_trigger
 
 #      if catalog.to_s.eql?("origin")
@@ -520,14 +493,7 @@ module DTK::Client
       module_name = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
       version     = options["version"]
 
-      # if this is not name it will not work, we need module name
-      if module_name.to_s =~ /^[0-9]+$/
-        module_id   = module_name
-        module_name = get_name_from_id_helper(module_id)
-      end
-
-      modules_path    = OsUtil.module_clone_location(module_type)
-      module_location = "#{modules_path}/#{module_name}#{version && "-#{version}"}"
+      module_location = OsUtil.module_location(module_type, module_name, version)
 
       # check if there is repository cloned
       if File.directory?(module_location)
@@ -553,11 +519,6 @@ module DTK::Client
       assembly_template_name = (assembly_template_id.to_s =~ /^[0-9]+$/) ? DTK::Client::Assembly.get_assembly_template_name_for_service(assembly_template_id, module_name) : assembly_template_id
       assembly_template_id   = DTK::Client::Assembly.get_assembly_template_id_for_service(assembly_template_id, module_name) unless assembly_template_id.to_s =~ /^[0-9]+$/
 
-      if module_name.to_s =~ /^[0-9]+$/
-        module_id   = module_name
-        module_name = get_name_from_id_helper(module_id)
-      end
-
       return unless Console.confirmation_prompt("Are you sure you want to delete assembly '#{assembly_template_name||assembly_template_id}'"+'?') unless options.force?
 
       post_body = {
@@ -569,8 +530,7 @@ module DTK::Client
       response = post rest_url("module_type/delete_assembly_template"), post_body
       return response unless response.ok?
 
-      modules_path               = OsUtil.module_clone_location(module_type)
-      module_location            = "#{modules_path}/#{module_name}" if module_name
+      module_location = OsUtil.module_location(module_type, module_name)
       assembly_template_location = "#{module_location}/assemblies/#{assembly_template_name}" if (module_location && assembly_template_name)
 
       if File.directory?(assembly_template_location)
