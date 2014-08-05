@@ -1,9 +1,9 @@
 dtk_require_from_base('configurator')
 module DTK::Client
   #
-  # Main purpose of this module is to recognize which local modules are missing based on 
+  # Main purpose of this module is to recognize which local modules are missing based on
   # name, namespace, version and for those missing component module module will call
-  # module#clone and module#import_dtkn method to get missing component modules 
+  # module#clone and module#import_dtkn method to get missing component modules
   #
   module ServiceImporter
     def create_missing_clone_dirs()
@@ -18,7 +18,7 @@ module DTK::Client
     ##
     # Method will trigger import for each missing module component
     #
-    def trigger_module_component_import(missing_component_list,opts={})      
+    def trigger_module_component_import(missing_component_list,opts={})
       puts "Auto-importing missing component module(s)"
       does_not_exist, modules_to_import = validate_missing_components(missing_component_list)
 
@@ -27,7 +27,7 @@ module DTK::Client
         OsUtil.print("You do no have access to component modules '#{module_names}' required by service module, or they do not exist on repo manager and will not be imported!", :yellow)
         return false unless Console.confirmation_prompt("Do you want to continue with import of available component modules and service module"+'?')
       end
-      
+
       modules_to_import.each do |m_module|
         module_name = "#{m_module['namespace']}/#{m_module['name']}"
         module_name += "-#{m_module['version']}" if m_module['version']
@@ -38,9 +38,9 @@ module DTK::Client
 
         response = ContextRouter.routeTask("component_module", "install", new_context_params, @conn)
         puts(response.data(:does_not_exist) ? response.data(:does_not_exist) : "Done.")
-        raise DTK::Client::DtkError, response.error_message unless response.ok?        
+        raise DTK::Client::DtkError, response.error_message unless response.ok?
       end
-      
+
       Response::Ok.new()
     end
 
@@ -78,11 +78,13 @@ module DTK::Client
     def resolve_missing_components(service_module_id, service_module_name, namespace_to_use, force_clone=false)
       # Get dependency component modules and cross reference them with local component modules
       module_component_list = post rest_url("service_module/list_component_modules"), { :service_module_id => service_module_id }
+
+     auth_headers(session_uuid)
       local_modules, needed_modules = OsUtil.local_component_module_list(), Array.new
 
       if module_component_list
         module_component_list.data.each do |dependency_module|
-          unless local_modules.include?(formated_name = formulate_module_name(dependency_module['display_name'], dependency_module['version']))
+          unless local_modules.include?(formated_name = formulate_module_name(dependency_module['full_module_name'], dependency_module['version']))
             needed_modules << dependency_module.merge({'formated_name' => formated_name})
           end
         end
@@ -109,7 +111,7 @@ module DTK::Client
             thor_options.merge!(:module_type => 'component-module')
             new_context_params = ::DTK::Shell::ContextParams.new
             new_context_params.forward_options(thor_options)
-            new_context_params.add_context_to_params(formated_name, :"component-module", m['id'])             
+            new_context_params.add_context_to_params(formated_name, :"component-module", m['id'])
             response = ContextRouter.routeTask("component_module", "clone", new_context_params, @conn)
             puts "Done."
           end

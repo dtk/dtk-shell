@@ -15,8 +15,9 @@ module DTK::Client
 
       response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
       return response unless response.ok?
-      
-      module_name = response.data(:module_name)
+
+      module_name = response.data(:full_module_name)
+
       opts = {
         :remote_repo_url => response.data(:remote_repo_url),
         :remote_repo => response.data(:remote_repo),
@@ -31,7 +32,7 @@ module DTK::Client
       added, deleted, modified = print_diffs(response.data(remote ? :diffs : :status), remote)
 
       raise DTK::Client::DtkValidationError, "There is no changes in current workspace!" if(added.empty? && deleted.empty? && modified.empty?)
-      
+
       unless added.empty?
         puts "ADDED:"
         added.each do |a|

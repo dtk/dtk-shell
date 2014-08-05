@@ -17,7 +17,8 @@ module DTK::Client
       )
       response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
       return response unless response.ok?
-      module_name = response.data(:module_name)
+
+      full_module_name = response.data(:full_module_name)
       remote_params = response.data_hash_form(:remote_repo_url,:remote_repo,:remote_branch)
       remote_params.merge!(:version => version) if version
 
@@ -26,13 +27,13 @@ module DTK::Client
         import_module_component_dependencies(module_id,remote_namespace)
       end
       # check whether a local module exists to determine whether pull from local clone or try to pull from server
-      if Helper(:git_repo).local_clone_exists?(module_type,module_name,version)
+      if Helper(:git_repo).local_clone_exists?(module_type,full_module_name,version)
         unless rsa_pub_key
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
         end
-        PullFromRemote.perform_locally(self,module_type,module_id,module_name,remote_params)
+        PullFromRemote.perform_locally(self,module_type,module_id,full_module_name,remote_params)
       else
-        PullFromRemote.perform_on_server(self,module_type,module_id,module_name,remote_params)
+        PullFromRemote.perform_on_server(self,module_type,module_id,full_module_name,remote_params)
       end
     end
 

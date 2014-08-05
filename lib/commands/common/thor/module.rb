@@ -422,6 +422,7 @@ module DTK::Client
     end
 
     def clone_module_aux(context_params, internal_trigger=false)
+     auth_headers(session_uuid)
       module_type      = get_module_type(context_params)
       thor_options     = context_params.get_forwarded_options() || options
       module_id        = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
