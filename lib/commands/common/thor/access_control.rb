@@ -50,7 +50,7 @@ module DTK::Client
       case self
         when DTK::Client::ComponentModule
           return :component_module
-        when DTK::Client::service_module
+        when DTK::Client::ServiceModule
           return :service_module
         when DTK::Client::TestModule
           return :test_module

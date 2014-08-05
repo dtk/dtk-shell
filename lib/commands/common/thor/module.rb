@@ -30,11 +30,19 @@ module DTK::Client
     include ServiceImporter
     include AccessControlMixin
 
-    REQ_MODULE_ID = [:service_module_id!, :component_module_id!, :test_module_id!]
+    REQ_MODULE_ID   = [:service_module_id!, :component_module_id!, :test_module_id!]
+    REQ_MODULE_NAME = [:service_module_name!, :component_module_name!, :test_module_name!]
 
     def get_module_type(context_params)
       forwarded_type = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:module_type] : nil
-      module_type = (context_params.root_command_name||forwarded_type).gsub(/\-/, "_")
+
+      if context_params.root_command_name || forwarded_type
+        module_type = (context_params.root_command_name||forwarded_type).gsub(/\-/, "_")
+      else
+        module_type = resolve_module_type
+      end
+
+      module_type
     end
 
     def module_info_about(context_params, about, data_type)
@@ -363,7 +371,7 @@ module DTK::Client
     end
 
     def pull_dtkn_aux(context_params)
-      module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID,:component_module_name,:option_1],method_argument_names)
+      module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID,REQ_MODULE_NAME,:option_1],method_argument_names)
 
       catalog      = 'dtkn'
       version      = options["version"]
@@ -422,7 +430,6 @@ module DTK::Client
     end
 
     def clone_module_aux(context_params, internal_trigger=false)
-     auth_headers(session_uuid)
       module_type      = get_module_type(context_params)
       thor_options     = context_params.get_forwarded_options() || options
       module_id        = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
@@ -451,8 +458,7 @@ module DTK::Client
     end
 
     def push_dtkn_module_aux(context_params, internal_trigger=false)
-#      component_module_id, component_module_name, catalog = context_params.retrieve_arguments([:component_module_id!, :component_module_name, :option_1],method_argument_names)
-      module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID, :component_module_name],method_argument_names)
+      module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME],method_argument_names)
       catalog     = 'dtkn'
       version     = options["version"]
       module_type = get_module_type(context_params)

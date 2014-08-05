@@ -79,7 +79,6 @@ module DTK::Client
       # Get dependency component modules and cross reference them with local component modules
       module_component_list = post rest_url("service_module/list_component_modules"), { :service_module_id => service_module_id }
 
-     auth_headers(session_uuid)
       local_modules, needed_modules = OsUtil.local_component_module_list(), Array.new
 
       if module_component_list
