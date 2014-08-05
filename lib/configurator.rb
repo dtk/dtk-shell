@@ -17,7 +17,7 @@ module DTK
 			def self.check_config_exists
 				exists = true
 				if !File.exists?(CONFIG_FILE)
-					puts "", "Please enter the DTK server address (example: dtk.r8network.com)"
+					puts "", "Please enter the DTK server address (example: instance.dtk.io)"
 					header = File.read(File.expand_path('../lib/config/client.conf.header', File.dirname(__FILE__)))
 					generate_conf_file(CONFIG_FILE, [['server_host', 'Server address']], header)
 					exists = false
