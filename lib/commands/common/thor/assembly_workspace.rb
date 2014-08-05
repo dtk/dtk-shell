@@ -736,40 +736,10 @@ module DTK::Client
         end
       end
 
-      #Get list of components on particular node
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :node_id => node_id,
-        :subtype => "instance",
-        :about => "components"
-      }
-
-      response = post(rest_url("assembly/info_about"),post_body)
-
-      components = []
-      if !response['data'].nil?
-        response['data'].each do |c|
-          components << c['display_name']
-        end
-      end
-
-      #Filter out request per specific component
-      #Filter works for two types of component notation provided: node/component and component
-      if !options["component"].nil?
-          components.reject! do |c|
-            if options["component"].include? "/" 
-              c != options["component"] 
-            else
-              c.split("/").last != options["component"]
-            end
-          end
-      end
-      components = nil if components.empty?
-
-      post_body = {
-        :assembly_id => assembly_or_workspace_id,
-        :node_id => node_id,
-        :components => components
+        :components => options["component"]
       }  
 
       response = post(rest_url("assembly/initiate_execute_tests"),post_body)
