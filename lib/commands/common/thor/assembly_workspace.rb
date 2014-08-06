@@ -744,7 +744,7 @@ module DTK::Client
 
       response = post(rest_url("assembly/initiate_execute_tests"),post_body)
 
-      raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
+      raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
       return response unless response.ok?
 
       action_results_id = response.data(:action_results_id)
@@ -814,6 +814,7 @@ module DTK::Client
           :sort_key => "pid"
         }
         response = post(rest_url("assembly/get_action_results"),post_body)
+
         count += 1
         if count > get_ps_tries or response.data(:is_complete)
           end_loop = true
