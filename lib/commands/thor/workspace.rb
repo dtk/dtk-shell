@@ -48,7 +48,8 @@ module DTK::Client
         :context => {
           :add_component => "component_template",
           :create_node => "node_template",
-          :add_component_dependency => "component_template"  
+          :add_component_dependency => "component_template",
+          :set_target => 'target'
         },
         :command => {
           :edit_component_module => {
