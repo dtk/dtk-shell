@@ -36,7 +36,7 @@ module DTK::Client
     end
 
     desc "create-provider PROVIDER-TYPE:PROVIDER-NAME [--keypair KEYPAIR] [--security-group SECURITY-GROUP] [--bootstrap]", "Create provider"
-    method_option :keypair,    :type => :string
+    method_option :keypair, :type => :string
     method_option :security_group, :type => :string
     method_option :bootstrap, :type => :boolean, :default => false
     def create_provider(context_params)
@@ -44,10 +44,20 @@ module DTK::Client
 
       provider_type, provider_name = decompose_provider_type_and_name(composed_provider_name)
       iaas_properties = Hash.new
-      #TODO: daat-driven check if legal provider type and then what options needed depending on provider type
+      #TODO: data-driven check if legal provider type and then what options needed depending on provider type
       unless provider_type.eql?('physical')
+        security_groups = []
         keypair, security_group = context_params.retrieve_thor_options([:keypair!, :security_group!], options)
-        iaas_properties.merge!(:keypair_name => keypair,:security_group => security_group)
+
+        security_groups = security_group.split(',')
+        iaas_properties.merge!(:keypair_name => keypair)#,:security_group => security_group)
+
+        if (security_groups.empty? || security_groups.size==1)
+          iaas_properties.merge!(:security_group => security_group)#,:security_group => security_group)
+        else
+          iaas_properties.merge!(:security_group_set => security_groups)
+        end
+
         result = DTK::Shell::InteractiveWizard::interactive_user_input(
           {'IAAS Credentials' => { :type => :group, :options => [
                 {:key    => {}},
