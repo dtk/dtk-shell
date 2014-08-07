@@ -35,9 +35,9 @@ module DTK::Client
       return Provider.valid_children().include?(name_of_sub_context.to_sym)
     end
 
-    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME [--keypair KEYPAIR] [--security-group SECURITY-GROUP] [--bootstrap]", "Create provider"
+    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME [--keypair KEYPAIR] [--security-group(s) SECURITY-GROUP(S)] [--bootstrap]", "Create provider. Multiple security groups separated with ',' (gr1,gr2,gr3,...)"
     method_option :keypair, :type => :string
-    method_option :security_group, :type => :string
+    method_option :security_group, :type => :string, :aliases => '--security-groups'
     method_option :bootstrap, :type => :boolean, :default => false
     def create_provider(context_params)
       composed_provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
@@ -48,6 +48,8 @@ module DTK::Client
       unless provider_type.eql?('physical')
         security_groups = []
         keypair, security_group = context_params.retrieve_thor_options([:keypair!, :security_group!], options)
+
+        raise ::DTK::Client::DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ") if security_group.end_with?(',')
 
         security_groups = security_group.split(',')
         iaas_properties.merge!(:keypair_name => keypair)#,:security_group => security_group)
