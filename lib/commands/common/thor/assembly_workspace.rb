@@ -738,9 +738,9 @@ module DTK::Client
 
       post_body = {
         :assembly_id => assembly_or_workspace_id,
-        :node_id => node_id,
         :components => options["component"]
-      }  
+      } 
+      post_body[:node_id] = node_id unless node_id.nil?
 
       response = post(rest_url("assembly/initiate_execute_tests"),post_body)
 
