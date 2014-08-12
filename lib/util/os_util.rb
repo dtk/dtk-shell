@@ -101,10 +101,6 @@ module DTK
         def module_location(module_type,module_name,version=nil,opts={})
           # compact used because module_name can be nil
           location = module_location_parts(module_type,module_name,version,opts).compact.join('/')
-          # DEBUG SNIPPET >>> REMOVE <<<
-          require 'ap'
-          ap ">>>>>>>>>> #{location}"
-          ap caller unless location.include?('::')
           location
         end
 
