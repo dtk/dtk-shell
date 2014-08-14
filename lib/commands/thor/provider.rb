@@ -35,7 +35,7 @@ module DTK::Client
       return Provider.valid_children().include?(name_of_sub_context.to_sym)
     end
 
-    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME [--keypair KEYPAIR] [--security-group(s) SECURITY-GROUP(S)] [--bootstrap]", "Create provider. Multiple security groups separated with ',' (gr1,gr2,gr3,...)"
+    desc "create-provider PROVIDER-TYPE:PROVIDER-NAME [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)] [--bootstrap]", "Create provider. Multiple security groups separated with ',' (gr1,gr2,gr3,...)"
     method_option :keypair, :type => :string
     method_option :security_group, :type => :string, :aliases => '--security-groups'
     method_option :bootstrap, :type => :boolean, :default => false
