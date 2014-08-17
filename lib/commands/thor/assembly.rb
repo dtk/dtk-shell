@@ -206,7 +206,7 @@ module DTK::Client
       end
     end
 
-    desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] [-t TARGET-NAME/ID]", "Stage assembly in target."
+    desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] [-t TARGET-NAME/ID] [--settings SETTINGS-NAME1[,..]]", "Stage assembly in target."
     method_option "in-target",:aliases => "-t" ,
       :type => :string, 
       :banner => "TARGET-NAME/ID",
@@ -214,7 +214,7 @@ module DTK::Client
     #hidden option
     method_option "instance-bindings",
       :type => :string 
-
+    method_option :settings, :type => :string, :aliases => '-s'
     def stage(context_params)
       assembly_template_id, name = context_params.retrieve_arguments([:assembly_id!, :option_1],method_argument_names)
       post_body = {
