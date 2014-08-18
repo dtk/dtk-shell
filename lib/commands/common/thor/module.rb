@@ -165,6 +165,7 @@ module DTK::Client
       return response unless response.ok?
 
       create_response = import(context_params)
+
       unless create_response.ok?
         error_msg = create_response['errors'].select { |er| er['message'].include? "cannot be created since it exists already" }
         if error_msg.empty?
@@ -229,8 +230,8 @@ module DTK::Client
       response = post rest_url("#{module_type}/create"), { :module_name => module_name }
       return response unless response.ok?
 
-      repo_url,repo_id,module_id,branch = response.data(:repo_url,:repo_id,:module_id,:workspace_branch)
-      response = Helper(:git_repo).initialize_client_clone_and_push(module_type.to_sym, module_name, branch, repo_url, module_directory)
+      repo_url,repo_id,module_id,branch,new_module_name = response.data(:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name)
+      response = Helper(:git_repo).rename_and_initialize_clone_and_push(module_type.to_sym, module_name, new_module_name, branch, repo_url, module_directory)
 
       return response unless response.ok?
       repo_obj,commit_sha =  response.data(:repo_obj, :commit_sha)

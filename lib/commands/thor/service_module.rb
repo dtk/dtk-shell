@@ -412,10 +412,12 @@ module DTK::Client
       end
 
       # initial commit for given service module
-      service_module_id, repo_info, module_id = response.data(:service_module_id, :repo_info)
-      repo_url,repo_id,module_id,branch = [:repo_url,:repo_id,:module_id,:workspace_branch].map { |k| repo_info[k.to_s] }
-      response = Helper(:git_repo).initialize_client_clone_and_push(:service_module, module_name,branch,repo_url,service_directory)
+      service_module_id, repo_info = response.data(:service_module_id, :repo_info)
+      repo_url,repo_id,module_id,branch,new_module_name = [:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name].map { |k| repo_info[k.to_s] }
+
+      response = Helper(:git_repo).rename_and_initialize_clone_and_push(:service_module, module_name, new_module_name,branch,repo_url,service_directory)
       return response unless response.ok?
+
       repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
 
       context_params.add_context_to_params(module_name, :"service-module", module_id)

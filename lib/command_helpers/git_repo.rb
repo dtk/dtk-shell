@@ -154,8 +154,19 @@ module DTK; module Client; class CommandHelper
       end
     end
 
+    def rename_and_initialize_clone_and_push(type, module_name, new_module_name, branch, repo_url, local_repo_dir, version = nil)
+      old_dir = local_repo_dir
+      new_dir = local_repo_dir.gsub(/#{module_name}$/, new_module_name)
+
+      # Moving directory
+      FileUtils.mv(old_dir, new_dir)
+
+      # Continue push
+      initialize_client_clone_and_push(type, new_module_name, branch, repo_url, new_dir, version)
+    end
+
     # makes repo_dir (determined from type and module_name) into a git dir, pulls, adds, content and then pushes
-    def initialize_client_clone_and_push(type,module_name,branch,repo_url,local_repo_dir,version=nil)
+    def initialize_client_clone_and_push(type, module_name, branch, repo_url, local_repo_dir, version=nil)
       # moved this part from 'check_local_dir_exists_with_content' to this method since this only deletes .git folder
       # which can cause us problems if import fails
       if File.directory?("#{local_repo_dir}/.git")
