@@ -231,6 +231,7 @@ module DTK::Client
       # we check current options and forwarded options (from deploy method)
       in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
       instance_bindings = options["instance-bindings"]
+      settings = options["settings"]
       assembly_list = Assembly.assembly_list()
 
       if name
@@ -242,6 +243,7 @@ module DTK::Client
       post_body.merge!(:target_id => in_target) if in_target
       post_body.merge!(:name => name) if name
       post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
+      post_body.merge!(:settings => settings) if settings
 
       response = post rest_url("assembly/stage"), post_body
       return response unless response.ok?
