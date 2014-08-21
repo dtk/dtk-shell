@@ -64,7 +64,8 @@ module DTK::Client
             # ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
             # ["deploy","deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
             ["list-nodes","list-nodes", "# List all nodes for given assembly."],
-            ["list-components","list-components", "# List all components for given assembly."]
+            ["list-components","list-components", "# List all components for given assembly."],
+            ["list-settings","list-settings", "# List all settings for given assembly."]
           ]
         }
 

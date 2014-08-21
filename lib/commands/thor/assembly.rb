@@ -206,6 +206,20 @@ module DTK::Client
       end
     end
 
+    desc "ASSEMBLY-NAME/ID list-settings", "List all settings for given assembly."
+    def list_settings(context_params)
+      assembly_template_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_template_id
+      }
+
+      response = post rest_url("assembly/list_settings"), post_body
+      response.render_table(:service_setting) unless options.list?
+
+      response
+    end
+
     desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] [-t TARGET-NAME/ID] [--settings SETTINGS-NAME1[,..]]", "Stage assembly in target."
     method_option "in-target",:aliases => "-t" ,
       :type => :string, 
