@@ -968,7 +968,7 @@ module DTK
       private
 
       # list of commands that should be excluded from history
-      EXCLUDE_COMMAND_LIST = ['create-provider']
+      EXCLUDE_COMMAND_LIST = ['create-provider','create-ec2-provider','create-physical-provider']
 
       def self.is_allowed_command?(full_command_entry)
         found = EXCLUDE_COMMAND_LIST.find { |cmd| full_command_entry.include?(cmd) }
