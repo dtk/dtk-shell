@@ -526,7 +526,7 @@ module DTK::Client
       delete_from_catalog_aux(context_params)
     end
 
-    desc "SERVICE-MODULE-NAME/ID delete-assembly ASSEMBLY-ID [-y]", "Delete assembly from service module."
+    desc "SERVICE-MODULE-NAME/ID delete-assembly ASSEMBLY-NAME [-y]", "Delete assembly from service module."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_assembly(context_params)
       response = delete_assembly_aux(context_params)

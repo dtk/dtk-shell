@@ -524,6 +524,7 @@ module DTK::Client
       module_type = get_module_type(context_params)
       module_id, assembly_template_id = context_params.retrieve_arguments([REQ_MODULE_ID,:option_1!], method_argument_names)
       module_name = context_params.retrieve_arguments([:service_module_name],method_argument_names)
+
       assembly_template_name = (assembly_template_id.to_s =~ /^[0-9]+$/) ? DTK::Client::Assembly.get_assembly_template_name_for_service(assembly_template_id, module_name) : assembly_template_id
       assembly_template_id   = DTK::Client::Assembly.get_assembly_template_id_for_service(assembly_template_id, module_name) unless assembly_template_id.to_s =~ /^[0-9]+$/
 
@@ -535,7 +536,7 @@ module DTK::Client
         :subtype => :template
       }
 
-      response = post rest_url("module_type/delete_assembly_template"), post_body
+      response = post rest_url("#{module_type}/delete_assembly_template"), post_body
       return response unless response.ok?
 
       module_location = OsUtil.module_location(module_type, module_name)

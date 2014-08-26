@@ -55,10 +55,13 @@ module DTK::Client
       response = DTK::Client::CommandBaseThor.get_cached_response(:assembly, "assembly/list", {:subtype => 'template' })
       # response = DTK::Client::CommandBaseThor.get_cached_response(:module, "service_module/list")
 
+      service_namespace = service.split("::").first
+      service_name = service.split("::").last
+
       if response.ok?
         unless response['data'].nil?
           response['data'].each do |module_item|
-            if ("#{service.to_s}::#{assembly_template_name.to_s}" == (module_item['display_name']))
+            if ("#{service_name.to_s}::#{assembly_template_name.to_s}" == (module_item['display_name']) && service_namespace == module_item['namespace'])
               assembly_template_id = module_item['id']
               break
             end
