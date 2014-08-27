@@ -7,13 +7,11 @@ module DTK::Client
       if info = opts[:workspace_branch_info]
         name_or_full_module_name = info[:module_name]
         module_namespace,module_name = ModuleUtil.full_module_name_parts?(name_or_full_module_name)
-         module_namespace ||= info[:module_namespace]
-         ret = [module_name,module_namespace,info[:repo_url],info[:branch]]
-         unless  ret.find{|r|r.nil?}
-           pp ret
-           return ret
-
-         end
+        module_namespace ||= info[:module_namespace]
+        ret = [module_name,module_namespace,info[:repo_url],info[:branch]]
+        unless  ret.find{|r|r.nil?}
+          return ret
+        end
       end
 
       post_body = get_workspace_branch_info_post_body(module_type,module_id,version,opts)
