@@ -405,11 +405,15 @@ module DTK::Client
       end
 
       assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
+      namespace, component_template_id = get_namespace_and_name(component_template_id)
+
+      raise DTK::Client::DtkValidationError, "You have to provide valid component name (namespace/component)!" if(namespace.nil? || component_template_id.nil?)
 
       post_body = {
         :assembly_id => assembly_id,
         :node_id => node_id,
-        :component_template_id => component_template_id
+        :component_template_id => component_template_id,
+        :namespace => namespace
       }
 
       post rest_url("assembly/add_component"), post_body
