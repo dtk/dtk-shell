@@ -673,10 +673,15 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete #{what} '#{component_id}'"+'?')
       end
 
+      namespace, component_id = get_namespace_and_name(component_id)
+      raise DTK::Client::DtkValidationError, "You have to provide valid component name (namespace/component)!" if(namespace.nil? || component_id.nil?)
+
+
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :node_id => node_id,
-        :component_id => component_id
+        :component_id => component_id,
+        :namespace => namespace
       }
 
       # delete component by name (e.g. delete-component dtk_java)
