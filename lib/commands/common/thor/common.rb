@@ -1,18 +1,25 @@
 module DTK::Client
   module CommonMixin
    private
-    #returns module_name,repo_url,branch,not_ok_response( only if error)
+    # returns module_name,module_namespace,repo_url,branch,not_ok_response( only if error)
     def workspace_branch_info(module_type, module_id, version, opts={})
+      # shortcut if have info about workspace branch already
       if info = opts[:workspace_branch_info]
-        [info[:module_name],info[:repo_url],info[:branch]]
-      else
-        post_body = get_workspace_branch_info_post_body(module_type,module_id,version,opts)
-        response = post(rest_url("#{module_type}/get_workspace_branch_info"),post_body)
-        unless response.ok?
-          [nil,nil,nil,response]
-        else
-          response.data(:module_name,:module_namespace,:repo_url,:workspace_branch)
+        name_or_full_module_name = info[:module_name]
+        module_namespace,module_name = ModuleUtil.full_module_name_parts?(name_or_full_module_name)
+        module_namespace ||= info[:module_namespace]
+        ret = [module_name,module_namespace,info[:repo_url],info[:branch]]
+        unless  ret.find{|r|r.nil?}
+          return ret
         end
+      end
+
+      post_body = get_workspace_branch_info_post_body(module_type,module_id,version,opts)
+      response = post(rest_url("#{module_type}/get_workspace_branch_info"),post_body)
+      unless response.ok?
+        [nil,nil,nil,nil,response]
+      else
+        response.data(:module_name,:module_namespace,:repo_url,:workspace_branch)
       end
     end
 
