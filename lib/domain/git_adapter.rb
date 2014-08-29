@@ -7,7 +7,9 @@ module DTK
 
       def initialize(repo_dir, branch = nil, opts = {})
         @git_repo = Git.init(repo_dir)
-        @git_repo.branch(branch) if branch
+        if @local_branch_name = branch
+          @git_repo.branch(branch)
+        end
       end
 
       def changed?
@@ -103,7 +105,7 @@ module DTK
       end
 
       def head_commit_sha()
-        current_branch.gcommit.sha
+        ret_local_branch.gcommit.sha
       end
 
       def find_remote_sha(ref)
@@ -129,7 +131,7 @@ module DTK
             raise Error.new("Illegal type parameter (#{type}) passed to merge_relationship") 
         end
 
-        local_sha = current_branch.gcommit.sha
+        local_sha = ret_local_branch.gcommit.sha
 
         opts[:ret_commit_shas][:local_sha] = local_sha if opts[:ret_commit_shas]
       
@@ -162,7 +164,7 @@ module DTK
       end
       
       def push_with_remote(remote, remote_branch)
-        branch_for_push = "#{current_branch_name}:refs/heads/#{remote_branch||current_branch_name}"
+        branch_for_push = "#{local_branch_name}:refs/heads/#{remote_branch||local_branch_name}"
         @git_repo.push(remote, branch_for_push)
       end
 
@@ -195,18 +197,19 @@ module DTK
         File.exists?(repo_dir)
       end
 
-      def current_branch_name
-        current_branch.name
+      def local_branch_name
+        ret_local_branch.name
       end
 
-      def current_branch
-        @git_repo.branches.local.find { |b| b.current }
+      def ret_local_branch
+        # if no local branch specified used current branch
+        @local_branch||@git_repo.branches.local.find { |b| b.current }
       end
 
       TEMP_BRANCH = "temp_branch"
 
       def merge_theirs(remote_branch_ref)
-        branch = current_branch_name
+        branch = local_branch_name
 
         # Git is not agile enoguh to work with following commands so we are using native commands to achive this
         Dir.chdir(repo_dir) do
