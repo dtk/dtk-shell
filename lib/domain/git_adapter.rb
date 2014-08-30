@@ -7,7 +7,7 @@ module DTK
 
       def initialize(repo_dir, local_branch_name = nil)
         @git_repo = Git.init(repo_dir)
-        @local_branch = local_branch_name && @git_repo.branch(local_branch_name)
+        @local_branch_name = local_branch_name 
       end
 
       def changed?
@@ -208,8 +208,16 @@ module DTK
       end
 
       def ret_local_branch
-        # if no local branch specified used current branch
-        @local_branch || current_branch()
+        # This build in assumption that just one local branch
+        unless ret = current_branch()
+          raise Error.new("Unexpected that current_branch() is nil")
+        end
+        if @local_branch_name
+          unless ret.name == @local_branch_name
+            raise Error.new("Unexpected that @local_branch_name (#{@local_branch_name}) does not equal current branch (#{current_branch()})")
+          end
+        end
+        ret
       end
 
       def current_branch()

@@ -1,3 +1,5 @@
+# This code is predciated on assumption that they is only one local branch (with with documented exceptions)
+# so checkout branch is not done in most cases
 #TODO : make sure all functions that use local_repo_dir( inside pass in full_moudle_name, not just module_name
 require 'fileutils'
 dtk_require("../domain/git_adapter")

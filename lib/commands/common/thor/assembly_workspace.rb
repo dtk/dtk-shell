@@ -63,9 +63,10 @@ module DTK::Client
 
       return response unless response.ok?()
       #synchronize_clone will load new assembly template into service clone on workspace (if it exists)
-      commit_sha,workspace_branch = response.data(:commit_sha,:workspace_branch)
+      commit_sha,workspace_branch,namespace = response.data(:commit_sha,:workspace_branch,:module_namespace)
       service_module_name ||= response.data(:module_name)
-      Helper(:git_repo).synchronize_clone(:service_module,service_module_name,commit_sha,:local_branch=>workspace_branch)
+      opts = {:local_branch=>workspace_branch, :namespace => namespace}
+      Helper(:git_repo).synchronize_clone(:service_module,service_module_name,commit_sha,opts)
     end
 
     def list_violations_aux(context_params)
