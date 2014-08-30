@@ -27,7 +27,7 @@ module DTK::Client
         import_module_component_dependencies(module_id,remote_namespace)
       end
       # check whether a local module exists to determine whether pull from local clone or try to pull from server
-      if Helper(:git_repo).local_clone_exists?(module_type,full_module_name,version)
+      if Helper(:git_repo).local_clone_dir_exists?(module_type,:full_module_name=>full_module_name,:version=>version)
         unless rsa_pub_key
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
         end

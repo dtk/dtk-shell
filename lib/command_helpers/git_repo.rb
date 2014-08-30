@@ -1,3 +1,4 @@
+#TODO : make sure all functions that use local_repo_dir( inside pass in full_moudle_name, not just module_name
 require 'fileutils'
 dtk_require("../domain/git_adapter")
 dtk_require("../domain/git_error_handler")
@@ -47,18 +48,6 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    def local_clone_dir_exists?(type,module_name,namespace=nil,version=nil)
-      full_name = ModuleUtil.resolve_name(module_name, namespace)
-      ret = local_repo_dir(type,full_name,version)
-      File.directory?(ret) && ret
-    end
-
-    def local_clone_exists?(type,module_name,version=nil)
-      repo_dir = local_repo_dir(type,module_name,version)
-      ret = "#{repo_dir}/.git"
-      File.directory?(ret) && ret
-    end
-
     #opts can have the following keys
     #
     #:remote_repo
@@ -83,32 +72,50 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    #opts can have the following keys
+    # opts can have the following keys
     #
-    #:remote_repo
-    #:remote_branch
-    #:remote_repo_url
-    #:local_branch
-    #:version
-    #:commit_sha
-    #
+    # :remote_repo
+    # :remote_branch
+    # :remote_repo_url
+    # :local_branch
+    # :version
+    # :commit_sha
+    # :full_module_name
+    # :namespace
     # returns:
     # { :diffs => , :commit_sha => }
     def pull_changes(type,module_name,opts={})
       Response.wrap_helper_actions() do
-        repo_dir = local_repo_dir(type,module_name,opts[:version],opts)
+        full_module_name = full_module_name(module_name,opts)
+        repo_dir = local_repo_dir(type,full_module_name,opts[:version],opts)
         repo = create(repo_dir,opts[:local_branch])
         response = pull_repo_changes_aux(repo,opts)
         response
       end
     end
     def pull_changes?(type,module_name,opts={})
-      if local_clone_exists?(type,module_name)
+      if local_clone_dir_exists?(type,module_name,opts)
         pull_changes(type,module_name,opts)
       else
         Response.wrap_helper_actions()
       end
     end
+
+    # opts can have the following keys
+    #
+    # :version
+    # :full_module_name
+    # :namespace    
+    def local_clone_dir_exists?(type,module_name,opts={})
+      full_module_name = full_module_name(module_name,opts)
+      ret = local_repo_dir(type,full_module_name,opts[:version])
+      File.directory?(ret) && ret
+    end
+
+    def full_module_name(module_name,opts)
+      opts[:full_module_name] || ModuleUtil.resolve_name(module_name, opts[:namespace])
+    end
+    private :full_module_name
 
     def synchronize_clone(type,module_name,commit_sha,opts={})
       pull_changes?(type,module_name,{:commit_sha => commit_sha}.merge(opts))
@@ -393,8 +400,8 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    def local_repo_dir(type,module_name,version=nil,opts={})
-      OsUtil.module_location(type,module_name,version,opts)
+    def local_repo_dir(type,full_module_name,version=nil,opts={})
+      OsUtil.module_location(type,full_module_name,version,opts)
     end
 
     def adapter_class()

@@ -209,9 +209,9 @@ module DTK::Client
         OsUtil.print(dsl_parsed_message, :red) 
         return Response::Error.new()
       end
-      module_name,branch,ff_change = response.data(:module_name,:workspace_branch,:fast_forward_change)
+      module_name,namespace,branch,ff_change = response.data(:module_name,:module_namespace,:workspace_branch,:fast_forward_change)
       ff_change ||= true
-      opts = {:local_branch => branch}
+      opts = {:local_branch => branch,:namespace => namespace}
       opts.merge!(:hard_reset => true) if !ff_change
       response = Helper(:git_repo).pull_changes?(:component_module,module_name,opts)
       return response unless response.ok?()
