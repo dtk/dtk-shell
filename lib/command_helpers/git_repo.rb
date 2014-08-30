@@ -6,7 +6,7 @@ module DTK; module Client; class CommandHelper
   class GitRepo < self; class << self
 
     def create(repo_dir,branch=nil,opts={})
-      GitAdapter.new(repo_dir,branch,opts)
+      GitAdapter.new(repo_dir,branch)
     end
 
     def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil, module_namespace=nil, opts={})

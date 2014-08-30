@@ -5,11 +5,9 @@ module DTK
     class GitAdapter
       attr_accessor :git_repo
 
-      def initialize(repo_dir, branch = nil, opts = {})
+      def initialize(repo_dir, local_branch_name = nil)
         @git_repo = Git.init(repo_dir)
-        if @local_branch_name = branch
-          @git_repo.branch(branch)
-        end
+        @local_branch = local_branch_name && @git_repo.branch(local_branch_name)
       end
 
       def changed?
@@ -176,7 +174,15 @@ module DTK
       end
 
       def pull_remote_to_local(remote_branch, local_branch, remote='origin')
+        # special case; if no branches and local_branch differs from master
+        # creates master plus local_branch
+        # special_case must be calculated before pull
+        special_case = current_branch().nil? and local_branch != 'master'
         @git_repo.pull(remote,"#{remote_branch}:#{local_branch}")
+        if special_case
+          @git_repo.branch(local_branch).checkout
+          @git_repo.branch('master').delete
+        end
       end
 
       def merge(remote_branch_ref)
@@ -203,7 +209,11 @@ module DTK
 
       def ret_local_branch
         # if no local branch specified used current branch
-        @local_branch||@git_repo.branches.local.find { |b| b.current }
+        @local_branch || current_branch()
+      end
+
+      def current_branch()
+        @git_repo.branches.local.find { |b| b.current }
       end
 
       TEMP_BRANCH = "temp_branch"
