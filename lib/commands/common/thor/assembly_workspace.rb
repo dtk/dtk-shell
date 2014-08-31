@@ -205,9 +205,8 @@ module DTK::Client
       return response unless response.ok?
       return Response::Ok.new() unless response.data(:any_updates)
       if dsl_parsing_errors = response.data(:dsl_parsing_errors)
-        #TODO: not sure if this should be reached
         error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors using 'edit' command from module context and invoke promote-module-updates again.\n"
-        OsUtil.print(dsl_parsed_message, :red) 
+        OsUtil.print(error_message, :red) 
         return Response::Error.new()
       end
       module_name,namespace,branch,ff_change = response.data(:module_name,:module_namespace,:workspace_branch,:fast_forward_change)
