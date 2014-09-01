@@ -428,6 +428,20 @@ module DTK
         def get_namespace_and_name(input_remote_name)
           (input_remote_name||'').include?('/') ? input_remote_name.split('/') : [nil, input_remote_name]
         end
+
+        def get_namespace_and_name_for_component(component_full_name)
+          namespace, name = nil, ''
+
+          if (component_full_name||'').include?(':')
+            match = component_full_name.match(/(\w*):{1}(.*)/)
+            namespace, name = [$1,$2]
+
+            return [nil, component_full_name] if (name.include?(':') && !name.include?('::'))
+            component_full_name = name
+          end
+
+          [namespace, component_full_name]
+        end
       end
 
 
