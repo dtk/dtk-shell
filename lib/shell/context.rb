@@ -748,13 +748,21 @@ module DTK
       def load_extended_context_commands(extended_context_commands, active_context_copy)
         candidates = []
         entity_name = active_context_copy.last_context
+        parent_entity = active_context_copy.context_list[1]
 
         if entity_name.is_identifier?
           endpoint = extended_context_commands[:endpoint]
           url = extended_context_commands[:url]
           opts = extended_context_commands[:opts]||{}
 
-          id_label = "#{endpoint}_id".to_sym
+          if (parent_entity && parent_entity.is_identifier? && (parent_entity != entity_name))
+            parent_id_label = "#{endpoint}_id".to_sym
+            parent_id = parent_entity.identifier
+            opts[parent_id_label] = parent_id
+            id_label = "#{entity_name.entity}_id".to_sym
+          end
+
+          id_label ||= "#{endpoint}_id".to_sym
           id = entity_name.identifier
           opts[id_label] = id
 

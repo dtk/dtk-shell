@@ -35,6 +35,13 @@ module DTK::Client
       {
         :context => {
           :add_component => "component_template"
+        },
+        :command => {
+          :delete_component => {
+            :endpoint => "assembly",
+            :url => "assembly/info_about",
+            :opts => {:subtype=>"instance", :about=>"components"}
+          }
         }
       }
     end

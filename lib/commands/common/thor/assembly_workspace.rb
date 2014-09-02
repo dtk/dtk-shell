@@ -123,7 +123,9 @@ module DTK::Client
       return response unless response.ok?
 
 
-      assembly_name,component_module_id,version,repo_url,branch,commit_sha = response.data(:assembly_name,:module_id,:version,:repo_url,:workspace_branch,:branch_head_sha)
+      assembly_name,component_module_id,version,repo_url,branch,commit_sha,full_module_name = response.data(:assembly_name,:module_id,:version,:repo_url,:workspace_branch,:branch_head_sha,:full_module_name)
+      component_module_name = full_module_name if full_module_name
+
       edit_opts = {
         :automatically_clone => true,
         :pull_if_needed => true,
@@ -138,6 +140,7 @@ module DTK::Client
           :commit_sha => commit_sha
         }
       }
+
       version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
       edit_aux(:component_module,component_module_id,component_module_name,version,edit_opts)
     end
@@ -209,7 +212,8 @@ module DTK::Client
         OsUtil.print(error_message, :red)
         return Response::Error.new()
       end
-      module_name,namespace,branch,ff_change = response.data(:module_name,:module_namespace,:workspace_branch,:fast_forward_change)
+      module_name,namespace,branch,ff_change,full_module_name = response.data(:module_name,:module_namespace,:workspace_branch,:fast_forward_change,:full_module_name)
+      module_name = full_module_name if full_module_name
       ff_change ||= true
       opts = {:local_branch => branch,:namespace => namespace}
       opts.merge!(:hard_reset => true) if !ff_change
@@ -671,18 +675,19 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete #{what} '#{component_id}'"+'?')
       end
 
-      namespace, component_id = get_namespace_and_name(component_id)
-      raise DTK::Client::DtkValidationError, "You have to provide valid component name (namespace/component)!" if(namespace.nil? || component_id.nil?)
+      # namespace, component_id = get_namespace_and_name(component_id)
+      namespace, component_id = get_namespace_and_name_for_component(component_id)
+      # raise DTK::Client::DtkValidationError, "You have to provide valid component name (namespace/component)!" if(namespace.nil? || component_id.nil?)
 
 
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :node_id => node_id,
-        :component_id => component_id,
-        :namespace => namespace
+        :component_id => component_id
       }
 
       # delete component by name (e.g. delete-component dtk_java)
+      post_body.merge!(:namespace => namespace) if namespace
       post_body.merge!(:cmp_full_name => "#{node_name}/#{component_id}") if (node_name && !(component_id.to_s =~ /^[0-9]+$/))
       response = post(rest_url("assembly/delete_component"),post_body)
     end
