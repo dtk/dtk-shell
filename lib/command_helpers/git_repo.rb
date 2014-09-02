@@ -107,7 +107,7 @@ module DTK; module Client; class CommandHelper
     #
     # :version
     # :full_module_name
-    # :namespace    
+    # :namespace
     def local_clone_dir_exists?(type,module_name,opts={})
       full_module_name = full_module_name(module_name,opts)
       ret = local_repo_dir(type,full_module_name,opts[:version])
@@ -135,13 +135,14 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    def check_local_dir_exists_with_content(type,module_name,version=nil)
+    def check_local_dir_exists_with_content(type,module_name,version=nil,module_namespace=nil)
+      full_module_name = ModuleUtil.join_name(module_name, module_namespace)
       Response.wrap_helper_actions() do
         ret = Hash.new
-        local_repo_dir = local_repo_dir(type,module_name,version)
+        local_repo_dir = local_repo_dir(type,full_module_name,version)
 
         unless File.directory?(local_repo_dir)
-          raise ErrorUsage.new("The content for module (#{module_name}) should be put in directory (#{local_repo_dir})")
+          raise ErrorUsage.new("The content for module (#{full_module_name}) should be put in directory (#{local_repo_dir})")
         end
 
         # transfered this part to initialize_client_clone_and_push because if we remove .git folder and
@@ -157,18 +158,22 @@ module DTK; module Client; class CommandHelper
         # end
 
         if Dir["#{local_repo_dir}/*"].empty?
-          raise ErrorUsage.new("Directory (#{local_repo_dir}) must have ths initial content for module (#{module_name})")
+          raise ErrorUsage.new("Directory (#{local_repo_dir}) must have ths initial content for module (#{full_module_name})")
         end
         {"module_directory" => local_repo_dir}
       end
     end
 
     def rename_and_initialize_clone_and_push(type, module_name, new_module_name, branch, repo_url, local_repo_dir, version = nil)
-      old_dir = local_repo_dir
-      new_dir = local_repo_dir.gsub(/#{module_name}$/, new_module_name)
 
-      # Moving directory
-      FileUtils.mv(old_dir, new_dir)
+      # check to see if the new dir has proper naming e.g. (~/dtk/component_modules/dtk::java)
+      unless local_repo_dir.match(/\/#{new_module_name}$/)
+        old_dir = local_repo_dir
+        new_dir = local_repo_dir.gsub(/#{module_name}$/, new_module_name)
+        FileUtils.mv(old_dir, new_dir)
+      else
+        new_dir = local_repo_dir
+      end
 
       # Continue push
       initialize_client_clone_and_push(type, new_module_name, branch, repo_url, new_dir, version)

@@ -10,6 +10,10 @@ module DTK
         "#{module_namespace}#{NAMESPACE_SEPERATOR}#{module_name}"
       end
 
+      def self.join_name(module_name, module_namespace)
+        module_namespace ? resolve_name(module_name, module_namespace) : module_name
+      end
+
       # returns [namespace,name]; namespace can be null if cant determine it
       def self.full_module_name_parts?(name_or_full_module_name)
         if name_or_full_module_name.nil?
