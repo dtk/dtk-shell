@@ -405,7 +405,7 @@ module DTK::Client
       end
 
       assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
-      namespace, component_template_id = get_namespace_and_name(component_template_id)
+      namespace, component_template_id = get_namespace_and_name_for_component(component_template_id)
 
       post_body = {
         :assembly_id => assembly_id,
