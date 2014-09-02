@@ -76,26 +76,21 @@ module DTK::Client
       end
     end
 
-    def delete_module_aux(context_params,method_opts={})
+    def delete_module_aux(context_params, method_opts={})
       module_location, modules_path = nil, nil
       module_id = context_params.retrieve_arguments([:option_1!], method_argument_names)
+
+      delete_module_sub_aux(context_params, module_id, method_opts)
+    end
+
+    def delete_module_sub_aux(context_params, module_id, method_opts={})
       ModuleUtil.check_format!(module_id)
       version = options.version
       module_name = get_name_from_id_helper(module_id)
       module_type = get_module_type(context_params)
 
-      # if called from import-git first param will be git_url and second one will be module_id
-      git_import = context_params.get_forwarded_options()[:git_import] if context_params.get_forwarded_options()
-      if git_import
-        module_id = context_params.retrieve_arguments([:option_2!], method_argument_names)
-      end
-
-      unless (options.force? || method_opts[:force_delete])
-        return unless Console.confirmation_prompt("Are you sure you want to delete #{module_type} #{version.nil? ? '' : 'version '}'#{module_name}#{version.nil? ? '' : ('-' + version.to_s)}' and all items contained in it"+'?')
-      end
-
       response =
-        if options.purge?
+        if options.purge? || method_opts[:purge]
           opts = {:module_name => module_name}
           if version then opts.merge!(:version => version)
           else opts.merge!(:delete_all_versions => true)
@@ -182,7 +177,7 @@ module DTK::Client
       module_type = get_module_type(context_params)
 
       # Create component module from user's input git repo
-      response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, module_name, git_repo_url)
+      response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, module_name, git_repo_url, nil, nil, options.namespace)
 
       # Raise error if git repository is invalid
       # raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless response.ok?
@@ -203,9 +198,8 @@ module DTK::Client
           OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
         end
       else
-        # If server response is not ok, delete cloned module, invoke delete method
-        FileUtils.rm_rf("#{response['data']['module_directory']}")
-        delete(context_params,:force_delete => true, :no_error_msg => true)
+        module_full_name = create_response.data()[:full_module_name]
+        delete_module_sub_aux(context_params, module_full_name, :force_delete => true, :no_error_msg => true, :purge => true)
         return create_response
       end
 
@@ -219,7 +213,7 @@ module DTK::Client
       module_type = get_module_type(context_params)
 
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
-      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, module_name)
+      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, module_name, nil, options.namespace)
       return response unless response.ok?
       module_directory = response.data(:module_directory)
 
@@ -227,7 +221,7 @@ module DTK::Client
       reparse_aux(module_directory)
 
       # first make call to server to create an empty repo
-      response = post rest_url("#{module_type}/create"), { :module_name => module_name }
+      response = post rest_url("#{module_type}/create"), { :module_name => module_name, :module_namespace => options.namespace }
       return response unless response.ok?
 
       repo_url,repo_id,module_id,branch,new_module_name = response.data(:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name)
@@ -243,7 +237,11 @@ module DTK::Client
         :scaffold_if_no_dsl => true
       }
       response = post(rest_url("#{module_type}/update_from_initial_create"),post_body)
-      return response unless response.ok?
+
+      unless response.ok?
+        response.set_data_hash({ :full_module_name => new_module_name })
+        return response
+      end
 
       external_dependencies = response.data(:external_dependencies)
       dsl_created_info = response.data(:dsl_created_info)

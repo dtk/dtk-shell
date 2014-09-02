@@ -175,12 +175,28 @@ TODO: might deprecate
     #### commands to interact with remote repo ###
 
 
-    desc "import COMPONENT-MODULE-NAME", "Create new component module from local clone"
+    desc "import COMPONENT-MODULE-NAME [-n NAMESPACE]", "Create new component module from local clone"
+    method_option "namespace",:aliases => "-n" ,
+      :type => :string,
+      :banner => "NAMESPACE",
+      :desc => "Import module in custom namespace."
     def import(context_params)
       response = import_module_aux(context_params)
       @@invalidate_map << :component_module if response && response.ok?
 
       response
+    end
+
+    #
+    # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
+    #
+    desc "import-git GIT-SSH-REPO-URL COMPONENT-MODULE-NAME [-n NAMESPACE]", "Create new local component module by importing from provided git repo URL"
+    method_option "namespace",:aliases => "-n" ,
+      :type => :string,
+      :banner => "NAMESPACE",
+      :desc => "Import git module in custom namespace."
+    def import_git(context_params)
+      import_git_module_aux(context_params)
     end
 
 =begin
@@ -221,13 +237,6 @@ TODO: might deprecate
       response
     end
 
-    #
-    # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
-    #
-    desc "import-git GIT-SSH-REPO-URL COMPONENT-MODULE-NAME", "Create new local component module by importing from provided git repo URL"
-    def import_git(context_params)
-      import_git_module_aux(context_params)
-    end
 
 =begin
     => DUE TO DEPENDENCY TO PUPPET GEM WE OMMIT THIS <=

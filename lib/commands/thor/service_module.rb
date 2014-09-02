@@ -389,12 +389,16 @@ module DTK::Client
     # end
 
     # TODO: put in two versions, one that creates empty and anotehr taht creates from local dir; use --empty flag
-    desc "import SERVICE-MODULE-NAME", "Create new service module from local clone"
+    desc "import SERVICE-MODULE-NAME [-n NAMESPACE]", "Create new service module from local clone"
+    method_option "namespace",:aliases => "-n" ,
+      :type => :string,
+      :banner => "NAMESPACE",
+      :desc => "Import module in custom namespace."
     def import(context_params)
       module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
-      response = Helper(:git_repo).check_local_dir_exists_with_content(:service_module,module_name)
+      response = Helper(:git_repo).check_local_dir_exists_with_content(:service_module, module_name, nil, options.namespace)
       return response unless response.ok?
       service_directory = response.data(:module_directory)
 
@@ -402,7 +406,7 @@ module DTK::Client
       reparse_aux(service_directory)
 
       # first call to create empty module
-      response = post rest_url("service_module/create"), { :module_name => module_name }
+      response = post rest_url("service_module/create"), { :module_name => module_name, :module_namespace => options.namespace }
       return response unless response.ok?
       @@invalidate_map << :service_module
 
