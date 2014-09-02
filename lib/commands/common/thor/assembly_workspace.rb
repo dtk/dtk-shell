@@ -25,7 +25,7 @@ module DTK::Client
         mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1]
       end
 
-      assembly_or_workspace_id, node_pattern = context_params.retrieve_arguments(mapping,method_argument_names)      
+      assembly_or_workspace_id, node_pattern = context_params.retrieve_arguments(mapping,method_argument_names)
       assembly_start(assembly_or_workspace_id, node_pattern)
     end
 
@@ -74,7 +74,7 @@ module DTK::Client
       response = post rest_url("assembly/find_violations"),:assembly_id => assembly_or_workspace_id
       response.render_table(:violation)
     end
-     
+
     def converge_aux(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
 
@@ -98,7 +98,7 @@ module DTK::Client
 
       if response.data
         confirmation_message = response.data["confirmation_message"]
-        
+
         if confirmation_message
           return unless Console.confirmation_prompt("Workspace service is stopped, do you want to start it"+'?')
           post_body.merge!(:start_assembly=>true)
@@ -151,7 +151,7 @@ module DTK::Client
       }
       response = post rest_url("assembly/prepare_for_edit_module"), post_body
       return response unless response.ok?
-      assembly_name,service_module_id,service_module_name,version,repo_url,branch,branch_head_sha,edit_file = response.data(:assembly_name,:module_id,:module_name,:version,:repo_url,:workspace_branch,:branch_head_sha,:edit_file)
+      assembly_name,service_module_id,service_module_name,version,repo_url,branch,branch_head_sha,edit_file = response.data(:assembly_name,:module_id,:full_module_name,:version,:repo_url,:workspace_branch,:branch_head_sha,:edit_file)
       edit_opts = {
         :automatically_clone => true,
         :assembly_module => {
@@ -171,25 +171,25 @@ module DTK::Client
       version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
       edit_aux(:service_module,service_module_id,service_module_name,version,edit_opts)
     end
-    
+
     def edit_attributes_aux(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
-      
+
       # if no format is set then we use 'yaml'
       format = options.format || 'yaml'
       context_params.forward_options( { :format => format})
-      
+
       response = list_attributes_aux(context_params)
       return response unless response.ok?
 
       attributes_list = response.data
       attributes_hash = attributes_editor(attributes_list, format)
-      
+
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :av_pairs_hash => attributes_hash
       }
-      
+
       response = post rest_url("assembly/set_attributes"), post_body
     end
 
@@ -206,7 +206,7 @@ module DTK::Client
       return Response::Ok.new() unless response.data(:any_updates)
       if dsl_parsing_errors = response.data(:dsl_parsing_errors)
         error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors using 'edit' command from module context and invoke promote-module-updates again.\n"
-        OsUtil.print(error_message, :red) 
+        OsUtil.print(error_message, :red)
         return Response::Error.new()
       end
       module_name,namespace,branch,ff_change = response.data(:module_name,:module_namespace,:workspace_branch,:fast_forward_change)
@@ -240,7 +240,7 @@ module DTK::Client
           end
         end
       end
-     
+
       response
     end
 
@@ -323,7 +323,7 @@ module DTK::Client
     #         data_type = :task
     #       else
     #         raise_validation_error_method_usage('list')
-    #     end 
+    #     end
     #   end
 
     #   post_body = {
@@ -335,7 +335,7 @@ module DTK::Client
     #   post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
     #   rest_endpoint = "assembly/info_about"
 
-    #   if context_params.is_last_command_eql_to?(:attribute)        
+    #   if context_params.is_last_command_eql_to?(:attribute)
     #     raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
     #     about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
     #   elsif context_params.is_last_command_eql_to?(:component)
@@ -358,7 +358,7 @@ module DTK::Client
     #       data_type = :assembly
     #       post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
     #       rest_endpoint = "assembly/list"
-    #     end  
+    #     end
     #   end
 
     #   post_body[:about] = about
@@ -395,7 +395,7 @@ module DTK::Client
     end
 
     def create_component_aux(context_params)
-      # If method is invoked from 'assembly/node' level retrieve node_id argument 
+      # If method is invoked from 'assembly/node' level retrieve node_id argument
       # directly from active context
       if context_params.is_there_identifier?(:node)
         mapping = [REQ_ASSEMBLY_OR_WS_ID,:node_id!,:option_1!]
@@ -435,7 +435,7 @@ module DTK::Client
       end
       post_body = {
         :assembly_id => assembly_or_workspace_id,
-        :input_component_id => dep_cmp, 
+        :input_component_id => dep_cmp,
         :output_component_id => antec_cmp
       }
       post_body.merge!(:dependency_name => dependency_name) if dependency_name
@@ -479,15 +479,15 @@ module DTK::Client
 
     def info_aux(context_params)
       assembly_or_workspace_id, node_id, component_id, attribute_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :node_id, :component_id, :attribute_id],method_argument_names)
-      is_json_return = context_params.get_forwarded_option(:json_return) || false 
- 
+      is_json_return = context_params.get_forwarded_option(:json_return) || false
+
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :node_id     => node_id,
         :component_id => component_id,
         :attribute_id => attribute_id,
         :subtype     => :instance,
-        :json_return => is_json_return      
+        :json_return => is_json_return
       }
 
       resp = post rest_url("assembly/info"), post_body
@@ -498,7 +498,7 @@ module DTK::Client
       if (component_id.nil? && !node_id.nil?)
         resp.render_workspace_node_info("node")
       elsif (component_id && node_id)
-        resp.render_workspace_node_info("component") 
+        resp.render_workspace_node_info("component")
       else
         return resp
       end
@@ -525,7 +525,7 @@ module DTK::Client
       }
 
       response = post rest_url("assembly/delete"), post_body
-         
+
       # when changing context send request for getting latest assemblies instead of getting from cache
       # @@invalidate_map << :assembly
       response
@@ -546,7 +546,7 @@ module DTK::Client
       else
         mapping = (options.unset? ? [REQ_ASSEMBLY_OR_WS_ID,:option_1!] : [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!])
       end
-      
+
       assembly_or_workspace_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
@@ -585,7 +585,7 @@ module DTK::Client
       end
 
       assembly_or_workspace_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
-      
+
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :pattern => pattern,
@@ -641,7 +641,7 @@ module DTK::Client
 
     def delete_aux(context_params)
       if context_params.is_last_command_eql_to?(:node)
-        delete_node_aux(context_params) 
+        delete_node_aux(context_params)
       elsif context_params.is_last_command_eql_to?(:component)
         delete_component_aux(context_params)
       end
@@ -696,7 +696,7 @@ module DTK::Client
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :node_id => node_id
-      }  
+      }
 
       response = post(rest_url("assembly/initiate_get_netstats"),post_body)
       return response unless response.ok?
@@ -746,7 +746,7 @@ module DTK::Client
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :components => options["component"]
-      } 
+      }
       post_body[:node_id] = node_id unless node_id.nil?
 
       response = post(rest_url("assembly/initiate_execute_tests"),post_body)
@@ -771,7 +771,7 @@ module DTK::Client
         if count > execute_test_tries or response.data(:is_complete)
           response.data(:results).each do |res|
             if res.key?('test_error')
-              test_error = res.delete('test_error')     
+              test_error = res.delete('test_error')
               res['errors'] = { "message" => test_error, "type" => "test_error" }
             end
           end
@@ -786,7 +786,7 @@ module DTK::Client
       end
 
       if (response.data(:results).empty? && options['timeout'].nil?)
-        raise DTK::Client::DtkValidationError, "Could not finish execution of tests in default timeframe (#{execute_test_tries} seconds). Try again with passing --timeout TIMEOUT parameter" 
+        raise DTK::Client::DtkValidationError, "Could not finish execution of tests in default timeframe (#{execute_test_tries} seconds). Try again with passing --timeout TIMEOUT parameter"
       elsif (response.data(:results).empty? && !options['timeout'].nil?)
         raise DTK::Client::DtkValidationError, "Could not finish execution of tests in set timeframe (#{execute_test_tries} seconds). Try again with increasing --timeout TIMEOUT parameter"
       else
@@ -805,8 +805,8 @@ module DTK::Client
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :node_id => node_id
-      }  
-      
+      }
+
       response = post(rest_url("assembly/initiate_get_ps"),post_body)
       return response unless response.ok?
 
@@ -835,18 +835,18 @@ module DTK::Client
       end
       filtered = response.data(:results).flatten
 
-      # Amar: had to add more complex filtering in order to print node id and node name in output, 
+      # Amar: had to add more complex filtering in order to print node id and node name in output,
       #       as these two values are sent only in the first element of node's processes list
-      unless (filter_pattern.nil? || !options["filter"])    
+      unless (filter_pattern.nil? || !options["filter"])
         node_id = ""
-        node_name = ""    
+        node_name = ""
         filtered.reject! do |r|
           match = r.to_s.include?(filter_pattern)
           if r["node_id"] && r["node_id"] != node_id
             node_id = r["node_id"]
             node_name = r["node_name"]
           end
-             
+
           if match && !node_id.empty?
             r["node_id"] = node_id
             r["node_name"] = node_name
@@ -854,7 +854,7 @@ module DTK::Client
             node_name = ""
           end
           !match
-        end 
+        end
       end
 
       response.set_data(*filtered)
@@ -872,9 +872,9 @@ module DTK::Client
       else
         mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!,:option_3]
       end
-      
+
       assembly_or_workspace_id,node_identifier,log_path,grep_option = context_params.retrieve_arguments(mapping,method_argument_names)
-     
+
       last_line = nil
       begin
 
@@ -936,7 +936,7 @@ module DTK::Client
 
               unless output.empty?
                 file_ready = true
-                tail_temp_file << output 
+                tail_temp_file << output
                 tail_temp_file.flush
               end
 
@@ -970,7 +970,7 @@ module DTK::Client
             t1.exit()
           end
         end
-        
+
         t1.join()
         t2.join()
       rescue Interrupt
@@ -981,7 +981,7 @@ module DTK::Client
       end
     end
 
-    def grep_aux(context_params) 
+    def grep_aux(context_params)
       if context_params.is_there_identifier?(:node)
         mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:node_id!,:option_2!]
       else
@@ -989,7 +989,7 @@ module DTK::Client
       end
 
       assembly_or_workspace_id,log_path,node_pattern,grep_pattern = context_params.retrieve_arguments(mapping,method_argument_names)
-         
+
       begin
         post_body = {
           :assembly_id         => assembly_or_workspace_id,
@@ -1030,7 +1030,7 @@ module DTK::Client
         end
 
         raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
-        
+
         console_width = ENV["COLUMNS"].to_i
 
         response.data(:results).each do |r|
@@ -1039,7 +1039,7 @@ module DTK::Client
           message_colorized = DTK::Client::OsUtil.colorize(r[0].inspect, :green)
 
           if r[1]["output"].empty?
-            puts "NODE-ID #{message_colorized} - Log does not contain data that matches you pattern #{grep_pattern}!" 
+            puts "NODE-ID #{message_colorized} - Log does not contain data that matches you pattern #{grep_pattern}!"
           else
             puts "\n"
             console_width.times do
@@ -1055,7 +1055,7 @@ module DTK::Client
       end
     end
 
-    def assembly_start(workspace_id, node_pattern_filter)             
+    def assembly_start(workspace_id, node_pattern_filter)
       post_body = {
         :assembly_id  => workspace_id,
         :node_pattern => node_pattern_filter
@@ -1065,7 +1065,7 @@ module DTK::Client
       response = post rest_url("assembly/start"), post_body
       return response unless response.ok?()
       raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
-      
+
       task_id = response.data(:task_id)
       post rest_url("task/execute"), "task_id" => task_id
     end
@@ -1106,7 +1106,7 @@ module DTK::Client
             data_type = :component
             if options.deps?
               detail_to_include = [:component_dependencies]
-            end  
+            end
           when "attributes"
             data_type = (options.links? ? :workspace_attribute_w_link : :workspace_attribute)
             edit_attr_format = context_params.get_forwarded_options()[:format] if context_params.get_forwarded_options()
@@ -1123,7 +1123,7 @@ module DTK::Client
             data_type = :task
           else
             raise_validation_error_method_usage('list')
-        end 
+        end
       end
 
       post_body = {
@@ -1136,7 +1136,7 @@ module DTK::Client
       post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
       rest_endpoint = "assembly/info_about"
 
-      if context_params.is_last_command_eql_to?(:attribute)        
+      if context_params.is_last_command_eql_to?(:attribute)
         raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
         about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
       elsif context_params.is_last_command_eql_to?(:component)
@@ -1154,7 +1154,7 @@ module DTK::Client
       else
         if assembly_or_workspace_id
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "modules","tasks"])
-          
+
           if data_type.to_s.eql?("component")
             data_type = nil #DynamicDatatype
           end
@@ -1166,7 +1166,7 @@ module DTK::Client
           data_type = :assembly
           post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
           rest_endpoint = "assembly/list"
-        end  
+        end
       end
 
       post_body[:about] = about
