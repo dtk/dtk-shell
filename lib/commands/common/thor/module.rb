@@ -248,7 +248,7 @@ module DTK::Client
 
       if dsl_created_info and !dsl_created_info.empty?
         msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_directory}"
-        DTK::Client::OsUtil.print(msg)
+        DTK::Client::OsUtil.print(msg,:yellow)
         response = Helper(:git_repo).add_file(repo_obj, dsl_created_info["path"], dsl_created_info["content"], msg)
         return response unless response.ok?
       end
