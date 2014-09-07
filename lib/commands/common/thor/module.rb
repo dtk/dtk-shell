@@ -248,11 +248,15 @@ module DTK::Client
 
       if dsl_created_info and !dsl_created_info.empty?
         msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_directory}"
+        DTK::Client::OsUtil.print(msg)
         response = Helper(:git_repo).add_file(repo_obj, dsl_created_info["path"], dsl_created_info["content"], msg)
-      else
-        response = Response::Ok.new("module_created" => module_name)
+        return response unless response.ok?
       end
 
+      #TODO: this is never used
+      response = Response::Ok.new("module_created" => module_name)
+
+      # TODO: what is purpose of pushing again
       # we push clone changes anyway, user can change and push again
       # context_params.add_context_to_params(module_name, :"component-module", module_id)
       context_params.add_context_to_params(module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
@@ -263,7 +267,7 @@ module DTK::Client
         response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies
       end
 
-      return response
+      response
     end
 
     def install_module_aux(context_params)

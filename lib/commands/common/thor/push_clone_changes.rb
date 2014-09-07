@@ -37,20 +37,29 @@ module DTK::Client
       response = post(rest_url("#{module_type}/update_model_from_clone"),post_body)
       return response unless response.ok?
 
-      if (!response.data.empty? && response.data(:dsl_parsed_info))
-        dsl_parsed_message = ServiceImporter.error_message(module_name, response.data(:dsl_parsed_info))
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red)
-        return Response::NoOp.new() #NoOp fine because error reported by section above
-      end
+      ret = Response::Ok.new()
 
-      if module_type == :component_module
-        dsl_created_info = response.data(:dsl_created_info)
-        if dsl_created_info and !dsl_created_info.empty?
-          msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{repo_obj.repo_dir}"
-          return Helper(:git_repo).add_file(repo_obj,dsl_created_info["path"],dsl_created_info["content"],msg)
+      # check if any errors
+      if dsl_parsed_info = response.data(:dsl_parsed_info)
+        if dsl_parsed_message = ServiceImporter.error_message(module_name, dsl_parsed_info)
+          DTK::Client::OsUtil.print(dsl_parsed_message, :red)
+          ret = Response::NoOp.new()
         end
       end
-      Response::Ok.new()
+
+      # TODO: is this used
+      # check if server pushed anything that needs to eb pulled
+      dsl_created_info = response.data(:dsl_created_info)
+      if dsl_created_info and !dsl_created_info.empty?
+        created_or_updated = 
+          if dsl_created_info["updated"] then "updated"
+          else "created"
+          end
+        msg = "A #{dsl_created_info["path"]} file has been #{created_or_updated} for you, located at #{repo_obj.repo_dir}"
+        response = Helper(:git_repo).add_file(repo_obj,dsl_created_info["path"],dsl_created_info["content"],msg)
+        return response unless response.ok?
+      end
+      ret
     end
   end
 end
