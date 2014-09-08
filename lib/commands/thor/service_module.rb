@@ -410,11 +410,6 @@ module DTK::Client
       return response unless response.ok?
       @@invalidate_map << :service_module
 
-      if error = response.data(:dsl_parsed_info)
-        dsl_parsed_message = ServiceImporter.error_message(module_name, error)
-        DTK::Client::OsUtil.print(dsl_parsed_message, :red)
-      end
-
       # initial commit for given service module
       service_module_id, repo_info = response.data(:service_module_id, :repo_info)
       repo_url,repo_id,module_id,branch,new_module_name = [:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name].map { |k| repo_info[k.to_s] }

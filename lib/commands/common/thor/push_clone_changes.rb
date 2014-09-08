@@ -47,18 +47,22 @@ module DTK::Client
         end
       end
 
-      # TODO: is this used
-      # check if server pushed anything that needs to eb pulled
+      # check if server sent any file taht shoudl be added
       dsl_created_info = response.data(:dsl_created_info)
       if dsl_created_info and !dsl_created_info.empty?
-        created_or_updated = 
-          if dsl_created_info["updated"] then "updated"
-          else "created"
-          end
-        msg = "A #{dsl_created_info["path"]} file has been #{created_or_updated} for you, located at #{repo_obj.repo_dir}"
+        msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{repo_obj.repo_dir}" 
         response = Helper(:git_repo).add_file(repo_obj,dsl_created_info["path"],dsl_created_info["content"],msg)
         return response unless response.ok?
       end
+      
+      # check if server pushed anything that needs to be pulled
+      dsl_updated_info = response.data(:dsl_updated_info)
+      if dsl_updated_info and !dsl_updated_info.empty?
+        if msg = dsl_updated_info["msg"] 
+          DTK::Client::OsUtil.print(msg,:yellow)
+        end
+      end
+
       ret
     end
   end
