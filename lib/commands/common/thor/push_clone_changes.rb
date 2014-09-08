@@ -46,14 +46,6 @@ module DTK::Client
           ret = Response::NoOp.new()
         end
       end
-
-      # check if server sent any file taht shoudl be added
-      dsl_created_info = response.data(:dsl_created_info)
-      if dsl_created_info and !dsl_created_info.empty?
-        msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{repo_obj.repo_dir}" 
-        response = Helper(:git_repo).add_file(repo_obj,dsl_created_info["path"],dsl_created_info["content"],msg)
-        return response unless response.ok?
-      end
       
       # check if server pushed anything that needs to be pulled
       dsl_updated_info = response.data(:dsl_updated_info)
@@ -61,8 +53,25 @@ module DTK::Client
         if msg = dsl_updated_info["msg"] 
           DTK::Client::OsUtil.print(msg,:yellow)
         end
+        new_commit_sha = dsl_updated_info[:commit_sha]
+        unless new_commit_sha and new_commit_sha == commit_sha
+          opts_pull = opts.merge(:local_branch => branch,:namespace => module_namespace)
+          response = Helper(:git_repo).pull_changes(module_type,module_name,opts_pull)
+          return response unless response.ok?
+        end
       end
 
+      # check if server sent any file that should be added
+      dsl_created_info = response.data(:dsl_created_info)
+      if dsl_created_info and !dsl_created_info.empty?
+        path = dsl_created_info["path"]
+        content = dsl_created_info["content"]
+        if path and content
+          msg = "A #{path} file has been created for you, located at #{repo_obj.repo_dir}" 
+          response = Helper(:git_repo).add_file(path,content,msg)
+          return response unless response.ok?
+        end
+      end
       ret
     end
   end
