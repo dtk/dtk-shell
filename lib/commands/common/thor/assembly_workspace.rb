@@ -49,13 +49,24 @@ module DTK::Client
       post rest_url("assembly/cancel_task"), post_body
     end
 
-    #mode will be :create or :update
-    def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name=nil,assembly_template_name=nil)
+    # mode will be :create or :update
+    # service_module_name_x can be name or fullname (NS:MOduleName)
+    def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name_x=nil,assembly_template_name=nil)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :mode => mode.to_s
       }
-      post_body.merge!(:service_module_name => service_module_name) if service_module_name
+      if service_module_name_x
+        service_module_name = service_module_name_x
+        namespace = nil
+        if service_module_name_x =~ /(^[^:]+):([^:]+$)/
+          namespace,service_module_name = [$1,$2]
+        end
+        post_body.merge!(:service_module_name => service_module_name) 
+        if namespace
+          post_body.merge!(:namespace => namespace)
+        end
+      end
       post_body.merge!(:assembly_template_name => assembly_template_name) if assembly_template_name
       response = post rest_url("assembly/promote_to_template"), post_body
       # when changing context send request for getting latest assembly_templates instead of getting from cache
