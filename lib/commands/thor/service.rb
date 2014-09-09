@@ -409,7 +409,7 @@ TODO: will put in dot release and will rename to 'extend'
           about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
         else
           data_type = :assembly
-          post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
+          post_body = { :subtype  => 'instance', :detail_level => 'nodes',:include_namespaces => true}
           rest_endpoint = "assembly/list"
         end
       end
