@@ -188,23 +188,20 @@ module DTK::Client
 
     def edit_attributes_aux(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
-
-      # if no format is set then we use 'yaml'
-      format = options.format || 'yaml'
-      context_params.forward_options( { :format => format})
+      format = 'yaml'
+      context_params.forward_options(:format => format)
 
       response = list_attributes_aux(context_params)
       return response unless response.ok?
 
       attributes_list = response.data
-      attributes_hash = attributes_editor(attributes_list, format)
-
+      attribute_settings_hash = attributes_editor(attributes_list, format)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
-        :av_pairs_hash => attributes_hash
+        :settings_hash => attribute_settings_hash
       }
 
-      response = post rest_url("assembly/set_attributes"), post_body
+      post rest_url("assembly/apply_attribute_settings"), post_body
     end
 
     def push_module_updates_aux(context_params)
