@@ -106,23 +106,16 @@ module DTK::Client
       Response::Ok.new()
     end
 
-
-    def attributes_editor(input_attributes,format)
-      unless format.eql?('yaml')
-        raise DtkError, "Only yaml format is supported"
-      end
-                         
+    # returns text string with edited yaml content
+    def attributes_editor(yaml_input)
       dtk_folder = OsUtil.dtk_local_folder
       file_path = "#{dtk_folder}/temp_attrs.yaml"
-      File.open(file_path, 'w'){|out| out << input_attributes}
+      File.open(file_path, 'w'){|f| f << yaml_input}
       OsUtil.edit(file_path)
       OsUtil.print("If you want to use different editor please set environment variable EDITOR and log back into dtk-shell!", :yellow) unless ENV['EDITOR']
-      begin
-        raw_output_hash = YAML.load_file(file_path)
-        post_process(raw_output_hash)||{}
-      rescue Psych::SyntaxError => e
-        raise DSLParsing::YAMLParsing.new("YAML parsing error #{e} in file",file_path)
-      end
+      edited_yaml = File.open(file_path,'r'){|f|f.read}
+      File.unlink(file_path)
+      edited_yaml
     end
    private
     # removes any nil values and returns hash; also modifies any term that does not serialize

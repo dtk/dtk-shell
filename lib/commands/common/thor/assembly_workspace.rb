@@ -188,17 +188,17 @@ module DTK::Client
 
     def edit_attributes_aux(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
-      format = 'yaml'
-      context_params.forward_options(:format => format)
+      context_params.forward_options(:format => 'yaml')
 
       response = list_attributes_aux(context_params)
       return response unless response.ok?
 
-      input_attribute_settings = response.data
-      attribute_settings_hash = attributes_editor(input_attribute_settings, format)
+      yaml_input = response.data
+      edited_yaml = attributes_editor(yaml_input)
+      # sending params in yaml format because marshalling fouls with some data types like nil and Booleans
       post_body = {
         :assembly_id => assembly_or_workspace_id,
-        :settings_hash => attribute_settings_hash
+        :settings_yaml_content => edited_yaml
       }
 
       post rest_url("assembly/apply_attribute_settings"), post_body
