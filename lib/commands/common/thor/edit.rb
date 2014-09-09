@@ -138,17 +138,14 @@ module DTK::Client
     end
     def post_process__hash(hash)
       ret = Hash.new
-      if hash.empty?
-        hash
-      elsif hash.size == 1
-        hash unless  hash.values.first.nil?
-      else
-        hash.inject(ret) do |h,(k,v)|
-          if processed_val = post_process(v)
-            h.merge(k => processed_val)
-          end
+      hash.each_pair do |k,v|
+        processed_val = post_process(v)
+        #processed_val can be false so explicitly checking against nil
+        unless processed_val.nil?
+          ret.merge!(k => processed_val)
         end 
       end
+      ret
     end
 
     def post_process__array(array)
@@ -157,8 +154,12 @@ module DTK::Client
         # explicit nil not removed
         if a.nil? 
           ret << Response.nil_term()
-        elsif processed_val = post_process(v)
-          ret << processed_val
+        else
+          processed_val = post_process(a)
+          #processed_val can be false so explicitly checking against nil
+          unless processed_val.nil?
+            ret << processed_val
+          end
         end
       end
       ret
