@@ -223,8 +223,7 @@ module DTK::Client
         OsUtil.print(error_message, :red)
         return Response::Error.new()
       end
-      module_name,namespace,branch,ff_change,full_module_name = response.data(:module_name,:module_namespace,:workspace_branch,:fast_forward_change,:full_module_name)
-      module_name = full_module_name if full_module_name
+      module_name,namespace,branch,ff_change = response.data(:module_name,:module_namespace,:workspace_branch,:fast_forward_change)
       ff_change ||= true
       opts = {:local_branch => branch,:namespace => namespace}
       opts.merge!(:hard_reset => true) if !ff_change
