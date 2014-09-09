@@ -194,8 +194,8 @@ module DTK::Client
       response = list_attributes_aux(context_params)
       return response unless response.ok?
 
-      attributes_list = response.data
-      attribute_settings_hash = attributes_editor(attributes_list, format)
+      input_attribute_settings = response.data
+      attribute_settings_hash = attributes_editor(input_attribute_settings, format)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :settings_hash => attribute_settings_hash

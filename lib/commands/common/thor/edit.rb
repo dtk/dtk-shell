@@ -106,12 +106,75 @@ module DTK::Client
       Response::Ok.new()
     end
 
+
+    def attributes_editor(input_attributes,format)
+      unless format.eql?('yaml')
+        raise DtkError, "Only yaml format is supported"
+      end
+                         
+      dtk_folder = OsUtil.dtk_local_folder
+      file_path = "#{dtk_folder}/temp_attrs.yaml"
+      File.open(file_path, 'w'){|out| out << input_attributes}
+      OsUtil.edit(file_path)
+      OsUtil.print("If you want to use different editor please set environment variable EDITOR and log back into dtk-shell!", :yellow) unless ENV['EDITOR']
+      begin
+        raw_output_hash = YAML.load_file(file_path)
+        post_process(raw_output_hash)||{}
+      rescue Psych::SyntaxError => e
+        raise DSLParsing::YAMLParsing.new("YAML parsing error #{e} in file",file_path)
+      end
+    end
+   private
+    # removes any nil values and returns hash
+    def post_process(object)
+      ret = Hash.new
+      if object.kind_of?(Hash)
+        post_process__hash(object)
+      elsif object.kind_of?(Array)
+        post_process__array(object)
+      else
+        object
+      end
+    end
+    def post_process__hash(hash)
+      ret = Hash.new
+      if hash.empty?
+        hash
+      elsif hash.size == 1
+        hash unless  hash.values.first.nil?
+      else
+        hash.inject(ret) do |h,(k,v)|
+          if processed_val = post_process(v)
+            h.merge(k => processed_val)
+          end
+        end 
+      end
+    end
+
+    def post_process__array(array)
+      ret = Array.new
+      array.each do |a|
+        # explicit nil not removed
+        if a.nil? 
+          ret << Response.nil_term()
+        elsif processed_val = post_process(v)
+          ret << processed_val
+        end
+      end
+      ret
+    end
+  end
+end
+
+
+=begin
+    # TODO: probably deprecate
     def attribute_header()
       header_string = 
       "#############################\n####  REQUIRED ATTRIBUTES\n#############################\n#\n"
     end
-
-    def attributes_editor(attributes,format)
+    # TODO: probably deprecate
+    def attributes_editor_old_form(attributes,format)
       if (format.eql?('yaml'))
         dtk_folder = OsUtil.dtk_local_folder
         file_path = "#{dtk_folder}/temp_attrs.yaml"
@@ -153,7 +216,7 @@ module DTK::Client
         begin
           edited = YAML.load_file(file_path)
         rescue Psych::SyntaxError => e
-          raise DTK::Client::DSLParsing::YAMLParsing.new("YAML parsing error #{e} in file",file_path)
+          raise DSLParsing::YAMLParsing.new("YAML parsing error #{e} in file",file_path)
         end
 
         edited.each do |k,v|
@@ -169,9 +232,8 @@ module DTK::Client
         raise DtkValidationError, "No attribute changes have been made." if ((first_iteration_keys == second_iteration_keys) && (first_iteration_values == second_iteration_values))
         edited
       else
-        raise DTK::Client::DtkValidationError, "Unsupported format type '#{format.to_s}'!"
+        raise DtkValidationError, "Unsupported format type '#{format.to_s}'!"
       end
     end
+=end
 
-  end
-end
