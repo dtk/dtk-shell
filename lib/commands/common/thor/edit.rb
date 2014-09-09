@@ -125,17 +125,20 @@ module DTK::Client
       end
     end
    private
-    # removes any nil values and returns hash
+    # removes any nil values and returns hash; also modifies any term that does not serialize
     def post_process(object)
       ret = Hash.new
       if object.kind_of?(Hash)
         post_process__hash(object)
       elsif object.kind_of?(Array)
         post_process__array(object)
+      elsif object.kind_of?(FalseClass)
+        Response::Term::Boolean.false
       else
         object
       end
     end
+
     def post_process__hash(hash)
       ret = Hash.new
       hash.each_pair do |k,v|
@@ -153,7 +156,7 @@ module DTK::Client
       array.each do |a|
         # explicit nil not removed
         if a.nil? 
-          ret << Response.nil_term()
+          ret << Response::Term.nil()
         else
           processed_val = post_process(a)
           #processed_val can be false so explicitly checking against nil
