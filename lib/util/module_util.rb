@@ -29,7 +29,7 @@ module DTK
 
       def self.check_format!(module_identifier)
         return module_identifier if module_identifier.match(/^[0-9]+$/)
-        raise DtkError, "Module name should be in following format NAMESPACE::MODULE_NAME" unless module_identifier.match(/^.+::.+$/)
+        raise DtkError, "Module name should be in following format NAMESPACE#{NAMESPACE_SEPERATOR}MODULE_NAME" unless module_identifier.match(Regexp.new("^.+#{NAMESPACE_SEPERATOR}.+$"))
       end
     end
   end
