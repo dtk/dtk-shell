@@ -2,7 +2,7 @@ module DTK
   module Client
     module ModuleUtil
 
-      NAMESPACE_SEPERATOR = '::'
+      NAMESPACE_SEPERATOR = ':'
 
       def self.resolve_name(module_name, module_namespace)
         is_invalid = module_name.nil? || module_namespace.nil? || module_name.empty? || module_namespace.empty?
