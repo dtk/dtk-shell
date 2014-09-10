@@ -82,18 +82,20 @@ module DTK::Client
       local_modules, needed_modules = OsUtil.local_component_module_list(), Array.new
 
       if module_component_list
-        module_component_list.data.each do |dependency_module|
-          unless local_modules.include?(formated_name = formulate_module_name(dependency_module['full_module_name'], dependency_module['version']))
-            needed_modules << dependency_module.merge({'formated_name' => formated_name})
+        module_component_list.data.each do |cmp_module|
+          with_namespace = ModuleUtil.resolve_name(cmp_module["display_name"],cmp_module["namespace_name"])
+          formated_name = add_version?(with_namespace, cmp_module['version'])
+          unless local_modules.include?(formated_name)
+            needed_modules << cmp_module.merge({'formated_name' => formated_name})
           end
         end
       end
 
       unless needed_modules.empty?
-        puts "Service '#{service_module_name}' has following dependencies: \n\n"
+        puts "Service '#{service_module_name}' does not have the following component modules dependencies on the client machine: \n\n"
         needed_modules.each { |m| puts " - #{m['formated_name']}" }
         is_install_dependencies = true
-        is_install_dependencies = Console.confirmation_prompt("\nDo you want to clone missing component module dependencies") unless force_clone
+        is_install_dependencies = Console.confirmation_prompt("\nDo you want to clone these missing component modules to the client machine?") unless force_clone
 
         # we get list of modules available on server
 
@@ -126,13 +128,13 @@ module DTK::Client
     def resolve_module_names(e)
       versions = (e['version'] ? e['version'].split(',') : ['CURRENT'])
 
-      versions.collect { |version| formulate_module_name(e['display_name'], version)}
+      versions.collect { |version| add_version?(e['display_name'], version)}
     end
 
     # Resolves local module name
     #
     # Returns: String
-    def formulate_module_name(display_name, version)
+    def add_version?(display_name, version)
       version = nil if 'CURRENT'.eql?(version)
       (version ? "#{display_name}-#{version.strip}" : "#{display_name}")
     end
