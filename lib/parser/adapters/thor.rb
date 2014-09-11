@@ -343,6 +343,14 @@ module DTK
 
       no_tasks do
 
+        #
+        # Run shell command directly from main, use with CAUTION
+        #
+
+        def run_shell_command(line)
+          TOPLEVEL_BINDING.eval('self').execute_shell_command_internal(line)
+        end
+
         ##
         # Block that allows users to specify part of the code which is expected to run for longer duration
         #

@@ -17,7 +17,7 @@ require 'thor'
 $shell_mode = true
 
 ALIAS_COMMANDS = {
-  'ls' => 'list', 
+  'ls' => 'list',
   'cd' => 'cc',
   'rm' => 'delete'
 }
@@ -45,7 +45,7 @@ def run_shell_command()
     puts "\n"
     raise Interrupt
   }
-  
+
   # runtime part
   begin
     while line = Readline.readline(prompt, true)
@@ -75,7 +75,7 @@ def init_shell_context()
   begin
     @context      = DTK::Shell::Context.new
     @shell_header = DTK::Shell::HeaderShell.new
-    # loads root context 
+    # loads root context
     @context.load_context()
 
     @t1   = nil
@@ -121,10 +121,10 @@ def execute_shell_command(line, prompt)
       end
     end
 
-    
+
     if ('cc' == cmd)
       # in case there is no params we just reload command
-      args << "/" if args.empty?      
+      args << "/" if args.empty?
       prompt = @context.change_context(args, cmd)
     elsif ('popc' == cmd)
         @context.dirs.shift()
@@ -149,9 +149,9 @@ def execute_shell_command(line, prompt)
 
       # get all next-context-candidates (e.g. for assembly get all assembly_names)
       context_candidates = @context.get_ac_candidates_for_context(@context.active_context.last_context(), @context.active_context())
-      
+
       # this part of the code is used for calling of nested commands from base context (dtk:/>assembly/assembly_id converge)
-      # base_command is used to check if first command from n-level is valid e.g. 
+      # base_command is used to check if first command from n-level is valid e.g.
       # (dtk:/>assembly/assembly_id converge - chech if 'assembly' exists in context_candidates)
       # revert_context is used to return to context which command is called from after command is executed
       base_command = cmd.split('/').first
@@ -165,12 +165,12 @@ def execute_shell_command(line, prompt)
 
       if cmd.nil?
         prompt = @context.change_context(["-"]) if revert_context
-        raise DTK::Client::DtkValidationError, "You have to provide command after context name. Usage: CONTEXT-TYPE/CONTEXT-NAME COMMAND [ARG1] .. [ARG2]." 
+        raise DTK::Client::DtkValidationError, "You have to provide command after context name. Usage: CONTEXT-TYPE/CONTEXT-NAME COMMAND [ARG1] .. [ARG2]."
       end
 
       # send monkey patch class information about context
       Thor.set_context(@context)
-      
+
       # we get command and hash params, will return Validation error if command is not valid
       entity_name, method_name, context_params, thor_options, invalid_options = @context.get_command_parameters(cmd,args)
 
@@ -178,7 +178,7 @@ def execute_shell_command(line, prompt)
       if context_candidates.include?(method_name)
         context_params.add_context_to_params(method_name, entity_name, method_name)
         method_name = context_params.method_arguments.shift if context_params.method_arguments.size > 0
-      else        
+      else
         unless @context.method_valid?(method_name)
           prompt = @context.change_context(["-"]) if revert_context
           raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
@@ -194,7 +194,7 @@ def execute_shell_command(line, prompt)
       # when 'delete' or 'delete-and-destroy' command is executed reload cached tasks with latest commands
       unless (args.nil? || args.empty?)
         @context.reload_cached_tasks(entity_name) if (method_name.include?('delete') || method_name.include?('import'))
-      end       
+      end
 
       # check execution status, prints status to sttout
       DTK::Shell::StatusMonitor.check_status()
@@ -210,8 +210,14 @@ def execute_shell_command(line, prompt)
   rescue DTK::Shell::Error => e
     DtkLogger.instance.error(e.message, true)
   end
-  
+
   return prompt
+end
+
+public
+
+def execute_shell_command_internal(line)
+  execute_shell_command(line, DTK::Shell::Context::DTK_ROOT_PROMPT)
 end
 
 

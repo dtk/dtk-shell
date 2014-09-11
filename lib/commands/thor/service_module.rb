@@ -532,6 +532,22 @@ module DTK::Client
 
       response
     end
+
+    #
+    # DEVELOPMENT MODE METHODS
+    #
+    if DTK::Configuration.get(:development_mode)
+
+      desc "delete-all [-y]","Delete all service modules"
+      def delete_all(context_params)
+        response = list(context_params)
+
+        response.data().each do |e|
+          run_shell_command("delete #{e['display_name']} -y -p")
+        end
+      end
+
+    end
 =begin
     desc "SERVICE-NAME/ID assembly-templates list", "List assembly templates optionally filtered by service ID/NAME."
     def assembly_template(context_params)
