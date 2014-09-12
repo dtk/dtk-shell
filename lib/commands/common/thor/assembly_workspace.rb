@@ -190,7 +190,7 @@ module DTK::Client
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       context_params.forward_options(:format => 'yaml')
 
-      response = list_attributes_aux(context_params)
+      response = list_attributes_aux(context_params,:attribute_type=>:editable)
       return response unless response.ok?
 
       yaml_input = response.data
@@ -268,7 +268,6 @@ module DTK::Client
     def list_nodes_aux(context_params)
       context_params.method_arguments = ["nodes"]
       list_aux(context_params)
-      # list_assemblies(context_params)
     end
 
     def list_components_aux(context_params)
@@ -283,9 +282,9 @@ module DTK::Client
       # list_assemblies(context_params)
     end
 
-    def list_attributes_aux(context_params)
+    def list_attributes_aux(context_params,opts={})
       context_params.method_arguments = ["attributes"]
-      list_aux(context_params)
+      list_aux(context_params,opts)
     end
 
     def list_tasks_aux(context_params)
@@ -1095,7 +1094,7 @@ module DTK::Client
       response
     end
 
-    def list_aux(context_params)
+    def list_aux(context_params,opts={})
       assembly_or_workspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([[:service_id!, :workspace_id],:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
       detail_to_include = nil
       format = nil
@@ -1127,6 +1126,9 @@ module DTK::Client
               #dont need to compute links if using a format
             elsif options.links?
               detail_to_include = [:attribute_links]
+            end
+            if opts[:attribute_type]
+              post_options.merge!(:attribute_type => opts[:attribute_type])
             end
           when "modules"
              detail_to_include = [:version_info]
