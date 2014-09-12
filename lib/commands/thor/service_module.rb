@@ -43,6 +43,10 @@ module DTK::Client
       get_cached_response(:service_module, "service_module/list", {})
     end
 
+    def self.whoami()
+      return :service_module, "service_module/list", nil
+    end
+
     def self.override_allowed_methods()
       return DTK::Shell::OverrideTasks.new({
         :command_only => {
