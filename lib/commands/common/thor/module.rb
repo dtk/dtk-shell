@@ -84,7 +84,7 @@ module DTK::Client
     end
 
     def delete_module_sub_aux(context_params, module_id, method_opts={})
-      ModuleUtil.check_format!(module_id)
+      # ModuleUtil.check_format!(module_id)
       version = options.version
       module_name = get_name_from_id_helper(module_id)
       module_type = get_module_type(context_params)
@@ -198,8 +198,7 @@ module DTK::Client
           OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
         end
       else
-        module_full_name = create_response.data()[:full_module_name]
-        delete_module_sub_aux(context_params, module_full_name, :force_delete => true, :no_error_msg => true, :purge => true)
+        delete_module_sub_aux(context_params, module_name, :force_delete => true, :no_error_msg => true, :purge => true)
         return create_response
       end
 
