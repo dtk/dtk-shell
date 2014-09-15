@@ -51,7 +51,7 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :command_only => {
           :self => [
-            ["list"," list [--remote] [--diff]","# List service modules (local/remote). Use --diff to compare loaded and remote modules."]
+            ["list"," list [--remote] [--diff] [-n NAMESPACE]","# List service modules (local/remote). Use --diff to compare loaded and remote modules."]
           ],
           :"assembly" => [
             ["list","list","# List assemblies for given service module."]
@@ -96,9 +96,13 @@ module DTK::Client
       list(context_params)
     end
 
-    desc "list [--remote] [--diff]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
+    desc "list [--remote] [--diff] [-n NAMESPACE]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
     method_option :remote, :type => :boolean, :default => false
     method_option :diff, :type => :boolean, :default => false
+    method_option :namespace, :aliases => "-n" ,
+      :type => :string,
+      :banner => "NAMESPACE",
+      :desc => "List modules only in specific namespace."
     def list(context_params)
       service_module_id, about, service_module_name = context_params.retrieve_arguments([:service_module_id, :option_1, :option_2],method_argument_names)
       datatype = nil
@@ -116,6 +120,7 @@ module DTK::Client
         action    = options.remote? ? "list_remote" : "list"
         post_body = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
         post_body[:diff] = options.diff? ? options.diff : {}
+        post_body.merge!(:module_namespace => options.namespace)
 
         response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.

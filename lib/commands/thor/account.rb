@@ -89,7 +89,7 @@ module DTK::Client
       new_pass_prompt = password_prompt("Enter new password: ")
       return if new_pass_prompt.nil?
       confirm_pass_prompt = password_prompt("Confirm new password: ")
-      
+
       if new_pass_prompt.eql?(confirm_pass_prompt)
         post_body = {:new_password => new_pass_prompt}
         response = post rest_url("account/set_password"), post_body
@@ -123,7 +123,7 @@ module DTK::Client
         DTK::Client::OsUtil.print("Provided ssh pub key has already been added.", :yellow)
       elsif matched_username
         DTK::Client::OsUtil.print("User ('#{matched_username}') already exists.", :yellow)
-      else        
+      else
         DTK::Client::Configurator.add_current_user_to_direct_access() if response.ok?
       end
 
@@ -133,12 +133,24 @@ module DTK::Client
     desc "delete-ssh-key KEYPAIR-NAME ","Deletes the named ssh key from your user account"
     def delete_ssh_key(context_params)
       name = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      post_body = {:username => name.chomp}
+      post_body = { :username => name.chomp }
 
       response = post rest_url("account/remove_user_direct_access"), post_body
       return response unless response.ok?
 
       OsUtil.print("SSH key '#{name}' removed successfully!", :yellow)
+      nil
+    end
+
+    desc "set-default-namespace NAMESPACE", "Sets default namespace for your user account"
+    def set_default_namespace(context_params)
+      default_namespace = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      post_body = { :namespace => default_namespace.chomp }
+
+      response = post rest_url("account/set_default_namespace"), post_body
+      return response unless response.ok?
+
+      OsUtil.print("Your default namespace has been set to '#{default_namespace}'!", :yellow)
       nil
     end
 
@@ -164,7 +176,7 @@ module DTK::Client
     #   response, key_exists_already = Account.internal_add_user_access("component_module/add_user_direct_access", post_body, 'component module')
     #   return response unless (response.ok? || key_exists_already)
     #   proper_response = response if response.ok?
-      
+
     #   # if either of request passed we will add to known hosts
     #   if proper_response
     #     repo_manager_fingerprint,repo_manager_dns = proper_response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
