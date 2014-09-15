@@ -51,7 +51,7 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :command_only => {
           :self => [
-            ["list"," list [--remote] [--diff]","# List service modules (local/remote). Use --diff to compare loaded and remote modules."]
+            ["list"," list [--remote] [--diff] [-n NAMESPACE]","# List service modules (local/remote). Use --diff to compare loaded and remote modules."]
           ],
           :"assembly" => [
             ["list","list","# List assemblies for given service module."]
