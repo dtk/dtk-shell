@@ -55,8 +55,8 @@ module DTK::Client
       response = DTK::Client::CommandBaseThor.get_cached_response(:assembly, "assembly/list", {:subtype => 'template' })
       # response = DTK::Client::CommandBaseThor.get_cached_response(:module, "service_module/list")
 
-      service_namespace = service.split("::").first
-      service_name = service.split("::").last
+      service_namespace = service.split(":").first
+      service_name = service.split(":").last
 
       if response.ok?
         unless response['data'].nil?

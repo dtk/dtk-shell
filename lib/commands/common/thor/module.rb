@@ -541,8 +541,23 @@ module DTK::Client
       return response unless response.ok?
 
       module_location = OsUtil.module_location(module_type, module_name)
-      assembly_template_location = "#{module_location}/assemblies/#{assembly_template_name}" if (module_location && assembly_template_name)
 
+      if (module_location && assembly_template_name)
+        assembly_template_location = "#{module_location}/assemblies/#{assembly_template_name}"
+        base_file = "#{module_location}/assemblies/#{assembly_template_name}.dtk.assembly"
+
+        # Aldin: could not find better solution, leaving as is for now
+        assembly_file_location =
+          if File.exists?("#{base_file}.yaml")
+            "#{base_file}.yaml"
+          elsif File.exists?("#{base_file}.json")
+            "#{base_file}.json"
+          else
+            nil
+          end
+      end
+
+      FileUtils.rm("#{assembly_file_location}") if assembly_file_location
       if File.directory?(assembly_template_location)
         unless (assembly_template_location.nil? || ("#{module_location}/assemblies/" == assembly_template_location))
           FileUtils.rm_rf("#{assembly_template_location}")
