@@ -10,6 +10,7 @@ module DTK
       extend Auxiliary
 
       DTK_KEYPAIR = 'dtk.pem'
+      DTK_FULL_NAME_SEPARATOR = ':'
 
       class << self
         def is_mac?
@@ -118,7 +119,7 @@ module DTK
             end
           else
             # we detect if we are using full name
-            if (module_name.match(/(.*):(.*)/))
+            if (module_name.match(/(.*)#{DTK_FULL_NAME_SEPARATOR}(.*)/))
               [base_path, "#{$1}", "#{$2}#{version && "-#{version}"}"]
             else
               [base_path, "#{module_name}#{version && "-#{version}"}"]
