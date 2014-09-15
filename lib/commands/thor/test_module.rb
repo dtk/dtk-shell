@@ -47,25 +47,24 @@ module DTK::Client
       set_attribute_module_aux(context_params)
     end
 
-    desc "list [--remote] [--diff]", "List loaded or remote test modules. Use --diff to compare loaded and remote test modules."
+    desc "list [--remote] [--diff] [-n NAMESPACE]", "List loaded or remote test modules. Use --diff to compare loaded and remote test modules."
     method_option :remote, :type => :boolean, :default => false
     method_option :diff, :type => :boolean, :default => false
+    method_option :namespace, :aliases => "-n" ,
+      :type => :string,
+      :banner => "NAMESPACE",
+      :desc => "List modules only in specific namespace."
     def list(context_params)
-      # Amar: attribute context commented out per Rich suggeston
-      #if context_params.is_there_command?(:attribute)
-      #  return module_info_about(context_params, :attributes, :attribute)
-      #elsif context_params.is_there_command?(:"component-template")
-      # if context_params.is_there_command?(:"component-template")
-      if context_params.is_there_command?(:"component")
-        return module_info_about(context_params, :components, :component)
-      end
+      return module_info_about(context_params, :components, :component) if context_params.is_there_command?(:"component")
 
       forwarded_remote = context_params.get_forwarded_options()["remote"] if context_params.get_forwarded_options()
       remote           = options.remote? || forwarded_remote
       action           = (remote ? "list_remote" : "list")
-#     post_body        = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes","versions"]})
+
       post_body        = (remote ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
       post_body[:diff] = options.diff? ? options.diff : {}
+      post_body.merge!(:module_namespace => options.namespace)
+
       response         = post rest_url("test_module/#{action}"),post_body
 
       return response unless response.ok?
