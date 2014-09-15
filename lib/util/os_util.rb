@@ -117,7 +117,12 @@ module DTK
               ["#{base_all_types}/#{type}", module_name]
             end
           else
-            [base_path, "#{module_name}#{version && "-#{version}"}"]
+            # we detect if we are using full name
+            if (module_name.match(/(.*):(.*)/))
+              [base_path, "#{$1}", "#{$2}#{version && "-#{version}"}"]
+            else
+              [base_path, "#{module_name}#{version && "-#{version}"}"]
+            end
           end
         end
 
