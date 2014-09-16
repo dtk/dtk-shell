@@ -170,6 +170,10 @@ module DTK; module Client; class CommandHelper
       unless local_repo_dir.match(/\/#{new_module_name}$/)
         old_dir = local_repo_dir
         new_dir = local_repo_dir.gsub(/#{module_name}$/, new_module_name.split(ModuleUtil::NAMESPACE_SEPERATOR).join('/'))
+
+        # creates directory if missing
+        parent_path = new_dir.gsub(/(\/\w+)$/,'')
+        FileUtils::mkdir_p(parent_path) unless File.directory?(parent_path)
         FileUtils.mv(old_dir, new_dir)
       else
         new_dir = local_repo_dir
