@@ -176,8 +176,10 @@ module DTK::Client
       git_repo_url, module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
       module_type = get_module_type(context_params)
 
+      namespace, local_module_name = get_namespace_and_name(module_name, ':')
+
       # Create component module from user's input git repo
-      response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, module_name, git_repo_url, nil, nil, options.namespace)
+      response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, local_module_name, git_repo_url, nil, nil, namespace)
 
       # Raise error if git repository is invalid
       # raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless response.ok?
@@ -198,7 +200,7 @@ module DTK::Client
           OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
         end
       else
-        delete_module_sub_aux(context_params, module_name, :force_delete => true, :no_error_msg => true, :purge => true)
+        delete_module_sub_aux(context_params, local_module_name, :force_delete => true, :no_error_msg => true, :purge => true)
         return create_response
       end
 
@@ -211,8 +213,10 @@ module DTK::Client
       module_name = context_params.retrieve_arguments([name_option],method_argument_names)
       module_type = get_module_type(context_params)
 
+      namespace, local_module_name = get_namespace_and_name(module_name, ':')
+
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
-      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, module_name, nil, options.namespace)
+      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name, nil, namespace)
       return response unless response.ok?
       module_directory = response.data(:module_directory)
 
@@ -220,11 +224,11 @@ module DTK::Client
       reparse_aux(module_directory)
 
       # first make call to server to create an empty repo
-      response = post rest_url("#{module_type}/create"), { :module_name => module_name, :module_namespace => options.namespace }
+      response = post rest_url("#{module_type}/create"), { :module_name => local_module_name, :module_namespace => namespace }
       return response unless response.ok?
 
       repo_url,repo_id,module_id,branch,new_module_name = response.data(:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name)
-      response = Helper(:git_repo).rename_and_initialize_clone_and_push(module_type.to_sym, module_name, new_module_name, branch, repo_url, module_directory)
+      response = Helper(:git_repo).rename_and_initialize_clone_and_push(module_type.to_sym, local_module_name, new_module_name, branch, repo_url, module_directory)
 
       return response unless response.ok?
       repo_obj,commit_sha =  response.data(:repo_obj, :commit_sha)
@@ -258,7 +262,7 @@ module DTK::Client
       # TODO: what is purpose of pushing again
       # we push clone changes anyway, user can change and push again
       # context_params.add_context_to_params(module_name, :"component-module", module_id)
-      context_params.add_context_to_params(module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
+      context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
       response = push_module_aux(context_params, true)
 
       if git_import
@@ -282,7 +286,7 @@ module DTK::Client
       ignore_component_error = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:ignore_component_error] : options.ignore?
       additional_message     = context_params.get_forwarded_options()[:additional_message] if context_params.get_forwarded_options()
 
-      remote_namespace, local_module_name = get_namespace_and_name(remote_module_name)
+      remote_namespace, local_module_name = get_namespace_and_name(remote_module_name,'/')
 
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, :namespace => remote_namespace, :version => version)
         message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed"
@@ -340,7 +344,7 @@ module DTK::Client
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       # for service_module we are doing this on server side
-      remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name) unless module_type.eql?('service_module')
+      remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name,'/') unless module_type.eql?('service_module')
 
       unless options.force?
         return unless Console.confirmation_prompt("Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace+'/'}#{remote_module_name}' and all items contained in it"+'?')

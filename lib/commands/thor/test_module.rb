@@ -86,11 +86,7 @@ module DTK::Client
       module_info_about(context_params, :instances, :component)
     end
 
-    desc "import TEST-MODULE-NAME [-n NAMESPACE]", "Create new test module from local clone"
-    method_option "namespace",:aliases => "-n" ,
-      :type => :string,
-      :banner => "NAMESPACE",
-      :desc => "Import module in custom namespace."
+    desc "import [NAMESPACE:]TEST-MODULE-NAME", "Create new test module from local clone"
     def import(context_params)
       response = import_module_aux(context_params)
       @@invalidate_map << :test_module if response && response.ok?
@@ -101,11 +97,7 @@ module DTK::Client
     #
     # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
     #
-    desc "import-git GIT-SSH-REPO-URL TEST-MODULE-NAME [-n NAMESPACE]", "Create new local test module by importing from provided git repo URL"
-    method_option "namespace",:aliases => "-n" ,
-      :type => :string,
-      :banner => "NAMESPACE",
-      :desc => "Import git module in custom namespace."
+    desc "import-git GIT-SSH-REPO-URL [NAMESPACE:]TEST-MODULE-NAME", "Create new local test module by importing from provided git repo URL"
     def import_git(context_params)
       import_git_module_aux(context_params)
     end

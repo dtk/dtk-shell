@@ -397,16 +397,13 @@ module DTK::Client
     # end
 
     # TODO: put in two versions, one that creates empty and anotehr taht creates from local dir; use --empty flag
-    desc "import SERVICE-MODULE-NAME [-n NAMESPACE]", "Create new service module from local clone"
-    method_option "namespace",:aliases => "-n" ,
-      :type => :string,
-      :banner => "NAMESPACE",
-      :desc => "Import module in custom namespace."
+    desc "import [NAMESPACE:]SERVICE-MODULE-NAME", "Create new service module from local clone"
     def import(context_params)
       module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      namespace, local_module_name = get_namespace_and_name(module_name, ':')
 
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
-      response = Helper(:git_repo).check_local_dir_exists_with_content(:service_module, module_name, nil, options.namespace)
+      response = Helper(:git_repo).check_local_dir_exists_with_content(:service_module, local_module_name, nil, namespace)
       return response unless response.ok?
       service_directory = response.data(:module_directory)
 
@@ -414,7 +411,7 @@ module DTK::Client
       reparse_aux(service_directory)
 
       # first call to create empty module
-      response = post rest_url("service_module/create"), { :module_name => module_name, :module_namespace => options.namespace }
+      response = post rest_url("service_module/create"), { :module_name => local_module_name, :module_namespace => namespace }
       return response unless response.ok?
       @@invalidate_map << :service_module
 
@@ -422,12 +419,12 @@ module DTK::Client
       service_module_id, repo_info = response.data(:service_module_id, :repo_info)
       repo_url,repo_id,module_id,branch,new_module_name = [:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name].map { |k| repo_info[k.to_s] }
 
-      response = Helper(:git_repo).rename_and_initialize_clone_and_push(:service_module, module_name, new_module_name,branch,repo_url,service_directory)
+      response = Helper(:git_repo).rename_and_initialize_clone_and_push(:service_module, local_module_name, new_module_name,branch,repo_url,service_directory)
       return response unless response.ok?
 
       repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
 
-      context_params.add_context_to_params(module_name, :"service-module", module_id)
+      context_params.add_context_to_params(local_module_name, :"service-module", module_id)
       push(context_params,true)
     end
 
