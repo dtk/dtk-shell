@@ -10,7 +10,6 @@ module DTK
       extend Auxiliary
 
       DTK_KEYPAIR = 'dtk.pem'
-      DTK_FULL_NAME_SEPARATOR = ':'
 
       class << self
         def is_mac?
@@ -119,7 +118,7 @@ module DTK
             end
           else
             # we detect if we are using full name
-            if (module_name.match(/(.*)#{DTK_FULL_NAME_SEPARATOR}(.*)/))
+            if (module_name.match(/(.*)#{ModuleUtil::NAMESPACE_SEPERATOR}(.*)/))
               [base_path, "#{$1}", "#{$2}#{version && "-#{version}"}"]
             else
               [base_path, "#{module_name}#{version && "-#{version}"}"]
@@ -196,7 +195,19 @@ module DTK
         #
         def local_component_module_list()
           component_module_dir = component_clone_location()
-          Dir.entries(component_module_dir).select {|entry| File.directory? File.join(component_module_dir,entry) and !(entry =='.' || entry == '..') }
+
+          directories = Dir.entries(component_module_dir).map do |entry|
+            next if (entry =='.' || entry == '..' || entry.index('.') == 0)
+
+            Dir.entries("#{component_module_dir}/#{entry}").map do |m_entry|
+              next unless File.directory? File.join(component_module_dir,entry,m_entry)
+              next if (m_entry =='.' || m_entry == '..' || m_entry.index('.') == 0)
+
+              ModuleUtil.join_name(m_entry, entry)
+            end
+          end
+
+          directories.flatten.select { |d| !d.nil? }
         end
 
         # Public method will convert given string, to string with colorize output

@@ -169,7 +169,7 @@ module DTK; module Client; class CommandHelper
       # check to see if the new dir has proper naming e.g. (~/dtk/component_modules/dtk::java)
       unless local_repo_dir.match(/\/#{new_module_name}$/)
         old_dir = local_repo_dir
-        new_dir = local_repo_dir.gsub(/#{module_name}$/, new_module_name)
+        new_dir = local_repo_dir.gsub(/#{module_name}$/, new_module_name.split(ModuleUtil::NAMESPACE_SEPERATOR).join('/'))
         FileUtils.mv(old_dir, new_dir)
       else
         new_dir = local_repo_dir
