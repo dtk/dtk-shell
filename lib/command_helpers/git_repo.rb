@@ -167,7 +167,7 @@ module DTK; module Client; class CommandHelper
     def rename_and_initialize_clone_and_push(type, module_name, new_module_name, branch, repo_url, local_repo_dir, version = nil)
 
       # check to see if the new dir has proper naming e.g. (~/dtk/component_modules/dtk::java)
-      unless local_repo_dir.match(/\/#{new_module_name}$/)
+      unless local_repo_dir.match(/\/#{new_module_name.gsub(ModuleUtil::NAMESPACE_SEPERATOR,'/')}$/)
         old_dir = local_repo_dir
         new_dir = local_repo_dir.gsub(/#{module_name}$/, new_module_name.split(ModuleUtil::NAMESPACE_SEPERATOR).join('/'))
 
