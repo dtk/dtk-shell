@@ -168,7 +168,7 @@ module DTK::Client
     # end
 
     # version_method_option
-    desc "install [NAMESPACE/]REMOTE-SERVICE-MODULE-NAME [-y] [-i]", "Install remote service module into local environment. -y will automatically clone component modules. -i will ignore component import error."
+    desc "install NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y] [-i]", "Install remote service module into local environment. -y will automatically clone component modules. -i will ignore component import error."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :ignore, :aliases => '-i', :type => :boolean, :default => false
     def install(context_params)
@@ -524,7 +524,7 @@ module DTK::Client
       response
     end
 
-    desc "delete-from-catalog [NAMESPACE/]REMOTE-SERVICE-MODULE-NAME [-y]", "Delete the service module from the DTK Network catalog"
+    desc "delete-from-catalog NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y]", "Delete the service module from the DTK Network catalog"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_from_catalog(context_params)
       delete_from_catalog_aux(context_params)

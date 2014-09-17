@@ -309,11 +309,12 @@ module DTK::Client
 
       # case when we need to import additional components
       if (response.ok? && (missing_components = response.data(:missing_module_components)))
+        required_components = response.data(:required_modules)
         opts = {:do_not_raise=>true}
         module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message=>true)
         module_opts.merge!(:module_type => 'component-module')
 
-        continue = trigger_module_component_import(missing_components,module_opts)
+        continue = trigger_module_component_import(missing_components, required_components, module_opts)
         return unless continue
 
         puts "Resuming DTK Network import for #{module_type} '#{remote_module_name}' ..."

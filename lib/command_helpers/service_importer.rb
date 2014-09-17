@@ -18,7 +18,7 @@ module DTK::Client
     ##
     # Method will trigger import for each missing module component
     #
-    def trigger_module_component_import(missing_component_list,opts={})
+    def trigger_module_component_import(missing_component_list, required_components, opts={})
       puts "Auto-importing missing component module(s)"
       does_not_exist, modules_to_import = validate_missing_components(missing_component_list)
 
@@ -26,6 +26,12 @@ module DTK::Client
         module_names = does_not_exist.collect{|x| "#{x['namespace']}/#{x['name']}"}
         OsUtil.print("You do no have access to component modules '#{module_names}' required by service module, or they do not exist on repo manager and will not be imported!", :yellow)
         return false unless Console.confirmation_prompt("Do you want to continue with import of available component modules and service module"+'?')
+      end
+
+      required_components.each do |r_module|
+        module_name = "#{r_module['namespace']}/#{r_module['name']}"
+        module_name += "-#{r_module['version']}" if r_module['version']
+        print "Using component module '#{module_name}'\n"
       end
 
       modules_to_import.each do |m_module|
@@ -92,10 +98,10 @@ module DTK::Client
       end
 
       unless needed_modules.empty?
-        puts "Service '#{service_module_name}' does not have the following component modules dependencies on the client machine: \n\n"
-        needed_modules.each { |m| puts " - #{m['formated_name']}" }
+        # puts "Service '#{service_module_name}' does not have the following component modules dependencies on the client machine: \n\n"
+        # needed_modules.each { |m| puts " - #{m['formated_name']}" }
         is_install_dependencies = true
-        is_install_dependencies = Console.confirmation_prompt("\nDo you want to clone these missing component modules to the client machine?") unless force_clone
+        # is_install_dependencies = Console.confirmation_prompt("\nDo you want to clone these missing component modules to the client machine?") unless force_clone
 
         # we get list of modules available on server
 
@@ -104,7 +110,7 @@ module DTK::Client
         if is_install_dependencies
           needed_modules.each do |m|
             formated_name = m['formated_name']
-            print "Cloning component module '#{formated_name}' from server ... "
+            # print "Cloning component module '#{formated_name}' from server ... "
             thor_options = {}
             thor_options["version"] = m['version']
             thor_options["skip_edit"] = true
@@ -114,7 +120,7 @@ module DTK::Client
             new_context_params.forward_options(thor_options)
             new_context_params.add_context_to_params(formated_name, :"component-module", m['id'])
             response = ContextRouter.routeTask("component_module", "clone", new_context_params, @conn)
-            puts "Done."
+            # puts "Done."
           end
         end
       end

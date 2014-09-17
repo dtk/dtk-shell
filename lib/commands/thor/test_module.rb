@@ -102,7 +102,7 @@ module DTK::Client
       import_git_module_aux(context_params)
     end
 
-    desc "install [NAMESPACE/]REMOTE-TEST-MODULE-NAME","Install remote test module into local environment"
+    desc "install NAMESPACE/REMOTE-TEST-MODULE-NAME","Install remote test module into local environment"
     method_option "repo-manager",:aliases => "-r" ,
       :type => :string,
       :banner => "REPO-MANAGER",
@@ -119,7 +119,7 @@ module DTK::Client
       create_test_module_aux(context_params)
     end
 
-    desc "delete-from-catalog [NAMESPACE/]REMOTE-TEST-MODULE-NAME [-y]", "Delete the test module from the DTK Network catalog"
+    desc "delete-from-catalog NAMESPACE/REMOTE-TEST-MODULE-NAME [-y]", "Delete the test module from the DTK Network catalog"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_from_catalog(context_params)
       delete_from_catalog_aux(context_params)

@@ -215,7 +215,7 @@ TODO: might deprecate
     # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     # if multiple items and failire; stops on first failure
 #    desc "install [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-r DTK-REPO-MANAGER]","Install remote component module into local environment"
-    desc "install [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME","Install remote component module into local environment"
+    desc "install NAMESPACE/REMOTE-COMPONENT-MODULE-NAME","Install remote component module into local environment"
     method_option "repo-manager",:aliases => "-r" ,
       :type => :string,
       :banner => "REPO-MANAGER",
@@ -270,7 +270,7 @@ TODO: might deprecate
     end
 =end
 
-    desc "delete-from-catalog [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-y]", "Delete the component module from the DTK Network catalog"
+    desc "delete-from-catalog NAMESPACE/REMOTE-COMPONENT-MODULE-NAME [-y]", "Delete the component module from the DTK Network catalog"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_from_catalog(context_params)
       delete_from_catalog_aux(context_params)
