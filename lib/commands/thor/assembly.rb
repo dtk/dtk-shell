@@ -1,8 +1,10 @@
-dtk_require("../../shell/status_monitor")
-
+dtk_require_from_base("shell/status_monitor")
+dtk_require_common_commands('thor/assembly_template')
 module DTK::Client
   class Assembly < CommandBaseThor
     no_tasks do
+      include AssemblyTemplateMixin
+
       def get_assembly_name(assembly_id)
         name = nil
         3.times do
@@ -245,10 +247,9 @@ module DTK::Client
       assembly_template_name = get_assembly_name(assembly_template_id)
       assembly_template_name.gsub!('::','-') if assembly_template_name
 
-      # we check current options and forwarded options (from deploy method)
-      in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
+      in_target = options["in-target"]
       instance_bindings = options["instance-bindings"]
-      settings = options["settings"]
+      settings = parse_service_settings(options["settings"])
       assembly_list = Assembly.assembly_list()
 
       if name
