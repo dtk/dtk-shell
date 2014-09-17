@@ -229,8 +229,9 @@ module DTK::Client
     # DEVELOPMENT MODE METHODS
     #
     if DTK::Configuration.get(:development_mode)
-      desc "delete-all [-y]","Delete all service modules"
+      desc "delete-all","Delete all service modules"
       def delete_all(context_params)
+        return unless Console.confirmation_prompt("This will DELETE ALL test modules, are you sure"+'?')
         response = list(context_params)
 
         response.data().each do |e|
