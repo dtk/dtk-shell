@@ -441,7 +441,7 @@ module DTK
           namespace, name = nil, ''
 
           if (component_full_name||'').include?(':')
-            match = component_full_name.match(/(\w*):{1}(.*)/)
+            match = component_full_name.match(/(\w*\-?\w*):{1}(.*)/)
             namespace, name = [$1,$2]
 
             return [nil, component_full_name] if (name.include?(':') && !name.include?('::'))
