@@ -27,6 +27,10 @@ module DTK
         [namespace,name]
       end
 
+      def self.filter_module_name(name_or_full_module_name)
+        full_module_name_parts?(name_or_full_module_name).last
+      end
+
       def self.check_format!(module_identifier)
         return module_identifier if module_identifier.match(/^[0-9]+$/)
         DtkLogger.instance.debug(caller)

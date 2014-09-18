@@ -170,9 +170,12 @@ module DTK::Client
         error_msg = create_response['errors'].select { |er| er['message'].include? "cannot be created since it exists already" }
         if error_msg.empty?
           # If server response is not ok and module does not exist on server, delete cloned module, invoke delete method
-          FileUtils.rm_rf("#{response['data']['module_directory']}")
           delete(context_params,:force_delete => true, :no_error_msg => true)
         end
+
+        # remove temp directory
+        FileUtils.rm_rf("#{response['data']['module_directory']}")
+
         return create_response
       end
     end
