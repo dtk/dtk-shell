@@ -450,15 +450,9 @@ module DTK
       DefaultRestOpts.merge!(:ssl_ca_file => File.expand_path('../lib/config/cacert.pem', File.dirname(__FILE__)))
 
       def get_raw(url)
-#ret =   RestClientWrapper.get_raw(url, {}, DefaultRestOpts.merge(:cookies => @cookies))
-#        pp [:get,{:url => url, :response => JSON.parse(ret)}]
-#ret
         RestClientWrapper.get_raw(url, {}, DefaultRestOpts.merge(:cookies => @cookies))
       end
       def post_raw(url,body,params={})
-#ret =   RestClientWrapper.post_raw(url, body, DefaultRestOpts.merge(:cookies => @cookies).merge(params))
-#pp [:post,{:url => url,:body => body,:response => JSON.parse(ret)}]
-#ret
         RestClientWrapper.post_raw(url, body, DefaultRestOpts.merge(:cookies => @cookies).merge(params))
       end
 
