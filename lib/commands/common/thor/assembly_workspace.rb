@@ -681,11 +681,6 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete #{what} '#{component_id}'"+'?')
       end
 
-      # namespace, component_id = get_namespace_and_name(component_id)
-      namespace, component_id = get_namespace_and_name_for_component(component_id)
-      # raise DTK::Client::DtkValidationError, "You have to provide valid component name (namespace/component)!" if(namespace.nil? || component_id.nil?)
-
-
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :node_id => node_id,
@@ -693,7 +688,6 @@ module DTK::Client
       }
 
       # delete component by name (e.g. delete-component dtk_java)
-      post_body.merge!(:namespace => namespace) if namespace
       post_body.merge!(:cmp_full_name => "#{node_name}/#{component_id}") if (node_name && !(component_id.to_s =~ /^[0-9]+$/))
       response = post(rest_url("assembly/delete_component"),post_body)
     end

@@ -89,7 +89,7 @@ module DTK::Client
       module_name = get_name_from_id_helper(module_id)
       module_type = get_module_type(context_params)
 
-      unless options.force?
+      unless (options.force? || method_opts[:force_delete])
         is_go = Console.confirmation_prompt("Are you sure you want to delete module '#{module_name}'?")
         return nil unless is_go
       end
