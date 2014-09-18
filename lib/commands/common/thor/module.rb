@@ -89,6 +89,11 @@ module DTK::Client
       module_name = get_name_from_id_helper(module_id)
       module_type = get_module_type(context_params)
 
+      unless options.force?
+        is_go = Console.confirmation_prompt("Are you sure you want to delete module '#{module_name}'?")
+        return nil unless is_go
+      end
+
       response =
         if options.purge? || method_opts[:purge]
           opts = {:module_name => module_name}
@@ -176,10 +181,10 @@ module DTK::Client
       git_repo_url, module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
       module_type = get_module_type(context_params)
 
-      namespace, local_module_name = get_namespace_and_name(module_name, ':')
+      namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
 
       # Create component module from user's input git repo
-      response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, local_module_name, git_repo_url, nil, nil, namespace)
+      response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, local_module_name, git_repo_url)
 
       # Raise error if git repository is invalid
       # raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless response.ok?
@@ -213,10 +218,10 @@ module DTK::Client
       module_name = context_params.retrieve_arguments([name_option],method_argument_names)
       module_type = get_module_type(context_params)
 
-      namespace, local_module_name = get_namespace_and_name(module_name, ':')
+      namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
 
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
-      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name, nil, namespace)
+      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name)
       return response unless response.ok?
       module_directory = response.data(:module_directory)
 
@@ -229,9 +234,9 @@ module DTK::Client
 
       repo_url,repo_id,module_id,branch,new_module_name = response.data(:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name)
       response = Helper(:git_repo).rename_and_initialize_clone_and_push(module_type.to_sym, local_module_name, new_module_name, branch, repo_url, module_directory)
-
       return response unless response.ok?
       repo_obj,commit_sha =  response.data(:repo_obj, :commit_sha)
+      module_final_dir = repo_obj.repo_dir
 
       post_body = {
         :repo_id => repo_id,
@@ -250,7 +255,7 @@ module DTK::Client
       dsl_created_info = response.data(:dsl_created_info)
 
       if dsl_created_info and !dsl_created_info.empty?
-        msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_directory}"
+        msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_final_dir}"
         DTK::Client::OsUtil.print(msg,:yellow)
         response = Helper(:git_repo).add_file(repo_obj, dsl_created_info["path"], dsl_created_info["content"], msg)
         return response unless response.ok?

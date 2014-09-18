@@ -114,7 +114,7 @@ module DTK::Client
       response
     end
 
-    desc "create TEST-MODULE-NAME", "Create template test module and generate all needed test module helper files"
+    desc "create [NAMESPACE:]TEST-MODULE-NAME", "Create template test module and generate all needed test module helper files"
     def create(context_params)
       create_test_module_aux(context_params)
     end

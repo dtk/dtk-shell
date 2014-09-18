@@ -8,14 +8,15 @@ module DTK::Client
 				Response.wrap_helper_actions do
 		      modules_dir = OsUtil.test_clone_location()
 		      FileUtils.mkdir_p(modules_dir) unless File.directory?(modules_dir)
+		      module_name = ModuleUtil.filter_module_name(module_name)
 		      target_repo_dir = OsUtil.module_location(type,module_name)
 		      begin
-		      	FileUtils.mkdir(target_repo_dir)  
+		      	FileUtils.mkdir(target_repo_dir)
 		        generate_model(module_name, target_repo_dir)
-		        generate_serverspec_files(module_name, target_repo_dir)					
+		        generate_serverspec_files(module_name, target_repo_dir)
 		      rescue => e
 		        error_msg = "Create of directory (#{target_repo_dir}) failed."
-		        additional_error_msg = "Directory already exists" if e.message.include? "File exists" 
+		        additional_error_msg = "Directory already exists" if e.message.include? "File exists"
 		        raise DTK::ErrorUsage.new(error_msg + " " + additional_error_msg,:log_error=>false)
 		      end
 		      {"module_directory" => target_repo_dir}
@@ -41,8 +42,8 @@ module DTK::Client
 					File.open(target_repo_dir + "/serverspec/spec/localhost/temp_component_spec.rb", "w") { |f| f.write(spec_template) }
 				rescue => e
 					error_msg = "Generating serverspec files failed."
-		      DtkLogger.instance.error_pp(e.message, e.backtrace)        
-		      raise DTK::ErrorUsage.new(error_msg,:log_error=>false)				
+		      DtkLogger.instance.error_pp(e.message, e.backtrace)
+		      raise DTK::ErrorUsage.new(error_msg,:log_error=>false)
 				end
 			end
 		end

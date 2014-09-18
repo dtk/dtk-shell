@@ -522,8 +522,7 @@ TODO: will put in dot release and will rename to 'extend'
       unless options.force?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
         # used form "+'?' because ?" confused emacs ruby rendering
-        what = "service"
-        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{assembly_name}' and its nodes"+'?')
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy service '#{assembly_name}' and its nodes"+'?')
       end
 
       # purge local clone
