@@ -4,47 +4,6 @@ module DTK::Client
   class Assembly < CommandBaseThor
     no_tasks do
       include AssemblyTemplateMixin
-
-      def get_assembly_name(assembly_id)
-        name = nil
-        3.times do
-          name = get_name_from_id_helper(assembly_id)
-          break if name
-        end
-
-        name
-      end
-
-      def get_assembly_stage_name(assembly_list,assembly_template_name)
-        name = nil
-        current_list = assembly_list.select{|e| e.include?(assembly_template_name)}
-
-        if current_list.empty?
-          name = assembly_template_name
-        else
-          numbers = []
-          base_name = nil
-
-          assembly_list.each do |assembly|
-            match = assembly.match(/#{assembly_template_name}(-)(\d*)/)
-            base_name = assembly_template_name if assembly_template_name.include?(assembly)
-            numbers << match[2].to_i if match
-          end
-
-          unless base_name
-            name = assembly_template_name
-          else
-            highest = numbers.max||1
-            new_highest = highest+1
-
-            all = (2..new_highest).to_a
-            nums = all - numbers
-            name = assembly_template_name + "-#{nums.first}"
-          end
-        end
-
-        name
-      end
     end
 
     def self.whoami()
@@ -261,7 +220,7 @@ module DTK::Client
       post_body.merge!(:target_id => in_target) if in_target
       post_body.merge!(:name => name) if name
       post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
-      post_body.merge!(:settings => settings) if settings
+      post_body.merge!(:settings_json_form => JSON.generate(settings)) if settings
 
       response = post rest_url("assembly/stage"), post_body
       return response unless response.ok?
@@ -320,9 +279,10 @@ module DTK::Client
       post_body.merge!(:target_id => in_target) if in_target
       post_body.merge!(:name => name) if name
       post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
-      post_body.merge!(:settings => settings) if settings
+      post_body.merge!(:settings_json_form => JSON.generate(settings)) if settings
 
       response = post rest_url("assembly/deploy"), post_body
+      return response unless response.ok?
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :service
       @@invalidate_map << :assembly
