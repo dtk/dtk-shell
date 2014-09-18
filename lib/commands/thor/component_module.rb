@@ -176,7 +176,7 @@ TODO: might deprecate
     desc "import [NAMESPACE:]COMPONENT-MODULE-NAME", "Create new component module from local clone"
     def import(context_params)
       response = import_module_aux(context_params)
-      @@invalidate_map << :component_module if response && response.ok?
+      @@invalidate_map << :component_module if (response && response.ok?)
 
       response
     end

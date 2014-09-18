@@ -90,7 +90,7 @@ module DTK::Client
       module_type = get_module_type(context_params)
 
       unless (options.force? || method_opts[:force_delete])
-        is_go = Console.confirmation_prompt("Are you sure you want to delete module '#{module_name}'?")
+        is_go = Console.confirmation_prompt("Are you sure you want to delete module '#{module_name}'"+"?")
         return nil unless is_go
       end
 
@@ -222,9 +222,8 @@ module DTK::Client
       module_type = get_module_type(context_params)
 
       namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
-
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
-      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name)
+      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name, nil, namespace)
       return response unless response.ok?
       module_directory = response.data(:module_directory)
 
