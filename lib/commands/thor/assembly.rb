@@ -1,8 +1,10 @@
-dtk_require("../../shell/status_monitor")
-
+dtk_require_from_base("shell/status_monitor")
+dtk_require_common_commands('thor/assembly_template')
 module DTK::Client
   class Assembly < CommandBaseThor
     no_tasks do
+      include AssemblyTemplateMixin
+
       def get_assembly_name(assembly_id)
         name = nil
         3.times do
@@ -245,10 +247,9 @@ module DTK::Client
       assembly_template_name = get_assembly_name(assembly_template_id)
       assembly_template_name.gsub!('::','-') if assembly_template_name
 
-      # we check current options and forwarded options (from deploy method)
-      in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
+      in_target = options["in-target"]
       instance_bindings = options["instance-bindings"]
-      settings = options["settings"]
+      settings = parse_service_settings(options["settings"])
       assembly_list = Assembly.assembly_list()
 
       if name
@@ -271,66 +272,63 @@ module DTK::Client
       return response
     end
 
-=begin
-    # desc "ASSEMBLY-NAME/ID deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
-    # version_method_option
-    desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
-    method_option "in-target",:aliases => "-t" ,
-      :type => :string,
-      :banner => "TARGET-NAME/ID",
-      :desc => "Target (id) to create assembly in" 
+
+#    desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [--settings SETTINGS-NAME1[,..]]", "Stage assembly in target."
+#     version_method_option
+    desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [--settings SETTINGS-NAME1[,..]] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
+    #hidden option
+    method_option "instance-bindings",
+      :type => :string 
+#    method_option "in-target",:aliases => "-t" ,
+#      :type => :string,
+#      :banner => "TARGET-NAME/ID",
+#      :desc => "Target (id) to create assembly in" 
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string, 
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
+    method_option :settings, :type => :string, :aliases => '-s'
     def deploy(context_params)
       context_params.forward_options(options)
-      response = stage(context_params)
-
-      return response unless response.ok?
-
-      # create task      
-      # commented assemlby_id until we implement json to yaml parsing on client side instead of server side
-      # assembly_id = response.data(:assembly_id)
-
-      # temp solution just to make deploy to work, since response we get from 'stage' command is simple string presented as yaml
-      assembly_id = response.data.match(/(id:)\s*(\d+)/)[2]
-
+      assembly_template_id, name = context_params.retrieve_arguments([:assembly_id!, :option_1],method_argument_names)
       post_body = {
-        :assembly_id => assembly_id,
-        :commit_msg => options["commit_msg"]||"Initial deploy"
+        :assembly_id => assembly_template_id
       }
-
-      response = post rest_url("assembly/find_violations"), post_body
-      return response unless response.ok?
-      if response.data and response.data.size > 0
-        error_message =  "The following violations were found; they must be corrected before the assembly can be deployed"
-        DTK::Client::OsUtil.print(error_message, :red)
-        return response.render_table(:violation)
+      if commit_msg = options["commit_msg"]
+        post_body.merge!(:commit_msg => commit_msg)
       end
 
-      ret = response = post(rest_url("assembly/create_task"), post_body)        
+      # using this to make sure cache will be invalidated after new assembly is created from other commands e.g.
+      # 'assembly-create', 'install' etc.
+      @@invalidate_map << :assembly
+      
+      assembly_template_name = get_assembly_name(assembly_template_id)
+      assembly_template_name.gsub!('::','-') if assembly_template_name
 
-      return response unless response.ok?
+      # we check current options and forwarded options (from deploy method)
+      in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
+      instance_bindings = options["instance-bindings"]
+      settings = options["settings"]
+      assembly_list = Assembly.assembly_list()
 
-      # execute task
-      task_id = response.data(:task_id)
-      response = post(rest_url("task/execute"), "task_id" => task_id)
-
-      # start watching task ID
-      if $shell_mode
-        DTK::Shell::StatusMonitor.start_monitoring(task_id) if response.ok?
+      if name
+        raise DTK::Client::DtkValidationError, "Unable to deploy service with name '#{name}'. Service with specified name exists already!" if assembly_list.include?(name)
+      else
+        name = get_assembly_stage_name(assembly_list,assembly_template_name)
       end
+      
+      post_body.merge!(:target_id => in_target) if in_target
+      post_body.merge!(:name => name) if name
+      post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
+      post_body.merge!(:settings => settings) if settings
 
-      return response unless response.ok?
-      ret.add_data_value!(:task_id,task_id)
-
+      response = post rest_url("assembly/deploy"), post_body
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :service
-
-      return ret
+      @@invalidate_map << :assembly
+      response
     end
-=end
+ 
 
     desc "delete ASSEMBLY-ID", "Delete assembly"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
