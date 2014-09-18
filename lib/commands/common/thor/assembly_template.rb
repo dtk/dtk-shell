@@ -4,7 +4,9 @@ module DTK::Client
     # SETTINGS := SETTING[;...SETTING]
     # SETTING := ATOM || ATOM(ATTR=VAL,...)
     def parse_service_settings(settings)
-      settings && settings.split(';').map{|setting|ServiceSetting.parse(setting)}
+      # TODO: because of problem with serialization on server side just passing in raw settings string
+      #  settings && settings.split(';').map{|setting|ServiceSetting.parse(setting)}
+      settings
     end
     module ServiceSetting
       def self.parse(setting)
