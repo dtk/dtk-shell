@@ -179,7 +179,7 @@ module DTK::Client
       push_module_updates_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID push-assembly-updates SERVICE-MODULE-NAME/ASSEMBLY-NAME", "Push changes made to this workspace to the designated assembly."
+    desc "WORKSPACE-NAME/ID push-assembly-updates [NAMESPACE:]SERVICE-MODULE-NAME/ASSEMBLY-NAME", "Push changes made to this workspace to the designated assembly."
     def push_assembly_updates(context_params)
       workspace_id, qualified_assembly_name = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names) 
       if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
@@ -193,7 +193,7 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "WORKSPACE-NAME/ID create-assembly NAMESPACE:SERVICE-MODULE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
+    desc "WORKSPACE-NAME/ID create-assembly [NAMESPACE:]SERVICE-MODULE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
    # The option -p will purge the workspace after assembly creation." 
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def create_assembly(context_params)

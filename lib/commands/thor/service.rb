@@ -202,7 +202,7 @@ TODO: overlaps with different meaning
       cancel_task_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID create-assembly SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create a new assembly from this service instance in the designated service module."
+    desc "SERVICE-NAME/ID create-assembly [NAMESPACE:]SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create a new assembly from this service instance in the designated service module."
     def create_assembly(context_params)
       assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
       response = promote_assembly_aux(:create,assembly_id,service_module_name,assembly_template_name)
@@ -223,7 +223,7 @@ TODO: overlaps with different meaning
       converge_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID push-assembly-updates [SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push changes made to this service instance to the designated assembly; default is parent assembly."
+    desc "SERVICE-NAME/ID push-assembly-updates [NAMESPACE:SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push changes made to this service instance to the designated assembly; default is parent assembly."
     def push_assembly_updates(context_params)
       assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:service_id!,:option_1],method_argument_names)
       service_module_name, assembly_template_name =
