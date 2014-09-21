@@ -267,7 +267,7 @@ module DTK::Client
       # we check current options and forwarded options (from deploy method)
       in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
       instance_bindings = options["instance-bindings"]
-      settings = options["settings"]
+      settings = parse_service_settings(options["settings"])
       assembly_list = Assembly.assembly_list()
 
       if name
