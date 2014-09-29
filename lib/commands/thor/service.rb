@@ -525,6 +525,11 @@ TODO: will put in dot release and will rename to 'extend'
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy service '#{assembly_name}' and its nodes"+'?')
       end
 
+      unsaved_modules = check_if_unsaved_changes(assembly_id)
+      unless unsaved_modules.empty?
+        return unless Console.confirmation_prompt("Component module(s) '#{unsaved_modules.join(',')}' attached to this service contain some unsaved changes that will be lost. Do you still want to proceed"+'?')
+      end
+
       # purge local clone
       response = purge_clone_aux(:all,:assembly_module => {:assembly_name => assembly_name})
       return response unless response.ok?

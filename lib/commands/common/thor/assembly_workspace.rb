@@ -631,6 +631,15 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy all nodes in the workspace"+'?')
       end
 
+      unsaved_modules = check_if_unsaved_changes(assembly_or_workspace_id)
+      unless unsaved_modules.empty?
+        return unless Console.confirmation_prompt("Component module(s) '#{unsaved_modules.join(',')}' attached to workspace contain some unsaved changes that will be lost. Do you still want to proceed"+'?')
+      end
+
+      # purge local clone
+      response = purge_clone_aux(:all,:assembly_module => {:assembly_name => 'workspace'})
+      return response unless response.ok?
+
       post_body = {
         :assembly_id => assembly_or_workspace_id
       }

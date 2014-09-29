@@ -22,5 +22,23 @@ module DTK::Client
       end
       response
     end
+
+    def check_if_unsaved_changes(assembly_or_workspace_id, opts={})
+      unsaved_modules = []
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :subtype     => 'instance'
+      }
+      response = post rest_url("assembly/get_component_modules"), post_body
+
+      if response.ok?
+        response.data.each do |cmp_mod|
+          unsaved_modules << "#{cmp_mod['namespace_name']}:#{cmp_mod['display_name']}" if cmp_mod['local_copy_diff']
+        end
+      end
+
+      unsaved_modules
+    end
+
   end
 end
