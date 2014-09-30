@@ -67,12 +67,13 @@ module DTK::Client
           post_body.merge!(:namespace => namespace)
         end
       end
-      post_body.merge!(:assembly_template_name => assembly_template_name) if assembly_template_name
-      response = post rest_url("assembly/promote_to_template"), post_body
-      # when changing context send request for getting latest assembly_templates instead of getting from cache
-      # @@invalidate_map << :assembly_template
 
+      post_body.merge!(:local_clone_dir_exists => true) if Helper(:git_repo).local_clone_dir_exists?(:service_module, service_module_name, :namespace => namespace)
+      post_body.merge!(:assembly_template_name => assembly_template_name) if assembly_template_name
+
+      response = post rest_url("assembly/promote_to_template"), post_body
       return response unless response.ok?()
+
       #synchronize_clone will load new assembly template into service clone on workspace (if it exists)
       commit_sha,workspace_branch,namespace = response.data(:commit_sha,:workspace_branch,:module_namespace)
       service_module_name ||= response.data(:module_name)
