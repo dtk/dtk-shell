@@ -527,7 +527,7 @@ TODO: will put in dot release and will rename to 'extend'
 
       unsaved_modules = check_if_unsaved_changes(assembly_id)
       unless unsaved_modules.empty?
-        return unless Console.confirmation_prompt("Component module(s) '#{unsaved_modules.join(',')}' attached to this service contain some unsaved changes that will be lost. Do you still want to proceed"+'?')
+        return unless Console.confirmation_prompt("Deleting this service will cause unsaved changes in component module(s) '#{unsaved_modules.join(',')}' to be lost. Do you still want to proceed"+'?')
       end
 
       # purge local clone

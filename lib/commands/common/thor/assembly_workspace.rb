@@ -633,7 +633,7 @@ module DTK::Client
 
       unsaved_modules = check_if_unsaved_changes(assembly_or_workspace_id)
       unless unsaved_modules.empty?
-        return unless Console.confirmation_prompt("Component module(s) '#{unsaved_modules.join(',')}' attached to workspace contain some unsaved changes that will be lost. Do you still want to proceed"+'?')
+        return unless Console.confirmation_prompt("Purging the workspace will cause unsaved changes in component module(s) '#{unsaved_modules.join(',')}' to be lost. Do you still want to proceed"+'?')
       end
 
       # purge local clone
