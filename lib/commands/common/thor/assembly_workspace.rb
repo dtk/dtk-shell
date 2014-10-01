@@ -51,26 +51,29 @@ module DTK::Client
 
     # mode will be :create or :update
     # service_module_name_x can be name or fullname (NS:MOduleName)
-    def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name_x=nil,assembly_template_name=nil)
+    def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name_x=nil,assembly_template_name=nil,opts={})#default_namespace=nil)
+      namespace = nil
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :mode => mode.to_s
       }
+
       if service_module_name_x
         service_module_name = service_module_name_x
-        namespace = nil
         if service_module_name_x =~ /(^[^:]+):([^:]+$)/
           namespace,service_module_name = [$1,$2]
         end
         post_body.merge!(:service_module_name => service_module_name) 
-        if namespace
-          post_body.merge!(:namespace => namespace)
-        end
       end
 
-      post_body.merge!(:local_clone_dir_exists => true) if Helper(:git_repo).local_clone_dir_exists?(:service_module, service_module_name, :namespace => namespace)
-      post_body.merge!(:assembly_template_name => assembly_template_name) if assembly_template_name
+      namespace ||= opts[:default_namespace]
+      if namespace
+        post_body.merge!(:namespace => namespace)
+        post_body.merge!(:local_clone_dir_exists => true) if Helper(:git_repo).local_clone_dir_exists?(:service_module, service_module_name, :namespace => namespace)
+      end
 
+      post_body.merge!(:assembly_template_name => assembly_template_name) if assembly_template_name
+      post_body.merge!(:use_module_namespace => true) if opts[:use_module_namespace]
       response = post rest_url("assembly/promote_to_template"), post_body
       return response unless response.ok?()
 

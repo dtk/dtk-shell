@@ -198,8 +198,15 @@ module DTK::Client
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def create_assembly(context_params)
       workspace_id, service_module_full_name, assembly_template_name = context_params.retrieve_arguments([:workspace_id!,:option_1!,:option_2!],method_argument_names)
-      response = promote_assembly_aux(:create,workspace_id,service_module_full_name,assembly_template_name)
+
+      # need default_namespace for create-assembly because need to check if local service-module directory existst in promote_assembly_aux
+      resp = post rest_url("namespace/default_namespace_name")
+      return resp unless resp.ok?
+
+      default_namespace = resp.data
+      response = promote_assembly_aux(:create,workspace_id,service_module_full_name,assembly_template_name,{:default_namespace=>default_namespace})
       return response unless response.ok?
+
       if options.purge?
         response = purge_aux(context_params)
         return response unless response.ok?

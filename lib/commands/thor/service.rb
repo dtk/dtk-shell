@@ -205,7 +205,13 @@ TODO: overlaps with different meaning
     desc "SERVICE-NAME/ID create-assembly [NAMESPACE:]SERVICE-MODULE-NAME ASSEMBLY-NAME", "Create a new assembly from this service instance in the designated service module."
     def create_assembly(context_params)
       assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
-      response = promote_assembly_aux(:create,assembly_id,service_module_name,assembly_template_name)
+
+      # need default_namespace for create-assembly because need to check if local service-module directory existst in promote_assembly_aux
+      resp = post rest_url("namespace/default_namespace_name")
+      return resp unless resp.ok?
+
+      default_namespace = resp.data
+      response = promote_assembly_aux(:create,assembly_id,service_module_name,assembly_template_name,{:default_namespace=>default_namespace})
       return response unless response.ok?
 
       @@invalidate_map << :assembly
@@ -236,7 +242,8 @@ TODO: overlaps with different meaning
         else
           [nil,nil]
         end
-      response = promote_assembly_aux(:update,assembly_id, service_module_name, assembly_template_name)
+
+      response = promote_assembly_aux(:update,assembly_id, service_module_name, assembly_template_name,{:use_module_namespace=>true})
       return response unless response.ok?
       @@invalidate_map << :assembly
       Response::Ok.new()
