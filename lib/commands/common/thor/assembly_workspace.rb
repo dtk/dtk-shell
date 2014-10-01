@@ -51,7 +51,7 @@ module DTK::Client
 
     # mode will be :create or :update
     # service_module_name_x can be name or fullname (NS:MOduleName)
-    def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name_x=nil,assembly_template_name=nil,opts={})#default_namespace=nil)
+    def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name_x=nil,assembly_template_name=nil,opts={})
       namespace = nil
       post_body = {
         :assembly_id => assembly_or_workspace_id,

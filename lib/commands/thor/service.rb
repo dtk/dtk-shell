@@ -209,8 +209,8 @@ TODO: overlaps with different meaning
       # need default_namespace for create-assembly because need to check if local service-module directory existst in promote_assembly_aux
       resp = post rest_url("namespace/default_namespace_name")
       return resp unless resp.ok?
-
       default_namespace = resp.data
+
       response = promote_assembly_aux(:create,assembly_id,service_module_name,assembly_template_name,{:default_namespace=>default_namespace})
       return response unless response.ok?
 
