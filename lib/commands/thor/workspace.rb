@@ -432,6 +432,12 @@ module DTK::Client
       set_attribute_aux(context_params)
     end
 
+    desc "WORKSPACE-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
+    def set_required_params(context_params)
+      workspace_id = context_params.retrieve_arguments([:workspace_id!],method_argument_names)
+      set_required_params_aux(workspace_id,:assembly,:instance)
+    end
+
 #    desc "WORKSPACE-NAME/ID start [NODE-ID-PATTERN]", "Starts all workspace's nodes,  specific nodes can be selected via node id regex."
     desc "WORKSPACE-NAME/ID start [NODE-NAME]", "Starts all the workspace nodes. A single node can be selected."
     def start(context_params)
