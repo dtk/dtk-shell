@@ -162,6 +162,11 @@ module DTK
         return context_params
       end
 
+      # removes nil values
+      def self.post_body(hash)
+        hash.inject(Hash.new){|h,(k,v)|v.nil? ? h : h.merge(k => v)} 
+      end
+
       def self.list_method_supported?
         return (respond_to?(:validation_list) || respond_to?(:whoami))
       end
