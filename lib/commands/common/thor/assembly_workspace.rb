@@ -865,7 +865,7 @@ module DTK::Client
         filtered.reject! do |r|
           match = r.to_s.include?(filter_pattern)
           if r["node_id"] && r["node_id"] != node_id
-            node_id = r["node_id"]
+            node_id = (r["node_id"] && r["node_id"].to_s)
             node_name = r["node_name"]
           end
 

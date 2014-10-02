@@ -16,25 +16,7 @@ module DTK::Client
     def self.validation_list(context_params)
       get_cached_response(:node_template, "node/list", {:subtype => 'template'})
     end
-=begin
-  #Not implemented yet
-    desc "NODE-TEMPLATE-NAME/ID info", "Get information about given node template."
-    method_option :list, :type => :boolean, :default => false
-    def info(context_params)
-      node_template_id = context_params.retrieve_arguments([:node_template_id!],method_argument_names)
-      data_type = :node
 
-      post_body = {
-        :node_id => node_template_id,
-        :subtype => 'template'
-      }
-      response = post rest_url("node/info"), post_body
-
-      response.render_table(data_type) unless options.list?
-
-      return response
-    end
-=end
 #    desc "list --all -t [TARGET-NAME]", "List all node templates."
     desc "list", "List all node templates."
     method_option :all, :type => :boolean, :default => false
@@ -62,6 +44,50 @@ module DTK::Client
       }
       post rest_url("node/image_upgrade"), post_body
     end
+
+    desc "add-node-template NODE-TEMPLATE-NAME TARGET-NAME/ID --os OS --image-id IMAGE-ID --size SIZE[,SIZE2,..]", "Add new node template"
+    method_option "os"
+    method_option "image-id",:aliases => "-i" 
+    method_option "size",:aliases => "-s" 
+    def add_node_template(context_params)
+      node_template_name, target_id = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
+      missing_opts = ['os','image-id'].reject{|k|options.has_key?(k)}
+      unless  missing_opts.empty?
+        pl = (missing_opts.size > 1)
+        missing = missing_opts.map{|o|"--#{o}"}.join(',')
+        raise DtkError, "[ERROR] The mandatory #{plural?(pl,'option')} (#{missing}) #{plural?(pl,'is/are')} missing" 
+      end
+      size_array = options[:size] && options[:size].split(',')
+      post_body = post_body(
+        :node_template_name => node_template_name,
+        :target_id => target_id,
+        :operating_system => options['os'],
+        :image_id => options['image-id'],
+        :size_array => size_array
+      )
+      post rest_url("node/add_node_template"), post_body
+    end
+
+=begin
+  #Not implemented yet
+    desc "NODE-TEMPLATE-NAME/ID info", "Get information about given node template."
+    method_option :list, :type => :boolean, :default => false
+    def info(context_params)
+      node_template_id = context_params.retrieve_arguments([:node_template_id!],method_argument_names)
+      data_type = :node
+
+      post_body = {
+        :node_id => node_template_id,
+        :subtype => 'template'
+      }
+      response = post rest_url("node/info"), post_body
+
+      response.render_table(data_type) unless options.list?
+
+      return response
+    end
+=end
+
 =begin
     #TODO: move to form desc "NODE-TEMPLATE-NAME/ID stage [INSTANCE-NAME]"
     #will then have to reverse arguments
