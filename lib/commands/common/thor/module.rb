@@ -223,7 +223,7 @@ module DTK::Client
 
       namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
-      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name)
+      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name, nil, namespace)
       return response unless response.ok?
       module_directory = response.data(:module_directory)
 
