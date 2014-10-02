@@ -51,12 +51,18 @@ module DTK::Client
     method_option "size",:aliases => "-s" 
     def add_node_template(context_params)
       node_template_name, target_id = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
-      size_array = option.size && option.size.split(',')
+      missing_opts = ['os','image-id'].reject{|k|options.has_key?(k)}
+      unless  missing_opts.empty?
+        pl = (missing_opts.size > 1)
+        missing = missing_opts.map{|o|"--#{o}"}.join(',')
+        raise DtkError, "[ERROR] The mandatory #{plural?(pl,'option')} (#{missing}) #{plural?(pl,'is/are')} missing" 
+      end
+      size_array = options[:size] && options[:size].split(',')
       post_body = post_body(
         :node_template_name => node_template_name,
         :target_id => target_id,
-        :operating_system => option.os,
-        :image_id => option.image_id,
+        :operating_system => options['os'],
+        :image_id => options['image-id'],
         :size_array => size_array
       )
       post rest_url("node/add_node_template"), post_body

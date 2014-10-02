@@ -162,11 +162,6 @@ module DTK
         return context_params
       end
 
-      # removes nil values
-      def self.post_body(hash)
-        hash.inject(Hash.new){|h,(k,v)|v.nil? ? h : h.merge(k => v)} 
-      end
-
       def self.list_method_supported?
         return (respond_to?(:validation_list) || respond_to?(:whoami))
       end
@@ -417,6 +412,21 @@ module DTK
 
         def is_numeric_id?(possible_id)
           !possible_id.to_s.match(/^[0-9]+$/).nil?
+        end
+
+        # helper for error messages; prints singular or plural version
+        # tem will be of form singural/plural or simple term in which case plural formed by adding 's'
+        def plural?(is_plural,term)
+          singular_plural = term.split('/')
+          if singular_plural.size == 1
+            singular_plural << "#{singular_plural[0]}s"
+          end
+          singular_plural[is_plural ? 1 : 0]
+        end
+
+        # removes nil values
+        def post_body(hash)
+          hash.inject(Hash.new){|h,(k,v)|v.nil? ? h : h.merge(k => v)} 
         end
 
         # User input prompt
