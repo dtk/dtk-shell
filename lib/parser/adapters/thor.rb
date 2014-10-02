@@ -446,10 +446,17 @@ module DTK
           return about, about[0..-2].to_sym
         end
 
-        # check for delimiter '/', if present returns namespace and name for module/service
+        # check for delimiter, if present returns namespace and name for module/service
         # returns: namespace, name
         def get_namespace_and_name(input_remote_name, delimiter)
-          (input_remote_name||'').include?(delimiter) ? input_remote_name.split(delimiter) : [nil, input_remote_name]
+          if (input_remote_name||'').include?(delimiter)
+            input_remote_name.split(delimiter)
+          # support ns/name as well as ns:name
+          elsif (input_remote_name||'').include?('/')
+            input_remote_name.split('/')
+          else
+            [nil, input_remote_name]
+          end
         end
 
         def get_namespace_and_name_for_component(component_full_name)
