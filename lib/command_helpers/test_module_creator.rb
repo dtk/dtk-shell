@@ -9,11 +9,13 @@ module DTK::Client
 		      modules_dir = OsUtil.test_clone_location()
 		      FileUtils.mkdir_p(modules_dir) unless File.directory?(modules_dir)
 		      target_repo_dir = OsUtil.module_location(type,module_name)
+
 		      begin
-		      	FileUtils.mkdir(target_repo_dir)
+		      	FileUtils.mkdir_p(target_repo_dir)
 		        generate_model(module_name, target_repo_dir)
 		        generate_serverspec_files(module_name, target_repo_dir)
 		      rescue => e
+		      	additional_error_msg = ""
 		        error_msg = "Create of directory (#{target_repo_dir}) failed."
 		        additional_error_msg = "Directory already exists" if e.message.include? "File exists"
 		        raise DTK::ErrorUsage.new(error_msg + " " + additional_error_msg,:log_error=>false)
