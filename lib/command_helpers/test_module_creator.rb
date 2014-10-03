@@ -8,7 +8,6 @@ module DTK::Client
 				Response.wrap_helper_actions do
 		      modules_dir = OsUtil.test_clone_location()
 		      FileUtils.mkdir_p(modules_dir) unless File.directory?(modules_dir)
-		      module_name = ModuleUtil.filter_module_name(module_name)
 		      target_repo_dir = OsUtil.module_location(type,module_name)
 		      begin
 		      	FileUtils.mkdir(target_repo_dir)
