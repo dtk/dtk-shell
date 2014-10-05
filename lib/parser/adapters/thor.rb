@@ -21,7 +21,7 @@ module DTK
       extend  TaskStatusMixin
       extend  Console
       include CommandHelperMixin
-      extend CommonOptionDefsClassMixin
+      extend CommonOptionDefs::ClassMixin
 
       @@cached_response = {}
       @@invalidate_map  = []
@@ -342,6 +342,8 @@ module DTK
       end
 
       no_tasks do
+
+        include CommonOptionDefs::Mixin
 
         #
         # Run shell command directly from main, use with CAUTION

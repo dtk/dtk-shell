@@ -45,27 +45,32 @@ module DTK::Client
       post rest_url("node/image_upgrade"), post_body
     end
 
-    desc "add-node-template NODE-TEMPLATE-NAME TARGET-NAME/ID --os OS --image-id IMAGE-ID --size SIZE[,SIZE2,..]", "Add new node template"
+    desc "add-node-template NODE-TEMPLATE-NAME [-t TARGET-NAME/ID] --os OS --image-id IMAGE-ID --size SIZE[,SIZE2,..]", "Add new node template"
+    method_option "target",:aliases => "-t" 
     method_option "os"
     method_option "image-id",:aliases => "-i" 
     method_option "size",:aliases => "-s" 
     def add_node_template(context_params)
-      node_template_name, target_id = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
-      missing_opts = ['os','image-id'].reject{|k|options.has_key?(k)}
-      unless  missing_opts.empty?
-        pl = (missing_opts.size > 1)
-        missing = missing_opts.map{|o|"--#{o}"}.join(',')
-        raise DtkError, "[ERROR] The mandatory #{plural?(pl,'option')} (#{missing}) #{plural?(pl,'is/are')} missing" 
-      end
+      node_template_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       size_array = options[:size] && options[:size].split(',')
+
       post_body = post_body(
         :node_template_name => node_template_name,
-        :target_id => target_id,
-        :operating_system => options['os'],
-        :image_id => options['image-id'],
+        :target_id => options['target'],
+        :operating_system => required_option('os'),
+        :image_id => required_option('image-id'),
         :size_array => size_array
       )
       post rest_url("node/add_node_template"), post_body
+    end
+
+    desc "delete-node-template NODE-TEMPLATE-NAME", "Delete node template"
+    def delete_node_template(context_params)
+      node_template_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      post_body = post_body(
+        :node_template_name => node_template_name
+      )
+      post rest_url("node/delete_node_template"), post_body
     end
 
 =begin
