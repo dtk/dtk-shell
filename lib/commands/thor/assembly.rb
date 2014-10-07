@@ -204,7 +204,9 @@ module DTK::Client
       @@invalidate_map << :assembly
       
       assembly_template_name = get_assembly_name(assembly_template_id)
-      assembly_template_name.gsub!('::','-') if assembly_template_name
+      if assembly_template_name
+        assembly_template_name.gsub!(/(::)|(\/)/,'-')
+      end
 
       in_target = options["in-target"]
       instance_bindings = options["instance-bindings"]
