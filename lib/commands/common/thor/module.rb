@@ -208,6 +208,7 @@ module DTK::Client
           OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
         end
       else
+        local_module_name = create_response.data[:full_module_name] if create_response.data[:full_module_name]
         delete_module_sub_aux(context_params, local_module_name, :force_delete => true, :no_error_msg => true, :purge => true)
         return create_response
       end

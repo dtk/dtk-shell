@@ -174,6 +174,7 @@ module DTK; module Client; class CommandHelper
         # creates directory if missing
         parent_path = new_dir.gsub(/(\/\w+)$/,'')
         FileUtils::mkdir_p(parent_path) unless File.directory?(parent_path)
+        # raise ErrorUsage.new("Destination folder already exists '#{new_dir}', aborting initialization.") if File.directory?(new_dir)
         FileUtils.mv(old_dir, new_dir)
       else
         new_dir = local_repo_dir
@@ -191,7 +192,7 @@ module DTK; module Client; class CommandHelper
         response =  unlink_local_clone?(type,module_name,version)
         unless response.ok?
           # in case delete went wrong, we raise usage error
-          raise ErrorUsage.new("Directory (#{local_repo_dir} is set as a git repo; to continue it must be a non git repo; this can be handled by shell command 'rm -rf #{local_repo_dir}/.git'")
+          raise DtkError.new("Directory (#{local_repo_dir} is set as a git repo; to continue it must be a non git repo; this can be handled by shell command 'rm -rf #{local_repo_dir}/.git'")
         end
         # we return to normal flow, since .git dir is removed
       end
