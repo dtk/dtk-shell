@@ -229,7 +229,8 @@ module DTK
             clazz_from_args = DTK::Shell::Context.get_command_class(command_from_args) if command_from_args
           end
 
-          if (command.eql?('cd') || command.eql?('cc') || command.eql?('popc') || command.eql?('pushc'))
+          # this delete-node is a hack because we need autocomplete when there is node with name 'node'
+          if (command.eql?('cd') || command.eql?('cc') || command.eql?('popc') || command.eql?('pushc') || command.eql?('delete-node'))
             if is_root
               if entries.size >= 3
                 node = entries[2]

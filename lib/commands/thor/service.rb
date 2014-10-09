@@ -85,6 +85,11 @@ module DTK::Client
             :endpoint => "assembly",
             :url => "assembly/info_about",
             :opts => {:subtype=>"instance", :about=>"modules"}
+          },
+          :delete_node => {
+            :endpoint => "assembly",
+            :url => "assembly/info_about",
+            :opts => {:subtype=>"instance", :about=>"nodes"}
           }
         }
       }
@@ -574,7 +579,13 @@ TODO: will put in dot release and will rename to 'extend'
       response = create_node_aux(context_params)
       return response unless response.ok?
 
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
       @@invalidate_map << :service_node
+      @@invalidate_map << :workspace
+      @@invalidate_map << :workspace_node
+
       message = "Created node '#{response.data["display_name"]}'."
       DTK::Client::OsUtil.print(message, :yellow)
     end
@@ -601,7 +612,13 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       response = delete_node_aux(context_params)
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
       @@invalidate_map << :service_node
+      @@invalidate_map << :workspace
+      @@invalidate_map << :workspace_node
 
       return response
     end
