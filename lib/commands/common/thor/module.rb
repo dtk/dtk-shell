@@ -187,9 +187,11 @@ module DTK::Client
       namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
 
       # Create component module from user's input git repo
-      branch = options['branch']
-      version = nil 
-      response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, local_module_name, git_repo_url, branch, version, namespace)
+      opts = {
+        :namespace => namespace,
+        :branch  => options['branch']
+      }
+      response = Helper(:git_repo).create_clone_from_optional_branch(module_type.to_sym, local_module_name, git_repo_url, opts)
 
       # Raise error if git repository is invalid
       # raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless response.ok?
@@ -343,6 +345,7 @@ module DTK::Client
       end
 
       unless skip_cloning
+        # TODO: should we use instead Helper(:git_repo).create_clone_from_optional_branch
         response = Helper(:git_repo).create_clone_with_branch(module_type.to_sym, module_name, repo_url, branch, version, remote_namespace)
       end
 

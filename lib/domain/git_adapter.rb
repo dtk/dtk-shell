@@ -189,10 +189,24 @@ module DTK
         @git_repo.merge(remote_branch_ref)
       end
 
-      def self.clone(repo_url, target_path, branch)
+      def self.clone(repo_url, target_path, branch, opts={})
         git_base = Git.clone(repo_url, target_path)
-        git_base.branch(branch).checkout unless branch.nil?
-        git_base
+        unless branch.nil?
+          if opts[:track_remote_branch]
+            # This just tracks remote branch
+            begin 
+              git_base.checkout(branch)
+            rescue => e
+              # TODO: see if any other kind of error
+              raise DtkError.new("The branch or tag '#{branch}' does not exist on repo '#{repo_url}'")
+            end
+        else
+            # This wil first create a remote branch; 
+            # TODO: this might be wrong and should be deprecated
+            git_base.branch(branch).checkout 
+          end
+        end
+          git_base
       end
 
       def repo_dir
