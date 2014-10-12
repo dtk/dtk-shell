@@ -184,7 +184,8 @@ TODO: might deprecate
     #
     # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
     #
-    desc "import-git GIT-SSH-REPO-URL [NAMESPACE:]COMPONENT-MODULE-NAME", "Create new local component module by importing from provided git repo URL"
+    method_option :branch, :aliases => '-b'
+    desc "import-git GIT-SSH-REPO-URL [-b BRANCH/TAG] [NAMESPACE:]COMPONENT-MODULE-NAME", "Create new local component module by importing from provided git repo URL"
     def import_git(context_params)
       import_git_module_aux(context_params)
     end

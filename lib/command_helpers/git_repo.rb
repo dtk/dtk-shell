@@ -18,7 +18,11 @@ module DTK; module Client; class CommandHelper
 
         modules_dir = modules_dir(type,full_name,version,opts)
         FileUtils.mkdir_p(modules_dir) unless File.directory?(modules_dir)
+
         target_repo_dir = local_repo_dir(type,full_name,version,opts)
+        if File.exists?(target_repo_dir)
+          raise ErrorUsage.new("Directory '#{target_repo_dir}' is not empty; it must be deleted or removed before retrying the command")          
+        end
 
         opts = {}
         opts = { :branch => branch } if branch
