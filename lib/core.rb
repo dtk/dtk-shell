@@ -138,6 +138,12 @@ def resolve_direct_access(params, config_exists=nil)
     DTK::Client::Configurator.add_current_user_to_direct_access()
   end
 
+  # setting up catalog credentials
+  catalog_creds = DTK::Client::Configurator.ask_catalog_credentials()
+  unless catalog_creds.empty?
+    conn = DTK::Client::Session.get_connection()
+    response = conn.post DTK::Client::CommandBase.class, conn.rest_url("account/set_catalog_credentials"), { :username => catalog_creds[:username], :password => catalog_creds[:password]}
+  end
 
   response
 end
