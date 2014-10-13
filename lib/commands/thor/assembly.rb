@@ -264,7 +264,9 @@ module DTK::Client
       @@invalidate_map << :assembly
       
       assembly_template_name = get_assembly_name(assembly_template_id)
-      assembly_template_name.gsub!('::','-') if assembly_template_name
+      if assembly_template_name
+        assembly_template_name.gsub!(/(::)|(\/)/,'-')
+      end
 
       # we check current options and forwarded options (from deploy method)
       in_target = options["in-target"] || context_params.get_forwarded_thor_option("in-target")
