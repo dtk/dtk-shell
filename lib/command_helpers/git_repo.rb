@@ -12,18 +12,28 @@ module DTK; module Client; class CommandHelper
       GitAdapter.new(repo_dir,branch)
     end
 
+    def create_clone_from_optional_branch(type, module_name, repo_url, opts={})
+      branch = opts[:branch]
+      version = opts[:version]
+      namespace =  opts[:namespace]
+      create_clone_with_branch(type,module_name,repo_url,branch,version,namespace,{:track_remote_branch => true}.merge(opts))
+    end
+    # TODO: should we deprecate below for above, subsituting the body of below for above ?
     def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil, module_namespace=nil, opts={})
       Response.wrap_helper_actions do
         full_name = module_namespace ? ModuleUtil.resolve_name(module_name, module_namespace) : module_name
 
         modules_dir = modules_dir(type,full_name,version,opts)
         FileUtils.mkdir_p(modules_dir) unless File.directory?(modules_dir)
-        target_repo_dir = local_repo_dir(type,full_name,version,opts)
 
-        opts = {}
-        opts = { :branch => branch } if branch
+        target_repo_dir = local_repo_dir(type,full_name,version,opts)
+        if File.exists?(target_repo_dir)
+          raise ErrorUsage.new("Directory '#{target_repo_dir}' is not empty; it must be deleted or removed before retrying the command")          
+        end
+
         begin
-          GitAdapter.clone(repo_url, target_repo_dir, opts[:branch])
+          opts_clone = (opts[:track_remote_branch] ? {:track_remote_branch => true} : {})
+          GitAdapter.clone(repo_url, target_repo_dir, branch,opts_clone)
         rescue => e
           # Handling Git error messages with more user friendly messages
           e = GitErrorHandler.handle(e)

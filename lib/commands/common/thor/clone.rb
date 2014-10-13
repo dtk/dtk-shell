@@ -14,6 +14,7 @@ module DTK::Client
       full_module_name = ModuleUtil.resolve_name(module_name, module_namespace)
 
       return not_ok_response if not_ok_response
+      # TODO: should we use instead Helper(:git_repo).create_clone_from_optional_branch
       response = Helper(:git_repo).create_clone_with_branch(module_type,module_name,repo_url,branch,version,module_namespace,opts)
 
       if response.ok?

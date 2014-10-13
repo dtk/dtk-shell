@@ -68,7 +68,7 @@ module DTK::Client
         content = dsl_created_info["content"]
         if path and content
           msg = "A #{path} file has been created for you, located at #{repo_obj.repo_dir}" 
-          response = Helper(:git_repo).add_file(path,content,msg)
+          response = Helper(:git_repo).add_file(repo_obj,path,content,msg)
           return response unless response.ok?
         end
       end
