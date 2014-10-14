@@ -402,10 +402,12 @@ module DTK
         printf "%15s %s\n", "Username:", "#{creds[:username]}"
         printf "%15s %s\n", "Password:", "#{creds[:password] ? creds[:password].gsub(/./,'*') : 'No password set'}"
         puts   "==================================================================="
-        error_code = self.connection_error['errors'].first['errors'].first['code']
-        print " Error code: "
-        DTK::Client::OsUtil.print(error_code, :red)
 
+        if self.connection_error['errors'].first['errors']
+          error_code = self.connection_error['errors'].first['errors'].first['code']
+          print " Error code: "
+          DTK::Client::OsUtil.print(error_code, :red)
+        end
       end
 
       private
