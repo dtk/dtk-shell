@@ -190,7 +190,8 @@ module DTK
       end
 
       def self.clone(repo_url, target_path, branch, opts={})
-        git_base = Git.clone(repo_url, target_path)
+        git_base = handle_git_error{Git.clone(repo_url, target_path)}
+
         unless branch.nil?
           if opts[:track_remote_branch]
             # This just tracks remote branch
@@ -256,6 +257,26 @@ module DTK
       end
 
     private
+
+      def self.handle_git_error(&block)
+        ret = nil
+        begin
+          ret = yield
+         rescue => e
+          unless e.respond_to?(:message)
+            raise e 
+          else
+            err_msg = e.message
+            lines = err_msg.split("\n")
+            if lines.last =~ GitErrorPattern
+              err_msg = lines.last.gsub(GitErrorPattern,'').strip()
+            end
+            raise DtkError.new(err_msg)
+          end 
+        end
+        ret
+      end
+      GitErrorPattern = /^fatal:/
 
       # Method bellow show different behavior when working with 1.8.7
       # so based on Hash response we know it it is:

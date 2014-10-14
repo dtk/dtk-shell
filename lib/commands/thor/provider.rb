@@ -52,10 +52,10 @@ module DTK::Client
       raise ::DTK::Client::DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ") if security_group.end_with?(',')
 
       security_groups = security_group.split(',')
-      iaas_properties.merge!(:keypair_name => keypair)#,:security_group => security_group)
+      iaas_properties.merge!(:keypair_name => keypair)
 
       if (security_groups.empty? || security_groups.size==1)
-        iaas_properties.merge!(:security_group => security_group)#,:security_group => security_group)
+        iaas_properties.merge!(:security_group => security_group)
       else
         iaas_properties.merge!(:security_group_set => security_groups)
       end
@@ -108,18 +108,35 @@ module DTK::Client
     end
 
 
-    desc "PROVIDER-ID/NAME create-target [TARGET-NAME] --region REGION", "Create target based on given provider"
+    desc "PROVIDER-ID/NAME create-target [TARGET-NAME] --region REGION --keypair KEYPAIR --security-group SECURITY-GROUP(S)", "Create target based on given provider"
     method_option :region, :type => :string
+    method_option :keypair, :type => :string
+    method_option :security_group, :type => :string, :aliases => '--security-groups'
     def create_target(context_params)
       # we use :target_id but that will retunr provider_id (another name for target template ID)
-      provider_id, target_name = context_params.retrieve_arguments([:provider_id!,:option_1],method_argument_names)
-      region = context_params.retrieve_thor_options([:region!], options)
+      provider_id, target_name = context_params.retrieve_arguments([:provider_id!, :option_1],method_argument_names)
+      region, keypair, security_group = context_params.retrieve_thor_options([:region!, :keypair!, :security_group!], options)
 
+      #TODO: data-driven check if legal provider type and then what options needed depending on provider type
+      iaas_properties = Hash.new
       DTK::Shell::InteractiveWizard.validate_region(region)
+
+      security_groups = []
+      raise ::DTK::Client::DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ") if security_group.end_with?(',')
+
+      security_groups = security_group.split(',')
+      iaas_properties.merge!(:keypair => keypair)
+
+      if (security_groups.empty? || security_groups.size==1)
+        iaas_properties.merge!(:security_group => security_group)
+      else
+        iaas_properties.merge!(:security_group_set => security_groups)
+      end
 
       post_body = {
         :provider_id => provider_id,
-        :region => region
+        :region => region,
+        :iaas_properties => iaas_properties
       }
       post_body.merge!(:target_name => target_name) if target_name
       response = post rest_url("target/create"), post_body
