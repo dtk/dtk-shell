@@ -395,10 +395,10 @@ module DTK
       # to make sure that connection is properly set.
       #
       def print_warning
+        creds = get_credentials
         puts   "[WARNING] Unable to connect to server, please check you configuration."
         puts   "========================== Configuration =========================="
         printf "%15s %s\n", "REST endpoint:", rest_url
-        creds = get_credentials
         printf "%15s %s\n", "Username:", "#{creds[:username]}"
         printf "%15s %s\n", "Password:", "#{creds[:password] ? creds[:password].gsub(/./,'*') : 'No password set'}"
         puts   "==================================================================="

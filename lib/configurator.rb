@@ -1,5 +1,5 @@
 require 'rubygems'
-
+require 'fileutils'
 dtk_require_from_base('util/os_util')
 
 module DTK
@@ -11,7 +11,6 @@ module DTK
       DIRECT_ACCESS = File.join(OsUtil.dtk_local_folder, ".add_direct_access")
       NODE_SSH_CREDENTIALS = File.join(OsUtil.dtk_local_folder, "ssh_credentials.yaml")
 
-      require 'fileutils'
       FileUtils.mkdir(OsUtil.dtk_local_folder) unless File.directory?(OsUtil.dtk_local_folder)
 
       def self.check_config_exists
@@ -88,7 +87,7 @@ module DTK
 
 
       def self.parse_key_value_file(file)
-        #adapted from mcollective config
+        # adapted from mcollective config
         ret = Hash.new
         raise DTK::Client::DtkError,"Config file (#{file}) does not exists" unless File.exists?(file)
         File.open(file).each do |line|
@@ -137,12 +136,18 @@ module DTK
         are_there_creds = Console.confirmation_prompt("Do you have DTK catalog credentials", true)
         property_template = {}
         if are_there_creds
-          { :username => 'Catalog Username', :password => 'Catalog Password' }.each do |p, v|
-            value = ask("#{v}: ") { |q| q.echo = false if p == :password }
-            property_template.store(p, value)
-          end
+          property_template = self.enter_catalog_credentials()
         end
 
+        property_template
+      end
+
+      def self.enter_catalog_credentials()
+        property_template = {}
+        { :username => 'Catalog Username', :password => 'Catalog Password' }.each do |p, v|
+          value = ask("#{v}: ") { |q| q.echo = false if p == :password }
+          property_template.store(p, value)
+        end
         property_template
       end
     end
