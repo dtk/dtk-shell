@@ -541,6 +541,7 @@ module DTK::Client
 
     def delete_assembly_aux(context_params)
       module_type = get_module_type(context_params)
+
       module_id, assembly_template_id = context_params.retrieve_arguments([REQ_MODULE_ID,:option_1!], method_argument_names)
       module_name = context_params.retrieve_arguments([:service_module_name],method_argument_names)
 
@@ -584,7 +585,7 @@ module DTK::Client
       version = nil
       commit_msg = "Deleting assembly template #{assembly_template_name.to_s}"
       internal_trigger = true
-      push_clone_changes_aux(module_type.to_sym, module_id, version, commit_msg, internal_trigger)
+      push_clone_changes_aux(module_type.to_sym, module_id, version, commit_msg, internal_trigger, :skip_cloning => true)
 
       Response::Ok.new()
     end

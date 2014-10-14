@@ -22,7 +22,7 @@ module DTK::Client
       if response.ok?
         unless response['data'].nil?
           response['data'].each do |module_item|
-            if ("#{service_name.to_s}::#{assembly_template_name.to_s}" == (module_item['display_name']) && service_namespace == module_item['namespace'])
+            if ("#{service_name.to_s}/#{assembly_template_name.to_s}" == (module_item['display_name']) && service_namespace == module_item['namespace'])
               assembly_template_id = module_item['id']
               break
             end
@@ -31,7 +31,7 @@ module DTK::Client
       end
 
       raise DTK::Client::DtkError, "Illegal name (#{assembly_template_name}) for assembly." if assembly_template_id.nil?
-      
+
       return assembly_template_id
     end
 
@@ -74,13 +74,13 @@ module DTK::Client
       assembly_list = []
       response = get_cached_response(:service, "assembly/list", {})
       raise DTK::Client::DtkError, "Unable to retreive service list." unless (response.nil? || response.ok?)
-      
+
       if assemblies = response.data
         assemblies.each do |assembly|
           assembly_list << assembly["display_name"]
         end
       end
-      
+
       assembly_list
     end
 
@@ -89,19 +89,19 @@ module DTK::Client
     def info(context_params)
       assembly_template_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
       data_type = :assembly_template
-      
+
       post_body = {
         :assembly_id => assembly_template_id,
         :subtype => 'template',
       }
-      
+
       post rest_url("assembly/info"), post_body
     end
 
     desc "ASSEMBLY-NAME/ID list-nodes [--service SERVICE-NAME]", "List all nodes for given assembly."
     method_option :list, :type => :boolean, :default => false
     method_option "service",:aliases => "-s" ,
-      :type => :string, 
+      :type => :string,
       :banner => "SERVICE-LIST-FILTER",
       :desc => "Service list filter"
     def list_nodes(context_params)
@@ -112,7 +112,7 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID list-components [--service SERVICE-NAME]", "List all components for given assembly."
     method_option :list, :type => :boolean, :default => false
     method_option "service",:aliases => "-s" ,
-      :type => :string, 
+      :type => :string,
       :banner => "SERVICE-LIST-FILTER",
       :desc => "Service list filter"
     def list_components(context_params)
@@ -133,7 +133,7 @@ module DTK::Client
           context_params_for_service = DTK::Shell::ContextParams.new
           context_params_for_service.add_context_to_params("service_module", "service_module", service_id)
           context_params_for_service.method_arguments = ['assembly',"#{service_id}"]
-          
+
           response = DTK::Client::ContextRouter.routeTask("service_module", "list", context_params_for_service, @conn)
         else
           response = post rest_url("assembly/list"), {:subtype => 'template', :detail_level => 'nodes'}
@@ -143,7 +143,7 @@ module DTK::Client
         end
 
       else
-        
+
         post_body = {
           :subtype => 'template',
           :assembly_id => assembly_template_id,
@@ -186,12 +186,12 @@ module DTK::Client
 
     desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] [-t TARGET-NAME/ID] [--settings SETTINGS-NAME1[,..]]", "Stage assembly in target."
     method_option "in-target",:aliases => "-t" ,
-      :type => :string, 
+      :type => :string,
       :banner => "TARGET-NAME/ID",
-      :desc => "Target (id) to create assembly in" 
+      :desc => "Target (id) to create assembly in"
     #hidden option
     method_option "instance-bindings",
-      :type => :string 
+      :type => :string
     method_option :settings, :type => :string, :aliases => '-s'
     def stage(context_params)
       assembly_template_id, name = context_params.retrieve_arguments([:assembly_id!, :option_1],method_argument_names)
@@ -202,7 +202,7 @@ module DTK::Client
       # using this to make sure cache will be invalidated after new assembly is created from other commands e.g.
       # 'assembly-create', 'install' etc.
       @@invalidate_map << :assembly
-      
+
       assembly_template_name = get_assembly_name(assembly_template_id)
       if assembly_template_name
         assembly_template_name.gsub!(/(::)|(\/)/,'-')
@@ -218,7 +218,7 @@ module DTK::Client
       else
         name = get_assembly_stage_name(assembly_list,assembly_template_name)
       end
-      
+
       post_body.merge!(:target_id => in_target) if in_target
       post_body.merge!(:name => name) if name
       post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
@@ -239,13 +239,13 @@ module DTK::Client
     desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [--settings SETTINGS-NAME1[,..]] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
     #hidden option
     method_option "instance-bindings",
-      :type => :string 
+      :type => :string
 #    method_option "in-target",:aliases => "-t" ,
 #      :type => :string,
 #      :banner => "TARGET-NAME/ID",
-#      :desc => "Target (id) to create assembly in" 
+#      :desc => "Target (id) to create assembly in"
     method_option "commit_msg",:aliases => "-m" ,
-      :type => :string, 
+      :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     method_option :settings, :type => :string, :aliases => '-s'
@@ -262,7 +262,7 @@ module DTK::Client
       # using this to make sure cache will be invalidated after new assembly is created from other commands e.g.
       # 'assembly-create', 'install' etc.
       @@invalidate_map << :assembly
-      
+
       assembly_template_name = get_assembly_name(assembly_template_id)
       if assembly_template_name
         assembly_template_name.gsub!(/(::)|(\/)/,'-')
@@ -279,7 +279,7 @@ module DTK::Client
       else
         name = get_assembly_stage_name(assembly_list,assembly_template_name)
       end
-      
+
       post_body.merge!(:target_id => in_target) if in_target
       post_body.merge!(:name => name) if name
       post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
@@ -292,7 +292,7 @@ module DTK::Client
       @@invalidate_map << :assembly
       response
     end
- 
+
 
     desc "delete ASSEMBLY-ID", "Delete assembly"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
@@ -308,7 +308,7 @@ module DTK::Client
         :subtype => :template
       }
       response = post rest_url("assembly/delete"), post_body
-      
+
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :assembly
       return response unless response.ok?

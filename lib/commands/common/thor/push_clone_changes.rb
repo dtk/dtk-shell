@@ -15,6 +15,7 @@ module DTK::Client
       module_location  = OsUtil.module_location(module_type,full_module_name,version,opts)
 
       unless File.directory?(module_location)
+        return if opts[:skip_cloning]
         if Console.confirmation_prompt("Push not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
           clone_aux(module_type,module_id, version, true, true, opts)
         else
@@ -46,11 +47,11 @@ module DTK::Client
           ret = Response::NoOp.new()
         end
       end
-      
+
       # check if server pushed anything that needs to be pulled
       dsl_updated_info = response.data(:dsl_updated_info)
       if dsl_updated_info and !dsl_updated_info.empty?
-        if msg = dsl_updated_info["msg"] 
+        if msg = dsl_updated_info["msg"]
           DTK::Client::OsUtil.print(msg,:yellow)
         end
         new_commit_sha = dsl_updated_info[:commit_sha]
@@ -67,7 +68,7 @@ module DTK::Client
         path = dsl_created_info["path"]
         content = dsl_created_info["content"]
         if path and content
-          msg = "A #{path} file has been created for you, located at #{repo_obj.repo_dir}" 
+          msg = "A #{path} file has been created for you, located at #{repo_obj.repo_dir}"
           response = Helper(:git_repo).add_file(repo_obj,path,content,msg)
           return response unless response.ok?
         end
