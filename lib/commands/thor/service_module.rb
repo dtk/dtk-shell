@@ -426,7 +426,13 @@ module DTK::Client
       repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
 
       context_params.add_context_to_params(local_module_name, :"service-module", module_id)
-      push(context_params,true)
+      response = push(context_params,true)
+      return response unless response.ok?
+
+      # module directory moved from (~/dtk/service_module/<module_name>) to (~/dtk/service_module/<default_namespace>/<module_name>)
+      DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{repo_obj.repo_dir}",:yellow) unless namespace
+
+      response
     end
 
 

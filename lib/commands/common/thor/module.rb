@@ -280,6 +280,10 @@ module DTK::Client
       if git_import
         response[:module_id] = module_id
         response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies
+      else
+        # if not git-import and user do import from default directory (e.g. import ntp - without namespace) print message
+        # module directory moved from (~/dtk/component_module/<module_name>) to (~/dtk/component_module/<default_namespace>/<module_name>)
+        DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{module_final_dir}",:yellow) unless namespace
       end
 
       response

@@ -152,7 +152,7 @@ module DTK; module Client; class CommandHelper
         local_repo_dir = local_repo_dir(type,full_module_name,version)
 
         unless File.directory?(local_repo_dir)
-          raise ErrorUsage.new("The content for module (#{full_module_name}) should be put in directory (#{local_repo_dir})")
+          raise ErrorUsage.new("The content for module (#{full_module_name}) should be put in directory (#{local_repo_dir})",:log_error=>false)
         end
 
         # transfered this part to initialize_client_clone_and_push because if we remove .git folder and
