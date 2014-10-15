@@ -298,7 +298,7 @@ module DTK::Client
       ignore_component_error = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:ignore_component_error] : options.ignore?
       additional_message     = context_params.get_forwarded_options()[:additional_message] if context_params.get_forwarded_options()
 
-      remote_namespace, local_module_name = get_namespace_and_name(remote_module_name,'/')
+      remote_namespace, local_module_name = get_namespace_and_name(remote_module_name,':')
 
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, :namespace => remote_namespace, :version => version)
         message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed"
@@ -308,7 +308,7 @@ module DTK::Client
       end
 
       post_body = {
-        :remote_module_name => remote_module_name,
+        :remote_module_name => remote_module_name.sub(':','/'),
         :local_module_name => local_module_name,
         :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
