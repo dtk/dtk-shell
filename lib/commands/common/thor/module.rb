@@ -493,12 +493,13 @@ module DTK::Client
 
       module_location = OsUtil.module_location(resolve_module_type(), module_name, version)
       reparse_aux(module_location) unless internal_trigger
+      local_namespace, local_module_name = get_namespace_and_name(module_name,':')
 
 #      if catalog.to_s.eql?("origin")
 #        push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
       if catalog.to_s.eql?("dtkn")
         module_refs_content = RemoteDependencyUtil.module_ref_content(module_location) if module_type == :service_module
-        remote_module_info  = get_remote_module_info_aux(module_type.to_sym, module_id, options["namespace"], version, module_refs_content)
+        remote_module_info  = get_remote_module_info_aux(module_type.to_sym, module_id, options["namespace"], version, module_refs_content, local_namespace)
         return remote_module_info unless remote_module_info.ok?
 
         unless File.directory?(module_location)

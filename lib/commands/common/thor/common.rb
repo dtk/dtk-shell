@@ -38,7 +38,7 @@ module DTK::Client
       post_body
     end
 
-    def get_remote_module_info_aux(module_type, module_id, remote_namespace, version=nil, module_refs_content=nil)
+    def get_remote_module_info_aux(module_type, module_id, remote_namespace, version=nil, module_refs_content=nil, local_namespace=nil)
       id_field      = "#{module_type}_id"
       rsa_pub_value = SSHUtil.rsa_pub_key_content()
 
@@ -50,6 +50,7 @@ module DTK::Client
       }
       post_body.merge!(:version => version) if version
       post_body.merge!(:remote_namespace => remote_namespace) if remote_namespace
+      post_body.merge!(:local_namespace => local_namespace) if local_namespace
       post_body.merge!(:module_ref_content => module_refs_content) if module_refs_content && !module_refs_content.empty?
 
       response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
