@@ -390,7 +390,9 @@ module DTK::Client
       response = post rest_url("#{module_type}/export"), post_body
       return response unless response.ok?
 
-      DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published!")
+      full_module_name = "#{response.data['remote_repo_namespace']}/#{response.data['remote_repo_name']}"
+
+      DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published to '#{full_module_name}'!")
       Response::Ok.new()
     end
 
@@ -490,7 +492,6 @@ module DTK::Client
       raise DtkValidationError, "You have to provide valid catalog to push changes to! Valid catalogs: #{PushCatalogs}" unless catalog
 
       module_location = OsUtil.module_location(resolve_module_type(), module_name, version)
-
       reparse_aux(module_location) unless internal_trigger
 
 #      if catalog.to_s.eql?("origin")
