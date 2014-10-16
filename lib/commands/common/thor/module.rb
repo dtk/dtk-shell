@@ -280,6 +280,10 @@ module DTK::Client
       if git_import
         response[:module_id] = module_id
         response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies
+      else
+        # if not git-import and user do import from default directory (e.g. import ntp - without namespace) print message
+        # module directory moved from (~/dtk/component_module/<module_name>) to (~/dtk/component_module/<default_namespace>/<module_name>)
+        DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{module_final_dir}",:yellow) unless namespace
       end
 
       response
@@ -298,7 +302,7 @@ module DTK::Client
       ignore_component_error = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:ignore_component_error] : options.ignore?
       additional_message     = context_params.get_forwarded_options()[:additional_message] if context_params.get_forwarded_options()
 
-      remote_namespace, local_module_name = get_namespace_and_name(remote_module_name,'/')
+      remote_namespace, local_module_name = get_namespace_and_name(remote_module_name,':')
 
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, :namespace => remote_namespace, :version => version)
         message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed"
@@ -308,7 +312,7 @@ module DTK::Client
       end
 
       post_body = {
-        :remote_module_name => remote_module_name,
+        :remote_module_name => remote_module_name.sub(':','/'),
         :local_module_name => local_module_name,
         :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
@@ -386,7 +390,9 @@ module DTK::Client
       response = post rest_url("#{module_type}/export"), post_body
       return response unless response.ok?
 
-      DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published!")
+      full_module_name = "#{response.data['remote_repo_namespace']}/#{response.data['remote_repo_name']}"
+
+      DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published to '#{full_module_name}'!")
       Response::Ok.new()
     end
 
@@ -486,14 +492,14 @@ module DTK::Client
       raise DtkValidationError, "You have to provide valid catalog to push changes to! Valid catalogs: #{PushCatalogs}" unless catalog
 
       module_location = OsUtil.module_location(resolve_module_type(), module_name, version)
-
       reparse_aux(module_location) unless internal_trigger
+      local_namespace, local_module_name = get_namespace_and_name(module_name,':')
 
 #      if catalog.to_s.eql?("origin")
 #        push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
       if catalog.to_s.eql?("dtkn")
         module_refs_content = RemoteDependencyUtil.module_ref_content(module_location) if module_type == :service_module
-        remote_module_info  = get_remote_module_info_aux(module_type.to_sym, module_id, options["namespace"], version, module_refs_content)
+        remote_module_info  = get_remote_module_info_aux(module_type.to_sym, module_id, options["namespace"], version, module_refs_content, local_namespace)
         return remote_module_info unless remote_module_info.ok?
 
         unless File.directory?(module_location)
