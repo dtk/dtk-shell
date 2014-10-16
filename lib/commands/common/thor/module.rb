@@ -241,9 +241,11 @@ module DTK::Client
 
       repo_url,repo_id,module_id,branch,new_module_name = response.data(:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name)
       response = Helper(:git_repo).rename_and_initialize_clone_and_push(module_type.to_sym, local_module_name, new_module_name, branch, repo_url, module_directory)
-      return response unless response.ok?
-      repo_obj,commit_sha =  response.data(:repo_obj, :commit_sha)
+      return response unless (response && response.ok?)
+
+      repo_obj,commit_sha = response.data(:repo_obj, :commit_sha)
       module_final_dir = repo_obj.repo_dir
+      old_dir = response.data[:old_dir]
 
       post_body = {
         :repo_id => repo_id,
@@ -276,6 +278,11 @@ module DTK::Client
       # context_params.add_context_to_params(module_name, :"component-module", module_id)
       context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
       response = push_module_aux(context_params, true)
+      return response unless response.ok?
+
+      # if directory copied from component_module/<module_dir> to component_module/namespace/<module_dir>
+      # remove the old one if no errors while importing
+      FileUtils.rm_rf(old_dir) unless namespace
 
       if git_import
         response[:module_id] = module_id

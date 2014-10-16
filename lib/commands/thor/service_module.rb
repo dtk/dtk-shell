@@ -421,15 +421,18 @@ module DTK::Client
       repo_url,repo_id,module_id,branch,new_module_name = [:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name].map { |k| repo_info[k.to_s] }
 
       response = Helper(:git_repo).rename_and_initialize_clone_and_push(:service_module, local_module_name, new_module_name,branch,repo_url,service_directory)
-      return response unless response.ok?
+      return response unless (response && response.ok?)
 
-      repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
+      repo_obj,commit_sha = response.data(:repo_obj,:commit_sha)
+      old_dir = response.data[:old_dir]
 
       context_params.add_context_to_params(local_module_name, :"service-module", module_id)
       response = push(context_params,true)
       return response unless response.ok?
 
-      # module directory moved from (~/dtk/service_module/<module_name>) to (~/dtk/service_module/<default_namespace>/<module_name>)
+      # if directory copied from service_module/<module_dir> to service_module/namespace/<module_dir>
+      # remove the old one if no errors while importing
+      FileUtils.rm_rf(old_dir) unless namespace
       DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{repo_obj.repo_dir}",:yellow) unless namespace
 
       response
