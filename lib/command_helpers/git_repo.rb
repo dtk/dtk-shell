@@ -28,7 +28,7 @@ module DTK; module Client; class CommandHelper
 
         target_repo_dir = local_repo_dir(type,full_name,version,opts)
         if File.exists?(target_repo_dir)
-          raise ErrorUsage.new("Directory '#{target_repo_dir}' is not empty; it must be deleted or removed before retrying the command")          
+          raise ErrorUsage.new("Directory '#{target_repo_dir}' is not empty; it must be deleted or removed before retrying the command")
         end
 
         begin
@@ -60,13 +60,13 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    #opts can have the following keys
+    # opts can have the following keys
     #
-    #:remote_repo
-    #:remote_branch
-    #:remote_repo_url
-    #:local_branch
-    #:no_fetch
+    # :remote_repo
+    # :remote_branch
+    # :remote_repo_url
+    # :local_branch
+    # :no_fetch
     #
     def push_changes(type,full_module_name,version,opts={})
       Response.wrap_helper_actions() do
