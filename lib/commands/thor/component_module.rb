@@ -130,7 +130,7 @@ TODO: might deprecate
 
       post_body        = (remote ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
       post_body[:diff] = options.diff? ? options.diff : {}
-      post_body.merge!(:module_namespace => options.namespace)
+      post_body.merge!(:module_namespace => options.namespace) if options.namespace
 
       response = post rest_url("component_module/#{action}"),post_body
 

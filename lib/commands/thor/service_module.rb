@@ -121,7 +121,7 @@ module DTK::Client
         action    = options.remote? ? "list_remote" : "list"
         post_body = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
         post_body[:diff] = options.diff? ? options.diff : {}
-        post_body.merge!(:module_namespace => options.namespace)
+        post_body.merge!(:module_namespace => options.namespace) if options.namespace
 
         response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
