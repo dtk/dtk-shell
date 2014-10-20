@@ -258,7 +258,7 @@ module DTK::Client
       unless response.ok?
         response.set_data_hash({ :full_module_name => new_module_name })
         # remove new directory if import failed
-        FileUtils.rm_rf(module_final_dir) unless namespace
+        FileUtils.rm_rf(module_final_dir) unless (namespace && git_import)
         return response
       end
 
@@ -283,12 +283,12 @@ module DTK::Client
 
       unless response.ok?
         # remove new directory if import failed
-        FileUtils.rm_rf(module_final_dir) unless namespace
+        FileUtils.rm_rf(module_final_dir) unless (namespace && git_import)
         return response
       end
 
       # remove the old one if no errors while importing
-      FileUtils.rm_rf(old_dir) unless namespace
+      FileUtils.rm_rf(old_dir) unless (namespace && git_import)
 
       if git_import
         response[:module_id] = module_id
