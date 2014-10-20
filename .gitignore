@@ -5,4 +5,5 @@ dtk*.gem
 test.rb
 .gitattributes
 Gemfile_dev.lock
+Gemfile.lock
 sftp-config*.json

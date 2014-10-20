@@ -89,7 +89,7 @@ module DTK::Client
     desc "import [NAMESPACE:]TEST-MODULE-NAME", "Create new test module from local clone"
     def import(context_params)
       response = import_module_aux(context_params)
-      @@invalidate_map << :test_module if response && response.ok?
+      @@invalidate_map << :test_module
 
       response
     end

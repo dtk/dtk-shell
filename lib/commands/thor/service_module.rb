@@ -121,7 +121,7 @@ module DTK::Client
         action    = options.remote? ? "list_remote" : "list"
         post_body = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
         post_body[:diff] = options.diff? ? options.diff : {}
-        post_body.merge!(:module_namespace => options.namespace)
+        post_body.merge!(:module_namespace => options.namespace) if options.namespace
 
         response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
@@ -421,15 +421,23 @@ module DTK::Client
       repo_url,repo_id,module_id,branch,new_module_name = [:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name].map { |k| repo_info[k.to_s] }
 
       response = Helper(:git_repo).rename_and_initialize_clone_and_push(:service_module, local_module_name, new_module_name,branch,repo_url,service_directory)
-      return response unless response.ok?
+      return response unless (response && response.ok?)
 
-      repo_obj,commit_sha =  response.data(:repo_obj,:commit_sha)
+      repo_obj,commit_sha = response.data(:repo_obj,:commit_sha)
+      module_final_dir = repo_obj.repo_dir
+      old_dir = response.data[:old_dir]
 
       context_params.add_context_to_params(local_module_name, :"service-module", module_id)
       response = push(context_params,true)
-      return response unless response.ok?
 
-      # module directory moved from (~/dtk/service_module/<module_name>) to (~/dtk/service_module/<default_namespace>/<module_name>)
+      unless response.ok?
+        # remove new directory if import failed
+        FileUtils.rm_rf(module_final_dir) unless namespace
+        return response
+      end
+
+      # remove the old one if no errors while importing
+      FileUtils.rm_rf(old_dir) unless namespace
       DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{repo_obj.repo_dir}",:yellow) unless namespace
 
       response

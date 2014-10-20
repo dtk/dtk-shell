@@ -130,7 +130,7 @@ TODO: might deprecate
 
       post_body        = (remote ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
       post_body[:diff] = options.diff? ? options.diff : {}
-      post_body.merge!(:module_namespace => options.namespace)
+      post_body.merge!(:module_namespace => options.namespace) if options.namespace
 
       response = post rest_url("component_module/#{action}"),post_body
 
@@ -176,7 +176,7 @@ TODO: might deprecate
     desc "import [NAMESPACE:]COMPONENT-MODULE-NAME", "Create new component module from local clone"
     def import(context_params)
       response = import_module_aux(context_params)
-      @@invalidate_map << :component_module if (response && response.ok?)
+      @@invalidate_map << :component_module
 
       response
     end

@@ -175,7 +175,6 @@ module DTK; module Client; class CommandHelper
     end
 
     def rename_and_initialize_clone_and_push(type, module_name, new_module_name, branch, repo_url, local_repo_dir, version = nil)
-
       # check to see if the new dir has proper naming e.g. (~/dtk/component_modules/dtk::java)
       unless local_repo_dir.match(/\/#{new_module_name.gsub(ModuleUtil::NAMESPACE_SEPERATOR,'/')}$/)
         old_dir = local_repo_dir
@@ -185,13 +184,23 @@ module DTK; module Client; class CommandHelper
         parent_path = new_dir.gsub(/(\/\w+)$/,'')
         FileUtils::mkdir_p(parent_path) unless File.directory?(parent_path)
         # raise ErrorUsage.new("Destination folder already exists '#{new_dir}', aborting initialization.") if File.directory?(new_dir)
-        FileUtils.mv(old_dir, new_dir)
+        if File.directory?(new_dir)
+          # return empty response if user does not want to overwrite current directory
+          return unless Console.confirmation_prompt("Destination directory #{new_dir} exists already. Do you want to overwrite it with content from #{old_dir}"+'?')
+          FileUtils.rm_rf(new_dir)
+        end
+        # FileUtils.mv(old_dir, new_dir)
+        FileUtils.cp_r(old_dir, new_dir)
       else
         new_dir = local_repo_dir
       end
 
       # Continue push
-      initialize_client_clone_and_push(type, new_module_name, branch, repo_url, new_dir, version)
+      response = initialize_client_clone_and_push(type, new_module_name, branch, repo_url, new_dir, version)
+      return response unless response.ok?
+
+      response.data.merge!(:old_dir => old_dir)
+      response
     end
 
     # makes repo_dir (determined from type and module_name) into a git dir, pulls, adds, content and then pushes
