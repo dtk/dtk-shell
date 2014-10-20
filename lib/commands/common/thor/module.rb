@@ -257,6 +257,8 @@ module DTK::Client
 
       unless response.ok?
         response.set_data_hash({ :full_module_name => new_module_name })
+        # remove new directory if import failed
+        FileUtils.rm_rf(module_final_dir) unless namespace
         return response
       end
 
@@ -278,9 +280,13 @@ module DTK::Client
       # context_params.add_context_to_params(module_name, :"component-module", module_id)
       context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
       response = push_module_aux(context_params, true)
-      return response unless response.ok?
 
-      # if directory copied from component_module/<module_dir> to component_module/namespace/<module_dir>
+      unless response.ok?
+        # remove new directory if import failed
+        FileUtils.rm_rf(module_final_dir) unless namespace
+        return response
+      end
+
       # remove the old one if no errors while importing
       FileUtils.rm_rf(old_dir) unless namespace
 

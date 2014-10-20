@@ -424,13 +424,18 @@ module DTK::Client
       return response unless (response && response.ok?)
 
       repo_obj,commit_sha = response.data(:repo_obj,:commit_sha)
+      module_final_dir = repo_obj.repo_dir
       old_dir = response.data[:old_dir]
 
       context_params.add_context_to_params(local_module_name, :"service-module", module_id)
       response = push(context_params,true)
-      return response unless response.ok?
 
-      # if directory copied from service_module/<module_dir> to service_module/namespace/<module_dir>
+      unless response.ok?
+        # remove new directory if import failed
+        FileUtils.rm_rf(module_final_dir) unless namespace
+        return response
+      end
+
       # remove the old one if no errors while importing
       FileUtils.rm_rf(old_dir) unless namespace
       DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{repo_obj.repo_dir}",:yellow) unless namespace
