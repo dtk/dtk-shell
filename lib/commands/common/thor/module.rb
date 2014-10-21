@@ -296,7 +296,7 @@ module DTK::Client
       # was not sure why clause namespace && git_import was in so kept this condition
       # FileUtils.rm_rf(old_dir) unless (namespace && git_import)
       # New:
-      if old_dir != module_final_dir
+      if old_dir and (old_dir != module_final_dir)
         FileUtils.rm_rf(old_dir) unless (namespace && git_import)
       end
 
