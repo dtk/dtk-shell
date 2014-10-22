@@ -15,9 +15,11 @@ module DTK
       end
 
       def stage_changes()
-        @git_repo.add(untracked())
-        @git_repo.add(added())
-        @git_repo.add(changed())
+        handle_git_error do
+          @git_repo.add(untracked())
+          @git_repo.add(added())
+          @git_repo.add(changed())
+        end
         deleted().each do |file|
           begin
             @git_repo.remove(file)
@@ -257,7 +259,9 @@ module DTK
       end
 
     private
-
+      def handle_git_error(&block)
+        self.class.handle_git_error(&block)
+      end
       def self.handle_git_error(&block)
         ret = nil
         begin
@@ -269,7 +273,7 @@ module DTK
             err_msg = e.message
             lines = err_msg.split("\n")
             if lines.last =~ GitErrorPattern
-              err_msg = lines.last.gsub(GitErrorPattern,'').strip()
+              err_msg = error_msg_when_git_error(lines)
             end
             raise DtkError.new(err_msg)
           end 
@@ -277,6 +281,16 @@ module DTK
         ret
       end
       GitErrorPattern = /^fatal:/
+      def self.error_msg_when_git_error(lines)
+        ret = lines.last.gsub(GitErrorPattern,'').strip()
+        # TODO start putting in special cases here
+        if ret =~ /adding files failed/
+          if lines.first =~ /\.git/
+            ret = "Cannot add files that are in a .git directory; remove any nested .git directory"
+          end
+        end
+        ret
+      end
 
       # Method bellow show different behavior when working with 1.8.7
       # so based on Hash response we know it it is:
