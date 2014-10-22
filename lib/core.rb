@@ -121,6 +121,19 @@ def resolve_direct_access(params, config_exists=nil)
   return if params[:username_exists]
 
   puts "Processing..." if config_exists
+  # check to see if catalog credentials are set
+  conn = DTK::Client::Session.get_connection()
+  response = conn.post DTK::Client::CommandBase.class, conn.rest_url("account/check_catalog_credentials"), {}
+
+  # set catalog credentails
+  if response.ok? && !response.data['catalog_credentials_set']
+    # setting up catalog credentials
+    catalog_creds = DTK::Client::Configurator.ask_catalog_credentials()
+    unless catalog_creds.empty?
+      response = conn.post DTK::Client::CommandBase.class, conn.rest_url("account/set_catalog_credentials"), { :username => catalog_creds[:username], :password => catalog_creds[:password]}
+    end
+  end
+
   # response = DTK::Client::Account.add_access(params[:ssh_key_path])
   response, matched_pub_key, matched_username = DTK::Client::Account.add_key(params[:ssh_key_path])
 
@@ -136,15 +149,6 @@ def resolve_direct_access(params, config_exists=nil)
     # commented out because 'add_key' method called above will also print the same message
     # DTK::Client::OsUtil.print("Your SSH PUB key has been successfully added.", :yellow)
     DTK::Client::Configurator.add_current_user_to_direct_access()
-  end
-
-  if response.ok? && !response.data['catalog_credentials_set']
-    # setting up catalog credentials
-    catalog_creds = DTK::Client::Configurator.ask_catalog_credentials()
-    unless catalog_creds.empty?
-      conn = DTK::Client::Session.get_connection()
-      response = conn.post DTK::Client::CommandBase.class, conn.rest_url("account/set_catalog_credentials"), { :username => catalog_creds[:username], :password => catalog_creds[:password]}
-    end
   end
 
   response
