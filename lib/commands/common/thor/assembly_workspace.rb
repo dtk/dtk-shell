@@ -67,9 +67,12 @@ module DTK::Client
       end
 
       namespace ||= opts[:default_namespace]
+      local_clone_dir_exists = Helper(:git_repo).local_clone_dir_exists?(:service_module, service_module_name, :namespace => namespace)
+
       if namespace
         post_body.merge!(:namespace => namespace)
-        post_body.merge!(:local_clone_dir_exists => true) if Helper(:git_repo).local_clone_dir_exists?(:service_module, service_module_name, :namespace => namespace)
+        post_body.merge!(:local_clone_dir_exists => true) if local_clone_dir_exists
+        # post_body.merge!(:local_clone_dir_exists => true) if Helper(:git_repo).local_clone_dir_exists?(:service_module, service_module_name, :namespace => namespace)
       end
 
       post_body.merge!(:assembly_template_name => assembly_template_name) if assembly_template_name
@@ -78,10 +81,15 @@ module DTK::Client
       return response unless response.ok?()
 
       #synchronize_clone will load new assembly template into service clone on workspace (if it exists)
-      commit_sha,workspace_branch,namespace,full_module_name = response.data(:commit_sha,:workspace_branch,:module_namespace,:full_module_name)
+      commit_sha,workspace_branch,namespace,full_module_name,repo_url,version = response.data(:commit_sha,:workspace_branch,:module_namespace,:full_module_name,:repo_url,:version)
       service_module_name ||= response.data(:module_name)
       opts = {:local_branch=>workspace_branch, :namespace => namespace}
-      response = Helper(:git_repo).synchronize_clone(:service_module,service_module_name,commit_sha,opts)
+
+      if local_clone_dir_exists
+        response = Helper(:git_repo).synchronize_clone(:service_module,service_module_name,commit_sha,opts)
+      else
+        response = Helper(:git_repo).create_clone_with_branch(:service_module, service_module_name, repo_url, workspace_branch, version, namespace)
+      end
       return response unless response.ok?
 
       DTK::Client::OsUtil.print("New assembly template '#{assembly_template_name}' created in service module '#{full_module_name}'.", :yellow) if mode == :create

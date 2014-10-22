@@ -153,7 +153,7 @@ module DTK::Client
         case about
         when 'nodes'
           response = post rest_url("assembly/info_about"), post_body
-          data_type = :node_template
+          data_type = :assembly_node_template
         when 'components'
           response = post rest_url("assembly/info_about"), post_body
           data_type = :component

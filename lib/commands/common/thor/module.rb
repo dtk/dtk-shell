@@ -258,7 +258,8 @@ module DTK::Client
       unless response.ok?
         response.set_data_hash({ :full_module_name => new_module_name })
         # remove new directory if import failed
-        FileUtils.rm_rf(module_final_dir) unless (namespace && git_import)
+        # DTK-1768: removed below; TODO: see if there is any case where applicable
+        # FileUtils.rm_rf(module_final_dir) unless (namespace && git_import)
         return response
       end
 
@@ -283,12 +284,21 @@ module DTK::Client
 
       unless response.ok?
         # remove new directory if import failed
-        FileUtils.rm_rf(module_final_dir) unless (namespace && git_import)
+        # DTK-1768: removed below; TODO: see if there is any case where applicable
+        # Also think what should be done is if failure then move the directory back to old dir position
+        # (if it has been moved)
+        # FileUtils.rm_rf(module_final_dir) unless (namespace && git_import)
         return response
       end
 
       # remove the old one if no errors while importing
-      FileUtils.rm_rf(old_dir) unless (namespace && git_import)
+      # DTK-1768: removed below; and replaced by removing old dir if unequal to final dir
+      # was not sure why clause namespace && git_import was in so kept this condition
+      # FileUtils.rm_rf(old_dir) unless (namespace && git_import)
+      # New:
+      if old_dir and (old_dir != module_final_dir)
+        FileUtils.rm_rf(old_dir) unless (namespace && git_import)
+      end
 
       if git_import
         response[:module_id] = module_id

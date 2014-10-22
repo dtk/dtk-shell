@@ -432,12 +432,19 @@ module DTK::Client
 
       unless response.ok?
         # remove new directory if import failed
-        FileUtils.rm_rf(module_final_dir) unless namespace
+        # DTK-1768: removed below; TODO: see if need to put a variant back in
+        # was not sure why clause namespace is there
+        # FileUtils.rm_rf(module_final_dir) unless namespace
         return response
       end
 
       # remove the old one if no errors while importing
-      FileUtils.rm_rf(old_dir) unless namespace
+      # DTK-1768: removed below; and replaced by removing old dir if unequal to final dir
+      # was not sure why clause namespace  was in so kept this condition
+      #FileUtils.rm_rf(old_dir) unless namespace
+      if old_dir and (old_dir != module_final_dir)
+        FileUtils.rm_rf(old_dir) unless namespace
+      end
       DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{repo_obj.repo_dir}",:yellow) unless namespace
 
       response
