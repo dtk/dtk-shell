@@ -319,6 +319,7 @@ module DTK::Client
       # in case of auto-import via service import, we skip cloning to speed up a process
       skip_cloning = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
       do_not_raise = context_params.get_forwarded_options()[:do_not_raise] if context_params.get_forwarded_options()
+      skip_ainstall = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:skip_auto_install] : false
       module_type  = get_module_type(context_params)
 
       # ignore_component_error = context_params.get_forwarded_options()[:ignore_component_error]||options.ignore? if context_params.get_forwarded_options()
@@ -344,14 +345,18 @@ module DTK::Client
       post_body.merge!(:additional_message => additional_message) if additional_message
 
       response = post rest_url("#{module_type}/import"), post_body
-      RemoteDependencyUtil.print_dependency_warnings(response)
+      are_there_warnings = RemoteDependencyUtil.print_dependency_warnings(response)
+
+      # prompt to see if user is ready to continue with warnings/errors
+      if are_there_warnings
+        return false unless Console.confirmation_prompt("Do you want to ignore the warnings and proceed with import"+'?')
+      end
 
       # case when we need to import additional components
-      if (response.ok? && (missing_components = response.data(:missing_module_components)))
+      if (response.ok? && !skip_ainstall && (missing_components = response.data(:missing_module_components)))
         required_components = response.data(:required_modules)
         opts = {:do_not_raise=>true}
         module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message=>true)
-        module_opts.merge!(:module_type => 'component-module')
 
         continue = trigger_module_component_import(missing_components, required_components, module_opts)
         return unless continue

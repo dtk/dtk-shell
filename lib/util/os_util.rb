@@ -279,6 +279,7 @@ module DTK
             load File.expand_path('../../lib/shell/domain.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/domain/git_adapter.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/command_helpers/git_repo.rb', File.dirname(__FILE__))
+            load File.expand_path('../../lib/command_helpers/service_importer.rb', File.dirname(__FILE__))
             paths = []
             paths << File.expand_path('../../lib/commands/thor/*.rb', File.dirname(__FILE__))
             paths << File.expand_path('../../lib/commands/common/thor/*.rb', File.dirname(__FILE__))

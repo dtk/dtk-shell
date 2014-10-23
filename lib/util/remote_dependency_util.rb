@@ -10,14 +10,18 @@ module DTK
       class << self
 
         def print_dependency_warnings(response, success_msg=nil)
-          return if response.nil? || response.data.nil?
+          are_there_warnings = false
+          return are_there_warnings if response.nil? || response.data.nil?
+
           warnings = response.data['dependency_warnings']
           if warnings && !warnings.empty?
             print_out "Following warnings have been detected for current module by Repo Manager:\n"
             warnings.each { |w| print_out("  - #{w}") }
             puts
+            are_there_warnings = true
           end
           print_out success_msg, :green if success_msg
+          are_there_warnings
         end
 
         def module_ref_content(location)

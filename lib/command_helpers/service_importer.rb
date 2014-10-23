@@ -20,65 +20,30 @@ module DTK::Client
     #
     def trigger_module_component_import(missing_component_list, required_components, opts={})
       puts "Auto-importing missing component module(s)"
-      does_not_exist, modules_to_import = validate_missing_components(missing_component_list)
-
-      unless does_not_exist.empty?
-        module_names = does_not_exist.collect{|x| "#{x['namespace']}/#{x['name']}"}
-        OsUtil.print("You do no have access to component modules '#{module_names}' required by service module, or they do not exist on repo manager and will not be imported!", :yellow)
-        return false unless Console.confirmation_prompt("Do you want to continue with import of available component modules and service module"+'?')
-      end
+      modules_to_import = missing_component_list
 
       required_components.each do |r_module|
         module_name = "#{r_module['namespace']}/#{r_module['name']}"
         module_name += "-#{r_module['version']}" if r_module['version']
-        print "Using component module '#{module_name}'\n"
+        module_type = r_module['type']
+        print "Using #{module_type.gsub('_',' ')} '#{module_name}'\n"
       end
 
       modules_to_import.each do |m_module|
         module_name = "#{m_module['namespace']}/#{m_module['name']}"
         module_name += "-#{m_module['version']}" if m_module['version']
-        print "Importing component module '#{module_name}' ... "
+        module_type = m_module['type']
+        print "Importing #{module_type.gsub('_',' ')} '#{module_name}' ... "
         new_context_params = ::DTK::Shell::ContextParams.new([module_name])
         new_context_params.override_method_argument!('option_2', m_module['version'])
-        new_context_params.forward_options( { "skip_cloning" => false}).merge!(opts)
+        new_context_params.forward_options( { :skip_cloning => false, :skip_auto_install => true, :module_type => module_type}).merge!(opts)
 
-        response = ContextRouter.routeTask("component_module", "install", new_context_params, @conn)
+        response = ContextRouter.routeTask(module_type, "install", new_context_params, @conn)
         puts(response.data(:does_not_exist) ? response.data(:does_not_exist) : "Done.")
         raise DTK::Client::DtkError, response.error_message unless response.ok?
       end
 
       Response::Ok.new()
-    end
-
-    # check if component modules dependencies specified in service module exist on repo manager
-    def validate_missing_components(missing_component_list)
-      thor_options = {}
-      thor_options["remote"] = true
-      new_context_params = ::DTK::Shell::ContextParams.new
-      new_context_params.forward_options(thor_options)
-      new_context_params.add_context_to_params(:"component-module", :"component-module")
-      response = ContextRouter.routeTask("component_module", "list", new_context_params, @conn)
-      return response unless response.ok?
-
-      does_not_exist, modules_to_import = [], []
-
-      missing_component_list.each do |missing_cmp|
-        cmp = response.data.select{|x| x['display_name'].eql?("#{missing_cmp['namespace']}/#{missing_cmp['name']}")}
-        if cmp.empty?
-          does_not_exist << missing_cmp
-        else
-          cmp = cmp.first
-          if remote_version = cmp['versions']
-            missing_version = missing_cmp['version']||'CURRENT'
-            does_not_exist << missing_cmp unless (remote_version.include?(missing_version))
-          else
-            does_not_exist << missing_cmp if missing_cmp['version']
-          end
-        end
-      end
-
-      modules_to_import = missing_component_list - does_not_exist
-      return does_not_exist, modules_to_import
     end
 
     def resolve_missing_components(service_module_id, service_module_name, namespace_to_use, force_clone=false)
