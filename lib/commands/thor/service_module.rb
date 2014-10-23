@@ -431,10 +431,10 @@ module DTK::Client
       response = push(context_params,true)
 
       unless response.ok?
-        # remove new directory if import failed
-        # DTK-1768: removed below; TODO: see if need to put a variant back in
-        # was not sure why clause namespace is there
-        # FileUtils.rm_rf(module_final_dir) unless namespace
+        # remove new directory and leave the old one if import without namespace failed
+        if old_dir and (old_dir != module_final_dir)
+          FileUtils.rm_rf(module_final_dir) unless namespace
+        end
         return response
       end
 
