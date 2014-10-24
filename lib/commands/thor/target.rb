@@ -197,5 +197,35 @@ module DTK::Client
 
       return post rest_url("target/delete"), post_body
     end
+
+    desc "TARGET-NAME/ID edit-target [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]","Edit keypair or security-group for given target"
+    method_option :keypair, :type => :string
+    method_option :security_group, :type => :string, :aliases => '--security-groups'
+    def edit_target(context_params)
+      target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
+      keypair, security_group = context_params.retrieve_thor_options([:keypair, :security_group], options)
+
+      raise ::DTK::Client::DtkValidationError.new("You have to provide security-group or keypair to edit target!") unless keypair || security_group
+
+      security_groups, iaas_properties = [], {}
+      iaas_properties.merge!(:keypair => keypair) if keypair
+
+      if security_group
+        raise ::DTK::Client::DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ") if security_group.end_with?(',')
+        security_groups = security_group.split(',')
+        if (security_groups.empty? || security_groups.size==1)
+          iaas_properties.merge!(:security_group => security_group)
+        else
+          iaas_properties.merge!(:security_group_set => security_groups)
+        end
+      end
+      @@invalidate_map << :target
+
+      post_body = {
+        :target_id => target_id,
+        :iaas_properties => iaas_properties
+      }
+      return post rest_url("target/edit_target"), post_body
+    end
   end
 end
