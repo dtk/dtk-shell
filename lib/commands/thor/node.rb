@@ -93,8 +93,8 @@ module DTK::Client
        post rest_url("node/info"), post_body
     end
 
-    desc "NODE-NAME/ID ssh REMOTE-USER [--keypair PATH-TO-PEM]","SSH into node, optional parameters are path to keypair and remote user."
-    method_option "--keypair",:type => :string, :desc => "Keypair used for connection, if not provided default is used", :banner => "KEYPAIR"
+    desc "NODE-NAME/ID ssh REMOTE-USER [-i PATH-TO-PEM]","SSH into node, optional parameters are path to indentity file."
+    method_option "--identity-file",:aliases => '-i',:type => :string, :desc => "Identity-File used for connection, if not provided default is used", :banner => "IDENTITY-FILE"
     def ssh(context_params)
       if OsUtil.is_windows?
         puts "[NOTICE] SSH functionality is currenly not supported on Windows."
@@ -102,11 +102,10 @@ module DTK::Client
       end
 
       node_id, remote_user = context_params.retrieve_arguments([:node_id!,:option_1!],method_argument_names)
-      keypair_location = options.keypair
 
-      if keypair_location
-        unless File.exists?(keypair_location)
-          raise ::DTK::Client::DtkError, "Not able to find keypair, '#{keypair_location}'"
+      if identity_file_location = options['identity-file']
+        unless File.exists?(identity_file_location)
+          raise ::DTK::Client::DtkError, "Not able to find identity file, '#{identity_file_location}'"
         end
       end
 
@@ -121,23 +120,20 @@ module DTK::Client
 
         connection_string = "#{remote_user}@#{public_dns}"
 
-        default_keypair = OsUtil.dtk_keypair_location()
-
-        # vanilla ssh command using only pub key
-        vanilla_ssh = 
+        default_identity_file = OsUtil.dtk_identity_file_location()
 
         ssh_command = nil
         
-        if keypair_location
+        if identity_file_location
           # provided PEM key
-          ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{keypair_location} #{connection_string}"
+          ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{identity_file_location} #{connection_string}"
         elsif SSHUtil.ssh_reachable?(remote_user, public_dns)
           # it has PUB key access
           ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" #{connection_string}"
         else
-          # using default keypair
-          if default_keypair
-            ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{default_keypair} #{connection_string}"
+          # using default identity_file
+          if default_identity_file
+            ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{default_identity_file} #{connection_string}"
           end
         end
 
@@ -147,7 +143,7 @@ module DTK::Client
         Kernel.system(ssh_command)
         OsUtil.print("You are leaving SSH terminal, and returning to DTK Shell ...", :yellow)
       else
-        return response
+        response
       end
     end
 

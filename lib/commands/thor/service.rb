@@ -167,7 +167,7 @@ TODO: overlaps with different meaning
             ['set-attribute',"set-attribute ATTRIBUTE-NAME [VALUE] [-u]","# (Un)Set attribute value. The option -u will unset the attribute's value."],
             ['start', "start", "# Start node instance."],
             ['stop', "stop", "# Stop node instance."],
-            ['ssh', "ssh REMOTE-USER [--keypair PATH-TO-PEM]", "# SSH into node, optional parameters are path to keypair and remote user."]
+            ['ssh', "ssh REMOTE-USER [-i PATH-TO-PEM]","# SSH into node, optional parameters are path to identity file."]
           ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],

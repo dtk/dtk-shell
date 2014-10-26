@@ -9,7 +9,7 @@ module DTK
 
       extend Auxiliary
 
-      DTK_KEYPAIR = 'dtk.pem'
+      DTK_IDENTITY_FILE = 'dtk.pem'
 
       class << self
         def is_mac?
@@ -181,10 +181,10 @@ module DTK
         #
         # Checks to find dtk.pem in configuration node, if not found displays tip message
         #
-        def dtk_keypair_location()
-          path_to_keypair = "#{dtk_local_folder}#{DTK_KEYPAIR}"
-          return path_to_keypair if File.exists?(path_to_keypair)
-          print("TIP: You can save your keypair as '#{path_to_keypair}' and it will be used as default keypair.", :yellow)
+        def dtk_identity_file_location()
+          path_to_identity_file = "#{dtk_local_folder}#{DTK_IDENTITY_FILE}"
+          return path_to_identity_file if File.exists?(path_to_identity_file)
+          print("TIP: You can save your identity file as '#{path_to_identity_file}' and it will be used as default identityfile.", :yellow)
           nil
         end
 
