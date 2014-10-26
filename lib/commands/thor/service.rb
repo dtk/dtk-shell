@@ -449,7 +449,7 @@ TODO: will put in dot release and will rename to 'extend'
     #  post rest_url("assembly/list_smoketests"), post_body
     #end
 
-    desc "SERVICE-NAME/ID grant-access SYS-USER NAME [PATH-TO-PUB-KEY] [--nodes NODE-NAMES]", "Grant access to given service and its nodes"
+    desc "SERVICE-NAME/ID grant-access USER-ACCOUNT PUB-KEY-NAME [PATH-TO-PUB-KEY] [--nodes NODE-NAMES]", "Grants ssh access to user account USER-ACCOUNT for nodes in service instance"
     method_option :nodes, :type => :string, :default => nil
     def grant_access(context_params)
       service_id, system_user, rsa_key_name, path_to_rsa_pub_key = context_params.retrieve_arguments([:service_id!,:option_1!, :option_2!, :option_3],method_argument_names)
@@ -475,7 +475,7 @@ TODO: will put in dot release and will rename to 'extend'
       nil
     end
 
-    desc "SERVICE-NAME/ID revoke-access SYS-USER NAME [--nodes NODE-NAMES]", "Revoke access to given service and its nodes"
+    desc "SERVICE-NAME/ID revoke-access USER-ACCOUNT PUB-KEY-NAME [PATH-TO-PUB-KEY] [--nodes NODE-NAMES]", "Revokes ssh access to user account USER-ACCOUNT for nodes in service instance"
     method_option :nodes, :type => :string, :default => nil
     def revoke_access(context_params)
       service_id, system_user, rsa_key_name = context_params.retrieve_arguments([:service_id!,:option_1!, :option_2!],method_argument_names)
