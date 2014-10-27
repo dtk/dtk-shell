@@ -144,8 +144,11 @@ module DTK
 
       def self.enter_catalog_credentials()
         property_template = {}
-        { :username => 'Catalog Username', :password => 'Catalog Password' }.each do |p, v|
-          value = ask("#{v}: ") { |q| q.echo = false if p == :password }
+        # needed to preserve the order for ruby 1.8.7
+        # ruby 1.8 does not preserve order of insertation
+        wizard_values = { :username => 'Catalog Username', :password => 'Catalog Password' }
+        [:username, :password].each do |p|
+          value = ask("#{wizard_values[p]}: ") { |q| q.echo = false if p == :password }
           property_template.store(p, value)
         end
         property_template
