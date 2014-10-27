@@ -52,7 +52,7 @@ module DTK::Client
     # mode will be :create or :update
     # service_module_name_x can be name or fullname (NS:MOduleName)
     def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name_x=nil,assembly_template_name=nil,opts={})
-      namespace = nil
+      namespace,local_clone_dir_exists = nil, nil
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :mode => mode.to_s
@@ -67,12 +67,10 @@ module DTK::Client
       end
 
       namespace ||= opts[:default_namespace]
-      local_clone_dir_exists = Helper(:git_repo).local_clone_dir_exists?(:service_module, service_module_name, :namespace => namespace)
-
       if namespace
+        local_clone_dir_exists = Helper(:git_repo).local_clone_dir_exists?(:service_module, service_module_name, :namespace => namespace)
         post_body.merge!(:namespace => namespace)
         post_body.merge!(:local_clone_dir_exists => true) if local_clone_dir_exists
-        # post_body.merge!(:local_clone_dir_exists => true) if Helper(:git_repo).local_clone_dir_exists?(:service_module, service_module_name, :namespace => namespace)
       end
 
       post_body.merge!(:assembly_template_name => assembly_template_name) if assembly_template_name
@@ -85,7 +83,7 @@ module DTK::Client
       service_module_name ||= response.data(:module_name)
       opts = {:local_branch=>workspace_branch, :namespace => namespace}
 
-      if local_clone_dir_exists
+      if (mode == :update) || local_clone_dir_exists
         response = Helper(:git_repo).synchronize_clone(:service_module,service_module_name,commit_sha,opts)
       else
         response = Helper(:git_repo).create_clone_with_branch(:service_module, service_module_name, repo_url, workspace_branch, version, namespace)
