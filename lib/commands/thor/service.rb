@@ -537,9 +537,14 @@ TODO: will put in dot release and will rename to 'extend'
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy service '#{assembly_name}' and its nodes"+'?')
       end
 
-      unsaved_modules = check_if_unsaved_changes(assembly_id)
+      unsaved_modules = check_if_unsaved_cmp_module_changes(assembly_id)
       unless unsaved_modules.empty?
         return unless Console.confirmation_prompt("Deleting this service will cause unsaved changes in component module(s) '#{unsaved_modules.join(',')}' to be lost. Do you still want to proceed"+'?')
+      end
+
+      assembly_changed = check_if_unsaved_assembly_changes(assembly_id, assembly_name)
+      if assembly_changed == true
+        return unless Console.confirmation_prompt("You made some changes in assembly or it's workflow that will be lost if you delete this service. Do you still want to proceed"+'?')
       end
 
       # purge local clone
