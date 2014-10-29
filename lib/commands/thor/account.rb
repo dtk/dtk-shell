@@ -127,6 +127,10 @@ module DTK::Client
         DTK::Client::Configurator.add_current_user_to_direct_access() if response.ok?
       end
 
+      if response.ok? && !response.data(:registered_with_repoman)
+        OsUtil.print("Warning: We were not able to register your key with remote catalog!", :yellow)
+      end
+
       nil
     end
 
