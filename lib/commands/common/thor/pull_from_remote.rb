@@ -54,16 +54,21 @@ module DTK::Client
 
       print "Resolving dependencies please wait ... "
 
+      # install them all!
       if (response.ok? && !(missing_components = response.data(:missing_modules)).empty?)
         required_modules = response.data(:required_modules)
         puts " New dependencies found, Installing."
 
-        module_opts = {:module_type => 'component-module'}
-        trigger_module_component_import(missing_components, required_modules, module_opts)
+        trigger_module_auto_import(missing_components, required_modules, { :include_pull_action => true })
 
         puts "Resuming pull from remote ..."
       else
         puts 'Done.'
+      end
+
+      # pull them all!
+      if (response.ok? && !(required_modules = response.data(:required_modules)).empty?)
+        trigger_module_auto_pull(required_modules)
       end
 
       RemoteDependencyUtil.print_dependency_warnings(response)
@@ -75,9 +80,10 @@ module DTK::Client
       def self.perform_locally(cmd_obj,module_type,module_id,module_name,remote_params)
         opts = remote_params
         response = cmd_obj.Helper(:git_repo).pull_changes(module_type,module_name,opts)
+
         # return response unless response.ok?
         if response.data[:diffs].empty?
-          raise DtkError, "No changes to pull from remote"
+          puts "No changes to pull from remote."
         end
 
         return response

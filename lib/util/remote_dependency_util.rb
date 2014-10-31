@@ -16,7 +16,7 @@ module DTK
           warnings = response.data['dependency_warnings']
           if warnings && !warnings.empty?
             print_out "Following warnings have been detected for current module by Repo Manager:\n"
-            warnings.each { |w| print_out("  - #{w}") }
+            warnings.each { |w| print_out("  - #{w['message']}") }
             puts
             are_there_warnings = true
           end

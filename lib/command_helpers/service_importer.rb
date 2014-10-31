@@ -16,23 +16,52 @@ module DTK::Client
     end
 
     ##
+    # Method will trigger pull from dtkn for each existing module
+    #
+
+    def trigger_module_auto_pull(required_modules)
+      if !required_modules.empty? && Console.confirmation_prompt("Do you want to update existing modules from catalog?")
+        required_modules.each do |r_module|
+          module_name = full_module_name(r_module)
+          module_type = r_module['type']
+
+          print "Pulling latest #{module_type.gsub('_',' ')} code for '#{module_name}' ... "
+
+          new_context_params = DTK::Shell::ContextParams.new
+          new_context_params.add_context_to_params(module_type, module_type)
+          new_context_params.add_context_name_to_params(module_type, module_type, module_name)
+
+          response = ContextRouter.routeTask(module_type, "pull_dtkn", new_context_params, @conn)
+
+          raise DTK::Client::DtkError, response.error_message unless response.ok?
+
+          # in case there are diffs there was no ouput so we add 'Done'
+          puts 'Done.' unless response.data[:diffs].empty?
+        end
+      end
+    end
+
+
+    ##
     # Method will trigger import for each missing module component
     #
-    def trigger_module_component_import(missing_component_list, required_components, opts={})
+    def trigger_module_auto_import(missing_modules, required_modules, opts={})
       puts "Auto-importing missing module(s)"
-      modules_to_import = missing_component_list
+      modules_to_import = missing_modules
 
-      required_components.each do |r_module|
-        module_name = "#{r_module['namespace']}/#{r_module['name']}"
-        module_name += "-#{r_module['version']}" if r_module['version']
+      # Print out installed modules
+      required_modules.each do |r_module|
+        module_name = full_module_name(r_module)
         module_type = r_module['type']
+
         print "Using #{module_type.gsub('_',' ')} '#{module_name}'\n"
       end
 
+      # Trigger import/install for missing modules
       modules_to_import.each do |m_module|
-        module_name = "#{m_module['namespace']}/#{m_module['name']}"
-        module_name += "-#{m_module['version']}" if m_module['version']
+        module_name = full_module_name(m_module)
         module_type = m_module['type']
+
         print "Importing #{module_type.gsub('_',' ')} '#{module_name}' ... "
         new_context_params = ::DTK::Shell::ContextParams.new([module_name])
         new_context_params.override_method_argument!('option_2', m_module['version'])
@@ -108,6 +137,12 @@ module DTK::Client
     def add_version?(display_name, version)
       version = nil if 'CURRENT'.eql?(version)
       (version ? "#{display_name}-#{version.strip}" : "#{display_name}")
+    end
+
+  private
+
+    def full_module_name(module_hash)
+      ::DTK::Client::ModuleUtil.join_name(module_hash['name'], module_hash['namespace'])
     end
 
   end

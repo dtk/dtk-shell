@@ -14,7 +14,9 @@ module DTK::Client
       include CommandBase
       include CommandHelperMixin
 
+      #
       # Display confirmation prompt and repeat message until expected answer is given
+      #
       def confirmation_prompt(message, add_options=true)
         # used to disable skip with ctrl+c
         trap("INT", "SIG_IGN")
@@ -58,7 +60,7 @@ module DTK::Client
         # remove loading animation
         print "\b\b\b\b\b\b\bRefreshing..."
         STDOUT.flush
-        puts 
+        puts
       end
 
 
@@ -67,7 +69,7 @@ module DTK::Client
       # path to desire directory from where unix shell can execute normaly.
       #
       def unix_shell(path,module_id,module_type,version=nil)
-        
+
         dtk_shell_ac_proc = Readline.completion_proc
         dtk_shell_ac_append_char = Readline.completion_append_character
 
@@ -75,7 +77,7 @@ module DTK::Client
           puts "[NOTICE] Shell interaction is currenly not supported on Windows."
           return
         end
-        
+
         begin
           # we need to change path like this since system call 'cd' is not supported
           initial_dir = Dir.pwd
@@ -102,7 +104,7 @@ module DTK::Client
                 path = line.match(/^\//) ? line : "#{Dir.getwd()}/#{line}"
                 # If filepat* with '*' at the end, match first directory and go in it, else try to change original input
                 if path.match(/\*$/)
-                  dirs = Dir[path].select{|file| File.directory?(file)} 
+                  dirs = Dir[path].select{|file| File.directory?(file)}
                   unless dirs.empty?
                     Dir.chdir(dirs.first)
                     next

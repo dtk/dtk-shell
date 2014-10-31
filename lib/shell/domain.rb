@@ -13,7 +13,11 @@ module DTK
       end
 
       def add_context_to_params(context_name, entity_name, context_value = nil)
-        @current_context.push_new_context(context_name, entity_name, context_value)
+        @current_context.push_new_context(context_name, stand_name(entity_name), context_value)
+      end
+
+      def add_context_name_to_params(context_name, entity_name, context_value = nil)
+        @current_context.push_new_name_context(context_name, stand_name(entity_name), context_value)
       end
 
       def forward_options(options)
@@ -112,10 +116,10 @@ module DTK
                 break if element
                 if context_name
                   if alternative_key.to_s.include?(context_name.downcase)
-                    required = alternative_key.to_s.match(/.+!$/) 
+                    required = alternative_key.to_s.match(/.+!$/)
                     selected_key = alternative_key
                   end
-                end 
+                end
               end
             end
 
@@ -165,7 +169,7 @@ module DTK
         (matched ? matched[1].to_i - 1 : nil)
       end
 
-      # based on map key binding e.g. assembly_id, assembly_name we will extrace value 
+      # based on map key binding e.g. assembly_id, assembly_name we will extrace value
       # from our ActiveContext
       def check_context_for_element(key_mapping)
         split_info  =  split_info(key_mapping)
@@ -184,6 +188,15 @@ module DTK
         split_info[0].gsub(/_/,'-')  # makes sure we are using entity names with '_'
       end
 
+      #
+      # Standardize context name since we are in domain treating :component_module as :'component-module'
+      # and need to be careful about these changes
+      #
+
+      def stand_name(name)
+        name.to_s.gsub('_','-').to_sym
+      end
+
       def split_info(key_mapping)
         key_mapping.to_s.split(/_([a-z]+!?$)/)
       end
@@ -198,9 +211,13 @@ module DTK
 
       SHELL_SEPARATOR = '/'
 
-      def self.create_context(context_name, entity_name, context_value=nil)
+      def self.create_context(context_name, entity_name, context_value=nil, type_id=:id)
         if context_value
-          return ContextEntity.create_identifier(context_name, entity_name, context_value)
+          if :id.eql?(type_id)
+            return ContextEntity.create_identifier(context_name, entity_name, context_value)
+          else
+            return ContextEntity.create_name_identifier(context_name, entity_name, context_value)
+          end
         else
           return ContextEntity.create_command(context_name, entity_name)
         end
@@ -235,6 +252,14 @@ module DTK
         return instance
       end
 
+      def self.create_name_identifier(name, entity_name, value)
+        instance            = self.create_command(name,entity_name)
+        instance.name           = value
+        instance.identifier     = value
+        instance.alt_identifier = value
+        return instance
+      end
+
       def self.create_identifier(name, entity_name, value)
         instance                = self.create_command(name,entity_name)
         instance.identifier     = value
@@ -246,7 +271,7 @@ module DTK
 
     class ActiveContext
 
-      # special case when we are not able to provide valid identifier but we are 
+      # special case when we are not able to provide valid identifier but we are
       # using it as such
       NO_IDENTIFIER_PROVIDED = -1
 
@@ -265,6 +290,9 @@ module DTK
 
       def push_new_context(context_name, entity_name, context_value=nil)
         @context_list << ContextEntity.create_context(context_name, entity_name, context_value)
+      end
+      def push_new_name_context(context_name, entity_name, context_value=nil)
+        @context_list << ContextEntity.create_context(context_name, entity_name, context_value, :name)
       end
 
       def pop_context(n)
@@ -301,7 +329,7 @@ module DTK
         return filtered_entities.collect { |e| e.entity.to_s }
       end
 
-      # returns id to be used to retrive task list form the cache based on 
+      # returns id to be used to retrive task list form the cache based on
       # current active context
       def get_task_cache_id()
         identifier = command_list().join('_')
@@ -447,7 +475,7 @@ module DTK
 
       # returns 2 arrays one for commands and next one for identifiers
       def get_all_tasks(child_name)
-        command_o_tasks, identifier_o_tasks = [], []           
+        command_o_tasks, identifier_o_tasks = [], []
         command_o_tasks    = (self[:all][child_name]||[]) + (self[:command_only][child_name]||[])
         identifier_o_tasks = (self[:all][child_name]||[]) + (self[:identifier_only][child_name]||[])
         return command_o_tasks, identifier_o_tasks
@@ -463,6 +491,6 @@ module DTK
         @completed_tasks << child_name
       end
     end
-    
+
   end
 end

@@ -354,7 +354,7 @@ module DTK::Client
         opts = {:do_not_raise=>true}
         module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message=>true)
 
-        continue = trigger_module_component_import(missing_components, required_components, module_opts)
+        continue = trigger_module_auto_import(missing_components, required_components, module_opts)
         return unless continue
 
         puts "Resuming DTK Network import for #{module_type} '#{remote_module_name}' ..."
@@ -439,9 +439,8 @@ module DTK::Client
         return response unless response.ok?
 
         push_clone_changes_aux(module_type.to_sym, module_id, version, nil, true) if File.directory?(module_location)
-        Response::Ok.new()
-      #elsif catalog.to_s.eql?("origin")
-        #needs to be implemented
+        response.skip_render = true
+        response
       else
         raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PULL_CATALOGS}"
       end
