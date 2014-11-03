@@ -426,6 +426,7 @@ module DTK::Client
       catalog      = 'dtkn'
       version      = options["version"]
       module_type  = get_module_type(context_params)
+      skip_recursive_pull = context_params.get_forwarded_options()[:skip_recursive_pull]
 
       raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PULL_CATALOGS}" unless catalog
 
@@ -433,7 +434,7 @@ module DTK::Client
 
       if catalog.to_s.eql?("dtkn")
         clone_aux(module_type.to_sym, module_id, version, true, true) unless File.directory?(module_location)
-        opts = {:version => version, :remote_namespace => options.namespace}
+        opts = {:version => version, :remote_namespace => options.namespace, :skip_recursive_pull => skip_recursive_pull}
 
         response = pull_from_remote_aux(module_type.to_sym, module_id, opts)
         return response unless response.ok?

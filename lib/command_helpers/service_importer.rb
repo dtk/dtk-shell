@@ -30,6 +30,7 @@ module DTK::Client
           new_context_params = DTK::Shell::ContextParams.new
           new_context_params.add_context_to_params(module_type, module_type)
           new_context_params.add_context_name_to_params(module_type, module_type, module_name)
+          new_context_params.forward_options( { :skip_recursive_pull => true })
 
           response = ContextRouter.routeTask(module_type, "pull_dtkn", new_context_params, @conn)
 

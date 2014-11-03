@@ -23,9 +23,10 @@ module DTK::Client
       remote_params.merge!(:version => version) if version
 
       # check and import component module dependencies before importing service itself
-      if (module_type == :service_module)
-        import_module_component_dependencies(module_id,remote_namespace)
+      unless opts[:skip_recursive_pull]
+        import_module_component_dependencies(module_type, module_id,remote_namespace)
       end
+
       # check whether a local module exists to determine whether pull from local clone or try to pull from server
       if Helper(:git_repo).local_clone_dir_exists?(module_type,module_name,:full_module_name=>full_module_name,:version=>version)
         unless rsa_pub_key
@@ -44,13 +45,8 @@ module DTK::Client
     ##
     #
     # module_type: will be :component_module or :service_module
-    def import_module_component_dependencies(module_id,remote_namespace=nil)
-      post_body = PostBody.new(
-        :service_module_id => module_id,
-        :remote_namespace? => remote_namespace,
-        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
-      )
-      response = post(rest_url("service_module/resolve_pull_from_remote"),post_body)
+    def import_module_component_dependencies(module_type, module_id, remote_namespace=nil)
+      response = resolve_pull_from_remote_on_server(module_type, module_id, remote_namespace)
 
       print "Resolving dependencies please wait ... "
 
@@ -73,6 +69,17 @@ module DTK::Client
 
       RemoteDependencyUtil.print_dependency_warnings(response)
       nil
+    end
+
+  private
+
+    def resolve_pull_from_remote_on_server(module_type, module_id, remote_namespace=nil)
+      post_body = PostBody.new(
+        :module_id => module_id,
+        :remote_namespace? => remote_namespace,
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
+      )
+      post(rest_url("#{module_type}/resolve_pull_from_remote"),post_body)
     end
 
     module PullFromRemote

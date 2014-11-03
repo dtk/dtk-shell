@@ -63,7 +63,7 @@ module DTK::Client
         if service_module_name_x =~ /(^[^:]+):([^:]+$)/
           namespace,service_module_name = [$1,$2]
         end
-        post_body.merge!(:service_module_name => service_module_name) 
+        post_body.merge!(:service_module_name => service_module_name)
       end
 
       namespace ||= opts[:default_namespace]
@@ -503,7 +503,7 @@ module DTK::Client
 
     def info_aux(context_params)
       assembly_or_workspace_id, node_id, component_id, attribute_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :node_id, :component_id, :attribute_id],method_argument_names)
-      is_json_return = context_params.get_forwarded_option(:json_return) || false
+      is_json_return = context_params.get_forwarded_options[:json_return] || false
 
       post_body = {
         :assembly_id => assembly_or_workspace_id,

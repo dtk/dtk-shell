@@ -9,7 +9,7 @@ module DTK
       def initialize(override_method_arguments = [])
         @current_context  = ActiveContext.new
         @method_arguments = override_method_arguments
-        @thor_options          = nil
+        @thor_options     = Hash.new
       end
 
       def add_context_to_params(context_name, entity_name, context_value = nil)
@@ -26,10 +26,6 @@ module DTK
 
       def get_forwarded_options()
         @thor_options
-      end
-
-      def get_forwarded_option(key)
-        @thor_options ? @thor_options[key] : nil
       end
 
       def get_forwarded_thor_option(option_key)
