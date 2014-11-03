@@ -20,7 +20,7 @@ module DTK::Client
     #
 
     def trigger_module_auto_pull(required_modules)
-      if !required_modules.empty? && Console.confirmation_prompt("Do you want to update existing modules from catalog?")
+      if !required_modules.empty? && Console.confirmation_prompt("Do you want to update in addition to this module its dependent modules from the catalog?")
         required_modules.each do |r_module|
           module_name = full_module_name(r_module)
           module_type = r_module['type']
