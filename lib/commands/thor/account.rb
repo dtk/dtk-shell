@@ -131,7 +131,7 @@ module DTK::Client
         OsUtil.print("Warning: We were not able to register your key with remote catalog!", :yellow)
       end
 
-      nil
+      response.ok? ? nil : response
     end
 
     desc "delete-ssh-key KEYPAIR-NAME ","Deletes the named ssh key from your user account"
