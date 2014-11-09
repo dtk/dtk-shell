@@ -214,11 +214,13 @@ module DTK
       # TODO: this is hack used this to hide 'node' context and use just node_identifier
       # we should rethink the design of shell context if we are about to use different behaviors like this
       def self.check_invisible_context(acc, entries, is_root, line_buffer=[], args=[])
+        check = nil
         entries.reject! { |e| e.empty? }
         goes_from_root = args.first.start_with?('/')
 
-        unless line_buffer.empty?
-          command = line_buffer.split(' ').first
+        unless (line_buffer.empty? && args.empty?)
+          command = line_buffer.empty? ? args.first : line_buffer.split(' ').first
+          # command = line_buffer.split(' ').first
           current_c_name = acc.last_command_name
           current_context = acc.last_context
           clazz = DTK::Shell::Context.get_command_class(current_c_name)
@@ -229,8 +231,18 @@ module DTK
             clazz_from_args = DTK::Shell::Context.get_command_class(command_from_args) if command_from_args
           end
 
+          check = (command.eql?('cd') || command.eql?('cc') || command.eql?('popc') || command.eql?('pushc') || command.eql?('delete-node'))
+          # used when calling node commands from service or workspace context
+          # e.g. service/service_name>node1 info will display info about nodes instead of service instance
+          unless check
+            if current_c_name.eql?('service') || current_c_name.eql?('workspace')
+              check = true unless args.empty?
+            end
+          end
+
           # this delete-node is a hack because we need autocomplete when there is node with name 'node'
-          if (command.eql?('cd') || command.eql?('cc') || command.eql?('popc') || command.eql?('pushc') || command.eql?('delete-node'))
+          # if (command.eql?('cd') || command.eql?('cc') || command.eql?('popc') || command.eql?('pushc') || command.eql?('delete-node'))
+          if check
             if is_root
               if entries.size >= 3
                 node = entries[2]
