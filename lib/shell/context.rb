@@ -213,7 +213,7 @@ module DTK
 
       # TODO: this is hack used this to hide 'node' context and use just node_identifier
       # we should rethink the design of shell context if we are about to use different behaviors like this
-      def self.check_invisible_context(acc, entries, is_root, line_buffer=[], args=[])
+      def self.check_invisible_context(acc, entries, is_root, line_buffer=[], args=[], current_context_clazz)
         check = nil
         entries.reject! { |e| e.empty? }
         goes_from_root = args.first.start_with?('/')
@@ -236,7 +236,8 @@ module DTK
           # e.g. service/service_name>node1 info will display info about nodes instead of service instance
           unless check
             if current_c_name.eql?('service') || current_c_name.eql?('workspace')
-              check = true unless args.empty?
+              context_hash_data, error_message, invalid_context = current_context_clazz.validate_value('node', command, acc)
+              check = true if context_hash_data && !error_message
             end
           end
 
@@ -293,7 +294,7 @@ module DTK
 
         # transform alias to full path
         entries = Context.check_for_sym_link(entries) if root?
-        entries = Context.check_invisible_context(active_context_copy, entries, root?, line_buffer, args)
+        entries = Context.check_invisible_context(active_context_copy, entries, root?, line_buffer, args, self)
 
         # if only '/' or just cc skip validation
         return active_context_copy if entries.empty?
