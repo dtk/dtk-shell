@@ -9,14 +9,11 @@ module DTK::Client
     end
 
     def self.valid_children()
-      # [:"component-template"]
       [:component]
     end
 
     # this includes children of children - has to be sorted by n-level access
     def self.all_children()
-      # [:"component-template", :attribute] # Amar: attribute context commented out per Rich suggeston
-      # [:"component-template"]
       [:component]
     end
 
@@ -39,9 +36,6 @@ module DTK::Client
               ["list","list","# List all component templates."],
               ["list-attributes","list-attributes", "# List all attributes for given component."]
             ]
-            #:attribute => [
-            #  ['list',"list","List attributes for given component"]
-            #]
           },
           :identifier_only => {
             :"component" => [
@@ -56,31 +50,6 @@ module DTK::Client
       return :component_module, "component_module/list", nil
     end
 
-#TODO: in for testing; may remove
-    # desc "MODULE-NAME/ID test-generate-dsl", "Test generating DSL from implementation"
-    # def test_generate_dsl(context_params)
-    #   component_module_id = context_params.retrieve_arguments([:module_id!],method_argument_names)
-    #   post rest_url("component_module/test_generate_dsl"),{:component_module_id => component_module_id}
-    # end
-
-    # desc "MODULE-NAME/ID dsl-upgrade [UPGRADE-VERSION] [-v MODULE-VERSION]","Component module DSL upgrade"
-    # version_method_option
-    # def dsl_upgrade(context_params)
-    #   component_module_id, dsl_version = context_params.retrieve_arguments([:module_id, :option_1],method_argument_names)
-    #   dsl_version ||= MostRecentDSLVersion
-    #   post_body = {
-    #     :component_module_id => component_module_id,
-    #     :dsl_version => dsl_version
-    #   }
-    #   post_body.merge!(:version => options["version"]) if options["version"]
-    #    post rest_url("component_module/create_new_dsl_version"),post_body
-    # end
-    # MostRecentDSLVersion = 2
-### end
-
-    #### create and delete commands ###
-    # desc "delete COMPONENT-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete component module or component module version and all items contained in it. Optional parameter [-p] is to delete local directory."
-    # version_method_option
     desc "delete COMPONENT-MODULE-NAME [-y] [-p]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
@@ -91,29 +60,11 @@ module DTK::Client
       response
     end
 
-
     desc "COMPONENT-MODULE-NAME/ID set-attribute ATTRIBUTE-ID VALUE", "Set value of component module attributes"
     def set_attribute(context_params)
       set_attribute_module_aux(context_params)
     end
 
-    #### end: create and delete commands ###
-
-=begin
-TODO: might deprecate
-    #### list and info commands ###
-    desc "COMPONENT-MODULE-NAME/ID info", "Get information about given component module."
-    def info(context_params)
-      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
-
-      post_body = {
-        :component_module_id => component_module_id
-      }
-
-      response = post rest_url("component_module/info"), post_body
-      response.render_custom_info("module")
-    end
-=end
     desc "list [--remote] [--diff] [-n NAMESPACE]", "List loaded or remote component modules. Use --diff to compare loaded and remote component modules."
     method_option :remote, :type => :boolean, :default => false
     method_option :diff, :type => :boolean, :default => false
@@ -138,21 +89,6 @@ TODO: might deprecate
       response.render_table()
     end
 
-=begin
-    desc "COMPONENT-MODULE-NAME/ID list-versions","List all versions associated with this component module."
-    def list_versions(context_params)
-      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
-      post_body = {
-        :component_module_id => component_module_id,
-        :detail_to_include => ["remotes"],
-        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
-      }
-      response = post rest_url("component_module/versions"), post_body
-
-      response.render_table(:module_version)
-    end
-=end
-
     desc "COMPONENT-MODULE-NAME/ID list-components", "List all components for given component module."
     def list_components(context_params)
       module_info_about(context_params, :components, :component)
@@ -168,11 +104,6 @@ TODO: might deprecate
       module_info_about(context_params, :instances, :component)
     end
 
-    #### end: list and info commands ###
-
-    #### commands to interact with remote repo ###
-
-
     desc "import [NAMESPACE:]COMPONENT-MODULE-NAME", "Create new component module from local clone"
     def import(context_params)
       response = import_module_aux(context_params)
@@ -180,6 +111,25 @@ TODO: might deprecate
 
       response
     end
+
+=begin
+    desc "import-puppet-forge PUPPET-MODULE-NAME [NAMESPACE:]COMPONENT-MODULE-NAME", "Install puppet module from puppet forge"
+    def import_puppet_forge(context_params)
+      pf_module_name, full_module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
+      namespace, module_name = get_namespace_and_name(full_module_name, ModuleUtil::NAMESPACE_SEPERATOR)
+
+      response = post rest_url("component_module/install_puppet_module"), {
+        :puppetf_module_name => pf_module_name,
+        :module_name => module_name,
+        :module_namespace => namespace
+      }
+
+      return response unless response.ok?
+
+      @@invalidate_map << :component_module
+      response
+    end
+=end
 
     #
     # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
@@ -392,6 +342,20 @@ TODO: might deprecate
 
       internal_trigger = omit_output = true
       clone_aux(:component_module,component_module_id,version,internal_trigger,omit_output)
+    end
+=end
+=begin
+    desc "COMPONENT-MODULE-NAME/ID list-versions","List all versions associated with this component module."
+    def list_versions(context_params)
+      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
+      post_body = {
+        :component_module_id => component_module_id,
+        :detail_to_include => ["remotes"],
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
+      }
+      response = post rest_url("component_module/versions"), post_body
+
+      response.render_table(:module_version)
     end
 =end
 

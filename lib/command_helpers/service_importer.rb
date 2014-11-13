@@ -25,7 +25,7 @@ module DTK::Client
           module_name = full_module_name(r_module)
           module_type = r_module['type']
 
-          print "Pulling latest #{module_type.gsub('_',' ')} code for '#{module_name}' ... "
+          print "Pulling #{module_type.gsub('_',' ')} content for '#{module_name}' ... "
 
           new_context_params = DTK::Shell::ContextParams.new
           new_context_params.add_context_to_params(module_type, module_type)
@@ -35,10 +35,9 @@ module DTK::Client
           response = ContextRouter.routeTask(module_type, "pull_dtkn", new_context_params, @conn)
 
           raise DTK::Client::DtkError, response.error_message unless response.ok?
-
-          # in case there are diffs there was no ouput so we add 'Done'
-          puts 'Done.' unless response.data[:diffs].empty?
         end
+
+        print "Resuming pull ... "
       end
     end
 

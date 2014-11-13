@@ -91,6 +91,8 @@ module DTK::Client
         # return response unless response.ok?
         if response.data[:diffs].empty?
           puts "No changes to pull from remote."
+        else
+          puts "Changes pulled from remote"
         end
 
         return response

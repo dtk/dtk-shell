@@ -134,13 +134,22 @@ module DTK::Client
       response.ok? ? nil : response
     end
 
-    desc "delete-ssh-key KEYPAIR-NAME ","Deletes the named ssh key from your user account"
+    desc "delete-ssh-key KEYPAIR-NAME [-y]","Deletes the named ssh key from your user account"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_ssh_key(context_params)
       name = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      post_body = { :username => name.chomp }
 
-      response = post rest_url("account/remove_user_direct_access"), post_body
+      unless options.force?
+        is_go = Console.confirmation_prompt("Are you sure you want to delete SSH key '#{name}'"+"?")
+        return nil unless is_go
+      end
+
+      response = post rest_url("account/remove_user_direct_access"), { :username => name.chomp }
       return response unless response.ok?
+
+      if response.ok? && !response.data(:unregistered_with_repoman)
+        OsUtil.print("Warning: We were not able to unregister your key with remote catalog!", :yellow)
+      end
 
       OsUtil.print("SSH key '#{name}' removed successfully!", :yellow)
       nil
