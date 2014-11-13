@@ -197,7 +197,7 @@ module DTK
           component_module_dir = component_clone_location()
 
           directories = Dir.entries(component_module_dir).map do |entry|
-            next if (entry =='.' || entry == '..' || entry.index('.') == 0)
+            next if (entry =='.' || entry == '..' || entry.index('.') == 0 || !File.directory?(entry))
 
             Dir.entries("#{component_module_dir}/#{entry}").map do |m_entry|
               next unless File.directory? File.join(component_module_dir,entry,m_entry)
