@@ -1139,7 +1139,7 @@ module DTK::Client
             data_type = (options.links? ? :workspace_attribute_w_link : :workspace_attribute)
             edit_attr_format = context_params.get_forwarded_options()[:format] if context_params.get_forwarded_options()
             if tags = options.tags
-              post_options.merge!(:tags => tags)
+              post_options.merge!(:tags => tags.split(','))
             end
             if format = (options.format || edit_attr_format)
               post_options.merge!(:format => format)

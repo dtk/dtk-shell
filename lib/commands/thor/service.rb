@@ -342,8 +342,8 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     desc "SERVICE-NAME/ID list-attributes [-f FORMAT] [-t TAG,..] [--links]","List attributes associated with service."
-    method_option :format,:aliases => '-f'
-    method_option :format,:tags => '-t'
+    method_option :format, :aliases => '-f'
+    method_option :tags, :aliases => '-t'
     method_option :links, :type => :boolean, :default => false, :aliases => '-l'
     def list_attributes(context_params)
       list_attributes_aux(context_params)
