@@ -357,10 +357,13 @@ module DTK::Client
         continue = trigger_module_auto_import(missing_components, required_components, module_opts)
         return unless continue
 
-        puts "Resuming DTK Network import for #{module_type} '#{remote_module_name}' ..."
+        print "Resuming DTK Network import for #{module_type} '#{remote_module_name}' ..."
         # repeat import call for service
         post_body.merge!(opts)
         response = post rest_url("#{module_type}/import"), post_body
+
+        # we set skip cloning since it is already done by import
+        puts " Done"
       end
 
       return response if(!response.ok? || response.data(:does_not_exist))
@@ -489,7 +492,7 @@ module DTK::Client
 
       module_location = OsUtil.module_location(module_type, module_name, version)
 
-      raise DTK::Client::DtkValidationError, "Trying to clone a #{module_type} '#{module_name}#{version && "-#{version}"}' that exists already!" if File.directory?(module_location)
+      raise DTK::Client::DtkValidationError, "#{module_type.gsub('_',' ').capitalize} '#{module_name}#{version && "-#{version}"}' already cloned!" if File.directory?(module_location)
       clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'])
     end
 
