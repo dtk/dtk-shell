@@ -345,7 +345,7 @@ module DTK::Client
 
       # prompt to see if user is ready to continue with warnings/errors
       if are_there_warnings
-        return false unless Console.confirmation_prompt("Do you want to ignore the warnings and proceed with import"+'?')
+        return false unless Console.confirmation_prompt("Do you still want to proceed with import"+'?')
       end
 
       # case when we need to import additional components
