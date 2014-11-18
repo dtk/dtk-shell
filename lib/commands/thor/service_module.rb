@@ -133,7 +133,7 @@ module DTK::Client
         if about
           case about
           when "assembly"
-            data_type        = :assembly_template
+            data_type        = :assembly_template_description
             action           = "list_assemblies"
           when "modules"
             data_type        = options.remote? ? :component_remote : :component_module
