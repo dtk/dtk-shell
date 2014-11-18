@@ -110,11 +110,7 @@ module DTK
         begin
           # check if we are doing switch context
           if args.join("").match(/\A\-\Z/)
-            if @previous_context
-              # swap 2 variables
-              @active_context, @previous_context = @previous_context, @active_context
-            end
-            load_context(active_context.last_context_name)
+            revert_context()
             return
           end
 
@@ -143,7 +139,10 @@ module DTK
 
           load_context(active_context.last_context_name)
 
-          raise DTK::Client::DtkValidationError, error_message if error_message
+          if error_message
+            revert_context()
+            raise DTK::Client::DtkValidationError, error_message
+          end
         rescue DTK::Client::DtkValidationError => e
           DTK::Client::OsUtil.print(e.message, :yellow)
         rescue DTK::Shell::Error, Exception => e
@@ -247,7 +246,7 @@ module DTK
             if is_root
               if entries.size >= 3
                 node = entries[2]
-                if (node && clazz_from_args.respond_to?(:valid_child?))
+                if (node && clazz_from_args.respond_to?(:valid_child?) && !clazz_from_args.invisible_context_list.empty?)
                   unless clazz_from_args.valid_children().first.to_s.include?(node)
                     entries[2] = ["node", node]
                     entries.flatten!
@@ -546,6 +545,14 @@ module DTK
       def reset
         @active_context.clear
         load_context()
+      end
+
+      def revert_context()
+        if @previous_context
+          # swap 2 variables
+          @active_context, @previous_context = @previous_context, @active_context
+        end
+        load_context(active_context.last_context_name)
       end
 
       # when e.g assembly is deleted we want it to be removed from list without
