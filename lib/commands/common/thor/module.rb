@@ -317,7 +317,7 @@ module DTK::Client
 
       if git_import
         response[:module_id] = module_id
-        response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies
+        response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies        
       else
         if external_dependencies
           possibly_missing = external_dependencies["possibly_missing"]||[]
