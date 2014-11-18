@@ -225,6 +225,7 @@ module DTK::Client
       name_option = git_import ? :option_2! : :option_1!
       module_name = context_params.retrieve_arguments([name_option],method_argument_names)
       module_type = get_module_type(context_params)
+      version     = options["version"]
 
       namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
@@ -274,6 +275,24 @@ module DTK::Client
         return response unless response.ok?
       end
 
+      # since we are creating module_refs file on server, we need to pull changes first and then push
+      dsl_updated_info = response.data(:dsl_updated_info)
+      if dsl_updated_info and !dsl_updated_info.empty?
+        if msg = dsl_updated_info["msg"]
+          DTK::Client::OsUtil.print(msg,:yellow)
+        end
+
+        module_name,module_namespace,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version)
+        return not_ok_response if not_ok_response
+
+        new_commit_sha = dsl_updated_info[:commit_sha]
+        unless new_commit_sha and new_commit_sha == commit_sha
+          opts_pull = {:local_branch => branch,:namespace => module_namespace}
+          response = Helper(:git_repo).pull_changes(module_type,module_name,opts_pull)
+          return response unless response.ok?
+        end
+      end
+
       #TODO: this is never used
       response = Response::Ok.new("module_created" => module_name)
 
@@ -299,6 +318,9 @@ module DTK::Client
       if git_import
         response[:module_id] = module_id
         response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies
+      elsif external_dependencies
+        possibly_missing = external_dependencies["possibly_missing"]
+        OsUtil.print("There are some missing dependencies in dtk.model.yaml includes: #{possibly_missing}", :yellow) unless possibly_missing.empty?
       else
         # if not git-import and user do import from default directory (e.g. import ntp - without namespace) print message
         # module directory moved from (~/dtk/component_module/<module_name>) to (~/dtk/component_module/<default_namespace>/<module_name>)
