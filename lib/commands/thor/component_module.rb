@@ -101,7 +101,7 @@ module DTK::Client
 
     desc "COMPONENT-MODULE-NAME/ID list-instances", "List all instances for given component module."
     def list_instances(context_params)
-      module_info_about(context_params, :instances, :component)
+      module_info_about(context_params, :instances, :component_instances)
     end
 
     desc "import [NAMESPACE:]COMPONENT-MODULE-NAME", "Create new component module from local clone"
