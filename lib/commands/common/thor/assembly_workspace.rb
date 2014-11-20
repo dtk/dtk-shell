@@ -727,6 +727,7 @@ module DTK::Client
       }
 
       response = post(rest_url("assembly/initiate_get_netstats"),post_body)
+      raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
       return response unless response.ok?
 
       action_results_id = response.data(:action_results_id)
@@ -836,6 +837,7 @@ module DTK::Client
       }
 
       response = post(rest_url("assembly/initiate_get_ps"),post_body)
+      raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
       return response unless response.ok?
 
       action_results_id = response.data(:action_results_id)
@@ -923,6 +925,7 @@ module DTK::Client
             }
 
             response = post rest_url("assembly/initiate_get_log"), post_body
+            raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
 
             unless response.ok?
               raise DTK::Client::DtkError, "Error while getting log from server, there was no successful response."
@@ -1029,6 +1032,7 @@ module DTK::Client
         }
 
         response = post rest_url("assembly/initiate_grep"), post_body
+        raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
 
         unless response.ok?
           raise DTK::Client::DtkError, "Error while getting log from server. Message: #{response['errors'][0]['message'].nil? ? 'There was no successful response.' : response['errors'].first['message']}"
