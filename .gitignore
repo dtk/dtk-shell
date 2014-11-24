@@ -7,3 +7,4 @@ test.rb
 Gemfile_dev.lock
 Gemfile.lock
 sftp-config*.json
+*DS_Store
