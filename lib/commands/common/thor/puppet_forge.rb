@@ -15,9 +15,7 @@ module DTK::Client
       return response unless response.ok?
       return response if recursive_call
 
-      if response.data(:missing_modules) && !response.data(:missing_modules).empty?
-        install_dependencies(pf_module_name, module_type, response.data(:missing_modules))
-      end
+      check_for_dependencies(pf_module_name, module_type, response.data(:missing_modules), response.data(:found_modules))
 
       module_id = response.data(:module_id)
       full_module_name = response.data(:full_module_name)
@@ -50,9 +48,20 @@ module DTK::Client
 
   private
 
-    def install_dependencies(module_name, module_type, dependencies_hash)
-      puts "Auto-importing missing module(s) from puppet forge"
-      dependencies_hash.each do |dependency|
+    def check_for_dependencies(module_name, module_type, missing_modules=nil, found_modules=nil)
+      missing_modules ||= []
+      found_modules   ||= []
+
+      puts "Auto-importing missing module(s) from puppet forge" unless missing_modules.empty?
+
+      # print found module (already installed)
+      found_modules.each do |fm|
+        module_type = fm['type']
+        full_module_name =  ModuleUtil.resolve_name(fm['name'], fm['namespace'])
+        puts "Using #{module_type.gsub('_',' ')} '#{full_module_name}'"
+      end
+
+      missing_modules.each do |dependency|
         full_pf_name = concat_puppet_forge_name(dependency['namespace'], dependency['name'])
         print "Importing component module '#{full_pf_name}' ... "
         response = puppet_forge_install_aux(
