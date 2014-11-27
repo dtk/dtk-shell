@@ -116,41 +116,9 @@ module DTK::Client
     def import_puppet_forge(context_params)
       pf_module_name, full_module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
       namespace, module_name = get_namespace_and_name(full_module_name, ModuleUtil::NAMESPACE_SEPERATOR)
+      module_type            = get_module_type(context_params)
 
-      response = post rest_url("component_module/install_puppet_module"), {
-        :puppetf_module_name => pf_module_name,
-        :module_name => module_name,
-        :module_namespace => namespace
-      }
-
-      return response unless response.ok?
-
-      module_id = response.data(:module_id)
-      version   = response.data(:version)
-      external_dependencies = response.data(:external_dependencies)
-      dsl_created_info = response.data(:dsl_created_info)
-
-      clone_response = clone_aux(:component_module, module_id, version, true)
-      return clone_response unless clone_response.ok?
-
-      # DEBUG SNIPPET >>> REMOVE <<<
-      require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
-      if dsl_created_info and !dsl_created_info.empty?
-        msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_final_dir}"
-        DTK::Client::OsUtil.print(msg,:yellow)
-        response = Helper(:git_repo).add_file(repo_obj, dsl_created_info["path"], dsl_created_info["content"], msg)
-        return response unless response.ok?
-      end
-
-      #TODO: this is never used
-      response = Response::Ok.new("module_created" => module_name)
-
-      # TODO: what is purpose of pushing again
-      # we push clone changes anyway, user can change and push again
-      # context_params.add_context_to_params(module_name, :"component-module", module_id)
-      context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
-      response = push_module_aux(context_params, true)
-
+      response = puppet_forge_install_aux(context_params, pf_module_name, module_name, namespace, nil, module_type)
 
       @@invalidate_map << :component_module
       response
