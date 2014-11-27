@@ -36,6 +36,10 @@ module DTK
         DtkLogger.instance.debug(caller)
         raise DtkError, "Module name should be in following format NAMESPACE#{NAMESPACE_SEPERATOR}MODULE_NAME" unless module_identifier.match(Regexp.new("^.+#{NAMESPACE_SEPERATOR}.+$"))
       end
+
+      def self.type_to_sym(module_type_s)
+        module_type_s.to_s.gsub!(/\_/,'-').to_sym
+      end
     end
   end
 end

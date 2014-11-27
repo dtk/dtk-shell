@@ -1,5 +1,6 @@
 dtk_require_common_commands('thor/clone')
 dtk_require_common_commands('thor/list_diffs')
+dtk_require_common_commands('thor/puppet_forge')
 dtk_require_common_commands('thor/push_to_remote')
 dtk_require_common_commands('thor/pull_from_remote')
 dtk_require_common_commands('thor/push_clone_changes')
@@ -19,6 +20,7 @@ PULL_CATALOGS = ["dtkn"]
 
 module DTK::Client
   module ModuleMixin
+    include PuppetForgeMixin
     include CloneMixin
     include PushToRemoteMixin
     include PullFromRemoteMixin
@@ -273,9 +275,6 @@ module DTK::Client
         response = Helper(:git_repo).add_file(repo_obj, dsl_created_info["path"], dsl_created_info["content"], msg)
         return response unless response.ok?
       end
-
-      #TODO: this is never used
-      response = Response::Ok.new("module_created" => module_name)
 
       # TODO: what is purpose of pushing again
       # we push clone changes anyway, user can change and push again

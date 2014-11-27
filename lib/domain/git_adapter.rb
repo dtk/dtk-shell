@@ -7,7 +7,9 @@ module DTK
 
       def initialize(repo_dir, local_branch_name = nil)
         @git_repo = Git.init(repo_dir)
-        @local_branch_name = local_branch_name 
+#       If we want to log GIT interaction
+#       @git_repo = Git.init(repo_dir, :log => Logger.new(STDOUT))
+        @local_branch_name = local_branch_name
       end
 
       def changed?
@@ -25,7 +27,7 @@ module DTK
             @git_repo.remove(file)
           rescue
             # ignore this error means file has already been staged
-            # we cannot support status of file, in 1.8.7 so this is 
+            # we cannot support status of file, in 1.8.7 so this is
             # solution for that
           end
         end
@@ -132,24 +134,24 @@ module DTK
         ref_remote, ref_branch = ref.split('/')
         # fetch remote branch
         fetch(ref_remote) if opts[:fetch_if_needed]
-        
+
 
         git_reference = case type
           when :remote_branch
-            @git_repo.branches.remote.find { |r| "#{r.remote}/#{r.name}" == ref } 
+            @git_repo.branches.remote.find { |r| "#{r.remote}/#{r.name}" == ref }
           when :local_branch
             # DEBUG SNIPPET >>>> REMOVE <<<<
             #  TODO: HARIS LOOK INTO THIS
             # raise "Invalid ref #{ref}"
             @git_repo.branches.find { |b| b.name == ref }
-          else 
-            raise Error.new("Illegal type parameter (#{type}) passed to merge_relationship") 
+          else
+            raise Error.new("Illegal type parameter (#{type}) passed to merge_relationship")
         end
 
         local_sha = ret_local_branch.gcommit.sha
 
         opts[:ret_commit_shas][:local_sha] = local_sha if opts[:ret_commit_shas]
-      
+
         unless git_reference
           return :no_remote_ref if type.eql?(:remote_branch)
 
@@ -177,7 +179,7 @@ module DTK
         remote, remote_branch = remote_branch_ref.split('/')
         push_with_remote(remote, remote_branch)
       end
-      
+
       def push_with_remote(remote, remote_branch)
         branch_for_push = "#{local_branch_name}:refs/heads/#{remote_branch||local_branch_name}"
         @git_repo.push(remote, branch_for_push)
@@ -212,16 +214,16 @@ module DTK
         unless branch.nil?
           if opts[:track_remote_branch]
             # This just tracks remote branch
-            begin 
+            begin
               git_base.checkout(branch)
             rescue => e
               # TODO: see if any other kind of error
               raise DtkError.new("The branch or tag '#{branch}' does not exist on repo '#{repo_url}'")
             end
         else
-            # This wil first create a remote branch; 
+            # This wil first create a remote branch;
             # TODO: this might be wrong and should be deprecated
-            git_base.branch(branch).checkout 
+            git_base.branch(branch).checkout
           end
         end
           git_base
@@ -283,7 +285,7 @@ module DTK
           ret = yield
          rescue => e
           unless e.respond_to?(:message)
-            raise e 
+            raise e
           else
             err_msg = e.message
             lines = err_msg.split("\n")
@@ -291,7 +293,7 @@ module DTK
               err_msg = error_msg_when_git_error(lines)
             end
             raise DtkError.new(err_msg)
-          end 
+          end
         end
         ret
       end
