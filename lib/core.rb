@@ -16,6 +16,7 @@ dtk_require_from_base('util/common_util')
 dtk_require_from_base('util/permission_util')
 dtk_require_from_base('util/remote_dependency_util')
 dtk_require_from_base('util/module_util')
+dtk_require_from_base('shell/message_queue')
 
 dtk_require("config/configuration")
 
@@ -62,7 +63,6 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
     if print = response_ruby_obj.render_data()
       print = [print] unless print.kind_of?(Array)
       print.each do |el|
-
         if el.kind_of?(String)
           el.each_line{|l| STDOUT << l}
         else
@@ -70,6 +70,10 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
         end
       end
     end
+
+    # process/print queued message from server
+    DTK::Shell::MessageQueue.print_messages()
+
   rescue DTK::Client::DtkLoginRequiredError => e
     # this error is handled in method above
     raise e
@@ -377,7 +381,12 @@ module DTK
           response = rest_method_func.call
         end
 
-        Response.new(command_class, response)
+        response_obj = Response.new(command_class, response)
+
+        # queue messages from server to be displayed later
+        DTK::Shell::MessageQueue.process_response(response_obj)
+
+        response_obj
       end
 
 

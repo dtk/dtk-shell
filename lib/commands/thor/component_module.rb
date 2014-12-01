@@ -83,7 +83,7 @@ module DTK::Client
       post_body[:diff] = options.diff? ? options.diff : {}
       post_body.merge!(:module_namespace => options.namespace) if options.namespace
 
-      response = post rest_url("component_module/#{action}"),post_body
+      response = post rest_url("component_module/#{action}"), post_body
 
       return response unless response.ok?
       response.render_table()
