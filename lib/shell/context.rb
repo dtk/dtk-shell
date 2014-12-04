@@ -212,7 +212,7 @@ module DTK
 
       # TODO: this is hack used this to hide 'node' context and use just node_identifier
       # we should rethink the design of shell context if we are about to use different behaviors like this
-      def self.check_invisible_context(acc, entries, is_root, line_buffer=[], args=[], current_context_clazz)
+      def self.check_invisible_context(acc, entries, is_root, line_buffer=[], args=[], current_context_clazz=nil)
         check = nil
         entries.reject! { |e| e.empty? }
         goes_from_root = args.first.start_with?('/')
