@@ -414,7 +414,7 @@ module DTK::Client
 
 #    desc "COMPONENT-MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"
     # version_method_option
-    desc "COMPONENT-MODULE-NAME/ID list-diffs [--remote]", "List diffs"
+    desc "COMPONENT-MODULE-NAME/ID list-diffs", "List diffs"
     method_option :remote, :type => :boolean, :default => false
     def list_diffs(context_params)
       list_diffs_module_aux(context_params)

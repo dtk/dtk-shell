@@ -533,6 +533,11 @@ module DTK::Client
       push_dtkn_module_aux(context_params, internal_trigger)
     end
 
+    desc "SERVICE-MODULE-NAME/ID list-diffs", "List diffs"
+    method_option :remote, :type => :boolean, :default => false
+    def list_diffs(context_params)
+      list_diffs_module_aux(context_params)
+    end
 
     # desc "delete SERVICE-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     # version_method_option

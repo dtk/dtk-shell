@@ -139,14 +139,9 @@ module DTK::Client
 
     def edit_module_aux(context_params)
       assembly_or_workspace_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_or_workspace_id,
-        :module_name => component_module_name,
-        :module_type => 'component_module'
-      }
-      response = post rest_url("assembly/prepare_for_edit_module"), post_body
-      return response unless response.ok?
 
+      response = prepare_for_edit_module(assembly_or_workspace_id, component_module_name)
+      return response unless response.ok?
 
       assembly_name,component_module_id,version,repo_url,branch,commit_sha,full_module_name = response.data(:assembly_name,:module_id,:version,:repo_url,:workspace_branch,:branch_head_sha,:full_module_name)
       component_module_name = full_module_name if full_module_name
@@ -168,6 +163,15 @@ module DTK::Client
 
       version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
       edit_aux(:component_module,component_module_id,component_module_name,version,edit_opts)
+    end
+
+    def prepare_for_edit_module(assembly_or_workspace_id, component_module_name)
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :module_name => component_module_name,
+        :module_type => 'component_module'
+      }
+      response = post rest_url("assembly/prepare_for_edit_module"), post_body
     end
 
     def edit_workflow_aux(context_params)
