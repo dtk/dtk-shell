@@ -33,7 +33,7 @@ module DTK::Client
       added, deleted, modified = print_diffs(response.data(:status), remote)
       diffs = response.data(:diffs)
 
-      raise DTK::Client::DtkValidationError, "There is no changes in current workspace!" if(added.empty? && deleted.empty? && modified.empty? && diffs.empty?)
+      raise DTK::Client::DtkValidationError, "There are no changes in current workspace!" if(added.empty? && deleted.empty? && modified.empty? && diffs.empty?)
       puts "#{diffs}" unless (diffs||"").empty?
 
       unless added.empty?
@@ -50,6 +50,20 @@ module DTK::Client
         end
       end
   	end
+
+    def list_remote_diffs_aux(module_type, module_id)
+      id_field = "#{module_type}_id"
+
+      post_body = {
+        id_field => module_id
+      }
+
+      response = post(rest_url("#{module_type}/list_remote_diffs"),post_body)
+      return response unless response.ok?
+
+      raise DTK::Client::DtkValidationError, "There are no changes in current workspace!" if response.data.empty?
+      response
+    end
 
     def print_diffs(response, remote)
       added    = []

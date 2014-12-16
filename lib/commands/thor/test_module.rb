@@ -221,7 +221,8 @@ module DTK::Client
     desc "TEST-MODULE-NAME/ID list-diffs", "List diffs"
     method_option :remote, :type => :boolean, :default => false
     def list_diffs(context_params)
-      list_diffs_module_aux(context_params)
+      list_remote_module_diffs(context_params)
+      # list_diffs_module_aux(context_params)
     end
 
 
