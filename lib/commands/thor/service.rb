@@ -434,6 +434,11 @@ TODO: will put in dot release and will rename to 'extend'
       return response
     end
 
+    desc "SERVICE-NAME/ID list-diffs COMPONENT-MODULE-NAME", "List diffs against base component module."
+    def list_diffs(context_params)
+      list_remote_module_diffs(context_params)
+    end
+
     # desc "ASSEMBLY-NAME/ID list-attribute-mappings SERVICE-LINK-NAME/ID", "List attribute mappings associated with service link"
     # def list_attribute_mappings(context_params)
     #   post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)

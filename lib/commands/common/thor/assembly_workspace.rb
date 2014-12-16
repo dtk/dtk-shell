@@ -8,10 +8,13 @@ dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
+dtk_require_common_commands('thor/list_diffs')
 LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
 
 module DTK::Client
   module AssemblyWorkspaceMixin
+    include ListDiffsMixin
+
     REQ_ASSEMBLY_OR_WS_ID = [:service_id!, :workspace_id!]
 
     def get_name(assembly_or_workspace_id)
@@ -163,6 +166,15 @@ module DTK::Client
 
       version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
       edit_aux(:component_module,component_module_id,component_module_name,version,edit_opts)
+    end
+
+    def list_remote_module_diffs(context_params)
+      assembly_or_workspace_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
+      response = prepare_for_edit_module(assembly_or_workspace_id, component_module_name)
+      return response unless response.ok?
+
+      assembly_name,component_module_id,branch,commit_sha,module_branch_idh,repo_id = response.data(:assembly_name,:module_id,:workspace_branch,:branch_head_sha,:module_branch_idh,:repo_id)
+      list_component_module_diffs(component_module_id, assembly_name, branch, commit_sha, module_branch_idh['guid'], repo_id)
     end
 
     def prepare_for_edit_module(assembly_or_workspace_id, component_module_name)
