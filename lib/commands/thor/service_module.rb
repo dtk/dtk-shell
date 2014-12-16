@@ -533,7 +533,7 @@ module DTK::Client
       push_dtkn_module_aux(context_params, internal_trigger)
     end
 
-    desc "SERVICE-MODULE-NAME/ID list-diffs", "List diffs"
+    desc "SERVICE-MODULE-NAME/ID list-diffs", "List diffs between module on server and remote repo"
     method_option :remote, :type => :boolean, :default => false
     def list_diffs(context_params)
       list_remote_module_diffs(context_params)

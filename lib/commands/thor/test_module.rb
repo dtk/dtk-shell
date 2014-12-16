@@ -218,7 +218,7 @@ module DTK::Client
     end
     PushCatalogs = ["origin", "dtkn"]
 
-    desc "TEST-MODULE-NAME/ID list-diffs", "List diffs"
+    desc "TEST-MODULE-NAME/ID list-diffs", "List diffs between module on server and remote repo"
     method_option :remote, :type => :boolean, :default => false
     def list_diffs(context_params)
       list_remote_module_diffs(context_params)

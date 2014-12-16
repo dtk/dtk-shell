@@ -434,7 +434,7 @@ TODO: will put in dot release and will rename to 'extend'
       return response
     end
 
-    desc "SERVICE-NAME/ID list-diffs COMPONENT-MODULE-NAME", "List diffs against base component module."
+    desc "SERVICE-NAME/ID list-diffs COMPONENT-MODULE-NAME", "List diffs between module in service instance and base module."
     def list_diffs(context_params)
       list_remote_module_diffs(context_params)
     end
