@@ -65,11 +65,11 @@ module DTK::Client
       response
     end
 
-    def list_component_module_diffs(module_id, assembly_name, branch, commit_sha, module_branch_id, repo_id)
+    def list_component_module_diffs(module_id, assembly_name, workspace_branch, commit_sha, module_branch_id, repo_id)
       post_body = {
         :module_id => module_id,
         :assembly_name => assembly_name,
-        :branch => branch,
+        :workspace_branch => workspace_branch,
         :module_branch_id => module_branch_id,
         :repo_id => repo_id
       }

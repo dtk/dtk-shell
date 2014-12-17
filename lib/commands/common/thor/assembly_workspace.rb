@@ -173,8 +173,8 @@ module DTK::Client
       response = prepare_for_edit_module(assembly_or_workspace_id, component_module_name)
       return response unless response.ok?
 
-      assembly_name,component_module_id,branch,commit_sha,module_branch_idh,repo_id = response.data(:assembly_name,:module_id,:workspace_branch,:branch_head_sha,:module_branch_idh,:repo_id)
-      list_component_module_diffs(component_module_id, assembly_name, branch, commit_sha, module_branch_idh['guid'], repo_id)
+      assembly_name,component_module_id,workspace_branch,commit_sha,module_branch_idh,repo_id = response.data(:assembly_name,:module_id,:workspace_branch,:branch_head_sha,:module_branch_idh,:repo_id)
+      list_component_module_diffs(component_module_id, assembly_name, workspace_branch, commit_sha, module_branch_idh['guid'], repo_id)
     end
 
     def prepare_for_edit_module(assembly_or_workspace_id, component_module_name)
