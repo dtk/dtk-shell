@@ -77,7 +77,7 @@ module DTK::Client
       response = post(rest_url("assembly/list_component_module_diffs"),post_body)
       return response unless response.ok?
 
-      raise DTK::Client::DtkValidationError, "There are no diffs between module on server and remote repo!" if response.data.empty?
+      raise DTK::Client::DtkValidationError, "There are no diffs between module in service instance and base module!" if response.data.empty?
       response
     end
 
