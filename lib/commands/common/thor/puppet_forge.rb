@@ -1,6 +1,33 @@
 module DTK::Client
   module PuppetForgeMixin
 
+    def puppet_forge_install_aux(context_params, pf_module_name, module_name, namespace, version, module_type)
+
+      response = post rest_url("component_module/install_puppet_forge_modules"), {
+        :puppetf_module_name => pf_module_name,
+        :module_name => module_name,
+        :module_version => version,
+        :module_namespace => namespace
+      }
+
+      return response unless response.ok?
+# Do this for each module treated
+#      module_id = response.data(:module_id)
+#      full_module_name = response.data(:full_module_name)
+#      version   = response.data(:version)
+#      external_dependencies = response.data(:external_dependencies)
+#      dsl_created_info = response.data(:dsl_created_info)
+
+      # Clone It!
+ #     clone_response = clone_aux(:component_module, module_id, version, true)
+#      return clone_response unless clone_response.ok?
+
+      response
+    end
+  end
+end
+=begin
+TODO: deprecate
     MODULE_NAME_SEPARATOR = '-'
 
     def puppet_forge_install_aux(context_params, pf_module_name, module_name, namespace, version, module_type, recursive_call=false)
@@ -83,3 +110,4 @@ module DTK::Client
 
   end
 end
+=end
