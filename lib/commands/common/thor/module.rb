@@ -287,7 +287,8 @@ module DTK::Client
       external_dependencies = response.data(:external_dependencies)
       dsl_created_info = response.data(:dsl_created_info)
 
-      if ambiguous = external_dependencies['ambiguous']
+      if external_dependencies
+        ambiguous = external_dependencies['ambiguous']||[]
         opts.merge!(:set_parsed_false => true) unless ambiguous.empty?
       end
 
