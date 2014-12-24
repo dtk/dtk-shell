@@ -210,7 +210,7 @@ module DTK::Client
           possibly_missing = external_dependencies["possibly_missing"]
           ambiguous = external_dependencies["ambiguous"]
           OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
-          OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
+          OsUtil.print("There are some missing dependencies: #{possibly_missing}. Unable to generate module_refs.yaml since depedency modules do not exist", :yellow) unless possibly_missing.empty?
           OsUtil.print("There are some ambiguous dependencies: #{ambiguous.keys.join(',')}. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
         end
       else
@@ -271,9 +271,7 @@ module DTK::Client
       # since we are creating module_refs file on server, we need to pull changes first and then push
       dsl_updated_info = response.data(:dsl_updated_info)
       if dsl_updated_info and !dsl_updated_info.empty?
-        if msg = dsl_updated_info["msg"]
-          DTK::Client::OsUtil.print(msg,:yellow)
-        end
+        DTK::Client::OsUtil.print("A module_refs.yaml file has been created for you, located at #{module_final_dir}",:yellow)
 
         module_name,module_namespace,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version)
         return not_ok_response if not_ok_response
@@ -329,7 +327,7 @@ module DTK::Client
         if external_dependencies
           possibly_missing = external_dependencies["possibly_missing"]||[]
           ambiguous = external_dependencies["ambiguous"]||[]
-          OsUtil.print("There are some missing dependencies in dtk.model.yaml includes: #{possibly_missing}", :yellow) unless possibly_missing.empty?
+          OsUtil.print("There are some missing dependencies in dtk.model.yaml includes: #{possibly_missing}. Unable to generate module_refs.yaml since depedency modules do not exist", :yellow) unless possibly_missing.empty?
           OsUtil.print("There are some ambiguous dependencies: #{ambiguous.keys.join(',')}. One of the namespaces should be selected by editing the module_refs file", :yellow) unless ambiguous.empty?
         end
         # if not git-import and user do import from default directory (e.g. import ntp - without namespace) print message
