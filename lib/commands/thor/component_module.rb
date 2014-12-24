@@ -83,7 +83,7 @@ module DTK::Client
       post_body[:diff] = options.diff? ? options.diff : {}
       post_body.merge!(:module_namespace => options.namespace) if options.namespace
 
-      response = post rest_url("component_module/#{action}"),post_body
+      response = post rest_url("component_module/#{action}"), post_body
 
       return response unless response.ok?
       response.render_table()
@@ -407,10 +407,11 @@ module DTK::Client
 
 #    desc "COMPONENT-MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"
     # version_method_option
-    desc "COMPONENT-MODULE-NAME/ID list-diffs [--remote]", "List diffs"
+    desc "COMPONENT-MODULE-NAME/ID list-diffs", "List diffs between module on server and remote repo"
     method_option :remote, :type => :boolean, :default => false
     def list_diffs(context_params)
-      list_diffs_module_aux(context_params)
+      list_remote_module_diffs(context_params)
+      # list_diffs_module_aux(context_params)
     end
 
     #

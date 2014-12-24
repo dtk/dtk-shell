@@ -469,6 +469,10 @@ module DTK
             namespace, name = [$1,$2]
 
             return [nil, component_full_name] if (name.include?(':') && !name.include?('::'))
+
+            # to be robust to user putting in ns::x::y which splits to ns=ns name=:x::y
+            name.gsub!(/^:/,'')
+
             component_full_name = name
           end
 

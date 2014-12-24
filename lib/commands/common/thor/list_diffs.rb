@@ -26,34 +26,60 @@ module DTK::Client
       }
       version = response.data(:version)
 
-      response = Helper(:git_repo).get_diffs(module_type,module_name,version,opts)
+      # response = Helper(:git_repo).get_diffs(module_type,module_name,version,opts)
+      response = Helper(:git_repo).get_remote_diffs(module_type,module_name,version,opts)
       return response unless response.ok?
 
-      added, deleted, modified = print_diffs(response.data(remote ? :diffs : :status), remote)
+      added, deleted, modified = print_diffs(response.data(:status), remote)
+      diffs = response.data(:diffs)
 
-      raise DTK::Client::DtkValidationError, "There is no changes in current workspace!" if(added.empty? && deleted.empty? && modified.empty?)
+      raise DTK::Client::DtkValidationError, "There are no changes in current workspace!" if(added.empty? && deleted.empty? && modified.empty? && diffs.empty?)
+      puts "#{diffs}" unless (diffs||"").empty?
 
       unless added.empty?
-        puts "ADDED:"
+        puts "\nNew file(s):"
         added.each do |a|
           puts "\t #{a.inspect}"
         end
       end
 
       unless deleted.empty?
-        puts "DELETED:"
+        puts "\nDeleted file(s):"
         deleted.each do |d|
           puts "\t #{d.inspect}"
         end
       end
-
-      unless modified.empty?
-        puts "MODIFIED:"
-        modified.each do |m|
-          puts "\t #{m.inspect}"
-        end
-      end
   	end
+
+    def list_remote_diffs_aux(module_type, module_id)
+      id_field = "#{module_type}_id"
+
+      post_body = {
+        id_field => module_id
+      }
+
+      response = post(rest_url("#{module_type}/list_remote_diffs"),post_body)
+      return response unless response.ok?
+
+      raise DTK::Client::DtkValidationError, "There are no diffs between module on server and remote repo!" if response.data.empty?
+      response
+    end
+
+    def list_component_module_diffs(module_id, assembly_name, workspace_branch, commit_sha, module_branch_id, repo_id)
+      post_body = {
+        :module_id => module_id,
+        :assembly_name => assembly_name,
+        :workspace_branch => workspace_branch,
+        :module_branch_id => module_branch_id,
+        :repo_id => repo_id
+      }
+
+      response = post(rest_url("assembly/list_component_module_diffs"),post_body)
+      return response unless response.ok?
+
+      raise DTK::Client::DtkValidationError, "There are no diffs between module in service instance and base module!" if response.data.empty?
+      response
+    end
 
     def print_diffs(response, remote)
       added    = []

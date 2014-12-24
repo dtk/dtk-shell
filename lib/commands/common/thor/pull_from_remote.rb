@@ -89,7 +89,7 @@ module DTK::Client
         response = cmd_obj.Helper(:git_repo).pull_changes(module_type,module_name,opts)
 
         # return response unless response.ok?
-        if response.data[:diffs].empty?
+        if (response.data[:diffs].nil? || response.data[:diffs].empty?)
           puts "No changes to pull from remote."
         else
           puts "Changes pulled from remote"
