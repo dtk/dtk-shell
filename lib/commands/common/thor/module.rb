@@ -208,10 +208,11 @@ module DTK::Client
         if external_dependencies = create_response.data(:external_dependencies)
           inconsistent = external_dependencies["inconsistent"]
           possibly_missing = external_dependencies["possibly_missing"]
-          ambiguous = external_dependencies["ambiguous"]
+          ambiguous = external_dependencies["ambiguous"]||{}
+          amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
           OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
           OsUtil.print("There are some missing dependencies: #{possibly_missing}. Unable to generate module_refs.yaml since depedency modules do not exist", :yellow) unless possibly_missing.empty?
-          OsUtil.print("There are some ambiguous dependencies: #{ambiguous.keys.join(',')}. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
+          OsUtil.print("There are some ambiguous dependencies: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
         end
       else
         local_module_name = create_response.data[:full_module_name] if create_response.data[:full_module_name]
