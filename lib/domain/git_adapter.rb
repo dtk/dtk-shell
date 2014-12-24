@@ -59,6 +59,21 @@ module DTK
         end
       end
 
+      def diff_remote_summary(local_branch, remote_reference)
+        branch_local_obj  = @git_repo.branches.local.find { |b| b.name == local_branch }
+        branch_remote_obj = @git_repo.branches.remote.find{|r| "#{r.remote}/#{r.name}" == remote_reference }
+
+        if branch_local_obj && branch_remote_obj
+            difference = @git_repo.lib.diff_full(branch_remote_obj, branch_local_obj)
+            # difference = @git_repo.diff(branch_remote_obj, branch_local_obj)
+          {
+            :diffs => difference
+          }
+        else
+          raise Error.new("Error finding branches: local branch '#{local_branch}' (found: #{!branch_local_obj.nil?}), remote branch '#{remote_reference}' (found: #{!branch_remote_obj.nil?})")
+        end
+      end
+
       def local_summary()
         {
           :files_added => (untracked() + added()).collect { |file| { :path => file }},

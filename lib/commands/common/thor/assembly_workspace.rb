@@ -8,10 +8,13 @@ dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
+dtk_require_common_commands('thor/list_diffs')
 LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
 
 module DTK::Client
   module AssemblyWorkspaceMixin
+    include ListDiffsMixin
+
     REQ_ASSEMBLY_OR_WS_ID = [:service_id!, :workspace_id!]
 
     def get_name(assembly_or_workspace_id)
@@ -139,21 +142,16 @@ module DTK::Client
 
     def edit_module_aux(context_params)
       assembly_or_workspace_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
-      post_body = {
-        :assembly_id => assembly_or_workspace_id,
-        :module_name => component_module_name,
-        :module_type => 'component_module'
-      }
-      response = post rest_url("assembly/prepare_for_edit_module"), post_body
-      return response unless response.ok?
 
+      response = prepare_for_edit_module(assembly_or_workspace_id, component_module_name)
+      return response unless response.ok?
 
       assembly_name,component_module_id,version,repo_url,branch,commit_sha,full_module_name = response.data(:assembly_name,:module_id,:version,:repo_url,:workspace_branch,:branch_head_sha,:full_module_name)
       component_module_name = full_module_name if full_module_name
 
       edit_opts = {
         :automatically_clone => true,
-        :pull_if_needed => true,
+        :pull_if_needed => false,
         :assembly_module => {
           :assembly_name => assembly_name,
           :version => version
@@ -168,6 +166,24 @@ module DTK::Client
 
       version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
       edit_aux(:component_module,component_module_id,component_module_name,version,edit_opts)
+    end
+
+    def list_remote_module_diffs(context_params)
+      assembly_or_workspace_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
+      response = prepare_for_edit_module(assembly_or_workspace_id, component_module_name)
+      return response unless response.ok?
+
+      assembly_name,component_module_id,workspace_branch,commit_sha,module_branch_idh,repo_id = response.data(:assembly_name,:module_id,:workspace_branch,:branch_head_sha,:module_branch_idh,:repo_id)
+      list_component_module_diffs(component_module_id, assembly_name, workspace_branch, commit_sha, module_branch_idh['guid'], repo_id)
+    end
+
+    def prepare_for_edit_module(assembly_or_workspace_id, component_module_name)
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :module_name => component_module_name,
+        :module_type => 'component_module'
+      }
+      response = post rest_url("assembly/prepare_for_edit_module"), post_body
     end
 
     def edit_workflow_aux(context_params)
@@ -727,6 +743,7 @@ module DTK::Client
       }
 
       response = post(rest_url("assembly/initiate_get_netstats"),post_body)
+      raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
       return response unless response.ok?
 
       action_results_id = response.data(:action_results_id)
@@ -836,6 +853,7 @@ module DTK::Client
       }
 
       response = post(rest_url("assembly/initiate_get_ps"),post_body)
+      raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
       return response unless response.ok?
 
       action_results_id = response.data(:action_results_id)
@@ -923,6 +941,7 @@ module DTK::Client
             }
 
             response = post rest_url("assembly/initiate_get_log"), post_body
+            raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
 
             unless response.ok?
               raise DTK::Client::DtkError, "Error while getting log from server, there was no successful response."
@@ -1029,6 +1048,7 @@ module DTK::Client
         }
 
         response = post rest_url("assembly/initiate_grep"), post_body
+        raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
 
         unless response.ok?
           raise DTK::Client::DtkError, "Error while getting log from server. Message: #{response['errors'][0]['message'].nil? ? 'There was no successful response.' : response['errors'].first['message']}"

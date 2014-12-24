@@ -27,7 +27,11 @@ module DTK::Client
         component_module_id = context_params.retrieve_arguments([:component_module_id!])
         res = get_cached_response(:component_template, "component_module/info_about", { :component_module_id => component_module_id, :about => :components})
       else
-        get_cached_response(:component_template, "component/list", {:subtype => 'template', :ignore => 'test_module'})
+        post_body = {:subtype => 'template', :ignore => 'test_module'}
+        if assembly_id = context_params.retrieve_arguments([[:service_id, :workspace_id]])
+          post_body.merge!(:assembly_id => assembly_id)
+        end
+        get_cached_response(:component_template, "component/list", post_body)
       end
     end
 

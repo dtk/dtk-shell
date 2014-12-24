@@ -84,6 +84,14 @@ module DTK; module Client; class CommandHelper
       end
     end
 
+    def get_remote_diffs(type, module_name, version, opts={})
+      Response.wrap_helper_actions() do
+        repo_dir = local_repo_dir(type,module_name,version)
+        repo = create(repo_dir,opts[:local_branch])
+        get_remote_diffs_aux(repo,opts)
+      end
+    end
+
     # opts can have the following keys
     #
     # :remote_repo
@@ -245,9 +253,13 @@ module DTK; module Client; class CommandHelper
         new(repo.diff_summary(local_branch,remote_reference))
       end
 
-      def self.diff_remote(repo,ref1)
-        new(repo.diff(ref1).ret_summary())
+      def self.diff_remote(repo,local_branch,remote_reference)
+        new(repo.diff_remote_summary(local_branch,remote_reference))
       end
+
+      # def self.diff_remote(repo,ref1)
+      #   new(repo.diff(ref1).ret_summary())
+      # end
 
       def any_diffs?
         changes = false
@@ -351,6 +363,37 @@ module DTK; module Client; class CommandHelper
       commit_sha = repo.find_remote_sha(remote_branch_ref)
 
       {"diffs" => diffs, "commit_sha" => commit_sha, "repo_obj" => repo, "status" => repo.local_summary() }
+    end
+
+    def get_remote_diffs_aux(repo,opts={})
+      diffs = DiffSummary.new()
+      #add any file that is untracked
+
+      # repo.stage_changes()
+      if opts[:remote_repo] and opts[:remote_repo_url]
+        repo.add_remote(opts[:remote_repo],opts[:remote_repo_url])
+      end
+
+      unless opts[:no_fetch]
+        repo.fetch(remote(opts[:remote_repo]))
+      end
+
+      local_branch      = repo.local_branch_name
+      remote_branch_ref = remote_branch_ref(local_branch, opts)
+
+      commit_shas = Hash.new
+      merge_rel   = repo.merge_relationship(:remote_branch, remote_branch_ref, :ret_commit_shas => commit_shas)
+      commit_sha  = nil
+
+      if merge_rel == :equal
+        commit_sha = commit_shas[:other_sha]
+      elsif merge_rel == :no_remote_ref
+        diffs = DiffSummary.new_version(repo)
+        commit_sha = commit_shas[:local_sha]
+      end
+
+      diffs = DiffSummary.diff_remote(repo,local_branch, remote_branch_ref)
+      { "diffs" => (diffs[:diffs]||"").to_s, "status" => repo.local_summary() }
     end
 
     def pull_repo_changes_aux(repo,opts={})

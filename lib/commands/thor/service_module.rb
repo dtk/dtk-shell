@@ -133,7 +133,7 @@ module DTK::Client
         if about
           case about
           when "assembly"
-            data_type        = :assembly_template
+            data_type        = :assembly_template_description
             action           = "list_assemblies"
           when "modules"
             data_type        = options.remote? ? :component_remote : :component_module
@@ -533,6 +533,12 @@ module DTK::Client
       push_dtkn_module_aux(context_params, internal_trigger)
     end
 
+    desc "SERVICE-MODULE-NAME/ID list-diffs", "List diffs between module on server and remote repo"
+    method_option :remote, :type => :boolean, :default => false
+    def list_diffs(context_params)
+      list_remote_module_diffs(context_params)
+      # list_diffs_module_aux(context_params)
+    end
 
     # desc "delete SERVICE-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     # version_method_option
