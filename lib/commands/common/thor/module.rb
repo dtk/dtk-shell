@@ -289,7 +289,8 @@ module DTK::Client
 
       if external_dependencies
         ambiguous = external_dependencies['ambiguous']||[]
-        opts.merge!(:set_parsed_false => true) unless ambiguous.empty?
+        possibly_missing = external_dependencies["possibly_missing"]||[]
+        opts.merge!(:set_parsed_false => true) unless ambiguous.empty? && possibly_missing.empty?
       end
 
       if dsl_created_info and !dsl_created_info.empty?
