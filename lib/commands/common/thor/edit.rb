@@ -95,6 +95,7 @@ module DTK::Client
 
         internal_trigger=true
         reparse_aux(module_location)
+        opts.merge!(:force_parse => true)
         response = push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger,opts)
         
         # if error return

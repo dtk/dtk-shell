@@ -33,7 +33,13 @@ module DTK::Client
       json_diffs = JSON.generate(response.data(:diffs))
       post_body = get_workspace_branch_info_post_body(module_type,module_id,version,opts).merge(:json_diffs => json_diffs, :commit_sha => commit_sha)
       post_body.merge!(:modification_type => opts[:modification_type]) if opts[:modification_type]
-      post_body.merge!(:force_parse => true) if options['force-parse']
+      post_body.merge!(:force_parse => true) if options['force-parse'] || opts[:force_parse]
+      post_body.merge!(:skip_module_ref_update => true) if opts[:skip_module_ref_update]
+
+      if opts[:set_parsed_false]
+        post_body.merge!(:set_parsed_false => true)
+        post_body.merge!(:force_parse => true)
+      end
 
       response = post(rest_url("#{module_type}/update_model_from_clone"),post_body)
       return response unless response.ok?

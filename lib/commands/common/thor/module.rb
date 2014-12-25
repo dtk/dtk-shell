@@ -148,7 +148,7 @@ module DTK::Client
       post rest_url("attribute/set"), post_body
     end
 
-    def push_module_aux(context_params, internal_trigger=false)
+    def push_module_aux(context_params, internal_trigger=false, opts={})
       module_type = get_module_type(context_params)
       module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID, "#{module_type}_name".to_sym],method_argument_names)
       version = options["version"]
@@ -156,7 +156,7 @@ module DTK::Client
       module_location = OsUtil.module_location(module_type, module_name, version)
 
       reparse_aux(module_location)
-      push_clone_changes_aux(module_type.to_sym, module_id, version, options["message"]||DEFAULT_COMMIT_MSG, internal_trigger)
+      push_clone_changes_aux(module_type.to_sym, module_id, version, options["message"]||DEFAULT_COMMIT_MSG, internal_trigger, opts)
      end
 
     def create_test_module_aux(context_params)
@@ -210,8 +210,11 @@ module DTK::Client
         if external_dependencies = create_response.data(:external_dependencies)
           inconsistent = external_dependencies["inconsistent"]
           possibly_missing = external_dependencies["possibly_missing"]
+          ambiguous = external_dependencies["ambiguous"]||{}
+          amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
           OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
-          OsUtil.print("There are some missing dependencies: #{possibly_missing}", :yellow) unless possibly_missing.empty?
+          OsUtil.print("There are some missing dependencies: #{possibly_missing}. Unable to generate module_refs.yaml since depedency modules do not exist", :yellow) unless possibly_missing.empty?
+          OsUtil.print("There are some ambiguous dependencies: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
         end
       else
         local_module_name = create_response.data[:full_module_name] if create_response.data[:full_module_name]
@@ -227,6 +230,8 @@ module DTK::Client
       name_option = git_import ? :option_2! : :option_1!
       module_name = context_params.retrieve_arguments([name_option],method_argument_names)
       module_type = get_module_type(context_params)
+      version     = options["version"]
+      opts        = {}
 
       namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
@@ -266,21 +271,43 @@ module DTK::Client
         return response
       end
 
+      # since we are creating module_refs file on server, we need to pull changes first and then push
+      dsl_updated_info = response.data(:dsl_updated_info)
+      if dsl_updated_info and !dsl_updated_info.empty?
+        DTK::Client::OsUtil.print("A module_refs.yaml file has been created for you, located at #{module_final_dir}",:yellow)
+
+        module_name,module_namespace,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version)
+        return not_ok_response if not_ok_response
+
+        new_commit_sha = dsl_updated_info[:commit_sha]
+        unless new_commit_sha and new_commit_sha == commit_sha
+          opts_pull = {:local_branch => branch,:namespace => module_namespace}
+          resp = Helper(:git_repo).pull_changes(module_type,module_name,opts_pull)
+          return resp unless resp.ok?
+        end
+      end
+
       external_dependencies = response.data(:external_dependencies)
       dsl_created_info = response.data(:dsl_created_info)
+
+      if external_dependencies
+        ambiguous = external_dependencies['ambiguous']||[]
+        possibly_missing = external_dependencies["possibly_missing"]||[]
+        opts.merge!(:set_parsed_false => true, :skip_module_ref_update => true) unless ambiguous.empty? && possibly_missing.empty?
+      end
 
       if dsl_created_info and !dsl_created_info.empty?
         msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_final_dir}"
         DTK::Client::OsUtil.print(msg,:yellow)
-        response = Helper(:git_repo).add_file(repo_obj, dsl_created_info["path"], dsl_created_info["content"], msg)
-        return response unless response.ok?
+        resp = Helper(:git_repo).add_file(repo_obj, dsl_created_info["path"], dsl_created_info["content"], msg)
+        return resp unless resp.ok?
       end
 
       # TODO: what is purpose of pushing again
       # we push clone changes anyway, user can change and push again
       # context_params.add_context_to_params(module_name, :"component-module", module_id)
       context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
-      response = push_module_aux(context_params, true)
+      response = push_module_aux(context_params, true, opts)
 
       unless response.ok?
         # remove new directory and leave the old one if import without namespace failed
@@ -297,8 +324,14 @@ module DTK::Client
 
       if git_import
         response[:module_id] = module_id
-        response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies
+        response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies        
       else
+        if external_dependencies
+          possibly_missing = external_dependencies["possibly_missing"]||[]
+          ambiguous = external_dependencies["ambiguous"]||[]
+          OsUtil.print("There are some missing dependencies in dtk.model.yaml includes: #{possibly_missing}. Unable to generate module_refs.yaml since depedency modules do not exist", :yellow) unless possibly_missing.empty?
+          OsUtil.print("There are some ambiguous dependencies: #{ambiguous.keys.join(',')}. One of the namespaces should be selected by editing the module_refs file", :yellow) unless ambiguous.empty?
+        end
         # if not git-import and user do import from default directory (e.g. import ntp - without namespace) print message
         # module directory moved from (~/dtk/component_module/<module_name>) to (~/dtk/component_module/<default_namespace>/<module_name>)
         DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{module_final_dir}",:yellow) unless namespace
@@ -639,6 +672,9 @@ module DTK::Client
 
       # response.render_table(:assembly_template)
       response.render_table(:assembly)
+    end
+
+    def print_ambiguous(ambiguous)
     end
 
   end
