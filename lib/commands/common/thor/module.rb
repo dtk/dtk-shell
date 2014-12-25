@@ -329,8 +329,9 @@ module DTK::Client
         if external_dependencies
           possibly_missing = external_dependencies["possibly_missing"]||[]
           ambiguous = external_dependencies["ambiguous"]||[]
+          amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
           OsUtil.print("There are some missing dependencies in dtk.model.yaml includes: #{possibly_missing}. Unable to generate module_refs.yaml since depedency modules do not exist", :yellow) unless possibly_missing.empty?
-          OsUtil.print("There are some ambiguous dependencies: #{ambiguous.keys.join(',')}. One of the namespaces should be selected by editing the module_refs file", :yellow) unless ambiguous.empty?
+          OsUtil.print("There are some ambiguous dependencies: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) unless ambiguous.empty?
         end
         # if not git-import and user do import from default directory (e.g. import ntp - without namespace) print message
         # module directory moved from (~/dtk/component_module/<module_name>) to (~/dtk/component_module/<default_namespace>/<module_name>)
