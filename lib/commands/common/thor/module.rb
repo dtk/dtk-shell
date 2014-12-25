@@ -122,7 +122,7 @@ module DTK::Client
         msg = "Module '#{module_name}' "
         if version then msg << "version #{version} has been deleted"
         else  msg << "has been deleted"; end
-        OsUtil.print(msg,:yellow)
+        OsUtil.print(msg, :yellow)
       end
 
       Response::Ok.new()
@@ -324,7 +324,7 @@ module DTK::Client
 
       if git_import
         response[:module_id] = module_id
-        response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies        
+        response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies
       else
         if external_dependencies
           possibly_missing = external_dependencies["possibly_missing"]||[]
