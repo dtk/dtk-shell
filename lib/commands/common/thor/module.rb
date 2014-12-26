@@ -155,6 +155,9 @@ module DTK::Client
 
       module_location = OsUtil.module_location(module_type, module_name, version)
 
+      git_import = opts[:git_import]
+      opts.merge!(:update_from_includes => true, :force_parse => true) unless git_import
+
       reparse_aux(module_location)
       push_clone_changes_aux(module_type.to_sym, module_id, version, options["message"]||DEFAULT_COMMIT_MSG, internal_trigger, opts)
      end
@@ -260,6 +263,7 @@ module DTK::Client
         :commit_sha => commit_sha,
         :scaffold_if_no_dsl => true
       }
+
       response = post(rest_url("#{module_type}/update_from_initial_create"),post_body)
 
       unless response.ok?
@@ -307,6 +311,7 @@ module DTK::Client
       # we push clone changes anyway, user can change and push again
       # context_params.add_context_to_params(module_name, :"component-module", module_id)
       context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
+      opts.merge!(:git_import => true) if git_import
       response = push_module_aux(context_params, true, opts)
 
       unless response.ok?

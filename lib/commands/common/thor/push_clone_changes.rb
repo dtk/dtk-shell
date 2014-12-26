@@ -35,6 +35,7 @@ module DTK::Client
       post_body.merge!(:modification_type => opts[:modification_type]) if opts[:modification_type]
       post_body.merge!(:force_parse => true) if options['force-parse'] || opts[:force_parse]
       post_body.merge!(:skip_module_ref_update => true) if opts[:skip_module_ref_update]
+      post_body.merge!(:update_from_includes => true) if opts[:update_from_includes]
 
       if opts[:set_parsed_false]
         post_body.merge!(:set_parsed_false => true)
@@ -45,6 +46,7 @@ module DTK::Client
       return response unless response.ok?
 
       ret = Response::Ok.new()
+      external_dependencies = response.data('external_dependencies')
 
       # check if any errors
       if dsl_parsed_info = response.data(:dsl_parsed_info)
@@ -65,6 +67,18 @@ module DTK::Client
           opts_pull = opts.merge(:local_branch => branch,:namespace => module_namespace)
           response = Helper(:git_repo).pull_changes(module_type,module_name,opts_pull)
           return response unless response.ok?
+        end
+      end
+
+      unless internal_trigger
+        if external_dependencies# = response.data('external_dependencies')
+          inconsistent = external_dependencies["inconsistent"]||{}
+          possibly_missing = external_dependencies["possibly_missing"]||{}
+          ambiguous = external_dependencies["ambiguous"]||{}
+          amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
+          OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
+          OsUtil.print("There are some missing dependencies: #{possibly_missing}. Unable to generate module_refs.yaml since depedency modules do not exist", :yellow) unless possibly_missing.empty?
+          OsUtil.print("There are some ambiguous dependencies: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
         end
       end
 
