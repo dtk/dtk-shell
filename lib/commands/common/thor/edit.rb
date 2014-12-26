@@ -13,14 +13,14 @@ module DTK::Client
 
     ##
     #
-    # module_type: will be one of 
+    # module_type: will be one of
     # :component_module
-    # :service_module 
+    # :service_module
     def edit_aux(module_type,module_id,module_name,version,opts={})
       module_location  = OsUtil.module_location(module_type,module_name,version,opts)
 
       pull_if_needed = opts[:pull_if_needed]
-      # check if there is repository cloned 
+      # check if there is repository cloned
       unless File.directory?(module_location)
         if opts[:automatically_clone] or Console.confirmation_prompt("Edit not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
           internal_trigger = true
@@ -43,7 +43,7 @@ module DTK::Client
       grit_adapter = Helper(:git_repo).create(module_location)
       if edit_info = opts[:edit_file]
         #TODO: cleanup so dont need :base_file_name
-        file_to_edit = 
+        file_to_edit =
           if edit_info.kind_of?(String)
             edit_info
           else #edit_info.kind_of?(Hash) and has key :base_file_name
@@ -76,7 +76,7 @@ module DTK::Client
 
       # if there is no auto commit ask for confirmation
       unless auto_commit
-        confirm_msg = 
+        confirm_msg =
           if file_to_edit
             "Would you like to commit changes to the file?"
           else
@@ -85,7 +85,7 @@ module DTK::Client
         confirmed_ok = Console.confirmation_prompt(confirm_msg)
       end
       if (auto_commit || confirmed_ok)
-        if auto_commit 
+        if auto_commit
           puts "[NOTICE] You are using auto-commit option, all changes you have made will be commited."
         end
         commit_msg = user_input("Commit message")
@@ -95,14 +95,14 @@ module DTK::Client
 
         internal_trigger=true
         reparse_aux(module_location)
-        opts.merge!(:force_parse => true)
+        opts.merge!(:force_parse => true, :update_from_includes => true)
         response = push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger,opts)
-        
+
         # if error return
         return response unless response.ok?
       end
 
-      #TODO: temporary took out; wil put back in        
+      #TODO: temporary took out; wil put back in
       #puts "DTK SHELL TIP: Adding the client configuration parameter <config param name>=true will have the client automatically commit each time you exit edit mode" unless auto_commit
       Response::Ok.new()
     end
@@ -140,7 +140,7 @@ module DTK::Client
         #processed_val can be false so explicitly checking against nil
         unless processed_val.nil?
           ret.merge!(k => processed_val)
-        end 
+        end
       end
       ret
     end
@@ -149,7 +149,7 @@ module DTK::Client
       ret = Array.new
       array.each do |a|
         # explicit nil not removed
-        if a.nil? 
+        if a.nil?
           ret << Response::Term.nil()
         else
           processed_val = post_process(a)
@@ -168,7 +168,7 @@ end
 =begin
     # TODO: probably deprecate
     def attribute_header()
-      header_string = 
+      header_string =
       "#############################\n####  REQUIRED ATTRIBUTES\n#############################\n#\n"
     end
     # TODO: probably deprecate
@@ -180,15 +180,15 @@ end
         first_iteration_keys, first_iteration_values = [], []
         second_iteration_keys, second_iteration_values = [], []
         required_attributes = []
-        
+
         attribute_pairs = YAML.load(attributes)
-        
+
         attribute_pairs.each do |k,v|
           first_iteration_keys << k
 
           #prepare required attributes for editor display
           if v.eql?("*REQUIRED*")
-            required_attributes << k 
+            required_attributes << k
             attribute_pairs[k] = nil
             v = nil
           end
@@ -226,7 +226,7 @@ end
           edited_keys = second_iteration_keys.select{|k| !first_iteration_keys.include?(k)}
           raise DtkValidationError, "You have changed key(s) '#{edited_keys}'. We do not support key editing yet!"
         end
-        
+
         raise DtkValidationError, "No attribute changes have been made." if ((first_iteration_keys == second_iteration_keys) && (first_iteration_values == second_iteration_values))
         edited
       else
