@@ -12,12 +12,24 @@ module DTK::Client
 
       return response unless response.ok?
 
+
+      installed_modules = response.data(:installed_modules)
+
       print_modules(response.data(:found_modules), 'using')
-      print_modules(response.data(:installed_modules), 'installed')
+      print_modules(installed_modules, 'installed')
 
       main_module = response.data(:main_module)
-      OsUtil.print("Successfully installed puppet forge module '#{full_module_name(main_module)}'", :yellow)
 
+      unless installed_modules.empty?
+        clone_deps = Console.confirmation_prompt("\nDo you want to clone newly installed dependencies?")
+        if clone_deps
+          installed_modules.each do |im|
+            clone_aux(im['type'], im['id'], im['version'], true)
+          end
+        end
+      end
+
+      clone_aux(main_module['type'], main_module['id'], main_module['version'])
       nil
   end
 

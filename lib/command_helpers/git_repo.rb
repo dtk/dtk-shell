@@ -460,7 +460,8 @@ module DTK; module Client; class CommandHelper
       "#{remote(opts[:remote_repo])}/#{opts[:remote_branch]||opts[:local_branch]||local_branch}"
     end
 
-    def modules_dir(type,module_name,version=nil,opts={})
+    def modules_dir(type, module_name, version=nil, opts={})
+      type = type.to_sym
       if assembly_module = opts[:assembly_module]
         OsUtil.module_location_parts(type,module_name,version,opts)[0]
       elsif type == :component_module

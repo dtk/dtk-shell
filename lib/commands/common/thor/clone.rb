@@ -9,7 +9,7 @@ module DTK::Client
     #                   This will change behaviour of method
     # module_type: will be :component_module or :service_module
 
-    def clone_aux(module_type, module_id,version,internal_trigger,omit_output=false,opts={})
+    def clone_aux(module_type, module_id,version,internal_trigger=false,omit_output=false,opts={})
       module_name,module_namespace,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version,opts)
       full_module_name = ModuleUtil.resolve_name(module_name, module_namespace)
 
