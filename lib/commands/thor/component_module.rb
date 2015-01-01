@@ -112,9 +112,9 @@ module DTK::Client
       response
     end
 
-    desc "import-puppet-forge PUPPET-MODULE-NAME [NAMESPACE:]COMPONENT-MODULE-NAME", "Install puppet module from puppet forge"
+    desc "import-puppet-forge PUPPET-MODULE-NAME [[NAMESPACE:]COMPONENT-MODULE-NAME]", "Install puppet module from puppet forge"
     def import_puppet_forge(context_params)
-      pf_module_name, full_module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
+      pf_module_name, full_module_name = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       namespace, module_name = get_namespace_and_name(full_module_name, ModuleUtil::NAMESPACE_SEPERATOR)
       module_type            = get_module_type(context_params)
 

@@ -2,13 +2,14 @@ module DTK::Client
   module PuppetForgeMixin
 
     def puppet_forge_install_aux(context_params, pf_module_name, module_name, namespace, version, module_type)
-
-      response = post rest_url("component_module/install_puppet_forge_modules"), {
+      post_body_hash = {
         :puppetf_module_name => pf_module_name,
-        :module_name => module_name,
-        :module_version => version,
-        :module_namespace => namespace
+        :module_name?        => module_name,
+        :module_version?     => version,
+        :module_namespace?   => namespace
       }
+
+      response = post rest_url("component_module/install_puppet_forge_modules"),PostBody.new(post_body_hash)
 
       return response unless response.ok?
 
