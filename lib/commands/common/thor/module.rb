@@ -229,8 +229,7 @@ module DTK::Client
     end
     def import_module_aux(context_params)
       git_import  = context_params.get_forwarded_options()[:git_import] if context_params.get_forwarded_options()
-      # For Aldin
-      # intercepting this when called for git
+
       if git_import
         return import_module_aux__new(context_params)
       end
@@ -351,9 +350,6 @@ module DTK::Client
       response
     end
 
-
-
-    # For Aldin: version that does not require a push from clone
     def import_module_aux__new(context_params)
       git_import  = context_params.get_forwarded_options()[:git_import] if context_params.get_forwarded_options()
       name_option = git_import ? :option_2! : :option_1!
@@ -380,16 +376,15 @@ module DTK::Client
       return response unless (response && response.ok?)
 
       repo_obj,commit_sha = response.data(:repo_obj, :commit_sha)
-      module_final_dir = repo_obj.repo_dir
-      old_dir = response.data[:old_dir]
+      module_final_dir    = repo_obj.repo_dir
+      old_dir             = response.data[:old_dir]
 
-      # For Aldin: puutingin flag :commit_dsl
       post_body = {
-        :repo_id => repo_id,
-        "#{module_type}_id".to_sym => module_id,
+        :repo_id    => repo_id,
         :commit_sha => commit_sha,
+        :commit_dsl => true,
         :scaffold_if_no_dsl => true,
-        :commit_dsl => true
+        "#{module_type}_id".to_sym => module_id
       }
 
       response = post(rest_url("#{module_type}/update_from_initial_create"),post_body)
@@ -413,41 +408,15 @@ module DTK::Client
       module_name,module_namespace,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version)
       return not_ok_response if not_ok_response
 
-      #new_commit_sha = dsl_updated_info[:commit_sha]
-      #unless new_commit_sha and new_commit_sha == commit_sha
-        opts_pull = {:local_branch => branch,:namespace => module_namespace}
-        resp      = Helper(:git_repo).pull_changes(module_type,module_name,opts_pull)
-        return resp unless resp.ok?
-      #end
+      opts_pull = {:local_branch => branch,:namespace => module_namespace}
+      resp      = Helper(:git_repo).pull_changes(module_type,module_name,opts_pull)
+      return resp unless resp.ok?
 
       if external_dependencies
         ambiguous = external_dependencies['ambiguous']||[]
         possibly_missing = external_dependencies["possibly_missing"]||[]
         opts.merge!(:set_parsed_false => true, :skip_module_ref_update => true) unless ambiguous.empty? && possibly_missing.empty?
       end
-
-      # if dsl_created_info and !dsl_created_info.empty?
-      #  msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_final_dir}"
-      #  DTK::Client::OsUtil.print(msg,:yellow)
-      #  resp = Helper(:git_repo).add_file(repo_obj, dsl_created_info["path"], dsl_created_info["content"], msg)
-      #  return resp unless resp.ok?
-      #end
-
-      # TODO: what is purpose of pushing again
-      # we push clone changes anyway, user can change and push again
-      # context_params.add_context_to_params(module_name, :"component-module", module_id)
-      # For Aldin: nopush needed now
-      # context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
-      # opts.merge!(:git_import => true) if git_import
-      # response = push_module_aux(context_params, true, opts)
-
-      # unless response.ok?
-        # remove new directory and leave the old one if import without namespace failed
-      #  if old_dir and (old_dir != module_final_dir)
-      #    FileUtils.rm_rf(module_final_dir) unless (namespace && git_import)
-      #  end
-      #  return response
-     #  end
 
       # remove source directory if no errors while importing
       if old_dir and (old_dir != module_final_dir)
@@ -470,7 +439,6 @@ module DTK::Client
         DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{module_final_dir}",:yellow) unless namespace
       end
 
-      # For Aldin: need to maek sure that this is in form expected by call 'create_response = import(context_params)' from import_git_module_aux
       response
     end
 
