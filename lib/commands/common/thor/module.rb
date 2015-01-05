@@ -211,8 +211,8 @@ module DTK::Client
 
       if create_response.ok?
         if external_dependencies = create_response.data(:external_dependencies)
-          inconsistent = external_dependencies["inconsistent"]
-          possibly_missing = external_dependencies["possibly_missing"]
+          inconsistent = external_dependencies["inconsistent"]||{}
+          possibly_missing = external_dependencies["possibly_missing"]||{}
           ambiguous = external_dependencies["ambiguous"]||{}
           amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
           OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
@@ -403,12 +403,12 @@ module DTK::Client
         return response
       end
 
-      # For Aldin, dont need to push so commitiong out code related to pushing
-      # since we are creating module_refs file on server, we need to pull changes 
+      dsl_updated_info      = response.data(:dsl_updated_info)
+      external_dependencies = response.data(:external_dependencies)
+      dsl_created_info      = response.data(:dsl_created_info)
 
-      # dsl_updated_info = response.data(:dsl_updated_info)
-      # if dsl_updated_info and !dsl_updated_info.empty?
-      DTK::Client::OsUtil.print("A module_refs.yaml file has been created for you, located at #{module_final_dir}",:yellow)
+      DTK::Client::OsUtil.print("A module_refs.yaml file has been created for you, located at #{module_final_dir}", :yellow) if dsl_updated_info && !dsl_updated_info.empty?
+      DTK::Client::OsUtil.print("A #{dsl_created_info["path"]} file has been created for you, located at #{module_final_dir}", :yellow) if dsl_created_info && !dsl_created_info.empty?
 
       module_name,module_namespace,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version)
       return not_ok_response if not_ok_response
@@ -416,12 +416,9 @@ module DTK::Client
       #new_commit_sha = dsl_updated_info[:commit_sha]
       #unless new_commit_sha and new_commit_sha == commit_sha
         opts_pull = {:local_branch => branch,:namespace => module_namespace}
-        resp = Helper(:git_repo).pull_changes(module_type,module_name,opts_pull)
+        resp      = Helper(:git_repo).pull_changes(module_type,module_name,opts_pull)
         return resp unless resp.ok?
       #end
-
-      external_dependencies = response.data(:external_dependencies)
-#      dsl_created_info = response.data(:dsl_created_info)
 
       if external_dependencies
         ambiguous = external_dependencies['ambiguous']||[]
