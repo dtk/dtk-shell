@@ -187,10 +187,16 @@ module DTK::Client
 
      def import_git_module_aux(context_params)
       git_repo_url, module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
-      module_type = get_module_type(context_params)
+      module_type  = get_module_type(context_params)
 
+      thor_options = Hash.new
       namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
 
+      unless namespace
+        resp = post rest_url("namespace/default_namespace_name")
+        namespace = resp.data
+        thor_options[:default_namespace] = namespace
+      end
       # Create component module from user's input git repo
       opts = {
         :namespace => namespace,
@@ -205,22 +211,26 @@ module DTK::Client
       # Remove .git directory to rid of git pointing to user's github
       FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
 
-      context_params.forward_options({:git_import => true})
+      # context_params.forward_options({:git_import => true})
+      thor_options[:git_import] = true
+      context_params.forward_options(thor_options)
       # Reuse module create method to create module from local component_module
       create_response = import(context_params)
 
       if create_response.ok?
         if external_dependencies = create_response.data(:external_dependencies)
-          inconsistent = external_dependencies["inconsistent"]||{}
-          possibly_missing = external_dependencies["possibly_missing"]||{}
-          ambiguous = external_dependencies["ambiguous"]||{}
+          inconsistent = external_dependencies["inconsistent"]||[]
+          possibly_missing = external_dependencies["possibly_missing"]||[]
+          ambiguous = external_dependencies["ambiguous"]||[]
           amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
-          OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
-          OsUtil.print("There are some missing dependencies: #{possibly_missing}. Unable to generate module_refs.yaml since depedency modules do not exist", :yellow) unless possibly_missing.empty?
-          OsUtil.print("There are some ambiguous dependencies: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
+          OsUtil.print("There are inconsistent module dependencies mentioned in the git repo: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
+          OsUtil.print("There are missing module dependencies mentioned in the git repo: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
+          OsUtil.print("There are ambiguous module dependencies mentioned in the git repo: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
         end
       else
-        local_module_name = create_response.data[:full_module_name] if create_response.data[:full_module_name]
+        delete_dir        = namespace.nil? ? local_module_name : "#{namespace}/#{local_module_name}"
+        full_module_name  = create_response.data[:full_module_name]
+        local_module_name = full_module_name.nil? ? delete_dir : full_module_name
         delete_module_sub_aux(context_params, local_module_name, :force_delete => true, :no_error_msg => true, :purge => true)
         return create_response
       end
@@ -228,7 +238,10 @@ module DTK::Client
       Response::Ok.new()
     end
     def import_module_aux(context_params)
-      git_import  = context_params.get_forwarded_options()[:git_import] if context_params.get_forwarded_options()
+      if context_params.get_forwarded_options()
+        git_import = context_params.get_forwarded_options()[:git_import]
+        default_namespace = context_params.get_forwarded_options()[:default_namespace]
+      end
 
       if git_import
         return import_module_aux__new(context_params)
@@ -241,6 +254,8 @@ module DTK::Client
       opts        = {}
 
       namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
+      namespace = default_namespace if default_namespace && namespace.nil?
+
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
       response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name, nil, namespace)
       return response unless response.ok?
@@ -262,10 +277,11 @@ module DTK::Client
       old_dir = response.data[:old_dir]
 
       post_body = {
-        :repo_id => repo_id,
-        "#{module_type}_id".to_sym => module_id,
+        :repo_id    => repo_id,
         :commit_sha => commit_sha,
-        :scaffold_if_no_dsl => true
+        :commit_dsl => true,
+        :scaffold_if_no_dsl => true,
+        "#{module_type}_id".to_sym => module_id
       }
 
       response = post(rest_url("#{module_type}/update_from_initial_create"),post_body)
@@ -339,8 +355,8 @@ module DTK::Client
           possibly_missing = external_dependencies["possibly_missing"]||[]
           ambiguous = external_dependencies["ambiguous"]||[]
           amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
-          OsUtil.print("There are some missing dependencies in dtk.model.yaml includes: #{possibly_missing}. Unable to generate module_refs.yaml since depedency modules do not exist", :yellow) unless possibly_missing.empty?
-          OsUtil.print("There are some ambiguous dependencies: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) unless ambiguous.empty?
+          OsUtil.print("There are missing module dependencies in dtk.model.yaml includes: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
+          OsUtil.print("There are ambiguous module dependencies in dtk.model.yaml includes: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) unless ambiguous.empty?
         end
         # if not git-import and user do import from default directory (e.g. import ntp - without namespace) print message
         # module directory moved from (~/dtk/component_module/<module_name>) to (~/dtk/component_module/<default_namespace>/<module_name>)
@@ -351,7 +367,11 @@ module DTK::Client
     end
 
     def import_module_aux__new(context_params)
-      git_import  = context_params.get_forwarded_options()[:git_import] if context_params.get_forwarded_options()
+      if context_params.get_forwarded_options()
+        git_import  = context_params.get_forwarded_options()[:git_import]
+        default_namespace = context_params.get_forwarded_options()[:default_namespace]
+      end
+
       name_option = git_import ? :option_2! : :option_1!
       module_name = context_params.retrieve_arguments([name_option],method_argument_names)
       module_type = get_module_type(context_params)
@@ -359,6 +379,8 @@ module DTK::Client
       opts        = {}
 
       namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
+      namespace = default_namespace if default_namespace && namespace.nil?
+
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
       response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name, nil, namespace)
       return response unless response.ok?
@@ -387,6 +409,7 @@ module DTK::Client
         "#{module_type}_id".to_sym => module_id
       }
 
+      post_body.merge!(:git_import => true) if git_import
       response = post(rest_url("#{module_type}/update_from_initial_create"),post_body)
 
       unless response.ok?
@@ -431,8 +454,8 @@ module DTK::Client
           possibly_missing = external_dependencies["possibly_missing"]||[]
           ambiguous = external_dependencies["ambiguous"]||[]
           amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
-          OsUtil.print("There are some missing dependencies in dtk.model.yaml includes: #{possibly_missing}. Unable to generate module_refs.yaml since depedency modules do not exist", :yellow) unless possibly_missing.empty?
-          OsUtil.print("There are some ambiguous dependencies: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) unless ambiguous.empty?
+          OsUtil.print("There are missing module dependencies in dtk.model.yaml includes: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
+          OsUtil.print("There are ambiguous module dependencies in dtk.model.yaml includes: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) unless ambiguous.empty?
         end
         # if not git-import and user do import from default directory (e.g. import ntp - without namespace) print message
         # module directory moved from (~/dtk/component_module/<module_name>) to (~/dtk/component_module/<default_namespace>/<module_name>)

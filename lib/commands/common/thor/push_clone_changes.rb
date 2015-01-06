@@ -50,7 +50,9 @@ module DTK::Client
 
       # check if any errors
       if dsl_parsed_info = response.data(:dsl_parsed_info)
-        if dsl_parsed_message = ServiceImporter.error_message(module_name, dsl_parsed_info)
+        if parsed_external_dependencies = dsl_parsed_info['external_dependencies']
+          external_dependencies = parsed_external_dependencies
+        elsif dsl_parsed_message = ServiceImporter.error_message(module_name, dsl_parsed_info)
           DTK::Client::OsUtil.print(dsl_parsed_message, :red)
           ret = Response::NoOp.new()
         end
@@ -72,13 +74,13 @@ module DTK::Client
 
       unless internal_trigger
         if external_dependencies# = response.data('external_dependencies')
-          inconsistent = external_dependencies["inconsistent"]||{}
-          possibly_missing = external_dependencies["possibly_missing"]||{}
-          ambiguous = external_dependencies["ambiguous"]||{}
+          inconsistent = external_dependencies["inconsistent"]||[]
+          possibly_missing = external_dependencies["possibly_missing"]||[]
+          ambiguous = external_dependencies["ambiguous"]||[]
           amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
-          OsUtil.print("There are some inconsistent dependencies: #{inconsistent}", :red) unless inconsistent.empty?
-          OsUtil.print("There are some missing dependencies: #{possibly_missing}. Unable to generate module_refs.yaml since depedency modules do not exist", :yellow) unless possibly_missing.empty?
-          OsUtil.print("There are some ambiguous dependencies: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
+          OsUtil.print("There are inconsistent module dependencies: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
+          OsUtil.print("There are missing module dependencies: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
+          OsUtil.print("There are ambiguous module dependencies: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
         end
       end
 
