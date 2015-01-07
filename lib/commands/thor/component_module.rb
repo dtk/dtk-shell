@@ -108,7 +108,6 @@ module DTK::Client
     def import(context_params)
       response = import_module_aux(context_params)
       @@invalidate_map << :component_module
-
       response
     end
 
@@ -130,7 +129,9 @@ module DTK::Client
     method_option :branch, :aliases => '-b'
     desc "import-git GIT-SSH-REPO-URL [-b BRANCH/TAG] [NAMESPACE:]COMPONENT-MODULE-NAME", "Create new local component module by importing from provided git repo URL"
     def import_git(context_params)
-      import_git_module_aux(context_params)
+      response = import_git_module_aux(context_params)
+      @@invalidate_map << :component_module
+      response
     end
 
 =begin

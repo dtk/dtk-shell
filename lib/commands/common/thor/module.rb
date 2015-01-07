@@ -186,36 +186,32 @@ module DTK::Client
     end
 
      def import_git_module_aux(context_params)
-      git_repo_url, module_name = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
-      module_type  = get_module_type(context_params)
-
-      thor_options = Hash.new
+      git_repo_url, module_name    = context_params.retrieve_arguments([:option_1!, :option_2!], method_argument_names)
       namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
+
+      module_type  = get_module_type(context_params)
+      thor_options = { :git_import => true}
 
       unless namespace
         resp = post rest_url("namespace/default_namespace_name")
+        return resp unless resp.ok?
+
         namespace = resp.data
         thor_options[:default_namespace] = namespace
       end
-      # Create component module from user's input git repo
+
       opts = {
         :namespace => namespace,
-        :branch  => options['branch']
+        :branch    => options['branch']
       }
       response = Helper(:git_repo).create_clone_from_optional_branch(module_type.to_sym, local_module_name, git_repo_url, opts)
-
-      # Raise error if git repository is invalid
-      # raise DtkError,"Git repository URL '#{git_repo_url}' is invalid." unless response.ok?
       return response unless response.ok?
 
       # Remove .git directory to rid of git pointing to user's github
       FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
 
-      # context_params.forward_options({:git_import => true})
-      thor_options[:git_import] = true
       context_params.forward_options(thor_options)
-      # Reuse module create method to create module from local component_module
-      create_response = import(context_params)
+      create_response = import_module_aux(context_params)
 
       if create_response.ok?
         if external_dependencies = create_response.data(:external_dependencies)
@@ -239,12 +235,8 @@ module DTK::Client
     end
     def import_module_aux(context_params)
       if context_params.get_forwarded_options()
+        default_ns = context_params.get_forwarded_options()[:default_namespace]
         git_import = context_params.get_forwarded_options()[:git_import]
-        default_namespace = context_params.get_forwarded_options()[:default_namespace]
-      end
-
-      if git_import
-        return import_module_aux__new(context_params)
       end
 
       name_option = git_import ? :option_2! : :option_1!
@@ -253,28 +245,33 @@ module DTK::Client
       version     = options["version"]
       opts        = {}
 
+      # extract namespace and module_name from full name (r8:maven will result in namespace = r8 & name = maven)
       namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
-      namespace = default_namespace if default_namespace && namespace.nil?
+      namespace = default_ns if default_ns && namespace.nil?
 
       # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
       response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name, nil, namespace)
       return response unless response.ok?
-      module_directory = response.data(:module_directory)
 
       #check for yaml/json parsing errors before import
+      module_directory = response.data(:module_directory)
       reparse_aux(module_directory)
 
       # first make call to server to create an empty repo
-      response = post rest_url("#{module_type}/create"), { :module_name => local_module_name, :module_namespace => namespace }
+      post_body = {
+        :module_name => local_module_name,
+        :module_namespace => namespace
+      }
+      response = post(rest_url("#{module_type}/create"), post_body)
       return response unless response.ok?
 
-      repo_url,repo_id,module_id,branch,new_module_name = response.data(:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name)
+      repo_url,repo_id,module_id,branch,new_module_name = response.data(:repo_url, :repo_id, :module_id, :workspace_branch, :full_module_name)
       response = Helper(:git_repo).rename_and_initialize_clone_and_push(module_type.to_sym, local_module_name, new_module_name, branch, repo_url, module_directory)
       return response unless (response && response.ok?)
 
-      repo_obj,commit_sha = response.data(:repo_obj, :commit_sha)
-      module_final_dir = repo_obj.repo_dir
-      old_dir = response.data[:old_dir]
+      repo_obj, commit_sha = response.data(:repo_obj, :commit_sha)
+      module_final_dir     = repo_obj.repo_dir
+      old_dir              = response.data[:old_dir]
 
       post_body = {
         :repo_id    => repo_id,
@@ -283,134 +280,8 @@ module DTK::Client
         :scaffold_if_no_dsl => true,
         "#{module_type}_id".to_sym => module_id
       }
-
-      response = post(rest_url("#{module_type}/update_from_initial_create"),post_body)
-
-      unless response.ok?
-        response.set_data_hash({ :full_module_name => new_module_name })
-        # remove new directory and leave the old one if import without namespace failed
-        if old_dir and (old_dir != module_final_dir)
-          FileUtils.rm_rf(module_final_dir) unless (namespace && git_import)
-        end
-        return response
-      end
-
-      # since we are creating module_refs file on server, we need to pull changes first and then push
-      dsl_updated_info = response.data(:dsl_updated_info)
-      if dsl_updated_info and !dsl_updated_info.empty?
-        DTK::Client::OsUtil.print("A module_refs.yaml file has been created for you, located at #{module_final_dir}",:yellow)
-
-        module_name,module_namespace,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version)
-        return not_ok_response if not_ok_response
-
-        new_commit_sha = dsl_updated_info[:commit_sha]
-        unless new_commit_sha and new_commit_sha == commit_sha
-          opts_pull = {:local_branch => branch,:namespace => module_namespace}
-          resp = Helper(:git_repo).pull_changes(module_type,module_name,opts_pull)
-          return resp unless resp.ok?
-        end
-      end
-
-      external_dependencies = response.data(:external_dependencies)
-      dsl_created_info = response.data(:dsl_created_info)
-
-      if external_dependencies
-        ambiguous = external_dependencies['ambiguous']||[]
-        possibly_missing = external_dependencies["possibly_missing"]||[]
-        opts.merge!(:set_parsed_false => true, :skip_module_ref_update => true) unless ambiguous.empty? && possibly_missing.empty?
-      end
-
-      if dsl_created_info and !dsl_created_info.empty?
-        msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_final_dir}"
-        DTK::Client::OsUtil.print(msg,:yellow)
-        resp = Helper(:git_repo).add_file(repo_obj, dsl_created_info["path"], dsl_created_info["content"], msg)
-        return resp unless resp.ok?
-      end
-
-      # TODO: what is purpose of pushing again
-      # we push clone changes anyway, user can change and push again
-      # context_params.add_context_to_params(module_name, :"component-module", module_id)
-      context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
-      opts.merge!(:git_import => true) if git_import
-      response = push_module_aux(context_params, true, opts)
-
-      unless response.ok?
-        # remove new directory and leave the old one if import without namespace failed
-        if old_dir and (old_dir != module_final_dir)
-          FileUtils.rm_rf(module_final_dir) unless (namespace && git_import)
-        end
-        return response
-      end
-
-      # remove source directory if no errors while importing
-      if old_dir and (old_dir != module_final_dir)
-        FileUtils.rm_rf(old_dir) unless (namespace && git_import)
-      end
-
-      if git_import
-        response[:module_id] = module_id
-        response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies
-      else
-        if external_dependencies
-          possibly_missing = external_dependencies["possibly_missing"]||[]
-          ambiguous = external_dependencies["ambiguous"]||[]
-          amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
-          OsUtil.print("There are missing module dependencies in dtk.model.yaml includes: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
-          OsUtil.print("There are ambiguous module dependencies in dtk.model.yaml includes: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) unless ambiguous.empty?
-        end
-        # if not git-import and user do import from default directory (e.g. import ntp - without namespace) print message
-        # module directory moved from (~/dtk/component_module/<module_name>) to (~/dtk/component_module/<default_namespace>/<module_name>)
-        DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{module_final_dir}",:yellow) unless namespace
-      end
-
-      response
-    end
-
-    def import_module_aux__new(context_params)
-      if context_params.get_forwarded_options()
-        git_import  = context_params.get_forwarded_options()[:git_import]
-        default_namespace = context_params.get_forwarded_options()[:default_namespace]
-      end
-
-      name_option = git_import ? :option_2! : :option_1!
-      module_name = context_params.retrieve_arguments([name_option],method_argument_names)
-      module_type = get_module_type(context_params)
-      version     = options["version"]
-      opts        = {}
-
-      namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
-      namespace = default_namespace if default_namespace && namespace.nil?
-
-      # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
-      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name, nil, namespace)
-      return response unless response.ok?
-      module_directory = response.data(:module_directory)
-
-      #check for yaml/json parsing errors before import
-      reparse_aux(module_directory)
-
-      # first make call to server to create an empty repo
-      response = post rest_url("#{module_type}/create"), { :module_name => local_module_name, :module_namespace => namespace }
-      return response unless response.ok?
-
-      repo_url,repo_id,module_id,branch,new_module_name = response.data(:repo_url,:repo_id,:module_id,:workspace_branch,:full_module_name)
-      response = Helper(:git_repo).rename_and_initialize_clone_and_push(module_type.to_sym, local_module_name, new_module_name, branch, repo_url, module_directory)
-      return response unless (response && response.ok?)
-
-      repo_obj,commit_sha = response.data(:repo_obj, :commit_sha)
-      module_final_dir    = repo_obj.repo_dir
-      old_dir             = response.data[:old_dir]
-
-      post_body = {
-        :repo_id    => repo_id,
-        :commit_sha => commit_sha,
-        :commit_dsl => true,
-        :scaffold_if_no_dsl => true,
-        "#{module_type}_id".to_sym => module_id
-      }
-
       post_body.merge!(:git_import => true) if git_import
-      response = post(rest_url("#{module_type}/update_from_initial_create"),post_body)
+      response = post(rest_url("#{module_type}/update_from_initial_create"), post_body)
 
       unless response.ok?
         response.set_data_hash({ :full_module_name => new_module_name })
@@ -422,46 +293,144 @@ module DTK::Client
       end
 
       dsl_updated_info      = response.data(:dsl_updated_info)
-      external_dependencies = response.data(:external_dependencies)
       dsl_created_info      = response.data(:dsl_created_info)
-
+      external_dependencies = response.data(:external_dependencies)
       DTK::Client::OsUtil.print("A module_refs.yaml file has been created for you, located at #{module_final_dir}", :yellow) if dsl_updated_info && !dsl_updated_info.empty?
       DTK::Client::OsUtil.print("A #{dsl_created_info["path"]} file has been created for you, located at #{module_final_dir}", :yellow) if dsl_created_info && !dsl_created_info.empty?
 
-      module_name,module_namespace,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version)
+      module_name, module_namespace, repo_url, branch, not_ok_response = workspace_branch_info(module_type, module_id, version)
       return not_ok_response if not_ok_response
 
-      opts_pull = {:local_branch => branch,:namespace => module_namespace}
-      resp      = Helper(:git_repo).pull_changes(module_type,module_name,opts_pull)
-      return resp unless resp.ok?
+      opts_pull = {
+        :local_branch => branch,
+        :namespace => module_namespace
+      }
 
-      if external_dependencies
-        ambiguous = external_dependencies['ambiguous']||[]
-        possibly_missing = external_dependencies["possibly_missing"]||[]
-        opts.merge!(:set_parsed_false => true, :skip_module_ref_update => true) unless ambiguous.empty? && possibly_missing.empty?
-      end
-
-      # remove source directory if no errors while importing
-      if old_dir and (old_dir != module_final_dir)
-        FileUtils.rm_rf(old_dir) unless (namespace && git_import)
-      end
-
+      # if import-git then always pull changes because files are created on server side
       if git_import
+        resp = Helper(:git_repo).pull_changes(module_type, module_name, opts_pull)
+        return resp unless resp.ok?
         response[:module_id] = module_id
-        response.add_data_value!(:external_dependencies, external_dependencies) if external_dependencies
       else
+        # since we are creating module_refs file on server, we need to pull changes first and then push
+        dsl_updated_info = response.data(:dsl_updated_info)
+        if dsl_updated_info and !dsl_updated_info.empty?
+          new_commit_sha = dsl_updated_info[:commit_sha]
+          unless new_commit_sha and new_commit_sha == commit_sha
+            resp = Helper(:git_repo).pull_changes(module_type, module_name, opts_pull)
+            return resp unless resp.ok?
+          end
+        end
+
+        if dsl_created_info and !dsl_created_info.empty?
+          msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_final_dir}"
+          resp = Helper(:git_repo).add_file(repo_obj, dsl_created_info["path"], dsl_created_info["content"], msg)
+          return resp unless resp.ok?
+        end
+
         if external_dependencies
+          ambiguous        = external_dependencies['ambiguous']||[]
           possibly_missing = external_dependencies["possibly_missing"]||[]
-          ambiguous = external_dependencies["ambiguous"]||[]
-          amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
+          opts.merge!(:set_parsed_false => true, :skip_module_ref_update => true) unless ambiguous.empty? && possibly_missing.empty?
+        end
+
+        # TODO: what is purpose of pushing again
+        # we push clone changes anyway, user can change and push again
+        context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
+        response = push_module_aux(context_params, true, opts)
+
+        unless response.ok?
+          # remove new directory and leave the old one if import without namespace failed
+          if old_dir and (old_dir != module_final_dir)
+            FileUtils.rm_rf(module_final_dir) unless namespace
+          end
+          return response
+        end
+
+        # remove source directory if no errors while importing
+        if old_dir and (old_dir != module_final_dir)
+          FileUtils.rm_rf(old_dir) unless namespace
+        end
+
+        if external_dependencies
+          ambiguous        = external_dependencies["ambiguous"]||[]
+          amb_sorted       = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
+          possibly_missing = external_dependencies["possibly_missing"]||[]
           OsUtil.print("There are missing module dependencies in dtk.model.yaml includes: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
           OsUtil.print("There are ambiguous module dependencies in dtk.model.yaml includes: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) unless ambiguous.empty?
         end
-        # if not git-import and user do import from default directory (e.g. import ntp - without namespace) print message
+
+        # if user do import from default directory (e.g. import ntp - without namespace) print message
         # module directory moved from (~/dtk/component_module/<module_name>) to (~/dtk/component_module/<default_namespace>/<module_name>)
         DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{module_final_dir}",:yellow) unless namespace
       end
 
+      response
+    end
+
+    def import_module_aux__new(context_params)
+      module_name = context_params.retrieve_arguments([:option_2!], method_argument_names)
+      module_type = get_module_type(context_params)
+      version     = options["version"]
+      default_ns  = context_params.get_forwarded_options()[:default_namespace] if context_params.get_forwarded_options()
+
+      namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
+      namespace = default_ns if default_ns && namespace.nil?
+
+      # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
+      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name, nil, namespace)
+      return response unless response.ok?
+
+      #check for yaml/json parsing errors before import
+      module_directory = response.data(:module_directory)
+      reparse_aux(module_directory)
+
+      # first make call to server to create an empty repo
+      post_body = {
+        :module_name => local_module_name,
+        :module_namespace => namespace
+      }
+      response = post(rest_url("#{module_type}/create"), post_body)
+      return response unless response.ok?
+
+      repo_url, repo_id, module_id, branch, new_module_name = response.data(:repo_url, :repo_id, :module_id, :workspace_branch, :full_module_name)
+      response = Helper(:git_repo).rename_and_initialize_clone_and_push(module_type.to_sym, local_module_name, new_module_name, branch, repo_url, module_directory)
+      return response unless (response && response.ok?)
+
+      repo_obj,commit_sha = response.data(:repo_obj, :commit_sha)
+      module_final_dir    = repo_obj.repo_dir
+
+      post_body = {
+        :repo_id    => repo_id,
+        :commit_sha => commit_sha,
+        :git_import => true,
+        :commit_dsl => true,
+        :scaffold_if_no_dsl => true,
+        "#{module_type}_id".to_sym => module_id
+      }
+      response = post(rest_url("#{module_type}/update_from_initial_create"), post_body)
+
+      unless response.ok?
+        response.set_data_hash({ :full_module_name => new_module_name })
+        return response
+      end
+
+      dsl_updated_info = response.data(:dsl_updated_info)
+      dsl_created_info = response.data(:dsl_created_info)
+      DTK::Client::OsUtil.print("A module_refs.yaml file has been created for you, located at #{module_final_dir}", :yellow) if dsl_updated_info && !dsl_updated_info.empty?
+      DTK::Client::OsUtil.print("A #{dsl_created_info["path"]} file has been created for you, located at #{module_final_dir}", :yellow) if dsl_created_info && !dsl_created_info.empty?
+
+      module_name, module_namespace, repo_url, branch, not_ok_response = workspace_branch_info(module_type, module_id, version)
+      return not_ok_response if not_ok_response
+
+      opts_pull = {
+        :local_branch => branch,
+        :namespace => module_namespace
+      }
+      resp = Helper(:git_repo).pull_changes(module_type, module_name, opts_pull)
+      return resp unless resp.ok?
+
+      response[:module_id] = module_id
       response
     end
 
