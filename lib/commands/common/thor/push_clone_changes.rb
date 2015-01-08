@@ -46,7 +46,6 @@ module DTK::Client
       return response unless response.ok?
 
       ret = Response::Ok.new()
-
       external_dependencies = response.data('external_dependencies')
 
       # check if any errors
@@ -74,7 +73,7 @@ module DTK::Client
         end
       end
 
-      unless internal_trigger
+      if opts[:print_dependencies] || !internal_trigger
         if external_dependencies
           ambiguous        = external_dependencies["ambiguous"]||[]
           amb_sorted       = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
