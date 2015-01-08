@@ -28,7 +28,7 @@ module DTK; module Client; class CommandHelper
 
         target_repo_dir = local_repo_dir(type,full_name,version,opts)
         if File.exists?(target_repo_dir)
-          raise ErrorUsage.new("Directory '#{target_repo_dir}' is not empty; it must be deleted or removed before retrying the command")
+          raise ErrorUsage.new("Directory '#{target_repo_dir}' is not empty; it must be deleted or removed before retrying the command", :log_error => false)
         end
 
         begin
@@ -44,7 +44,7 @@ module DTK; module Client; class CommandHelper
 
           DtkLogger.instance.error_pp(e.message, e.backtrace)
 
-          raise ErrorUsage.new(error_msg,:log_error=>false)
+          raise ErrorUsage.new(error_msg, :log_error => false)
         end
         {"module_directory" => target_repo_dir}
       end
