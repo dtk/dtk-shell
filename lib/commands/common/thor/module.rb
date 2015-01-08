@@ -340,6 +340,10 @@ module DTK::Client
         return resp unless resp.ok?
         response[:module_id] = module_id
       else
+        # For Aldin; I think all code below this is just for import for file; so think we reorganize to have evrything above this be a common
+        # routine called by both; and then put in new method for 'import from file' that calss common , whcih passes back response
+        # and then calss teh rest in the 'import from file' bod
+
         # since we are creating module_refs file on server, we need to pull changes first and then push
         dsl_updated_info = response.data(:dsl_updated_info)
         if dsl_updated_info and !dsl_updated_info.empty?
@@ -350,30 +354,40 @@ module DTK::Client
           end
         end
 
+        # For Aldin; wil update the server side to  have dsl_created_info not have content when that is added on server side
+        # so setting acondition wrt to this and casing on this, i.e., whether need to commit file and then do push
+        # after we make sure working we can remove code that commits dsl file on client side
+        push_needed = false
         if dsl_created_info and !dsl_created_info.empty?
-          msg = "A #{dsl_created_info["path"]} file has been created for you, located at #{module_final_dir}"
-          resp = Helper(:git_repo).add_file(repo_obj, dsl_created_info["path"], dsl_created_info["content"], msg)
-          return resp unless resp.ok?
-        end
-
-        if external_dependencies
-          ambiguous        = external_dependencies['ambiguous']||[]
-          possibly_missing = external_dependencies["possibly_missing"]||[]
-          opts.merge!(:set_parsed_false => true, :skip_module_ref_update => true) unless ambiguous.empty? && possibly_missing.empty?
-        end
-
-        # TODO: what is purpose of pushing again
-        # we push clone changes anyway, user can change and push again
-        context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
-        response = push_module_aux(context_params, true, opts)
-
-        unless response.ok?
-          # remove new directory and leave the old one if import without namespace failed
-          if old_dir and (old_dir != module_final_dir)
-            FileUtils.rm_rf(module_final_dir) unless namespace
+          path = dsl_created_info["path"]
+          msg = "A #{path} file has been created for you, located at #{module_final_dir}"
+          if content = dsl_created_info["content"]
+            resp = Helper(:git_repo).add_file(repo_obj, path, content, msg)
+            return resp unless resp.ok?
+            push_needed = true
           end
-          return response
         end
+
+        ##### code that does push that can be removed once we always do commit of dsl on server side
+        if push_needed
+          if external_dependencies
+            ambiguous        = external_dependencies['ambiguous']||[]
+            possibly_missing = external_dependencies["possibly_missing"]||[]
+            opts.merge!(:set_parsed_false => true, :skip_module_ref_update => true) unless ambiguous.empty? && possibly_missing.empty?
+          end
+          
+          context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
+          response = push_module_aux(context_params, true, opts)
+          
+          unless response.ok?
+            # remove new directory and leave the old one if import without namespace failed
+            if old_dir and (old_dir != module_final_dir)
+              FileUtils.rm_rf(module_final_dir) unless namespace
+            end
+            return response
+          end
+        end
+        ##### end: code that does push  
 
         # remove source directory if no errors while importing
         if old_dir and (old_dir != module_final_dir)
