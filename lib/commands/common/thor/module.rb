@@ -28,6 +28,18 @@ module DTK::Client
     def initialize(command,context_params)
       @command        = command
       @context_params = context_params
+      @options        = command.options
+    end
+
+    def print_external_dependencies(external_dependencies, location)
+      ambiguous        = external_dependencies["ambiguous"]||[]
+      amb_sorted       = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
+      inconsistent     = external_dependencies["inconsistent"]||[]
+      possibly_missing = external_dependencies["possibly_missing"]||[]
+
+      OsUtil.print("There are inconsistent module dependencies mentioned in #{location}: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
+      OsUtil.print("There are missing module dependencies mentioned in #{location}: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
+      OsUtil.print("There are ambiguous module dependencies mentioned in #{location}: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
     end
 
    private
@@ -38,8 +50,7 @@ module DTK::Client
     end
     def get_namespace_and_name(*args)
       @command.get_namespace_and_name(*args)
-    end      
-
+    end
   end
 
   module ModuleMixin
@@ -262,6 +273,7 @@ module DTK::Client
       Response::Ok.new()
     end
     def import_module_aux(context_params)
+      # CommonModule::Import.new(self,context_params).from_file()
       if context_params.get_forwarded_options()
         default_ns = context_params.get_forwarded_options()[:default_namespace]
         git_import = context_params.get_forwarded_options()[:git_import]

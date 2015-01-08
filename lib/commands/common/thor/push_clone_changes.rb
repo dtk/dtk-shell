@@ -50,7 +50,6 @@ module DTK::Client
 
       # check if any errors
       if dsl_parse_error = response.data(:dsl_parse_error)
-        # TODO: For Aldin; check whether external_dependencies are ever put under dsl_parse_error
         if parsed_external_dependencies = dsl_parse_error['external_dependencies']
           external_dependencies = parsed_external_dependencies
         elsif err_message = ServiceImporter.error_message(module_name, dsl_parse_error)
