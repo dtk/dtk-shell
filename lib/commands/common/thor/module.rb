@@ -9,6 +9,7 @@ dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/reparse')
 dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/common')
+
 dtk_require_from_base('configurator')
 dtk_require_from_base('command_helpers/service_importer')
 dtk_require_from_base('command_helpers/test_module_creator')
@@ -19,6 +20,28 @@ DEFAULT_COMMIT_MSG = "Initial commit."
 PULL_CATALOGS = ["dtkn"]
 
 module DTK::Client
+  class CommonModule
+    # TODO: For Aldin; looking to use nested file structure if helpers just relate to one file in common;
+    # example here is import which is helper for module.rb
+    dtk_require_common_commands('thor/module/import')
+    
+    def initialize(command,context_params)
+      @command        = command
+      @context_params = context_params
+    end
+
+   private
+    # TODO: when we do this for other areas we can move these things up and use as common classes
+    # helpers
+    def retrieve_arguments(mapping, method_info = nil)
+      @context_params.retrieve_arguments(mapping, method_info||@command.method_argument_names)
+    end
+    def get_namespace_and_name(*args)
+      @command.get_namespace_and_name(*args)
+    end      
+
+  end
+
   module ModuleMixin
     include PuppetForgeMixin
     include CloneMixin
@@ -185,7 +208,12 @@ module DTK::Client
       end
     end
 
-     def import_git_module_aux(context_params)
+    def import_git_module_aux(context_params)
+      # For Aldin
+      # This would now be one top level call
+      # uncomment this out to se simple example 
+      # CommonModule::Import.new(self,context_params).from_git()
+
       git_repo_url, module_name    = context_params.retrieve_arguments([:option_1!, :option_2!], method_argument_names)
       namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
 
@@ -365,72 +393,6 @@ module DTK::Client
         DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{module_final_dir}",:yellow) unless namespace
       end
 
-      response
-    end
-
-    def import_module_aux__new(context_params)
-      module_name = context_params.retrieve_arguments([:option_2!], method_argument_names)
-      module_type = get_module_type(context_params)
-      version     = options["version"]
-      default_ns  = context_params.get_forwarded_options()[:default_namespace] if context_params.get_forwarded_options()
-
-      namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
-      namespace = default_ns if default_ns && namespace.nil?
-
-      # first check that there is a directory there and it is not already a git repo, and it ha appropriate content
-      response = Helper(:git_repo).check_local_dir_exists_with_content(module_type.to_sym, local_module_name, nil, namespace)
-      return response unless response.ok?
-
-      #check for yaml/json parsing errors before import
-      module_directory = response.data(:module_directory)
-      reparse_aux(module_directory)
-
-      # first make call to server to create an empty repo
-      post_body = {
-        :module_name => local_module_name,
-        :module_namespace => namespace
-      }
-      response = post(rest_url("#{module_type}/create"), post_body)
-      return response unless response.ok?
-
-      repo_url, repo_id, module_id, branch, new_module_name = response.data(:repo_url, :repo_id, :module_id, :workspace_branch, :full_module_name)
-      response = Helper(:git_repo).rename_and_initialize_clone_and_push(module_type.to_sym, local_module_name, new_module_name, branch, repo_url, module_directory)
-      return response unless (response && response.ok?)
-
-      repo_obj,commit_sha = response.data(:repo_obj, :commit_sha)
-      module_final_dir    = repo_obj.repo_dir
-
-      post_body = {
-        :repo_id    => repo_id,
-        :commit_sha => commit_sha,
-        :git_import => true,
-        :commit_dsl => true,
-        :scaffold_if_no_dsl => true,
-        "#{module_type}_id".to_sym => module_id
-      }
-      response = post(rest_url("#{module_type}/update_from_initial_create"), post_body)
-
-      unless response.ok?
-        response.set_data_hash({ :full_module_name => new_module_name })
-        return response
-      end
-
-      dsl_updated_info = response.data(:dsl_updated_info)
-      dsl_created_info = response.data(:dsl_created_info)
-      DTK::Client::OsUtil.print("A module_refs.yaml file has been created for you, located at #{module_final_dir}", :yellow) if dsl_updated_info && !dsl_updated_info.empty?
-      DTK::Client::OsUtil.print("A #{dsl_created_info["path"]} file has been created for you, located at #{module_final_dir}", :yellow) if dsl_created_info && !dsl_created_info.empty?
-
-      module_name, module_namespace, repo_url, branch, not_ok_response = workspace_branch_info(module_type, module_id, version)
-      return not_ok_response if not_ok_response
-
-      opts_pull = {
-        :local_branch => branch,
-        :namespace => module_namespace
-      }
-      resp = Helper(:git_repo).pull_changes(module_type, module_name, opts_pull)
-      return resp unless resp.ok?
-
-      response[:module_id] = module_id
       response
     end
 
