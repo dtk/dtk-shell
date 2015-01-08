@@ -388,7 +388,8 @@ module DTK::Client
           end
         end
         ##### end: code that does push  
-
+        response = Response::Ok.new()
+ 
         # remove source directory if no errors while importing
         if old_dir and (old_dir != module_final_dir)
           FileUtils.rm_rf(old_dir) unless namespace
