@@ -46,14 +46,16 @@ module DTK::Client
       return response unless response.ok?
 
       ret = Response::Ok.new()
+
       external_dependencies = response.data('external_dependencies')
 
       # check if any errors
-      if dsl_parsed_info = response.data(:dsl_parse_error)
-        if parsed_external_dependencies = dsl_parsed_info['external_dependencies']
+      if dsl_parse_error = response.data(:dsl_parse_error)
+        # TODO: For Aldin; check whether external_dependencies are ever put under dsl_parse_error
+        if parsed_external_dependencies = dsl_parse_error['external_dependencies']
           external_dependencies = parsed_external_dependencies
-        elsif dsl_parsed_message = ServiceImporter.error_message(module_name, dsl_parsed_info)
-          DTK::Client::OsUtil.print(dsl_parsed_message, :red)
+        elsif err_message = ServiceImporter.error_message(module_name, dsl_parse_error)
+          DTK::Client::OsUtil.print(err_message, :red)
           ret = Response::NoOp.new()
         end
       end

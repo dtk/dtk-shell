@@ -342,9 +342,9 @@ module DTK::Client
       else
         # For Aldin; I think all code below this is just for import for file; so think we reorganize to have evrything above this be a common
         # routine called by both; and then put in new method for 'import from file' that calss common , whcih passes back response
-        # and then calss teh rest in the 'import from file' bod
+        # and then calls the rest in the 'import from file' body
 
-        # since we are creating module_refs file on server, we need to pull changes first and then push
+        # since we are creating module_refs and dtk,,odel.yaml files on server need to pull
         dsl_updated_info = response.data(:dsl_updated_info)
         if dsl_updated_info and !dsl_updated_info.empty?
           new_commit_sha = dsl_updated_info[:commit_sha]
@@ -388,12 +388,16 @@ module DTK::Client
           end
         end
         ##### end: code that does push  
+
         response = Response::Ok.new()
  
         # remove source directory if no errors while importing
         if old_dir and (old_dir != module_final_dir)
           FileUtils.rm_rf(old_dir) unless namespace
         end
+
+        # For Aldin: need to also check to see if any parsing errors by looking at what is now in response under dsl_parse_error
+        # (it was just renamed from dsl_parse_info)
 
         if external_dependencies
           ambiguous        = external_dependencies["ambiguous"]||[]
