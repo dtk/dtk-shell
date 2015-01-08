@@ -174,7 +174,7 @@ module DTK::Client
 
 
 =begin
-    => DUE TO DEPENDENCY TO PUPPET GEM WE OMMIT THIS <=
+    => DUE TO DEPENDENCY TO PUPPET GEM WE OMIT THIS <=
     desc "import-puppet-forge PUPPET-FORGE-MODULE-NAME", "Imports puppet module from puppet forge via puppet gem"
     def import_puppet_forge(context_params)
       module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
@@ -205,7 +205,7 @@ module DTK::Client
       return response unless response.ok?
       module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
 
-      if error = response.data(:dsl_parsed_info)
+      if error = response.data(:dsl_parse_error)
         dsl_parsed_message = ServiceImporter.error_message(module_name, error)
         DTK::Client::OsUtil.print(dsl_parsed_message, :red)
       end

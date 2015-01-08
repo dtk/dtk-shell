@@ -214,7 +214,7 @@ module DTK::Client
     #   return response unless response.ok?
     #   module_name,repo_url,branch,version = response.data(:module_name,:repo_url,:workspace_branch,:version)
 
-    #   if error = response.data(:dsl_parsed_info)
+    #   if error = response.data(:dsl_parse_error)
     #     dsl_parsed_message = ServiceImporter.error_message("#{module_name}-#{version}", error)
     #     DTK::Client::OsUtil.print(dsl_parsed_message, :red)
     #   end

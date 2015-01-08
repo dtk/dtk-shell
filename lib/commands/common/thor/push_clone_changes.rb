@@ -49,7 +49,7 @@ module DTK::Client
       external_dependencies = response.data('external_dependencies')
 
       # check if any errors
-      if dsl_parsed_info = response.data(:dsl_parsed_info)
+      if dsl_parsed_info = response.data(:dsl_parse_error)
         if parsed_external_dependencies = dsl_parsed_info['external_dependencies']
           external_dependencies = parsed_external_dependencies
         elsif dsl_parsed_message = ServiceImporter.error_message(module_name, dsl_parsed_info)
