@@ -1,4 +1,9 @@
 dtk_require_from_base("util/os_util")
+
+# For Aldin: dont thing these are needed although this may be stylistic, which is fine; just putting here to make where the include
+#  include ReparseMixin 
+# ..
+# are comming from
 dtk_require_common_commands('thor/push_clone_changes')
 dtk_require_common_commands('thor/reparse')
 dtk_require_common_commands('thor/common')
@@ -225,6 +230,9 @@ module DTK::Client
         return not_ok_response if not_ok_response
 
         # For Rich: did not have time today, but should find better way to pass these arguments to from_git and from_file methods
+        # For Aldin: are all these values needed in teh calling fns. ANyways anotehr way to do it is to just set instance vars so from here
+        # @module_id = module_id
+        # then calling fn coudl just use @module_id
         response.add_data_value!(:module_id, module_id)
         response.add_data_value!(:version, version)
         response.add_data_value!(:repo_obj, repo_obj)
