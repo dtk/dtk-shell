@@ -323,6 +323,11 @@ module DTK::Client
       post_body.merge!(:git_import => true) if git_import
       response = post(rest_url("#{module_type}/update_from_initial_create"), post_body)
 
+      if error = response.data(:dsl_parse_error)
+        dsl_parsed_message = ServiceImporter.error_message(module_name, error)
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red)
+      end
+
       unless response.ok?
         response.set_data_hash({ :full_module_name => new_module_name })
         # remove new directory and leave the old one if import without namespace failed
@@ -390,6 +395,11 @@ module DTK::Client
           
           context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, module_id)
           response = push_module_aux(context_params, true, opts)
+
+          if error = response.data(:dsl_parse_error)
+            dsl_parsed_message = ServiceImporter.error_message(module_name, error)
+            DTK::Client::OsUtil.print(dsl_parsed_message, :red)
+          end
           
           unless response.ok?
             # remove new directory and leave the old one if import without namespace failed
