@@ -22,15 +22,15 @@ module DTK::Client
       main_module = response.data(:main_module)
 
       unless installed_modules.empty?
-        clone_deps = Console.confirmation_prompt("\nDo you want to clone newly installed dependencies?")
-        if clone_deps
-          installed_modules.each do |im|
-            clone_aux(im['type'], im['id'], im['version'], true)
-          end
+        # clone_deps = Console.confirmation_prompt("\nDo you want to clone newly installed dependencies?")
+        # if clone_deps
+        installed_modules.each do |im|
+          clone_aux(im['type'], im['id'], im['version'], true, true)
         end
+        # end
       end
 
-      clone_aux(main_module['type'], main_module['id'], main_module['version'])
+      clone_aux(main_module['type'], main_module['id'], main_module['version'], false, true, {:print_imported => true})
       nil
   end
 

@@ -19,8 +19,10 @@ module DTK::Client
 
       if response.ok?
         puts "Module '#{full_module_name}' has been successfully cloned!" unless omit_output
+        # when puppet forge import, print successfully imported instead of cloned
+        DTK::Client::OsUtil.print("Module '#{full_module_name}' has been successfully imported!", :yellow) if omit_output && opts[:print_imported]
         unless internal_trigger
-          if Console.confirmation_prompt("Would you like to edit cloned module now?")
+          if Console.confirmation_prompt("Would you like to edit module now?")
             context_params_for_module = create_context_for_module(full_module_name, module_type)
             return edit(context_params_for_module)
             # if module_type.to_s.eql?("service_module")
