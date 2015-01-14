@@ -30,7 +30,7 @@ module DTK::Client
         # end
       end
 
-      clone_aux(main_module['type'], main_module['id'], main_module['version'], true, true, {:print_imported => true})
+      clone_aux(main_module['type'], main_module['id'], main_module['version'], true, true, {:print_imported => true, :backup_if_exist => true})
       nil
   end
 
