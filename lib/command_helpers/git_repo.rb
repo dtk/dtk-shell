@@ -27,13 +27,27 @@ module DTK; module Client; class CommandHelper
         FileUtils.mkdir_p(modules_dir) unless File.directory?(modules_dir)
 
         target_repo_dir = local_repo_dir(type,full_name,version,opts)
+        moved           = false
+
         if File.exists?(target_repo_dir)
-          raise ErrorUsage.new("Directory '#{target_repo_dir}' is not empty; it must be deleted or removed before retrying the command", :log_error => false)
+          # if local copy of module exists then move that module to tmp/<module_name> where it will later be restored from
+          if opts[:backup_if_exist]
+            FileUtils.mv(target_repo_dir, "/tmp/#{full_name}")
+            moved = true
+          else
+            raise ErrorUsage.new("Directory '#{target_repo_dir}' is not empty; it must be deleted or removed before retrying the command", :log_error => false)
+          end
         end
 
         begin
           opts_clone = (opts[:track_remote_branch] ? {:track_remote_branch => true} : {})
           GitAdapter.clone(repo_url, target_repo_dir, branch,opts_clone)
+          # if local copy existed already it was moved to tmp/<module_name>, here we restore that folder
+          # to <module_name>/backup
+          if moved && File.exists?("/tmp/#{full_name}")
+            FileUtils.mv("/tmp/#{full_name}", "#{target_repo_dir}/backup")
+            puts "Backup of existing module directory moved to '#{target_repo_dir}/backup'"
+          end
         rescue => e
           # Handling Git error messages with more user friendly messages
           e = GitErrorHandler.handle(e)
