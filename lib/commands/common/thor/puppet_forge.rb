@@ -25,12 +25,12 @@ module DTK::Client
         # clone_deps = Console.confirmation_prompt("\nDo you want to clone newly installed dependencies?")
         # if clone_deps
         installed_modules.each do |im|
-          clone_aux(im['type'], im['id'], im['version'], true, true)
+          clone_aux(im['type'], im['id'], im['version'], true, true, {:print_warning_if_exist => true})
         end
         # end
       end
 
-      clone_aux(main_module['type'], main_module['id'], main_module['version'], false, true, {:print_imported => true})
+      clone_aux(main_module['type'], main_module['id'], main_module['version'], true, true, {:print_imported => true})
       nil
   end
 
