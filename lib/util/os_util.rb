@@ -161,6 +161,12 @@ module DTK
           clone_base_path(:assembly_module)
         end
 
+        def backups_location()
+          path = Config[:backups_location]
+          final_path = path && path.start_with?('/') ? path : "#{dtk_local_folder}#{path}"
+          final_path.gsub(/\/$/,'')
+        end
+
         def clone_base_path(module_type)
 
           path =

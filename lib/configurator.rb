@@ -83,6 +83,7 @@ module DTK
         FileUtils.mkdir(OsUtil.component_clone_location) unless File.directory?(OsUtil.component_clone_location)
         FileUtils.mkdir(OsUtil.service_clone_location) unless File.directory?(OsUtil.service_clone_location)
         FileUtils.mkdir(OsUtil.test_clone_location) unless File.directory?(OsUtil.test_clone_location)
+        FileUtils.mkdir(OsUtil.backups_location) unless File.directory?(OsUtil.backups_location)
       end
 
 

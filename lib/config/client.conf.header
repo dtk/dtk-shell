@@ -12,6 +12,7 @@ verbose_rest_calls=false          # logging of REST calls
 module_location=component_modules
 service_location=service_modules
 test_module_location=test_modules
+backups_location=backups
 
 # server connection details
 server_port=80
