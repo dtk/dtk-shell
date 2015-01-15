@@ -490,6 +490,9 @@ module DTK; module Client; class CommandHelper
       namespace, name = full_module_name.split(':', 2)
       module_type     = type.split('_').first
       backups_dir     = OsUtil.backups_location()
+
+      # create backups dir if deleted for some reason
+      FileUtils::mkdir_p(backups_dir) unless File.directory?(backups_dir)
       "#{backups_dir}/#{module_type}-#{namespace}-#{name}-#{Time.now.to_i}"
     end
 
