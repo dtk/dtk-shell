@@ -67,8 +67,8 @@ module DTK::Client
         new_commit_sha = dsl_updated_info[:commit_sha]
         unless new_commit_sha and new_commit_sha == commit_sha
           opts_pull = opts.merge(:local_branch => branch,:namespace => module_namespace)
-          response = Helper(:git_repo).pull_changes(module_type, module_name, opts_pull)
-          return response unless response.ok?
+          resp = Helper(:git_repo).pull_changes(module_type, module_name, opts_pull)
+          return resp unless resp.ok?
         end
       end
 
@@ -95,7 +95,23 @@ module DTK::Client
           return response unless response.ok?
         end
       end
+
+      service_component_refs = response.data['component_module_refs']
+      unless (service_component_refs||{}).empty?
+        print_using_dependencies(service_component_refs)
+      end
+
       ret
     end
+
+    private
+    def print_using_dependencies(component_refs)
+      component_refs.each do |k, value|
+        namespace = value['namespace_info']
+        name      = value['module_name']
+        puts "Using component module '#{namespace}:#{name}'"
+      end
+    end
+
   end
 end
