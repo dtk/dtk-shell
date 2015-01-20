@@ -21,8 +21,6 @@ PULL_CATALOGS = ["dtkn"]
 
 module DTK::Client
   class CommonModule
-    # TODO: For Aldin; looking to use nested file structure if helpers just relate to one file in common;
-    # example here is import which is helper for module.rb
     dtk_require_common_commands('thor/module/import')
     
     def initialize(command,context_params)
@@ -220,60 +218,14 @@ module DTK::Client
     end
 
     def import_git_module_aux(context_params)
-      # For Aldin
-      # This would now be one top level call
-      # uncomment this out to se simple example 
-      # CommonModule::Import.new(self,context_params).from_git()
-
-      git_repo_url, module_name    = context_params.retrieve_arguments([:option_1!, :option_2!], method_argument_names)
-      namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
-
-      module_type  = get_module_type(context_params)
-      thor_options = { :git_import => true}
-
-      unless namespace
-        resp = post rest_url("namespace/default_namespace_name")
-        return resp unless resp.ok?
-
-        namespace = resp.data
-        thor_options[:default_namespace] = namespace
-      end
-
-      opts = {
-        :namespace => namespace,
-        :branch    => options['branch']
-      }
-      response = Helper(:git_repo).create_clone_from_optional_branch(module_type.to_sym, local_module_name, git_repo_url, opts)
-      return response unless response.ok?
-
-      # Remove .git directory to rid of git pointing to user's github
-      FileUtils.rm_rf("#{response['data']['module_directory']}/.git")
-
-      context_params.forward_options(thor_options)
-      create_response = import_module_aux(context_params)
-
-      if create_response.ok?
-        if external_dependencies = create_response.data(:external_dependencies)
-          inconsistent = external_dependencies["inconsistent"]||[]
-          possibly_missing = external_dependencies["possibly_missing"]||[]
-          ambiguous = external_dependencies["ambiguous"]||[]
-          amb_sorted = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
-          OsUtil.print("There are inconsistent module dependencies mentioned in the git repo: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
-          OsUtil.print("There are missing module dependencies mentioned in the git repo: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
-          OsUtil.print("There are ambiguous module dependencies mentioned in the git repo: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
-        end
-      else
-        delete_dir        = namespace.nil? ? local_module_name : "#{namespace}/#{local_module_name}"
-        full_module_name  = create_response.data[:full_module_name]
-        local_module_name = full_module_name.nil? ? delete_dir : full_module_name
-        delete_module_sub_aux(context_params, local_module_name, :force_delete => true, :no_error_msg => true, :purge => true)
-        return create_response
-      end
-
-      Response::Ok.new()
+      CommonModule::Import.new(self, context_params).from_git()
     end
+
     def import_module_aux(context_params)
-      # CommonModule::Import.new(self,context_params).from_file()
+      CommonModule::Import.new(self,context_params).from_file()
+    end
+=begin
+    def import_module_aux(context_params)
       if context_params.get_forwarded_options()
         default_ns = context_params.get_forwarded_options()[:default_namespace]
         git_import = context_params.get_forwarded_options()[:git_import]
@@ -436,6 +388,7 @@ module DTK::Client
 
       response
     end
+=end
 
     def install_module_aux(context_params)
       create_missing_clone_dirs()
