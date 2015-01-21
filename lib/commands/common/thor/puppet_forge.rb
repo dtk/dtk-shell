@@ -1,6 +1,8 @@
 module DTK::Client
   module PuppetForgeMixin
 
+    NAME_REGEX = /\w*\-\w/
+
     def puppet_forge_install_aux(context_params, pf_module_name, module_name, namespace, version, module_type)
       post_body_hash = {
         :puppetf_module_name => pf_module_name,
@@ -9,7 +11,11 @@ module DTK::Client
         :module_namespace?   => namespace
       }
 
-      response = post rest_url("component_module/install_puppet_forge_modules"),PostBody.new(post_body_hash)
+      raise DtkError, "Puppet forge module name should be in format USERNAME-NAME" unless pf_module_name.match(NAME_REGEX)
+
+      response = poller_response do
+        post rest_url("component_module/install_puppet_forge_modules"),PostBody.new(post_body_hash)
+      end
 
       return response unless response.ok?
 

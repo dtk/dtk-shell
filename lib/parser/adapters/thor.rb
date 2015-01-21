@@ -10,6 +10,7 @@ dtk_require("../../util/console")
 dtk_require_common_commands('thor/task_status')
 dtk_require_from_base("command_helper")
 dtk_require("../../context_router")
+dtk_require_common_commands('thor/poller')
 
 module DTK
   module Client
@@ -17,10 +18,12 @@ module DTK
       dtk_nested_require('thor','common_option_defs')
 
       include CommandBase
+      include CommandHelperMixin
+      include Poller
+
       extend  CommandBase
       extend  TaskStatusMixin
       extend  Console
-      include CommandHelperMixin
       extend CommonOptionDefs::ClassMixin
 
       @@cached_response = {}
@@ -428,7 +431,7 @@ module DTK
 
         # removes nil values
         def post_body(hash)
-          hash.inject(Hash.new){|h,(k,v)|v.nil? ? h : h.merge(k => v)} 
+          hash.inject(Hash.new){|h,(k,v)|v.nil? ? h : h.merge(k => v)}
         end
 
         # User input prompt
