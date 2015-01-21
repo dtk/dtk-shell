@@ -7,6 +7,7 @@ dtk_require_from_base("commands/thor/assembly")
 dtk_require_from_base('command_helpers/service_importer')
 dtk_require_common_commands('thor/common')
 dtk_require_common_commands('thor/module')
+dtk_require_common_commands('thor/poller')
 
 module DTK::Client
   class ServiceModule < CommandBaseThor
@@ -17,6 +18,7 @@ module DTK::Client
       include ReparseMixin
       include ServiceImporter
       include ModuleMixin
+      include Poller
 
       def get_service_module_name(service_module_id)
         get_name_from_id_helper(service_module_id)
@@ -123,7 +125,11 @@ module DTK::Client
         post_body[:diff] = options.diff? ? options.diff : {}
         post_body.merge!(:module_namespace => options.namespace) if options.namespace
 
-        response = post rest_url("service_module/#{action}"), post_body
+        # Example of message poll
+        response = poller_response(2) do
+          post rest_url("service_module/#{action}"), post_body
+        end
+
       # If user is on service identifier level, list task can't have '--remote' option.
       else
         # TODO: this is temp; will shortly support this

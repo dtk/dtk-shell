@@ -17,7 +17,7 @@ module DTK::Client
         ssh_credentials = data["ssh_credentials"]||defaults["ssh_credentials"]
 
         raise DtkValidationError, "Credentials for '#{ssh_credentials}' does not exist in credentials file '#{ssh_creds_path}'" unless ssh_creds_data.include?(ssh_credentials)
-        
+
         ref = "physical--#{display_name}"
         row = ret[ref] = {
           :display_name => display_name,
