@@ -309,10 +309,6 @@ module DTK::Client
         return resp unless resp.ok?
         response[:module_id] = module_id
       else
-        # For Aldin; I think all code below this is just for import for file; so think we reorganize to have evrything above this be a common
-        # routine called by both; and then put in new method for 'import from file' that calss common , whcih passes back response
-        # and then calls the rest in the 'import from file' body
-
         # since we are creating module_refs and dtk,,odel.yaml files on server need to pull
         dsl_updated_info = response.data(:dsl_updated_info)
         if dsl_updated_info and !dsl_updated_info.empty?
@@ -323,9 +319,6 @@ module DTK::Client
           end
         end
 
-        # For Aldin; wil update the server side to  have dsl_created_info not have content when that is added on server side
-        # so setting acondition wrt to this and casing on this, i.e., whether need to commit file and then do push
-        # after we make sure working we can remove code that commits dsl file on client side
         push_needed = false
         if dsl_created_info and !dsl_created_info.empty?
           path = dsl_created_info["path"]
@@ -369,9 +362,6 @@ module DTK::Client
         if old_dir and (old_dir != module_final_dir)
           FileUtils.rm_rf(old_dir) unless namespace
         end
-
-        # For Aldin: need to also check to see if any parsing errors by looking at what is now in response under dsl_parse_error
-        # (it was just renamed from dsl_parse_info)
 
         if external_dependencies
           ambiguous        = external_dependencies["ambiguous"]||[]

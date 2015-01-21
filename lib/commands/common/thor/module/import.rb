@@ -1,11 +1,3 @@
-# For Aldin: dont thing these are needed although this may be stylistic, which is fine; just putting here to make where the include
-#  include ReparseMixin 
-# ..
-# are comming from
-# dtk_require_common_commands('thor/push_clone_changes')
-# dtk_require_common_commands('thor/reparse')
-# dtk_require_common_commands('thor/common')
-
 dtk_require_from_base("util/os_util")
 dtk_require_from_base('commands')
 dtk_require_from_base("command_helper")
@@ -18,7 +10,6 @@ module DTK::Client
       include PushCloneChangesMixin
       include ReparseMixin
 
-      # For Rich: this is used for import-git
       def from_git()
         git_repo_url, module_name    = retrieve_arguments([:option_1!, :option_2!])
         namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
