@@ -140,6 +140,9 @@ module DTK::Client
         Response::Ok.new()
       end
 
+
+      private
+
       def from_git_or_file()
         default_ns = @context_params.get_forwarded_options()[:default_namespace]
         git_import = @context_params.get_forwarded_options()[:git_import]
@@ -207,8 +210,6 @@ module DTK::Client
         response
       end
 
-      private
-      # ... the methods that represent the basic steps of from_git and from_git_or_file
     end
   end
 end
