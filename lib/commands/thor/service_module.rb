@@ -124,7 +124,7 @@ module DTK::Client
         post_body[:diff] = options.diff? ? options.diff : {}
         post_body.merge!(:module_namespace => options.namespace) if options.namespace
 
-        post rest_url("service_module/#{action}"), post_bodyco
+        post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
       else
         # TODO: this is temp; will shortly support this
@@ -145,7 +145,7 @@ module DTK::Client
         end
         response = post rest_url("service_module/#{action}"), { :service_module_id => service_module_id }
       end
-      return response unless response.ok?
+
       response.render_table(data_type) unless response.nil?
 
       response
