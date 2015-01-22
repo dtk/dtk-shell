@@ -33,7 +33,8 @@ module DTK::Client
 
       if response.ok?
         response.data.each do |cmp_mod|
-          unsaved_modules << "#{cmp_mod['namespace_name']}:#{cmp_mod['display_name']}" if cmp_mod['local_copy_diff']
+          branch_relationship = cmp_mod['branch_relationship']||''
+          unsaved_modules << "#{cmp_mod['namespace_name']}:#{cmp_mod['display_name']}" if (cmp_mod['local_copy_diff'] && branch_relationship.eql?('local_ahead'))
         end
       end
 
