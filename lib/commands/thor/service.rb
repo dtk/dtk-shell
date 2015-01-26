@@ -364,6 +364,11 @@ TODO: will put in dot release and will rename to 'extend'
       list_violations_aux(context_params)
     end
 
+    desc "SERVICE-NAME/ID print-includes", "Finds includes in the service."
+    def print_includes(context_params)
+      print_includes_aux(context_params)
+    end
+
     desc "SERVICE-NAME/ID workflow-info", "Get the structure of the workflow associated with service."
     def workflow_info(context_params)
       workflow_info_aux(context_params)
