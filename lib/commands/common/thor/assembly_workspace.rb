@@ -106,7 +106,6 @@ module DTK::Client
     def print_includes_aux(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       response = post rest_url("assembly/print_includes"),:assembly_id => assembly_or_workspace_id
-      # response.render_table(:violation)
     end
 
     def converge_aux(context_params)

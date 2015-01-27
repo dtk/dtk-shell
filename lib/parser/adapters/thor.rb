@@ -406,7 +406,7 @@ module DTK
 
           match = nil
           response = self.class.get_cached_response(entity_type,list_command_path,subtype)
-          if response.ok? and response['data']
+          if response and response.ok? and response['data']
             match = response['data'].find{|entity|entity_id == entity['id']}
           end
           unless match
