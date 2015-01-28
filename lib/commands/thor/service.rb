@@ -121,7 +121,7 @@ module DTK::Client
     # :identifier_only => only on identifier level for given entity (command)
     #
     def self.override_allowed_methods()
-      return DTK::Shell::OverrideTasks.new({
+      override_methods = {
         :all => {
           # :node => [
             # ['delete-component',"delete-component COMPONENT-ID","# Delete component from assembly's node"],
@@ -130,10 +130,6 @@ module DTK::Client
           # ],
           :component => [
             ['list-attributes',"list-attributes","# List attributes associated with given component."]
-=begin
-TODO: overlaps with different meaning
-            ['create-attribute',"create-attribute SERVICE-TYPE DEP-ATTR ARROW BASE-ATTR","# Create an attribute to service link."],
-=end
           ]
         },
         :command_only => {
@@ -161,7 +157,6 @@ TODO: overlaps with different meaning
             ['add-component',"add-component COMPONENT","# Add a component to the node."],
             ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from service's node"],
             ['info',"info","# Return info about node instance belonging to given workspace."],
-            # ['link-attributes', "link-attributes TARGET-ATTR-TERM SOURCE-ATTR-TERM", "# Set TARGET-ATTR-TERM to SOURCE-ATTR-TERM."],
             ['list-attributes',"list-attributes","# List attributes associated with service's node."],
             ['list-components',"list-components","# List components associated with service's node."],
             ['set-attribute',"set-attribute ATTRIBUTE-NAME [VALUE] [-u]","# (Un)Set attribute value. The option -u will unset the attribute's value."],
@@ -172,7 +167,6 @@ TODO: overlaps with different meaning
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
             ['edit',"edit","# Edit component module related to given component."],
-            # ['edit-dsl',"edit-dsl","# Edit component module dsl file related to given component."],
             ['link-components',"link-components ANTECEDENT-CMP-NAME [DEPENDENCY-NAME]","#Link components to satisfy component dependency relationship."],
             ['list-component-links',"list-component-links","# List component's links to other components."],
             ['unlink-components',"unlink-components SERVICE-TYPE","# Delete service link on component."]
@@ -181,7 +175,13 @@ TODO: overlaps with different meaning
             ['info',"info","# Return info about attribute instance belonging to given component."]
           ]
         }
-      }, [:utils])
+      }
+
+      if ::DTK::Configuration.get(:development_mode)
+        override_methods[:identifier_only][:node] << ['test-action-agent', "test-action-agent BASH-COMMAND-LINE", "Run bash command on test action agent"]
+      end
+
+      return DTK::Shell::OverrideTasks.new(override_methods, [:utils])
     end
 
     desc "SERVICE-NAME/ID destroy-and-reset-nodes [-y]", "Terminates all nodes, but keeps config state so they can be spun up from scratch."

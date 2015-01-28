@@ -1,5 +1,7 @@
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_params')
+dtk_require_common_commands('thor/test_action_agent')
+
 module DTK::Client
   class Node < CommandBaseThor
 
@@ -8,6 +10,7 @@ module DTK::Client
     no_tasks do
       include TaskStatusMixin
       include SetRequiredParamsMixin
+      include TestActionAgent
     end
 
     def self.pretty_print_cols()
@@ -29,7 +32,7 @@ module DTK::Client
     end
 
     # using extended_context when we want to use autocomplete from other context
-    # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
+    # e.g. we are in assembly/apache context and want to create-component we will use extended context to add
     # component-templates to autocomplete
     def self.extended_context()
       {
@@ -52,7 +55,7 @@ module DTK::Client
 
     def self.validation_list(context_params)
       assembly_id, workspace_id = context_params.retrieve_arguments([:service_id, :workspace_id])
-      
+
       if (assembly_id || workspace_id)
         # if assebmly_id is present we're loading nodes filtered by assembly_id
         post_body = {
@@ -81,7 +84,7 @@ module DTK::Client
         }
       })
     end
-    
+
     desc "NODE-NAME/ID info","Info about node"
     def info(context_params)
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
@@ -91,6 +94,34 @@ module DTK::Client
       }
 
        post rest_url("node/info"), post_body
+    end
+
+    desc "NODE-NAME/ID test-action-agent BASH-COMMAND-LINE", "Run bash command on test action agent"
+    def test_action_agent(context_params)
+      response = test_agent_aux(context_params)
+      return response unless response.ok?
+
+      # this I will fix to have more clear output
+      data = response.data(:results)
+      data = data.values.first['output']
+      data = data.first
+
+      # {"status"=>"ok", "data"=>{"is_complete"=>true, "results"=>{"2147560737"=>{"output"=>[{"
+
+      OsUtil.print("Status: #{data['status']}", :yellow)
+      if data['stdout'] && !data['stdout'].empty?
+        OsUtil.print("STDOUT OUTPUT ", :green)
+        print data['stdout']
+      end
+
+      if data['stderr'] && !data['stderr'].empty?
+        OsUtil.print("STDERR OUTPUT ", :red)
+        print data['stderr']
+      end
+
+
+
+      return nil
     end
 
     desc "NODE-NAME/ID ssh REMOTE-USER [-i PATH-TO-PEM]","SSH into node, optional parameters are path to indentity file."
@@ -123,7 +154,7 @@ module DTK::Client
         default_identity_file = OsUtil.dtk_identity_file_location()
 
         ssh_command = nil
-        
+
         if identity_file_location
           # provided PEM key
           ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{identity_file_location} #{connection_string}"
@@ -165,7 +196,7 @@ module DTK::Client
     method_option :list, :type => :boolean, :default => false
     def list(context_params)
       node_id, about = context_params.retrieve_arguments([:node_id,:option_1],method_argument_names)
-      
+
       if node_id.nil?
         response = post rest_url("node/list")
 
@@ -246,7 +277,7 @@ module DTK::Client
 
     desc "NODE-NAME/ID converge [-m COMMIT-MSG]", "Converges service instance"
     method_option "commit_msg",:aliases => "-m" ,
-      :type => :string, 
+      :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def converge(context_params)
@@ -334,7 +365,7 @@ module DTK::Client
       # Retrieving assembly_id to stop a node.. TODO create server side method that takes only node id
       #TODO: Rich: took this out; think it is a bug
       #assembly_id, node_id = get_assembly_and_node_id(context_params)
-      
+
       node_stop(node_id)
     end
 
@@ -344,7 +375,7 @@ module DTK::Client
 
       post_body = {
         :node_id => node_id
-      }  
+      }
 
       response = post(rest_url("node/initiate_get_netstats"), post_body)
       return response unless response.ok?
@@ -375,6 +406,7 @@ module DTK::Client
       response.set_data(*response.data(:results))
       response.render_table(:netstat_data)
     end
+
     GETNETSTATSTRIES = 6
     GETNETSTATSSLEEP = 0.5
 
@@ -384,7 +416,7 @@ module DTK::Client
 
       post_body = {
         :node_id => node_id
-      }  
+      }
 
       response = post(rest_url("node/initiate_get_ps"), post_body)
       return response unless response.ok?
@@ -422,7 +454,7 @@ module DTK::Client
     GETPSSLEEP = 0.5
 
     no_tasks do
-      def node_start(node_id)             
+      def node_start(node_id)
         post_body = {
           :node_id  => node_id
         }
@@ -472,7 +504,7 @@ module DTK::Client
         response = info(context_params)
         unless response.ok?
           raise DTK::Client::DtkError, "Unable to retrive node information, please try again."
-        end      
+        end
 
         return response.data(:assembly_id), response.data(:id)
       end
