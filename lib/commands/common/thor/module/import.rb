@@ -108,7 +108,7 @@ module DTK::Client
           end
 
           @context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, @module_id)
-          response = push_module_aux(@context_params, true, opts)
+          response = @command.push_module_aux(@context_params, true, opts)
 
           if error = response.data(:dsl_parse_error)
             dsl_parsed_message = ServiceImporter.error_message(module_name, error)
