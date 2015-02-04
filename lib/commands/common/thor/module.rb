@@ -128,6 +128,15 @@ module DTK::Client
         return nil unless is_go
       end
 
+      post_body = {
+       "#{module_type}_id".to_sym => module_id
+      }
+      action = (version ? "delete_version" : "delete")
+      post_body[:version] = version if version
+
+      response = post(rest_url("#{module_type}/#{action}"), post_body)
+      return response unless response.ok?
+
       response =
         if options.purge? || method_opts[:purge]
           opts = {:module_name => module_name}
@@ -139,15 +148,6 @@ module DTK::Client
           Helper(:git_repo).unlink_local_clone?(module_type.to_sym, module_name, version)
         end
 
-      return response unless response.ok?
-
-      post_body = {
-       "#{module_type}_id".to_sym => module_id
-      }
-      action = (version ? "delete_version" : "delete")
-      post_body[:version] = version if version
-
-      response = post(rest_url("#{module_type}/#{action}"), post_body)
       return response unless response.ok?
 
       unless method_opts[:no_error_msg]
