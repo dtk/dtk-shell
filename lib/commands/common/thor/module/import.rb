@@ -70,67 +70,25 @@ module DTK::Client
         response = from_git_or_file()
         return response unless response.ok?
 
-        dsl_updated_info      = response.data(:dsl_updated_info)
-        dsl_created_info      = response.data(:dsl_created_info)
-        external_dependencies = response.data(:external_dependencies)
+        opts_pull = {
+          :local_branch => @branch,
+          :namespace    => @module_namespace
+        }
+        resp = Helper(:git_repo).pull_changes(module_type, @module_name, opts_pull)
+        return resp unless resp.ok?
 
-        if dsl_updated_info and !dsl_updated_info.empty?
-          new_commit_sha = dsl_updated_info[:commit_sha]
-          unless new_commit_sha and new_commit_sha == commit_sha
-            opts_pull = {
-              :local_branch => @branch,
-              :namespace    => @module_namespace
-            }
-            resp = Helper(:git_repo).pull_changes(module_type, @module_name, opts_pull)
-            return resp unless resp.ok?
-          end
+        if error = response.data(:dsl_parse_error)
+          dsl_parsed_message = ServiceImporter.error_message(module_name, error)
+          DTK::Client::OsUtil.print(dsl_parsed_message, :red)
         end
-
-        push_needed      = false
-        module_final_dir = @repo_obj.repo_dir
-
-        if dsl_created_info and !dsl_created_info.empty?
-          path = dsl_created_info["path"]
-          msg  = "A #{path} file has been created for you, located at #{module_final_dir}"
-          if content = dsl_created_info["content"]
-            resp = Helper(:git_repo).add_file(@repo_obj, path, content, msg)
-            return resp unless resp.ok?
-            push_needed = true
-          end
-        end
-
-        ##### code that does push that can be removed once we always do commit of dsl on server side
-        if push_needed
-          if external_dependencies
-            ambiguous        = external_dependencies['ambiguous']||[]
-            possibly_missing = external_dependencies["possibly_missing"]||[]
-            opts.merge!(:set_parsed_false => true, :skip_module_ref_update => true) unless ambiguous.empty? && possibly_missing.empty?
-          end
-
-          @context_params.add_context_to_params(local_module_name, module_type.to_s.gsub!(/\_/,'-').to_sym, @module_id)
-          response = push_module_aux(@context_params, true, opts)
-
-          if error = response.data(:dsl_parse_error)
-            dsl_parsed_message = ServiceImporter.error_message(module_name, error)
-            DTK::Client::OsUtil.print(dsl_parsed_message, :red)
-          end
-
-          unless response.ok?
-            # remove new directory and leave the old one if import without namespace failed
-            if @old_dir and (@old_dir != module_final_dir)
-              FileUtils.rm_rf(module_final_dir) unless namespace
-            end
-            return response
-          end
-        end
-        ##### end: code that does push
 
         # remove source directory if no errors while importing
+        module_final_dir = @repo_obj.repo_dir
         if @old_dir and (@old_dir != module_final_dir)
           FileUtils.rm_rf(@old_dir) unless namespace
         end
 
-        if external_dependencies
+        if external_dependencies = response.data(:external_dependencies)
           print_external_dependencies(external_dependencies, 'dtk.model.yaml includes')
         end
 
