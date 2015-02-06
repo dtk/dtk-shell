@@ -1,7 +1,10 @@
 require File.expand_path('../../lib/client', File.dirname(__FILE__))
 require File.expand_path('../../lib/parser/adapters/thor',    File.dirname(__FILE__))
 require File.expand_path('../../lib/shell/context', File.dirname(__FILE__))
-require File.expand_path('../../lib/shell/domain', File.dirname(__FILE__))
+require File.expand_path('../../lib/shell/domain/context_entity', File.dirname(__FILE__))
+require File.expand_path('../../lib/shell/domain/active_context', File.dirname(__FILE__))
+require File.expand_path('../../lib/shell/domain/context_params', File.dirname(__FILE__))
+require File.expand_path('../../lib/shell/domain/override_tasks', File.dirname(__FILE__))
 Dir[File.expand_path('../../lib/shell/parse_monkey_patch.rb', File.dirname(__FILE__))].each {|file| require file }
 
 require 'shellwords'
@@ -92,7 +95,7 @@ module SpecThor
     gsub(regex, '').chomp
   end
 
-  private 
+  private
 
   ##
   # Method will take task name from class name

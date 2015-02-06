@@ -140,9 +140,6 @@ module DTK
           when :remote_branch
             @git_repo.branches.remote.find { |r| "#{r.remote}/#{r.name}" == ref }
           when :local_branch
-            # DEBUG SNIPPET >>>> REMOVE <<<<
-            #  TODO: HARIS LOOK INTO THIS
-            # raise "Invalid ref #{ref}"
             @git_repo.branches.find { |b| b.name == ref }
           else
             raise Error.new("Illegal type parameter (#{type}) passed to merge_relationship")

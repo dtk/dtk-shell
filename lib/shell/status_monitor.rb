@@ -1,3 +1,5 @@
+# TODO-REMOVE: Check if we need this anymore
+
 require 'thread'
 require 'singleton'
 require 'colorize'
@@ -5,7 +7,7 @@ require 'colorize'
 
 # This singleton is used to check status on running processes on the server side
 # Once certain task is complete it will give notice to user da certain task has been completed
-# At the moment this only 
+# At the moment this only
 
 module DTK
   module Shell
@@ -71,12 +73,12 @@ module DTK
               # we break if there is error in response
               break unless response.ok?
             end
-            
+
             DTK::Shell::TaskStatusThread.current.finished = true
 
             if response.ok?
               DTK::Shell::TaskStatusThread.current.status = response.data['status'].upcase
-            else                
+            else
               DTK::Shell::TaskStatusThread.current.status = "RESPONSE NOT OK, RESPONSE: #{response}"
             end
 

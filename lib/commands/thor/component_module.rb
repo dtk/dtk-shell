@@ -281,8 +281,8 @@ module DTK::Client
 
     desc "COMPONENT-MODULE-NAME/ID add-collaborators", "Add collabrators users or groups comma seperated (--users or --groups)"
     method_option "namespace", :aliases => "-n", :type => :string, :banner => "NAMESPACE", :desc => "Remote namespace"
-    method_option "users",:aliases => "-u", :type => :string, :banner => "USERS", :desc => "User collabrators"
-    method_option "groups",:aliases => "-g", :type => :string, :banner => "GROUPS", :desc => "Group collabrators"
+    method_option "users", :aliases => "-u", :type => :string, :banner => "USERS", :desc => "User collabrators"
+    method_option "groups", :aliases => "-g", :type => :string, :banner => "GROUPS", :desc => "Group collabrators"
     def add_collaborators(context_params)
       add_collaborators_module_aux(context_params)
     end
