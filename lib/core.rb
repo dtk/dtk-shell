@@ -138,7 +138,10 @@ def resolve_direct_access(params, config_exists=nil)
     # setting up catalog credentials
     catalog_creds = DTK::Client::Configurator.ask_catalog_credentials()
     unless catalog_creds.empty?
-      response = conn.post DTK::Client::CommandBase.class, conn.rest_url("account/set_catalog_credentials"), { :username => catalog_creds[:username], :password => catalog_creds[:password]}
+      response = conn.post DTK::Client::CommandBase.class, conn.rest_url("account/set_catalog_credentials"), { :username => catalog_creds[:username], :password => catalog_creds[:password], :validate => true}
+      if errors = response['errors']
+        DTK::Client::OsUtil.print("#{errors.first['message']} You will have to set catalog credentials manually ('dtk account set-catalog-credentials').", :yellow)
+      end
     end
   end
 
