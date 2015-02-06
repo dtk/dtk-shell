@@ -78,6 +78,7 @@ module DTK::Client
 
       post_body.merge!(:assembly_template_name => assembly_template_name) if assembly_template_name
       post_body.merge!(:use_module_namespace => true) if opts[:use_module_namespace]
+      post_body.merge!(:description => opts[:description]) if opts[:description]
       response = post rest_url("assembly/promote_to_template"), post_body
       return response unless response.ok?()
 
