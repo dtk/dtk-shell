@@ -798,22 +798,6 @@ module DTK
         candidates
       end
 
-      # changes command and argument if argument is plural of one of
-      # the possible commands on tier1 e.g. libraries, assemblies
-      # return 2 values cmd, args
-      def reverse_commands(cmd, args)
-        # iterates trough current context available commands
-        @current.each do |available_commands|
-          # singulirazes command, e.g. libraries => library
-          command_singular=args.first.singularize
-          if available_commands.eql?(command_singular)
-            cmd, args = command_singular, [cmd]
-          end
-        end
-
-        return cmd, args
-      end
-
       def get_dtk_command_parameters(entity_name, args)
         method_name, entity_name_id = nil, nil
         context_params = ContextParams.new
