@@ -41,6 +41,11 @@ module DTK
             ["set-attribute ATTRIBUTE-NAME [VALUE] [-u]", "# (Un)Set attribute value. The option -u will unset the attribute's value."]
           ],
           :node => [
+            ["add-component COMPONENT", "# Add a component to the node."],
+            ["list-attributes", "# List attributes associated with service's node."],
+            ["list-components", "# List components associated with service's node."],
+            ["delete-component COMPONENT-NAME [-y]", "# Delete component from service's node"],
+            ["set-attribute ATTRIBUTE-NAME [VALUE] [-u]", "# (Un)Set attribute value. The option -u will unset the attribute's value."],
             ["info", "# Return info about node instance belonging to given workspace."],
             ["start", "# Start node instance."],
             ["stop", "# Stop node instance."],
