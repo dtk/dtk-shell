@@ -70,6 +70,9 @@ module DTK
         data = [data] unless data.kind_of?(Array)
 
         data.each do |data_element|
+          # special flag to filter out data not needed here
+          next if data_element['dtk_client_hidden']
+
           structured_data << to_ostruct(data_element)
         end
 
@@ -88,7 +91,7 @@ module DTK
 
               if print_error_table && k.include?('error')
                 error_message = value_of(structured_element, v)
-                            
+
                 # here we see if there was an error if not we will skip this
                 # if so we add it to @error_data
 
@@ -108,11 +111,11 @@ module DTK
                   evaluated_element.send("#{k}=", error_index)
                   # we set new error element
                   error_element.id       = error_index
-                  if error_index.empty?  
-                    error_element.message = "[SERVER ERROR] " + error_message 
+                  if error_index.empty?
+                    error_element.message = "[SERVER ERROR] " + error_message
                   else
                     error_element.message = "[USER ERROR] " + error_message if error_type == "user_error"
-                    error_element.message = "[TEST ERROR] " + error_message if error_type == "test_error"  
+                    error_element.message = "[TEST ERROR] " + error_message if error_type == "test_error"
                   end
 
                   # add it with other
@@ -129,7 +132,7 @@ module DTK
                 # make sure when in development to disable this TODO: better solution needed
                 raise DTK::Client::DtkError,"Error with missing metadata occurred. There is a mistake in table metadata or unexpected data presented to table view."
               end
-            end 
+            end
           end
           @evaluated_data << evaluated_element
         end
@@ -178,12 +181,12 @@ module DTK
         unless (forced_metadata['order'].nil? || forced_metadata['mapping'].nil?)
           return if (forced_metadata['order'].class.eql?(Array) && forced_metadata['mapping'].class.eql?(Hash))
         end
-        
+
         raise DTK::Client::DtkError,"Provided table definition is not valid. Please review your order and mapping for provided definition: \n #{forced_metadata.inspect}"
       end
 
       def filter_remove_underscore(field)
-        
+
       end
 
       def print
@@ -196,7 +199,7 @@ module DTK
         unless @error_data.empty?
           printf "\nERRORS: \n\n"
           #table(@error_data,{:fields => [ :id, :message ]})
-          @error_data.each do |error_row| 
+          @error_data.each do |error_row|
             printf "%15s %s\n", error_row.id.colorize(:yellow), error_row.message.colorize(:red)
           end
         end
@@ -223,7 +226,7 @@ module DTK
         case
           when command.include?('map{')
             matched_data = command.match(/\['(.+)'\]/)
-            
+
             my_lambda = lambda{|_x| _x.map{|r|r["#{matched_data[1]}"]||[]}}
             value = my_lambda.call(value)
 
@@ -242,19 +245,19 @@ module DTK
             value = value.send('[]',params)
           when command.start_with?("list_")
             matched_data = command.match(/list_(.+)/)
-            
+
             my_lambda = lambda{|_x| _x.map{|r|r["#{matched_data[1]}"]||[]}}
             value = my_lambda.call(value)
 
             raise DTK::Client::DtkError,"There is a mistake in table metadata: #{command.inspect}" if value.nil?
           when command.start_with?("count_")
             matched_data = command.match(/count_(.+)/)
-            
+
             my_lambda = lambda{|_x| _x.map{|r|r["#{matched_data[1]}"]||[]}.flatten.size}
             value = my_lambda.call(value)
 
             raise DTK::Client::DtkError,"There is a mistake in table metadata: #{command.inspect}" if value.nil?
-          else 
+          else
             value = value.send(command)
         end
         return value

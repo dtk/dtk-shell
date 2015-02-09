@@ -18,8 +18,8 @@ module DTK::Shell
       @context_list = []
     end
 
-    def push_new_context(context_name, entity_name, context_value=nil)
-      @context_list << ContextEntity.create_context(context_name, entity_name, context_value)
+    def push_new_context(context_name, entity_name, context_value=nil, shadow_entity=nil)
+      @context_list << ContextEntity.create_context(context_name, entity_name, context_value, :id, shadow_entity)
     end
 
     def push_new_name_context(context_name, entity_name, context_value=nil)

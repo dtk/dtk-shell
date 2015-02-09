@@ -7,15 +7,7 @@ module DTK::Shell
 
     SHELL_SEPARATOR = '/'
 
-    def self.create_context(context_name, entity_name, context_value=nil, type_id=:id)
-      # DEBUG SNIPPET >>> REMOVE <<<
-      # require 'ap'
-      # ap "CREATE CONTEXT"
-      # ap context_name
-      # ap entity_name
-      # ap context_value
-      # ap type_id
-      # ap ">.............................................<"
+    def self.create_context(context_name, entity_name, context_value=nil, type_id=:id, shadow_entity=nil)
       if context_value
         if :id.eql?(type_id)
           return ContextEntity.create_identifier(context_name, entity_name, context_value)

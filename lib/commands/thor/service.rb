@@ -164,6 +164,11 @@ module DTK::Client
             ['stop', "stop", "# Stop node instance."],
             ['ssh', "ssh REMOTE-USER [-i PATH-TO-PEM]","# SSH into node, optional parameters are path to identity file."]
           ],
+          :node_group => [
+            ['start', "start", "# 2Start node instance."],
+            ['stop', "stop", "# 2Stop node instance."],
+            ['ssh', "ssh REMOTE-USER [-i PATH-TO-PEM]","# 2SSH into node, optional parameters are path to identity file."]
+          ],
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
             ['edit',"edit","# Edit component module related to given component."],

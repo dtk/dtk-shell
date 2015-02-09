@@ -69,6 +69,9 @@ class Thor
 
           active_context = @@shell_context.active_context
 
+          # DEBUG SNIPPET >>> REMOVE <<<
+          require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
+
           # first command we are using:
           # e.g. dtk:\assembly\assembly1\node\node123> => command would be :assembly
           command             = active_context.first_command_name.upcase

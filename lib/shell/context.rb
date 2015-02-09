@@ -351,7 +351,7 @@ module DTK
               break
             end
 
-            active_context_copy.push_new_context(context_hash_data[:name], command, context_hash_data[:identifier]) if ((i+1) >= ac_size)
+            active_context_copy.push_new_context(context_hash_data[:name], command, context_hash_data[:identifier], context_hash_data[:shadow_entity]) if ((i+1) >= ac_size)
           end
         end
 
