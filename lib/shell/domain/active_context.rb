@@ -155,5 +155,10 @@ module DTK::Shell
     def last_context()
       return @context_list.empty? ? nil : @context_list.last
     end
+
+    def last_context_is_shadow_entity?
+      return false if @context_list.empty?
+      !!last_context().shadow_entity
+    end
   end
 end

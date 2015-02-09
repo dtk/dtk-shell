@@ -181,11 +181,6 @@ module DTK::Client
           ]
         }
       }
-
-      if ::DTK::Configuration.get(:development_mode)
-        override_methods[:identifier_only][:node] << ['test-action-agent', "test-action-agent BASH-COMMAND-LINE", "Run bash command on test action agent"]
-      end
-
       return DTK::Shell::OverrideTasks.new(override_methods, [:utils])
     end
 

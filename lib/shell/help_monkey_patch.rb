@@ -69,9 +69,6 @@ class Thor
 
           active_context = @@shell_context.active_context
 
-          # DEBUG SNIPPET >>> REMOVE <<<
-          require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
-
           # first command we are using:
           # e.g. dtk:\assembly\assembly1\node\node123> => command would be :assembly
           command             = active_context.first_command_name.upcase
@@ -100,102 +97,107 @@ class Thor
           #
           override_tasks_obj = self.respond_to?(:override_allowed_methods) ? self.override_allowed_methods.dup : nil
 
+          shadow_list = ::DTK::Shell::ShadowEntity.resolve(active_context.last_context)
           # N-LEVEL-CONTEXT - context that has at least 2 commands and 1 or more identifiers
           # e.g. dtk:\assembly\assembly1\node>         THIS IS     N-LEVEL CONTEXT
           # e.g. dtk:\assembly\assembly1\node\node123> THIS IS     N-LEVEL CONTEXT
           # e.g. dtk:\assembly\assembly1>              THIS IS NOT N-LEVEL CONTEXT
           #
-          if (!active_context.is_n_context? || active_context.current_identifier?)
+          unless shadow_list
+            if (!active_context.is_n_context? || active_context.current_identifier?)
 
-            list.each do |help_item|
-              help_item.first.gsub!("^^", '') if help_item.first.include?("^^")
+              list.each do |help_item|
+                help_item.first.gsub!("^^", '') if help_item.first.include?("^^")
 
-              # this will match entity_name (command) and alternative identifiers
-              identifers = [command] + alt_identifiers
+                # this will match entity_name (command) and alternative identifiers
+                identifers = [command] + alt_identifiers
 
-              # matches identifiers for ID/NAME
-              matched_data          = help_item.first.match(/^\s\[?(#{identifers.join('|')}).?(NAME\/ID|ID\/NAME)\]?\s/)
-              alt_matched_data      = help_item.first.match(/^\s\[?(#{alt_identifiers.join('|')}).?(NAME\/ID|ID\/NAME)\]?\s/)
+                # matches identifiers for ID/NAME
+                matched_data          = help_item.first.match(/^\s\[?(#{identifers.join('|')}).?(NAME\/ID|ID\/NAME)\]?\s/)
+                alt_matched_data      = help_item.first.match(/^\s\[?(#{alt_identifiers.join('|')}).?(NAME\/ID|ID\/NAME)\]?\s/)
 
-              if matched_data.nil?
-                # not found and tier 1 we add it to help list
-                filtered_list << overriden_help(override_tasks_obj, help_item, true) if @@shell_context.current_command?
-              else
-                # for help we only care about first context name / identifier
-                if !is_there_identifier
-                  # if it contains [] it is optional and will be available on both tiers
-                  if matched_data[0].include?('[')
-                    # we remove it, since there is no need to use it
-                    help_item.first.gsub!(matched_data[0],' ') unless help_item.nil?
-                    filtered_list << overriden_help(override_tasks_obj, help_item, true)
-                  end
+                if matched_data.nil?
+                  # not found and tier 1 we add it to help list
+                  filtered_list << overriden_help(override_tasks_obj, help_item, true) if @@shell_context.current_command?
                 else
-                  # Adding alt identifiers here
-                  if alt_matched_data
-                    if active_context.current_alt_identifier?
-                      help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
-                      filtered_list << overriden_help(override_tasks_obj, help_item, false)
+                  # for help we only care about first context name / identifier
+                  if !is_there_identifier
+                    # if it contains [] it is optional and will be available on both tiers
+                    if matched_data[0].include?('[')
+                      # we remove it, since there is no need to use it
+                      help_item.first.gsub!(matched_data[0],' ') unless help_item.nil?
+                      filtered_list << overriden_help(override_tasks_obj, help_item, true)
                     end
                   else
-                    unless active_context.current_alt_identifier?
-                      help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
-                      filtered_list << overriden_help(override_tasks_obj, help_item, false)
+                    # Adding alt identifiers here
+                    if alt_matched_data
+                      if active_context.current_alt_identifier?
+                        help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
+                        filtered_list << overriden_help(override_tasks_obj, help_item, false)
+                      end
+                    else
+                      unless active_context.current_alt_identifier?
+                        help_item.first.gsub!(matched_data[0],'') unless help_item.nil?
+                        filtered_list << overriden_help(override_tasks_obj, help_item, false)
+                      end
                     end
                   end
                 end
               end
             end
-          end
 
-          # This will return commands that have identifiers
-          # e.g. dtk:\assembly\assembly1\node\node123> => ['assembly','node']
-          commands_that_have_identifiers =  active_context.commands_that_have_identifiers()
-          is_n_level_context             = active_context.command_list.size > 1
+            # This will return commands that have identifiers
+            # e.g. dtk:\assembly\assembly1\node\node123> => ['assembly','node']
+            commands_that_have_identifiers =  active_context.commands_that_have_identifiers()
+            is_n_level_context             = active_context.command_list.size > 1
 
-          # first one does not count
-          if is_n_level_context
-            # additional filter list for n-context
-            n_filter_list = []
-            # we do not need first one, since above code takes care of that one
-            filtered_list = filtered_list.select do |filtered_help_item|
-              #next unless filtered_help_item
-              unless commands_that_have_identifiers.empty?
-                commands_that_have_identifiers[1..-1].each_with_index do |entity,i|
-                  matched = match_help_item_changes(filtered_help_item, entity)
-                  filtered_help_item = replace_if_matched!(filtered_help_item, matched)
+            # first one does not count
+            if is_n_level_context
+              # additional filter list for n-context
+              n_filter_list = []
+              # we do not need first one, since above code takes care of that one
+              filtered_list = filtered_list.select do |filtered_help_item|
+                #next unless filtered_help_item
+                unless commands_that_have_identifiers.empty?
+                  commands_that_have_identifiers[1..-1].each_with_index do |entity,i|
+                    matched = match_help_item_changes(filtered_help_item, entity)
+                    filtered_help_item = replace_if_matched!(filtered_help_item, matched)
 
-                  # if it is last command, and there were changes
-                  if (i == (commands_that_have_identifiers.size - 2) && matched)
-                    n_filter_list << filtered_help_item
+                    # if it is last command, and there were changes
+                    if (i == (commands_that_have_identifiers.size - 2) && matched)
+                      n_filter_list << filtered_help_item
+                    end
                   end
                 end
               end
-            end
 
-            if override_tasks_obj && is_n_level_context
-              last_entity_name = active_context.last_context_entity_name.to_sym
+              if override_tasks_obj && is_n_level_context
+                last_entity_name = active_context.last_context_entity_name.to_sym
 
-              # we get commands task, and identifier tasks for given entity (e.g. :assembly)
-              command_o_tasks, identifier_o_tasks = override_tasks_obj.get_all_tasks(last_entity_name)
+                # we get commands task, and identifier tasks for given entity (e.g. :assembly)
+                command_o_tasks, identifier_o_tasks = override_tasks_obj.get_all_tasks(last_entity_name)
 
-              if active_context.current_identifier?
-                identifier_o_tasks.each do |o_task|
-                  n_filter_list << [o_task[1],o_task[2]]
-                end
-              else
-                command_o_tasks.each do |o_task|
-                  n_filter_list << [o_task[1],o_task[2]]
+                if active_context.current_identifier?
+                  identifier_o_tasks.each do |o_task|
+                    n_filter_list << [o_task[1],o_task[2]]
+                  end
+                else
+                  command_o_tasks.each do |o_task|
+                    n_filter_list << [o_task[1],o_task[2]]
+                  end
                 end
               end
+
+              # we have just filtered those methods that have attribute for given entity
+              # and also are last in the list
+              filtered_list = n_filter_list
             end
 
-            # we have just filtered those methods that have attribute for given entity
-            # and also are last in the list
-            filtered_list = n_filter_list
+            # remove double spaces
+            list = filtered_list.each { |e| e.first.gsub!(/  /,' ') }
+          else
+            list = shadow_list
           end
-
-          # remove double spaces
-          list = filtered_list.each { |e| e.first.gsub!(/  /,' ') }
         end
       else
         # no dtk-shell just dtk, we make sure that underscore is not used '_'

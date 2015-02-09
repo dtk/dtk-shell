@@ -512,8 +512,12 @@ module DTK
         # so getting context for 'public' will not work and we use than library
         command_name = root? ? 'dtk' : @active_context.last_command_name
 
-        # if there is no new context (current) we use old one
-        @current = current_context_task_names() || @current
+        if @active_context.last_context_is_shadow_entity?
+          @current = ShadowEntity.resolve_tasks(@active_context.last_context)
+        else
+          # if there is no new context (current) we use old one
+          @current = current_context_task_names() || @current
+        end
 
         client_commands = CLIENT_COMMANDS
         client_commands.concat(DEV_COMMANDS) if DTK::Configuration.get(:development_mode)
@@ -529,6 +533,7 @@ module DTK
 
         command_name_list = command_context ? command_context.collect { |e| e[:name] } : []
         @context_commands.concat(command_name_list) if current_command?
+
 
         # logic behind context loading
         #Readline.completer_word_break_characters=" "
