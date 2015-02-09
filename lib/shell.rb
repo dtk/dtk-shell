@@ -94,7 +94,9 @@ end
 def execute_shell_command(line, prompt)
    begin
     # remove single/double quotes from string because shellwords module is not able to parse it
-    line.gsub!(/['"]/, '')
+    if matched = line.scan(/['"]/)
+      line.gsub!(/['"]/, '') if matched.size.odd?
+    end
 
     # some special cases
     raise DTK::Shell::ExitSignal if line == 'exit'
