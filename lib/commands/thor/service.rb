@@ -334,6 +334,10 @@ TODO: will put in dot release and will rename to 'extend'
       task_status_aw_aux(context_params)
     end
 
+    desc "SERVICE-NAME/ID task-action-detail", "Get the task info of the running or last running service task."
+    def task_action_detail(context_params)
+      task_action_detail_aw_aux(context_params)
+    end
 
     desc "SERVICE-NAME/ID list-nodes","List nodes associated with service."
     def list_nodes(context_params)

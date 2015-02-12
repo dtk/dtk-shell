@@ -79,6 +79,7 @@ module DTK
         # we use array of OpenStruct to hold our evaluated values
         @evaluated_data = []
         @error_data     = []
+        @action_data    = []
         structured_data.each do |structured_element|
           evaluated_element = DtkOpenStruct.new
           error_element     = DtkOpenStruct.new
@@ -120,6 +121,29 @@ module DTK
 
                   # add it with other
                   @error_data << error_element
+                end
+              elsif k.include?('action')
+                error_message = value_of(structured_element, v)
+
+                # here we see if there was an error if not we will skip this
+                # if so we add it to @error_data
+
+                if error_message.empty?
+                  # no error message just add it as regular element
+                  evaluated_element.send("#{k}=",value_of(structured_element, v))
+                else
+                  error_index = "[ #{value_of(structured_element,'logs.label')} ]" || ""
+                  error_type = value_of(structured_element,'logs.dtk_type') || ""
+
+                  # original table takes that index
+                  evaluated_element.send("#{k}=", error_index)
+
+                  # we set new error element
+                  error_element.id      = error_index
+                  error_element.message = error_message
+
+                  # add it with other
+                  @action_data << error_element
                 end
               else
                 evaluated_element.send("#{k}=", value_of(structured_element, v))
@@ -201,6 +225,16 @@ module DTK
           #table(@error_data,{:fields => [ :id, :message ]})
           @error_data.each do |error_row|
             printf "%15s %s\n", error_row.id.colorize(:yellow), error_row.message.colorize(:red)
+          end
+        end
+
+        unless @action_data.empty?
+          printf " \n"
+          #table(@error_data,{:fields => [ :id, :message ]})
+          @action_data.each do |action_row|
+            # printf "%15s\n"
+            # printf("  INFO: #{action_row.message.colorize(:yellow)} \n") #, action_row.id.colorize(:yellow), action_row.message.colorize(:yellow)
+            printf "%15s %s\n", "INFO:".colorize(:yellow), action_row.message.colorize(:yellow)
           end
         end
       end

@@ -291,6 +291,16 @@ module DTK::Client
       response
     end
 
+    def task_action_detail_aw_aux(context_params)
+      assembly_or_workspace_id, message_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :option_1!], method_argument_names)
+      # response = task_status_aux(assembly_or_workspace_id,:assembly,options.wait?)
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :message_id => message_id
+      }
+      post rest_url("assembly/task_action_detail"), post_body
+    end
+
     def link_attributes_aux(context_params)
       assembly_id, target_attr_term, source_attr_term = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!],method_argument_names)
       post_body = {
