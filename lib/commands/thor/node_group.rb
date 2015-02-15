@@ -15,15 +15,6 @@ module DTK::Client
       return :node_group, "node_group/list", nil
     end
 
-    # desc "list","List Node groups"
-    # def list(context_params)
-    #   search_hash = SearchHash.new()
-    #   search_hash.cols = pretty_print_cols()
-    #   search_hash.filter = [:oneof, ":type", ["node_group_instance"]]
-    #   response = post rest_url("node_group/list"), search_hash.post_body_hash()
-    #   response.render_table(:node_group)
-    # end
-
     desc "NODE-GROUP-NAME/ID set ATTRIBUTE-ID VALUE", "Set node group attribute value"
     def set(context_params)
       node_group_id, attr_id, value = context_params.retrieve_arguments([:node_group_id!, :option_1!, :option_2!],method_argument_names)
@@ -69,7 +60,7 @@ module DTK::Client
       node_group_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       unless options.force?
         # Ask user if really want to delete node group, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to delete node group '#{node_group_id}'?")
+        return unless Console.confirmation_prompt("Are you sure you want to delete node group '#{node_group_id}'"+'?')
       end
 
       post_body = {:node_group_id => node_group_id}
@@ -188,23 +179,8 @@ module DTK::Client
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
       node_group_id = context_params.retrieve_arguments([:node_group_id!],method_argument_names)
-      task_status_aux(node_group_id,:node_group,options.wait?)
+      task_status_aux(node_group_id,:node_group,:wait => options.wait?)
     end
-
-    #TODO: may deprecate
-=begin
-    desc "set-profile NODE-GROUP-ID TEMPLATE-NODE-ID", "Set node group's default node template"
-    def set_profile(node_group_id,template_node_id)
-      post_body_hash = {:node_group_id => node_group_id, :template_node_id => template_node_id}
-      post rest_url("node_group/set_default_template_node"),post_body_hash
-    end
-
-    desc "add-template-node NODE-GROUP-ID", "Copy template node from library and add to node group"
-    def add_template_node(node_group_id)
-      post_body_hash = {:node_group_id => node_group_id}
-      post rest_url("node_group/clone_and_add_template_node"),post_body_hash
-    end
-=end
 
   end
 end

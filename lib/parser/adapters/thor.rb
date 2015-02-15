@@ -77,7 +77,7 @@ module DTK
             if action['wait_for_complete']
               entity_id, entity_type = action['wait_for_complete']['id'].to_s, action['wait_for_complete']['type']
               puts "Waiting for task to complete ..."
-              task_status_aux(entity_id,entity_type,true)
+              task_status_aux(entity_id,entity_type,:wait => true)
             end
           else
             # validation action are being skipped

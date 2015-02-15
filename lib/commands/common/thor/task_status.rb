@@ -1,18 +1,12 @@
 module DTK::Client
   module TaskStatusMixin
-      def task_status_aux(id,type,wait_flag)
-        id_field = "#{type}_id".to_sym
-        if wait_flag
+    def task_status_aux(id,type,opts={})
+        if opts[:wait]
           # there will be infinite loop until intereputed with CTRL+C
           begin
             response = nil
             loop do 
-              post_body = {
-                id_field => id,
-                :format => :table
-              }
-              response = post rest_url("#{type}/task_status"), post_body                                       
-
+              response = task_status_aux_post(id,type,opts)
               raise DTK::Client::DtkError, "[ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
 
               # stop pulling when top level task succeds, fails or timeout
@@ -57,11 +51,7 @@ module DTK::Client
             response.skip_render = true unless response.nil?
           end
         else
-          post_body = {
-            id_field => id,
-            :format => :table
-          }
-          response = post rest_url("#{type}/task_status"), post_body
+          response = task_status_aux_post(id,type,opts)
           response.print_error_table = true
           response.render_table(:task_status)
         end
@@ -79,6 +69,17 @@ module DTK::Client
            
         response.override_command_class("list_task")
         puts response.render_data
+      end
+
+     private
+      def task_status_aux_post(id,type,opts={})
+        id_field = "#{type}_id".to_sym
+        post_body_hash = {
+          id_field                => id,
+          :format                 => :table,
+          :summarize_node_groups? => opts[:summarize]
+        }
+        post rest_url("#{type}/task_status"), PostBody.new(post_body_hash)
       end
     end
 

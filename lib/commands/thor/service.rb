@@ -328,8 +328,9 @@ TODO: will put in dot release and will rename to 'extend'
     end
 =end
 
-    desc "SERVICE-NAME/ID task-status [--wait]", "Get the task status of the running or last running service task."
+    desc "SERVICE-NAME/ID task-status [--wait] [--summarize]", "Get the task status of the running or last running service task."
     method_option :wait, :type => :boolean, :default => false
+    method_option :summarize, :type => :boolean, :default => false, :aliases => '-s'
     def task_status(context_params)
       task_status_aw_aux(context_params)
     end

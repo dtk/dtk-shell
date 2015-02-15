@@ -10,7 +10,6 @@ module DTK
       end
     end
 
-    #TODO: probably move this
     class PostBody < Hash
       def initialize(raw={})
         super()

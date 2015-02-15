@@ -310,7 +310,7 @@ module DTK::Client
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
-      task_status_aux(node_id,:node,options.wait?)
+      task_status_aux(node_id,:node,:wait => options.wait?)
     end
 
     desc "NODE-NAME/ID list-task-info", "Task status details of running or last service task"
