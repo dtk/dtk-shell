@@ -231,10 +231,13 @@ module DTK
         unless @action_data.empty?
           printf " \n"
           #table(@error_data,{:fields => [ :id, :message ]})
+          printed = []
           @action_data.each do |action_row|
             # printf "%15s\n"
             # printf("  INFO: #{action_row.message.colorize(:yellow)} \n") #, action_row.id.colorize(:yellow), action_row.message.colorize(:yellow)
-            printf "%15s %s\n", "INFO:".colorize(:yellow), action_row.message.colorize(:yellow)
+            message = action_row.message
+            printf "%15s %s\n", "INFO:".colorize(:yellow), message.colorize(:yellow) unless printed.include?(message)
+            printed << message
           end
         end
       end
