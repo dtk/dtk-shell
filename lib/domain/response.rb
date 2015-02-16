@@ -52,17 +52,23 @@ module DTK
       end
 
       def get_label_for_column_name(column, type)
-        mappings = {
-          "#{type}_id:" => "ID:", 
-          "#{type}_name:" => "NAME:", 
-          "node_type:" => "TYPE:", 
-          "instance_id:" => "INSTANCE ID:",
-          "size:" => "SIZE:",
-          "os_type:" => "OS:",
-          "op_status:" => "OP STATUS:",
-          "dns_name:" => "DNS NAME:",
-          "target:" => "TARGET:"
-        }
+        if type.eql?('node')
+          mappings = {
+            column => column
+          }
+        else
+          mappings = {
+            "#{type}_id:" => "ID:",
+            "#{type}_name:" => "NAME:",
+            "node_type:" => "TYPE:",
+            "instance_id:" => "INSTANCE ID:",
+            "size:" => "SIZE:",
+            "os_type:" => "OS:",
+            "op_status:" => "OP STATUS:",
+            "dns_name:" => "DNS NAME:",
+            "target:" => "TARGET:"
+          }
+        end
         
         mappings[column]
       end
@@ -73,7 +79,7 @@ module DTK
         if type.eql?("component")
           info_list = ["component_name","component_id","basic_type","description"]
         else
-          info_list = ["node_id", "node_name","os_type", "instance_id", "op_status", "size", "target", "dns_name"]
+          info_list = ["type", "node_id", "node_name","os_type", "instance_id", "admin_op_status", "size", "target", "dns_name", "image_id", "ec2_public_address", "privete_dns_name", "keypair", "security_groups", "security_group", "security_group_set"]
         end
 
         columns = []
@@ -91,7 +97,13 @@ module DTK
           end
         end
 
-        columns.sort!()
+        if type.eql?('node')
+          # move target from first place
+          columns.rotate!
+        else
+          columns.sort!()
+        end
+
         columns.each do |column|
           STDOUT << column
         end 
