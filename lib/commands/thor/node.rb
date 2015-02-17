@@ -103,20 +103,26 @@ module DTK::Client
 
       # this I will fix to have more clear output
       data = response.data(:results)
-      datas = data.values.first['output']['output']
+
+      datas  = data.values.first['results']
+      errors = data.values.first['errors']
 
 
       datas.each do |data|
         OsUtil.print("Command: #{data['description']}, status: #{data['status']}", :yellow)
         if data['stdout'] && !data['stdout'].empty?
-          OsUtil.print("STDOUT OUTPUT ", :green)
           print data['stdout']
         end
 
         if data['stderr'] && !data['stderr'].empty?
-          OsUtil.print("STDERR OUTPUT ", :red)
           print data['stderr']
         end
+      end
+
+      if errors && !errors.empty?
+        puts; puts;
+        OsUtil.print('Some errors have been detected', :white)
+        errors.each_with_index { |err, index| OsUtil.print("#{index+1}. #{err}", :red) }
       end
 
 
