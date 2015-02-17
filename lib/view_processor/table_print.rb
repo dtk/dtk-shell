@@ -92,6 +92,7 @@ module DTK
 
               if print_error_table && k.include?('error')
                 error_message = value_of(structured_element, v)
+                server_error = nil
 
                 # here we see if there was an error if not we will skip this
                 # if so we add it to @error_data
@@ -103,16 +104,26 @@ module DTK
                   error_index = ""
                   error_type = value_of(structured_element,'errors.dtk_type') || ""
 
+                  if error_type.empty?
+                    val = value_of(structured_element,'dtk_type')||''
+                    # extract e.g. 3.1.1.1 from '3.1.1.1 action' etc.
+                    error_type = val.scan( /\d+[,.]\d?[,.]?\d?[,.]?\d?[,.]?\d?/ ).first
+                  end
+
                   # we set index for each message first => [ 1 ], second => [ 2 ], etc.
                   if error_type == "user_error" || error_type == "test_error"
                     error_index = "[ #{@error_data.size + 1} ]"
+                  else
+                    server_error = true
+                    error_index = error_type
                   end
 
                   # original table takes that index
                   evaluated_element.send("#{k}=", error_index)
                   # we set new error element
                   error_element.id       = error_index
-                  if error_index.empty?
+                  # if error_index.empty?
+                  if server_error
                     error_element.message = "[SERVER ERROR] " + error_message
                   else
                     error_element.message = "[USER ERROR] " + error_message if error_type == "user_error"
@@ -142,9 +153,6 @@ module DTK
                   error_element.id      = error_index
                   error_element.message = error_message
 
-                  table_defintion.delete('action')
-                  @order_definition.delete('action')
-
                   # add it with other
                   @action_data << error_element
                 end
@@ -161,6 +169,10 @@ module DTK
               end
             end
           end
+
+          @order_definition.delete('action')
+          @order_definition.delete('errors')
+
           @evaluated_data << evaluated_element
         end
       end
