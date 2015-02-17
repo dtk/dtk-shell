@@ -143,8 +143,12 @@ module DTK::Client
       response = info_aux(context_params)
 
       if response.ok?
-        node_info = response.data['nodes'].find { |n| node_id == n['node_id'] }
-        public_dns = node_info ? node_info['external_ref']['ec2_public_address'] : nil
+        node_info = {}
+        response.data['nodes'].each do |node|
+          properties = node.values.first['node_properties'] unless node.values.empty?
+          node_info = properties if node_id == properties['node_id']
+        end
+        public_dns = node_info ? node_info['ec2_public_address'] : nil
 
         raise ::DTK::Client::DtkError, "Not able to resolve instance address, has instance been stopped?" unless public_dns
 
