@@ -521,7 +521,6 @@ module DTK::Client
         assembly_template_location = "#{module_location}/assemblies/#{assembly_template_name}"
         base_file = "#{module_location}/assemblies/#{assembly_template_name}.dtk.assembly"
 
-        # Aldin: could not find better solution, leaving as is for now
         assembly_file_location =
           if File.exists?("#{base_file}.yaml")
             "#{base_file}.yaml"

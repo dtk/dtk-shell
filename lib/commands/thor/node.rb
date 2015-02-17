@@ -151,7 +151,7 @@ module DTK::Client
       if response.ok?
         node_info = {}
         response.data['nodes'].each do |node|
-          properties = node.values.first['node_properties'] unless node.values.empty?
+          properties = node['node_properties']
           node_info = properties if node_id == properties['node_id']
         end
         public_dns = node_info ? node_info['ec2_public_address'] : nil

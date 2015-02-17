@@ -142,6 +142,9 @@ module DTK
                   error_element.id      = error_index
                   error_element.message = error_message
 
+                  table_defintion.delete('action')
+                  @order_definition.delete('action')
+
                   # add it with other
                   @action_data << error_element
                 end
