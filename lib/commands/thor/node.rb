@@ -103,22 +103,21 @@ module DTK::Client
 
       # this I will fix to have more clear output
       data = response.data(:results)
-      data = data.values.first['output']
-      data = data.first
+      datas = data.values.first['output']['output']
 
-      # {"status"=>"ok", "data"=>{"is_complete"=>true, "results"=>{"2147560737"=>{"output"=>[{"
 
-      OsUtil.print("Status: #{data['status']}", :yellow)
-      if data['stdout'] && !data['stdout'].empty?
-        OsUtil.print("STDOUT OUTPUT ", :green)
-        print data['stdout']
+      datas.each do |data|
+        OsUtil.print("Command: #{data['description']}, status: #{data['status']}", :yellow)
+        if data['stdout'] && !data['stdout'].empty?
+          OsUtil.print("STDOUT OUTPUT ", :green)
+          print data['stdout']
+        end
+
+        if data['stderr'] && !data['stderr'].empty?
+          OsUtil.print("STDERR OUTPUT ", :red)
+          print data['stderr']
+        end
       end
-
-      if data['stderr'] && !data['stderr'].empty?
-        OsUtil.print("STDERR OUTPUT ", :red)
-        print data['stderr']
-      end
-
 
 
       return nil
