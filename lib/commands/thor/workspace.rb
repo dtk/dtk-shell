@@ -482,6 +482,10 @@ module DTK::Client
       task_status_aw_aux(context_params)
     end
 
+    desc "WORKSPACE-NAME/ID task-action-detail", "Get the task info of the running or last running workspace task."
+    def task_action_detail(context_params)
+      task_action_detail_aw_aux(context_params)
+    end
   end
 end
 
