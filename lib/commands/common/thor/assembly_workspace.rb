@@ -536,6 +536,9 @@ module DTK::Client
       assembly_or_workspace_id, node_id, component_id, attribute_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :node_id, :component_id, :attribute_id],method_argument_names)
       is_json_return = context_params.get_forwarded_options[:json_return] || false
 
+      # return only node group info if triggered from node group
+      is_node_group = true if context_params.shadow_entity_name == 'node_group'
+
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :node_id     => node_id,
@@ -545,6 +548,7 @@ module DTK::Client
         :json_return => is_json_return
       }
 
+      post_body.merge!(:only_node_group_info => true) if is_node_group
       resp = post rest_url("assembly/info"), post_body
 
       # if waiting for json response we do not need to render rest of data

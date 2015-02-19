@@ -152,6 +152,9 @@ module DTK::Shell
     def last_entity_name
       @current_context.last_context_entity_name
     end
+    def shadow_entity_name()
+      @current_context.shadow_entity()
+    end
 
     private
 
