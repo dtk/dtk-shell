@@ -104,30 +104,21 @@ module DTK
                   error_index = ""
                   error_type = value_of(structured_element,'errors.dtk_type') || ""
 
-                  if error_type.empty?
-                    val = value_of(structured_element,'dtk_type')||''
-                    # extract e.g. 3.1.1.1 from '3.1.1.1 action' etc.
-                    error_type = val.scan( /\d+[,.]\d?[,.]?\d?[,.]?\d?[,.]?\d?/ ).first
-                  end
-
-                  # we set index for each message first => [ 1 ], second => [ 2 ], etc.
-                  if error_type == "user_error" || error_type == "test_error"
-                    error_index = "[ #{@error_data.size + 1} ]"
-                  else
-                    server_error = true
-                    error_index = error_type
-                  end
+                  val = value_of(structured_element,'dtk_type')||''
+                  # extract e.g. 3.1.1.1 from '3.1.1.1 action' etc.
+                  error_index = "[ #{val.scan( /\d+[,.]\d?[,.]?\d?[,.]?\d?[,.]?\d?/ ).first} ]"
 
                   # original table takes that index
                   evaluated_element.send("#{k}=", error_index)
                   # we set new error element
-                  error_element.id       = error_index
-                  # if error_index.empty?
-                  if server_error
-                    error_element.message = "[SERVER ERROR] " + error_message
+                  error_element.id = error_index
+
+                  if error_type == "user_error"
+                    error_element.message = "[USER ERROR] " + error_message
+                  elsif error_type == "test_error"
+                    error_element.message = "[TEST ERROR] " + error_message
                   else
-                    error_element.message = "[USER ERROR] " + error_message if error_type == "user_error"
-                    error_element.message = "[TEST ERROR] " + error_message if error_type == "test_error"
+                    error_element.message = "[SERVER ERROR] " + error_message
                   end
 
                   # add it with other
