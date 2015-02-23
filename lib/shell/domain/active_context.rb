@@ -160,5 +160,10 @@ module DTK::Shell
       return false if @context_list.empty?
       !!last_context().shadow_entity
     end
+
+    def shadow_entity()
+      return if @context_list.empty?
+      last_context().shadow_entity
+    end
   end
 end

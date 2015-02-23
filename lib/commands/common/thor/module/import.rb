@@ -145,7 +145,18 @@ module DTK::Client
           :scaffold_if_no_dsl => true,
           "#{module_type}_id".to_sym => @module_id
         }
+
+        # For Rich: DTK-1925
+        # we need to send :update_from_includes that will be used on server in /Users/aldin/Reactor8/server/application/model/module/base_module/update_module.rb:111
+        #
+        # this line bellow
         post_body.merge!(:git_import => true) if git_import
+        # should be changed with this code:
+        # if git_import
+        #   post_body.merge!(:git_import => true)
+        # else
+        #   post_body.merge!(:update_from_includes => true)
+        # end
         response = post(rest_url("#{module_type}/update_from_initial_create"), post_body)
 
         unless response.ok?

@@ -198,9 +198,12 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "WORKSPACE-NAME/ID create-assembly [NAMESPACE:]SERVICE-MODULE-NAME ASSEMBLY-NAME [-p]", "Create a new assembly from the workspace instance in the designated service module."
+    desc "WORKSPACE-NAME/ID create-assembly [NAMESPACE:]SERVICE-MODULE-NAME ASSEMBLY-NAME [-p] [-m DESCRIPTION]", "Create a new assembly from the workspace instance in the designated service module."
    # The option -p will purge the workspace after assembly creation." 
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
+    method_option "description",:aliases => "-m" ,
+      :type => :string,
+      :banner => "DESCRIPTION"
     def create_assembly(context_params)
       workspace_id, service_module_full_name, assembly_template_name = context_params.retrieve_arguments([:workspace_id!,:option_1!,:option_2!],method_argument_names)
 
@@ -209,7 +212,9 @@ module DTK::Client
       return resp unless resp.ok?
       default_namespace = resp.data
 
-      response = promote_assembly_aux(:create,workspace_id,service_module_full_name,assembly_template_name,{:default_namespace=>default_namespace})
+      opts = {:default_namespace => default_namespace}
+      opts.merge!(:description => options.description) if options.description
+      response = promote_assembly_aux(:create,workspace_id,service_module_full_name,assembly_template_name,opts)
       return response unless response.ok?
 
       if options.purge?
@@ -482,6 +487,10 @@ module DTK::Client
       task_status_aw_aux(context_params)
     end
 
+    desc "WORKSPACE-NAME/ID task-action-detail", "Get the task info of the running or last running workspace task."
+    def task_action_detail(context_params)
+      task_action_detail_aw_aux(context_params)
+    end
   end
 end
 
