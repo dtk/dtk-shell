@@ -11,16 +11,16 @@ module DTK
 
       PP_LINE_HEAD  = '--------------------------------- DATA ---------------------------------'
       PP_LINE       = '------------------------------------------------------------------------'
-      INVALID_INPUT = Client::OsUtil.colorize(" Input is not valid.", :yellow)
+      INVALID_INPUT = Client::OsUtil.colorize(" Input is not valid. ", :yellow)
       EC2_REGIONS   = ['us-east-1','us-west-1','us-west-2','eu-west-1','sa-east-1','ap-northeast-1','ap-southeast-1','ap-southeast-2' ]
-      
+
 
       def initialize
       end
 
       def self.validate_region(region)
         unless EC2_REGIONS.include? region
-          raise ::DTK::Client::DtkValidationError.new("Region '#{region}' is not EC2 region, use one of: #{EC2_REGIONS.join(',')}") 
+          raise ::DTK::Client::DtkValidationError.new("Region '#{region}' is not EC2 region, use one of: #{EC2_REGIONS.join(',')}")
         end
       end
 
@@ -42,7 +42,7 @@ module DTK
                 validation = nil
               when :question
                 output = "#{metadata[:question]} (#{metadata[:options].join('|')}): "
-                validation = 
+                validation =
                 metadata[:options]
               when :selection
                 options = ""
@@ -90,7 +90,7 @@ module DTK
       end
 
 
-      def self.resolve_input(output, validation, is_required, is_recursion_call)
+      def self.resolve_input(output, validation, is_required, is_recursion_call=false)
         tab_prefix = is_recursion_call ? "\t" : ""
 
         # there was a bug within windows that does not support multiline input in readline method
@@ -100,10 +100,10 @@ module DTK
           puts prompt_input
           prompt_input = ">> "
         end
-        
+
         # while line = Readline.readline(prompt_input, true)
         #using 'ask' from highline gem to be able to hide input for key and secret
-        while line = ask("#{prompt_input}") { |q| q.echo = false}
+        while line = ask("#{prompt_input}") { |q| q.echo = true }
           if is_required && line.empty?
             puts INVALID_INPUT
             next
@@ -130,7 +130,7 @@ module DTK
             description =
               if param_info['display_name'] =~ Regexp.new(param_info['description'])
                 param_info['display_name']
-              else 
+              else
                 "#{param_info['display_name']} (#{param_info['description']})"
               end
             datatype_info = (param_info['datatype'] ? DTK::Client::OsUtil.colorize(" [#{param_info['datatype'].upcase}]", :yellow) : '')
@@ -143,7 +143,7 @@ module DTK
               checkup_hash[id] = {:value => line, :description => description}
               break
             end
-            
+
           end
 
           # pp print for provided parameters
@@ -152,14 +152,14 @@ module DTK
           # make sure this is satisfactory
           while line = Readline.readline("Is provided information ok? (yes|no) ", true)
             # start all over again
-            return resolve_missing_params(param_list) if 'no'.eql? line 
+            return resolve_missing_params(param_list) if 'no'.eql? line
             # continue with the code
             break if 'yes'.eql? line
           end
 
         rescue Interrupt => e
           puts
-          # TODO: Provide original error here 
+          # TODO: Provide original error here
           raise DTK::Client::DtkError, "You have decided to skip correction wizard."
         end
 
@@ -188,7 +188,7 @@ end
 =begin
     desc "create","Wizard that will guide you trough creation of target and target-template"
     def create(context_params)
-      
+
       # we get existing templates
       target_templates = post rest_url("target/list"), { :subtype => :template }
 
@@ -206,9 +206,9 @@ end
         # in case user has not selected template id we will needed information to create target
         wizard_params.concat([
           {:iaas_type       => { :type => :selection, :options => [:ec2] }},
-          {:aws_install     => { :type => :question, 
-                                 :question => "Do we have your permission to add necessery 'key-pair' and 'security-group' to your EC2 account?", 
-                                 :options => ["yes","no"], 
+          {:aws_install     => { :type => :question,
+                                 :question => "Do we have your permission to add necessery 'key-pair' and 'security-group' to your EC2 account?",
+                                 :options => ["yes","no"],
                                  :required_options => ["yes"],
                                  :explanation => "This permission is necessary for creation of a custom target."
                                 }},

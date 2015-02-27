@@ -22,7 +22,7 @@ PULL_CATALOGS = ["dtkn"]
 module DTK::Client
   class CommonModule
     dtk_require_common_commands('thor/module/import')
-    
+
     def initialize(command,context_params)
       @command        = command
       @context_params = context_params
@@ -374,12 +374,12 @@ module DTK::Client
 
     def make_public_module_aux(context_params)
       module_id = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
-      chmod_aux(module_id, "o+r", options.namespace)
+      chmod_aux(module_id, "o+r", options.namespace, :make_public)
     end
 
     def make_private_module_aux(context_params)
       module_id = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
-      chmod_aux(module_id, "o-rwd", options.namespace)
+      chmod_aux(module_id, "o-rwd", options.namespace, :make_private)
     end
 
     def add_collaborators_module_aux(context_params)
