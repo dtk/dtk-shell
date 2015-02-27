@@ -442,7 +442,7 @@ module DTK::Client
 #      if catalog.to_s.eql?("origin")
 #        push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
       if catalog.to_s.eql?("dtkn")
-        module_refs_content = RemoteDependencyUtil.module_ref_content(module_location) if module_type == 'service_module'
+        module_refs_content = RemoteDependencyUtil.module_ref_content(module_location)
         remote_module_info  = get_remote_module_info_aux(module_type.to_sym, module_id, options["namespace"], version, module_refs_content, local_namespace)
         return remote_module_info unless remote_module_info.ok?
 
