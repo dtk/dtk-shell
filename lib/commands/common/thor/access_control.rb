@@ -18,7 +18,7 @@ module DTK::Client
       else
         # in case there are dependencies
         main_module_name = response.data(:main_module)['full_name']
-        puts "Module '#{main_module_name}' has dependencies that are not public: "
+        puts "Main module '#{main_module_name}' has dependencies that are not public: "
         unless response.data(:missing_modules).empty?
           missing = response.data(:missing_modules).collect { |a| a['full_name'] }
           OsUtil.print("  These modules are missing on repository: #{missing.join(', ')}", :red)
@@ -33,15 +33,15 @@ module DTK::Client
         end
 
         puts "How should we resolve these dependencies: "
-        input = ::DTK::Shell::InteractiveWizard.resolve_input("All (P)ublic / (O)ne Public / (A)bort", ['P','A','O'], true)
-        if 'A'.eql?(input)
+        input = ::DTK::Shell::InteractiveWizard.resolve_input("(A)ll / (M)ain Module / (N)one ", ['M','A','N'], true)
+        if 'N'.eql?(input)
           return nil
         else
           puts "Sending input information ... "
           post_body = {
             :module_id     => module_id,
             :module_info   => response.data,
-            :public_action => 'P'.eql?(input) ? :all : :one,
+            :public_action => 'A'.eql?(input) ? :all : :one,
             :rsa_pub_key   => SSHUtil.rsa_pub_key_content(),
             :remote_module_namespace => namespace
           }
