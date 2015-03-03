@@ -28,8 +28,18 @@ module DTK::Client
           OsUtil.print("  You cannot change permissions for dependencies: #{no_permission.join(', ')}", :yellow)
         end
         unless response.data(:with_permission).empty?
-          with_permission = response.data(:with_permission).collect { |a| a['full_name'] }
-          OsUtil.print("  You can change permissions for dependencies: #{with_permission.join(', ')}", :white)
+          with_permission = response.data(:with_permission)
+          with_permission_names = with_permission.collect { |a| a['full_name'] }
+          OsUtil.print("  You can change permissions for dependencies: #{with_permission_names.join(', ')}", :white)
+
+          # fix for bug in comments for DTK-1959
+          # need to send hash instead of array to be able to parse properly in rest_request_params
+          with_permission_hash = {}
+          with_permission.each do |wp|
+            with_permission_hash.merge!("#{wp['name']}" => wp)
+          end
+
+          response.data["with_permission"] = with_permission_hash
         end
 
         puts "How should we resolve these dependencies: "
