@@ -143,6 +143,10 @@ module DTK::Client
         unless File.exists?(identity_file_location)
           raise ::DTK::Client::DtkError, "Not able to find identity file, '#{identity_file_location}'"
         end
+      elsif default_identity_file = OsUtil.dtk_identity_file_location()
+        if File.exists?(default_identity_file)
+          identity_file_location = default_identity_file
+        end
       end
 
       context_params.forward_options({ :json_return => true })
@@ -160,8 +164,7 @@ module DTK::Client
 
         connection_string = "#{remote_user}@#{public_dns}"
 
-        default_identity_file = OsUtil.dtk_identity_file_location()
-
+ 
         ssh_command = nil
 
         if identity_file_location
@@ -170,11 +173,6 @@ module DTK::Client
         elsif SSHUtil.ssh_reachable?(remote_user, public_dns)
           # it has PUB key access
           ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" #{connection_string}"
-        else
-          # using default identity_file
-          if default_identity_file
-            ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{default_identity_file} #{connection_string}"
-          end
         end
 
         raise ::DTK::Client::DtkError, "No public key access or PEM provided, please grant access or provide valid PEM key" if ssh_command.nil?
