@@ -674,6 +674,17 @@ module DTK::Client
       post rest_url("assembly/add_node"), post_body
     end
 
+    def create_node_group_aux(context_params)
+      assembly_or_workspace_id, node_group_name, node_template_identifier = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!,:option_2!],method_argument_names)
+      post_body = {
+        :assembly_id              => assembly_or_workspace_id,
+        :cardinality              => options.cardinality,
+        :node_group_name       => node_group_name,
+        :node_template_identifier => node_template_identifier
+      }
+      post rest_url("assembly/add_node_group"), post_body
+    end
+
     def purge_aux(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       unless options.force?

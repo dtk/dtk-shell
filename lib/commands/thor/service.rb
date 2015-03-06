@@ -73,6 +73,7 @@ module DTK::Client
         :context => {
           :add_component => "component_template",
           :create_node => "node_template",
+          :create_node_group => "node_template",
           :add_component_dependency => "component_template"
         },
         :command => {
@@ -618,6 +619,23 @@ TODO: will put in dot release and will rename to 'extend'
       @@invalidate_map << :workspace_node
 
       message = "Created node '#{response.data["display_name"]}'."
+      DTK::Client::OsUtil.print(message, :yellow)
+    end
+
+    desc "SERVICE-NAME/ID create-node-group ^^NODE-GROUP-NAME NODE-TEMPLATE [-n CARDINALITY]", "Add (stage) a new node group in the service."
+    method_option :cardinality, :aliases => '-n', :type => :string, :default => 1
+    def create_node_group(context_params)
+      response = create_node_group_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      @@invalidate_map << :workspace
+      @@invalidate_map << :workspace_node
+
+      message = "Created node group '#{response.data["display_name"]}'."
       DTK::Client::OsUtil.print(message, :yellow)
     end
 
