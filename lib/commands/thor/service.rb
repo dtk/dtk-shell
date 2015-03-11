@@ -271,6 +271,13 @@ module DTK::Client
       Response::Ok.new()
     end
 
+    desc "SERVICE-NAME/ID pull-base-component-module COMPONENT-MODULE-NAME [--force] [--revert]", "Pull base component module changes to component module in the service"
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    method_option :revert, :type => :boolean, :default => false, :aliases => '-r'
+    def pull_base_component_module(context_params)
+      pull_base_component_module_aux(context_params)
+    end
+
     desc "SERVICE-NAME/ID push-component-module-updates COMPONENT-MODULE-NAME [--force]", "Push changes made to a component module in the service to its base component module."
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def push_component_module_updates(context_params)
