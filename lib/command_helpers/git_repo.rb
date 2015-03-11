@@ -135,7 +135,7 @@ module DTK; module Client; class CommandHelper
     # :namespace
     def local_clone_dir_exists?(type,module_name,opts={})
       full_module_name = full_module_name(module_name,opts)
-      ret = local_repo_dir(type,full_module_name,opts[:version])
+      ret = local_repo_dir(type, full_module_name, opts[:version], opts)
       File.directory?(ret) && ret
     end
 
@@ -405,10 +405,11 @@ module DTK; module Client; class CommandHelper
 
     def pull_repo_changes_aux(repo,opts={})
       diffs = DiffSummary.new()
+      hard_reset = opts[:hard_reset]
 
       if commit_sha = opts[:commit_sha]
         #no op if at commit_sha
-        return diffs if commit_sha == repo.head_commit_sha()
+        return diffs if (commit_sha == repo.head_commit_sha()) && !hard_reset
       end
 
       if opts[:remote_repo] and opts[:remote_repo_url]
@@ -416,24 +417,24 @@ module DTK; module Client; class CommandHelper
       end
 
       repo.fetch(remote(opts[:remote_repo]))
+      # default commit in case it is needed
+      repo.stage_and_commit("Commit prior to pull from remote") if repo.changed?
 
       local_branch = repo.local_branch_name
       remote_branch_ref = remote_branch_ref(local_branch,opts)
 
-      if opts[:hard_reset]
+      if hard_reset
         diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
         repo.merge_theirs(remote_branch_ref)
         return({:diffs => diffs, :commit_sha => repo.head_commit_sha()})
       end
-
-      # default commit in case it is needed
-      repo.stage_and_commit("Commit prior to pull from remote") if repo.changed?
 
       #check if merge needed
       merge_rel = repo.merge_relationship(:remote_branch,remote_branch_ref)
       if merge_rel == :equal
         { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif [:branchpoint,:local_ahead].include?(merge_rel)
+        raise ErrorUsage.new("Unable to do fast-forward merge. You can use --force but all changes in the service instance will be lost") unless opts[:force]
         # TODO: right now just wiping out what is in repo
         diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
         repo.merge_theirs(remote_branch_ref)

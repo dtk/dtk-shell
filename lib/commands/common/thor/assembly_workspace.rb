@@ -265,6 +265,43 @@ module DTK::Client
       Response::Ok.new()
     end
 
+    def pull_base_component_module_aux(context_params)
+      assembly_or_workspace_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :module_name => component_module_name,
+        :module_type => 'component_module'
+      }
+      post_body.merge!(:force => true) if options.force?
+      response = post(rest_url("assembly/get_component_module_info"),post_body)
+      return response unless response.ok?
+
+      if dsl_parsing_errors = response.data(:dsl_parsing_errors)
+        error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors using 'edit' command from module context and invoke promote-module-updates again.\n"
+        OsUtil.print(error_message, :red)
+        return Response::Error.new()
+      end
+
+      assembly_name, module_name, version, base_module_branch, branch_head_sha, local_branch, namespace = response.data(:assembly_name, :full_module_name, :version, :workspace_branch, :branch_head_sha, :local_branch, :module_namespace)
+      edit_opts = {
+        :assembly_module => {
+          :assembly_name => assembly_name,
+          :version => version
+        },
+        :remote_branch => base_module_branch,
+        :commit_sha    => branch_head_sha,
+        :full_module_name => module_name
+      }
+      opts = {:local_branch => local_branch, :namespace => namespace}
+
+      opts.merge!(:hard_reset => true) if options.revert?
+      opts.merge!(:force => true) if options.force?
+
+      response = Helper(:git_repo).pull_changes?(:component_module, module_name, edit_opts.merge!(opts))
+      return response unless response.ok?()
+      Response::Ok.new()
+    end
+
     def workflow_info_aux(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       post_body = {

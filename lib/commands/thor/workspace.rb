@@ -184,6 +184,13 @@ module DTK::Client
       push_module_updates_aux(context_params)
     end
 
+    desc "SERVICE-NAME/ID pull-base-component-module COMPONENT-MODULE-NAME [--force] [--revert]", "Pull base component module changes to component module in the service"
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    method_option :revert, :type => :boolean, :default => false, :aliases => '-r'
+    def pull_base_component_module(context_params)
+      pull_base_component_module_aux(context_params)
+    end
+
     desc "WORKSPACE-NAME/ID push-assembly-updates [NAMESPACE:]SERVICE-MODULE-NAME/ASSEMBLY-NAME", "Push changes made to this workspace to the designated assembly."
     def push_assembly_updates(context_params)
       workspace_id, qualified_assembly_name = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names) 
