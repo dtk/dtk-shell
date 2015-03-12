@@ -438,6 +438,9 @@ module DTK; module Client; class CommandHelper
       diffs = DiffSummary.new()
       hard_reset = opts[:hard_reset]
 
+      # default commit in case it is needed
+      repo.stage_and_commit("Commit prior to pull from remote") if repo.changed?
+
       if commit_sha = opts[:commit_sha]
         #no op if at commit_sha
         return diffs if (commit_sha == repo.head_commit_sha()) && !hard_reset
@@ -448,9 +451,6 @@ module DTK; module Client; class CommandHelper
       end
 
       repo.fetch(remote(opts[:remote_repo]))
-      # default commit in case it is needed
-      repo.stage_and_commit("Commit prior to pull from remote") if repo.changed?
-
       local_branch = repo.local_branch_name
       remote_branch_ref = remote_branch_ref(local_branch,opts)
 
