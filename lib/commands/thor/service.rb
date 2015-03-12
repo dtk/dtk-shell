@@ -94,6 +94,11 @@ module DTK::Client
           :delete_node_group => {
             :endpoint => "assembly",
             :url => "assembly/get_node_groups"
+          },
+          :pull_base_component_module => {
+            :endpoint => "assembly",
+            :url => "assembly/info_about",
+            :opts => {:subtype=>"instance", :about=>"modules"}
           }
         }
       }
