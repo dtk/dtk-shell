@@ -90,6 +90,11 @@ module DTK::Client
             :endpoint => "assembly",
             :url => "assembly/info_about",
             :opts => {:subtype=>"instance", :about=>"nodes"}
+          },
+          :pull_base_component_module => {
+            :endpoint => "assembly",
+            :url => "assembly/info_about",
+            :opts => {:subtype=>"instance", :about=>"modules"}
           }
         }
       }

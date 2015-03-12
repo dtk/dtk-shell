@@ -66,6 +66,11 @@ module DTK::Client
             :endpoint => "assembly",
             :url => "assembly/info_about",
             :opts => {:subtype=>"instance", :about=>"nodes"}
+          },
+          :pull_base_component_module => {
+            :endpoint => "assembly",
+            :url => "assembly/info_about",
+            :opts => {:subtype=>"instance", :about=>"modules"}
           }
         }
       }
@@ -184,7 +189,7 @@ module DTK::Client
       push_module_updates_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID pull-base-component-module COMPONENT-MODULE-NAME [--force] [--revert]", "Pull base component module changes to component module in the service"
+    desc "WORKSPACE-NAME/ID pull-base-component-module COMPONENT-MODULE-NAME [--force] [--revert]", "Pull base component module changes to component module in workspace"
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     method_option :revert, :type => :boolean, :default => false, :aliases => '-r'
     def pull_base_component_module(context_params)
