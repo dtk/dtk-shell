@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require File.expand_path('../lib/client', File.dirname(__FILE__))
+require File.expand_path('../lib/execute', File.dirname(__FILE__))
+require File.expand_path('../lib/configurator', File.dirname(__FILE__))
+
+include DTK::Client
+
+Configurator.check_config_exists
+
+# if connection parameters are not set up properly, print warning and exit dtk_shell
+conn = Session.get_connection()
+exit if validate_connection(conn)
+
+Execute.test()
