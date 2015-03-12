@@ -236,6 +236,8 @@ module DTK::Client
       Response::Ok.new()
     end
 
+    # TODO: DTK-1986 introduces the hidden optional terms [WORKFLOW-ACTION [WORKFLOW-PARAMS]]
+    # desc "SERVICE-NAME/ID converge [-m COMMIT-MSG] [WORKFLOW-ACTION [WORKFLOW-PARAMS]]", "Converge service instance."
     desc "SERVICE-NAME/ID converge [-m COMMIT-MSG]", "Converge service instance."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,

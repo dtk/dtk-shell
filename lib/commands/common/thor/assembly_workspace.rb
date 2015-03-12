@@ -110,7 +110,18 @@ module DTK::Client
     end
 
     def converge_aux(context_params)
-      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
+      assembly_or_workspace_id,task_action,task_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1,:option_2],method_argument_names)
+      
+      task_params = nil
+      if task_params_string
+        task_params = task_params_string.split(',').inject(Hash.new) do |h,av|
+          av_split = av.split('=')
+          unless av_split.size == 2
+            raise DTK::Client::DtkValidationError, "The task parameters (#{task_params_string}) is ill-formed"
+          end
+          h.merge(av_split[0] => av_split[1])
+        end
+      end
 
       post_body = {
         :assembly_id => assembly_or_workspace_id
@@ -126,6 +137,8 @@ module DTK::Client
       end
 
       post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
+      post_body.merge!(:task_action => task_action) if task_action
+      post_body.merge!(:task_params => task_params) if task_params
 
       response = post rest_url("assembly/create_task"), post_body
       return response unless response.ok?
