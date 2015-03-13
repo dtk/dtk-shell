@@ -1,14 +1,15 @@
 class DTK::Client::Execute
   class Iterate
     class ResultStore < Hash
-      def self.default_var
+      def store_result(result,result_var=nil)
+        self[result_var||default_var()] = result
+      end
+      
+     private
+      def default_var
         DefaultVar
       end
       DefaultVar = :result
-
-      def store_result(result,result_var)
-        self[result_var] = result
-      end
     end
   end
 end

@@ -13,7 +13,7 @@ class DTK::Client::Execute
     def iterate_over_script(commands)
       Array(commands).each do |command|
         result = CommandProcessor.execute(command) 
-        pp(:command => command, :result => result)
+        pp(:command => command.input_hash, :result => result)
         @result_store.store_result(result,command.result_var)
       end
     end
