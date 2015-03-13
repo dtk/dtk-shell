@@ -282,11 +282,17 @@ module DTK::Client
         return Response::Error.new()
       end
 
-      assembly_name, module_name, version, base_module_branch, branch_head_sha, local_branch, namespace = response.data(:assembly_name, :full_module_name, :version, :workspace_branch, :branch_head_sha, :local_branch, :module_namespace)
+      assembly_name, module_id, module_name, version, base_module_branch, branch_head_sha, local_branch, namespace, repo_url = response.data(:assembly_name, :module_id, :full_module_name, :version, :workspace_branch, :branch_head_sha, :local_branch, :module_namespace, :repo_url)
       edit_opts = {
         :assembly_module => {
           :assembly_name => assembly_name,
           :version => version
+        },
+        :workspace_branch_info => {
+          :repo_url => repo_url,
+          :branch => local_branch,
+          :module_name => module_name,
+          :commit_sha  => branch_head_sha
         },
         :remote_branch => base_module_branch,
         :commit_sha    => branch_head_sha,
@@ -299,6 +305,11 @@ module DTK::Client
 
       response = Helper(:git_repo).pull_changes?(:component_module, module_name, edit_opts.merge!(opts))
       return response unless response.ok?()
+
+      edit_opts.merge!(:force_parse => true, :update_from_includes => true, :print_dependencies => true)
+      response = push_clone_changes_aux(:component_module, module_id, nil, "Pull base mogule updates", true, edit_opts)
+      return response unless response.ok?()
+      
       Response::Ok.new()
     end
 
