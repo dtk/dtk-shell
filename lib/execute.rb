@@ -3,6 +3,7 @@ module DTK::Client
     # The order matters
     dtk_require('execute/error_usage')
     dtk_require('execute/command')
+    dtk_require('execute/command_processor')
     dtk_require('execute/iterate')
 
     def self.test()
