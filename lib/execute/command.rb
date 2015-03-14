@@ -1,7 +1,7 @@
 class DTK::Client::Execute
   class Command
     dtk_require('command/rest_call')
-#    dtk_require('command/set_variable')
+    dtk_require('command/api_call')
 
     attr_reader :result_var,:input_hash
     def initialize(hash)

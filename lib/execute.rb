@@ -9,14 +9,22 @@ module DTK::Client
 
     extend ExecuteContext::ClassMixin
     def self.test()
-      node_id = 2147498350
+      ExecuteContext(:print_results => true) do
+        result = call 'service/add_component',
+          :assembly_id           => 'dtkhost5',
+          :node_id               => 'server', 
+          :component_template_id => 'dtk_tenant[dtk529]'
+      end
+    end
+
+    def self.test2()
       ExecuteContext(:print_results => true) do
 
         # add component; we want to modify so there is a flag that allows this to be idemponent and another one to indicate not to add to base workflow 
-        result = post 'assembly/add_component',
+        result = post_rest_call 'assembly/add_component',
           :assembly_id           => 'dtkhost5',
           :subtype               => 'instance',
-          :node_id               => node_id,
+          :node_id               => 'server', 
           :component_template_id => 'dtk_tenant[dtk529]'
       end
     end
