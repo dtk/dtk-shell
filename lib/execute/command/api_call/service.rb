@@ -13,8 +13,9 @@ class DTK::Client::Execute
             :assembly_id           => Equal::Required,
             :subtype               => 'instance',
             :node_id               => Equal::Required,
-            :component_template_id => Equal::Required
-
+            :component_template_id => Equal::Required,
+            :idempotent            => Equal::OrDefault(true),
+            :donot_update_workflow => Equal::OrDefault(false)
           }
         )
       }

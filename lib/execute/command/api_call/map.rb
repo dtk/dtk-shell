@@ -17,24 +17,14 @@ class DTK::Client::Execute
      private
       def translate_to_rest_body(api_params)
         body().inject(Hash.new) do |h,(k,v)|
-          unless TranslationTerm.matches?(v)
-            # this is a constant
-            h.merge(k => v)
-          else
-            processed = false
-            processed_v = nil 
-            if Equal.matches?(v)
-              processed = true
-              if Equal::Required.matches?(v) and !api_params.has_key?(k)
-                raise ErrorUsage.new("Missing key '#{k}' in params: #{api_params.ispect}")
-              end
-              processed_v = api_params[k]
+          # if TranslationTerm.matches is false then v is a constant
+          processed_v = 
+            if TranslationTerm.matches?(v)
+              v.instance_form().translate(k,api_params)
+            else 
+              v
             end
-            unless processed
-              raise "Cannot Process in '#{self.class}': key=#{k}; value=#{v.inspect}" 
-            end
-            h.merge(k => processed_v)
-          end
+          h.merge(k => processed_v)
         end
       end
 
