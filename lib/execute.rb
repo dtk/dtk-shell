@@ -8,16 +8,17 @@ module DTK::Client
 #    dtk_require('execute/iterate')
 
     extend ExecuteContext::ClassMixin
-    def self.test()
+    def self.test(component_template_id)
       ExecuteContext(:print_results => true) do
         result = call 'service/add_component',
           :assembly_id           => 'dtkhost5',
           :node_id               => 'server', 
-          :component_template_id => 'dtk_tenant[dtk529]'
+          :component_template_id => component_template_id,
+          :donot_update_workflow => true
       end
     end
 
-    def self.test2()
+    def self.test2(component_template_id)
       ExecuteContext(:print_results => true) do
 
         # add component; we want to modify so there is a flag that allows this to be idemponent and another one to indicate not to add to base workflow 
@@ -25,7 +26,8 @@ module DTK::Client
           :assembly_id           => 'dtkhost5',
           :subtype               => 'instance',
           :node_id               => 'server', 
-          :component_template_id => 'dtk_tenant[dtk529]'
+          :component_template_id => component_template_id,
+          :donot_update_workflow => true
       end
     end
   end

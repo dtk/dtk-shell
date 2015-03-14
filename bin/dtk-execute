@@ -12,4 +12,5 @@ Configurator.check_config_exists
 conn = Session.get_connection()
 exit if validate_connection(conn)
 
-Execute.test()
+component_template_id = (ARGV.size > 0 ? "dtk_tenant[#{ARGV[0]}]" : "dtk_tenant[dtk529]")
+Execute.test(component_template_id)
