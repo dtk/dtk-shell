@@ -298,7 +298,7 @@ module DTK::Client
         return Response::Error.new()
       end
 
-      assembly_name, module_id, module_name, version, base_module_branch, branch_head_sha, local_branch, namespace, repo_url = response.data(:assembly_name, :module_id, :full_module_name, :version, :workspace_branch, :branch_head_sha, :local_branch, :module_namespace, :repo_url)
+      assembly_name, module_id, module_name, version, base_module_branch, branch_head_sha, local_branch, namespace, repo_url, current_branch_sha = response.data(:assembly_name, :module_id, :full_module_name, :version, :workspace_branch, :branch_head_sha, :local_branch, :module_namespace, :repo_url, :current_branch_sha)
       edit_opts = {
         :assembly_module => {
           :assembly_name => assembly_name,
@@ -312,6 +312,7 @@ module DTK::Client
         },
         :remote_branch => base_module_branch,
         :commit_sha    => branch_head_sha,
+        :current_branch_sha => current_branch_sha,
         :full_module_name => module_name
       }
       opts = {:local_branch => local_branch, :namespace => namespace}
