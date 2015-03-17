@@ -24,6 +24,12 @@ class DTK::Client::Execute
         :attribute_path => "#{node}/#{component}/catalog_user_name",
         :value          => catalog_user_name
 
+      ['dtk_postgresql::databases'].each do |shared_service_component|
+        result = call 'service/link_components',
+          :service          => service,
+          :input_component  => "#{node}/#{component}",
+          :output_component => "#{node}/#{shared_service_component}"
+      end
 
     end
   end

@@ -36,6 +36,16 @@ class DTK::Client::Execute
           }
         ),
 
+        :link_components => Map.new(
+          :type => Rest::Post,                             
+          :path => 'assembly/add_service_link',
+          :body => {
+            :assembly_id         => Required(:service),
+            :input_component_id  => Required(:input_component),
+            :output_component_id => Required(:output_component),
+          }
+        ),
+
 
       }
 
