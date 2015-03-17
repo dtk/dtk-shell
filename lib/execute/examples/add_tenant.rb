@@ -4,6 +4,8 @@ class DTK::Client::Execute
     component = "dtk_tenant[#{tenant_name}]"
     service = 'dtkhost5'
     node = 'server'
+    tenant_password = params[:tenant_password] || 'foo'
+    catalog_user_name = params[:catalog_user_name] || tenant_name
 
     ExecuteContext(:print_results => true) do
       result = call 'service/add_component',
@@ -15,7 +17,13 @@ class DTK::Client::Execute
       result = call 'service/set_attribute',
         :service        => service,
         :attribute_path => "#{node}/#{component}/tenant_password",
-        :value          => params[:tenant_password] || 'foo'
+        :value          => tenant_password
+
+      result = call 'service/set_attribute',
+        :service        => service,
+        :attribute_path => "#{node}/#{component}/catalog_user_name",
+        :value          => catalog_user_name
+
 
     end
   end
