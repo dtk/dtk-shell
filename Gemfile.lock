@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dtk-client (0.7.0)
+    dtk-client (0.7.1)
       awesome_print (= 1.1.0)
       bundler (>= 1.2.4)
       colorize (~> 0.5.8)
