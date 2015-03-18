@@ -6,21 +6,21 @@ class DTK::Client::Execute
         replace(hash)
       end
 
-      def translate(api_params={})
+      def translate(api_params={},opts={})
         if Rest::Post.matches?(type())
-          Command::RestCall::Post.new(:path => path(),:body => translate_to_rest_body(api_params))
+          Command::RestCall::Post.new(:path => path(),:body => translate_to_rest_body(api_params,opts))
         else
           raise "Type in following map is not defined not defined: #{self.inspect}"
         end
       end
 
      private
-      def translate_to_rest_body(api_params)
+      def translate_to_rest_body(api_params,opts)
         body().inject(Hash.new) do |h,(k,v)|
           # if TranslationTerm.matches is false then v is a constant
           processed_v = 
             if TranslationTerm.matches?(v)
-              v.instance_form().translate(k,api_params)
+              v.instance_form().translate(k,api_params,opts)
             else 
               v
             end

@@ -50,7 +50,7 @@ class DTK::Client::Execute
         @input = input_key
       end
 
-      def translate(key,api_params)
+      def translate(key,api_params,opts={})
         index_required(api_params,@input||key)
       end
 
@@ -59,12 +59,12 @@ class DTK::Client::Execute
     end
 
     class Equal < TranslationTerm::Param
-      def translate(key,api_params)
+      def translate(key,api_params,opts={})
         index(api_params,key)
       end
 
       class Required < self
-        def translate(key,api_params)
+        def translate(key,api_params,opts={})
           index_required(api_params,key)
         end
       end
@@ -77,7 +77,7 @@ class DTK::Client::Execute
         def initialize(default_value)
           @default_value = default_value
         end
-        def translate(key,api_params)
+        def translate(key,api_params,opts={})
           has_key?(api_params,key) ? index(api_params,key) : @default_value
         end
       end
@@ -86,6 +86,16 @@ class DTK::Client::Execute
     class PreviousResponse < TranslationTerm::Param
       def initialize(response_key)
         @response_key = response_key
+      end
+      def translate(key,api_params,opts={})
+        unless last_result = opts[:last_result]
+          raise ErrorUsage.new("PreviousResponse used before results computed")
+        end
+        match = nil
+        unless matching_key = [@response_key.to_s,@response_key.to_sym].find{|k|last_result.has_key?(k)}
+          raise ErrorUsage.new("Key #{@response_key} in PreviousResponse not found in last results (#{last_result.inspect})")
+        end
+        last_result[matching_key]
       end
     end
   end

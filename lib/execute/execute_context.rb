@@ -34,7 +34,7 @@ class DTK::Client::Execute
 
       def call(object_type__method,params={})
         object_type, method = split_object_type__method(object_type__method)
-        api_command = Command::APICall.new(:object_type => object_type, :method => method)
+        api_command = Command::APICall.new(:object_type => object_type, :method => method, :params => params)
         result = nil
         api_command.raw_executable_commands() do |raw_command|
           last_result = @result_store.get_last_result?()
