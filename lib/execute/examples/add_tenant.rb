@@ -31,6 +31,12 @@ class DTK::Client::Execute
           :output_component => "#{node}/#{shared_service_component}"
       end
 
+      result = call 'service/execute_workflow',
+        :service         => service,
+        :workflow_name   => 'add_tenant',
+        :workflow_params => {'name' => tenant_name}
+        
+
     end
   end
 end

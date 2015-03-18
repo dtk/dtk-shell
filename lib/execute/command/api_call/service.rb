@@ -5,11 +5,6 @@ class DTK::Client::Execute
         :service
       end
 
-      def self.Required(key)
-         Required.new(key)
-      end
-
-
       CommandMap = {
         :add_component => Map.new(
           :type => Rest::Post,                             
@@ -46,9 +41,33 @@ class DTK::Client::Execute
           }
         ),
 
-
+        :execute_workflow  => 
+        [
+         Map.new(
+           :type => Rest::Post,                             
+           :path => 'assembly/create_task',
+           :body => {
+             :assembly_id => Required(:service),
+             :task_action => Required(:workflow_name),       
+             :task_params => Required(:workflow_params)
+            }
+         ),
+         Map.new(
+           :type => Rest::Post,                             
+           :path => 'task/execute',
+           :body => {
+             :task_id => PreviousResponse(:task_id)
+           }
+         )]
       }
 
+      module CustomMapping
+        # example would be
+        # def self.command(params)
+        #  ...
+        # end
+      end
+      
     end
   end
 end
