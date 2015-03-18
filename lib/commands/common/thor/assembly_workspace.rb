@@ -309,8 +309,13 @@ module DTK::Client
 
       edit_opts.merge!(:force_parse => true, :update_from_includes => true, :print_dependencies => true)
       response = push_clone_changes_aux(:component_module, module_id, nil, "Pull base mogule updates", true, edit_opts)
-      return response unless response.ok?()
       
+      unless response.ok?()
+        # if parsing error on assembly module (components/attributes/link_defs integrity violations) do git reset --hard
+        Helper(:git_repo).hard_reset_branch_to_sha(:component_module, module_name, edit_opts)
+        return response
+      end
+
       Response::Ok.new()
     end
 
