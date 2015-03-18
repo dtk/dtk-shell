@@ -4,8 +4,8 @@ class DTK::Client::Execute
     dtk_require('command/api_call')
 
     attr_reader :result_var,:input_hash
-    def initialize(hash)
-      @input_hash = hash
+    def initialize(input_hash)
+      @input_hash = input_hash
       @result_var = optional?(:result_var)
     end
 

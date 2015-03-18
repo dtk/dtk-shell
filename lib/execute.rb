@@ -6,7 +6,6 @@ module DTK::Client
     dtk_require('execute/command_processor')
     dtk_require('execute/execute_context')
     dtk_require('execute/examples')
-#    dtk_require('execute/iterate')
 
     extend ExecuteContext::ClassMixin
   end

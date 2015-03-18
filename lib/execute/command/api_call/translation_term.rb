@@ -81,7 +81,12 @@ class DTK::Client::Execute
           has_key?(api_params,key) ? index(api_params,key) : @default_value
         end
       end
-      
+    end
+
+    class PreviousResponse < TranslationTerm::Param
+      def initialize(response_key)
+        @response_key = response_key
+      end
     end
   end
 end

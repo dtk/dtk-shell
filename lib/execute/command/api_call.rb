@@ -2,42 +2,33 @@ class DTK::Client::Execute
   class Command
     class APICall < self
 
-      # order matters
+      # order matters; having these defs before requires; plus order of these requires
       def self.Required(key)
         Required.new(key)
       end
-      def self.PreviousResponse(key)
-        # TODO: stub
-        Required.new(key)
+      def self.PreviousResponse(response_key)
+        PreviousResponse.new(response_key)
       end
       dtk_require('api_call/translation_term')
       dtk_require('api_call/map')
       dtk_require('api_call/service')
 
-      attr_reader :executable_commands
-      def initialize(hash)
-        super
-        object_type = required(:object_type)
-        @executable_commands = ret_executable_commands(required(:object_type),required(:method),optional?(:params))
-      end
 
-     private
-       # returns the one or more commands that achieve the api
-      def ret_executable_commands(object_type,method,params={})
-        case object_type.to_sym
+       # calss block where on one or more commands that achieve the api
+      def raw_executable_commands(&block)
+        method = required(:method).to_sym
+        case required(:object_type).to_sym
          when :service
-          Service.objects_executable_commands(method,params)
+           Service.raw_executable_commands(method,&block)
          else
           raise ErrorUsage.new("The object_type '#{object_type}' is not supported")
         end
       end
 
-      def self.objects_executable_commands(method,params)
-        method = method.to_sym
+     private
+      def self.raw_executable_commands(method,&block)
         if command_map = self::CommandMap[method]
-          array_form(command_map).map{|command|command.translate(params)}
-        elsif self::CustomMapping.methods(false).include?(method)
-          array_form(self::CustomMapping.send(method,params))
+          array_form(command_map).each{|raw_command|block.call(raw_command)}
         else
           raise ErrorUsage.new("The method on '#{method}' on object type '#{object_type()}' is not supported")
         end

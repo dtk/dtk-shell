@@ -1,5 +1,7 @@
 class DTK::Client::Execute
   class ExecuteContext
+    dtk_require('execute_context/result_store')
+
     module ClassMixin
       def ExecuteContext(opts={},&block)
         ExecuteContext.new(opts).execute(&block)
@@ -8,10 +10,10 @@ class DTK::Client::Execute
 
     def initialize(opts={})
       @print_results = opts[:print_results]
+      @proxy = Proxy.new()
     end
 
     def execute(&block)
-      @proxy = Proxy.new()
       result, command = instance_eval(&block)
       result
     end
@@ -25,37 +27,43 @@ class DTK::Client::Execute
     end
 
     # commands in the execute context
-    class Proxy < self
+    class Proxy
+      def initialize()
+        @result_store = ResultStore.new()
+      end
+
       def call(object_type__method,params={})
         object_type, method = split_object_type__method(object_type__method)
-        api_command = Command::APICall.new(:object_type => object_type, :method => method, :params => params)
+        api_command = Command::APICall.new(:object_type => object_type, :method => method)
         result = nil
-        api_command.executable_commands.each do |command|
+        api_command.raw_executable_commands() do |raw_command|
+          last_result = @result_store.get_last_result?()
+          command = raw_command.translate(params,:last_result => last_result)
           result = CommandProcessor.execute(command)
+          @result_store.store(result)
         end
         [result, api_command]
       end
       
       def post_rest_call(path,body={})
-        command = Command::RestCall::Post.new(:path => path,:body => body)
+        command = Command::RestCall::Post.new(:path => path, :body => body, :last_result => @last_result)
         result = CommandProcessor.execute(command)
         [result, command]
       end
-    end
 
-    private 
-    # returns [object_type, method]
-    def split_object_type__method(str)
-      DelimitersObjectTypeMethod.each do |d| 
-        if str =~ Regexp.new("(^[^#{d}]+)#{d}([^#{d}]+$)") 
-          return [$1,$2]
+     private 
+      # returns [object_type, method]
+      def split_object_type__method(str)
+        DelimitersObjectTypeMethod.each do |d| 
+          if str =~ Regexp.new("(^[^#{d}]+)#{d}([^#{d}]+$)") 
+            return [$1,$2]
+          end
         end
+        raise ErrorUsage.new("Illegal term '#{str}'")
       end
-      raise ErrorUsage.new("Illegal term '#{str}'")
+      
+      DelimitersObjectTypeMethod = ['\/']
     end
-
-    DelimitersObjectTypeMethod = ['\/']
-    
 
   end
 end
