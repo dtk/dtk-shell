@@ -22,6 +22,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = "#{DtkClient::VERSION}.#{ARGV[3]}".chomp(".")
 
+  gem.add_dependency 'mime-types','~> 1.25'
   gem.add_dependency 'bundler','>= 1.2.4'
   gem.add_dependency 'json_pure' ,'1.7.4'
   gem.add_dependency 'diff-lcs','1.1.3'
