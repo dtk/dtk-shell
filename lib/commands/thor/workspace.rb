@@ -8,6 +8,7 @@ dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/assembly_workspace')
+dtk_require_common_commands('thor/action_result_handler')
 # LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
 
 module DTK::Client
@@ -18,6 +19,7 @@ module DTK::Client
       include EditMixin
       include PurgeCloneMixin
       include AssemblyWorkspaceMixin
+      include ActionResultHandler
       
       def get_workspace_name(workspace_id)
         get_name_from_id_helper(workspace_id)
@@ -382,6 +384,23 @@ module DTK::Client
     method_option :first, :type => :boolean, :default => false
     def grep(context_params)
       grep_aux(context_params)
+    end
+
+    desc "WORKSPACE-NAME/ID grant-access USER-ACCOUNT PUB-KEY-NAME [PATH-TO-PUB-KEY] [--nodes NODE-NAMES]", "Grants ssh access to user account USER-ACCOUNT for nodes in workspace"
+    method_option :nodes, :type => :string, :default => nil
+    def grant_access(context_params)
+      grant_access_aux(context_params)
+    end
+
+    desc "WORKSPACE-NAME/ID revoke-access USER-ACCOUNT PUB-KEY-NAME [PATH-TO-PUB-KEY] [--nodes NODE-NAMES]", "Revokes ssh access to user account USER-ACCOUNT for nodes in workspace"
+    method_option :nodes, :type => :string, :default => nil
+    def revoke_access(context_params)
+      revoke_access_aux(context_params)
+    end
+
+    desc "WORKSPACE-NAME/ID list-ssh-access", "List SSH access for each of the nodes"
+    def list_ssh_access(context_params)
+      list_ssh_access_aux(context_params)
     end
     
     desc "WORKSPACE-NAME/ID info", "Get info about content of the workspace."

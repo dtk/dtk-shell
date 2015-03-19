@@ -481,63 +481,19 @@ TODO: will put in dot release and will rename to 'extend'
     desc "SERVICE-NAME/ID grant-access USER-ACCOUNT PUB-KEY-NAME [PATH-TO-PUB-KEY] [--nodes NODE-NAMES]", "Grants ssh access to user account USER-ACCOUNT for nodes in service instance"
     method_option :nodes, :type => :string, :default => nil
     def grant_access(context_params)
-      service_id, system_user, rsa_key_name, path_to_rsa_pub_key = context_params.retrieve_arguments([:service_id!,:option_1!, :option_2!, :option_3],method_argument_names)
-
-      path_to_rsa_pub_key ||= SSHUtil.default_rsa_pub_key_path()
-      rsa_pub_key_content = SSHUtil.read_and_validate_pub_key(path_to_rsa_pub_key)
-
-      response = post_file rest_url("assembly/initiate_ssh_pub_access"), {
-        :agent_action => :grant_access,
-        :system_user => system_user,
-        :rsa_pub_name => rsa_key_name,
-        :rsa_pub_key => rsa_pub_key_content,
-        :assembly_id => service_id,
-        :target_nodes => options.nodes
-      }
-
-      return response unless response.ok?
-
-      action_results_id = response.data(:action_results_id)
-
-      print_action_results(action_results_id)
-
-      nil
+      grant_access_aux(context_params)
     end
 
     desc "SERVICE-NAME/ID revoke-access USER-ACCOUNT PUB-KEY-NAME [PATH-TO-PUB-KEY] [--nodes NODE-NAMES]", "Revokes ssh access to user account USER-ACCOUNT for nodes in service instance"
     method_option :nodes, :type => :string, :default => nil
     def revoke_access(context_params)
-      service_id, system_user, rsa_key_name = context_params.retrieve_arguments([:service_id!,:option_1!, :option_2!],method_argument_names)
-
-      response = post_file rest_url("assembly/initiate_ssh_pub_access"), {
-        :agent_action => :revoke_access,
-        :system_user => system_user,
-        :rsa_pub_name => rsa_key_name,
-        :assembly_id => service_id,
-        :target_nodes => options.nodes
-      }
-
-      return response unless response.ok?
-
-      action_results_id = response.data(:action_results_id)
-
-      print_action_results(action_results_id)
-
-      nil
+      revoke_access_aux(context_params)
     end
 
     desc "SERVICE-NAME/ID list-ssh-access", "List SSH access for each of the nodes"
     def list_ssh_access(context_params)
-      service_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-
-      response = post_file rest_url("assembly/list_ssh_access"), {
-        :assembly_id => service_id
-      }
-
-      response.render_table(:ssh_access)
-      response
+      list_ssh_access_aux(context_params)
     end
-
 
     desc "SERVICE-NAME/ID info", "Get info about content of the service."
     def info(context_params)
