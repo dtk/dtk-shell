@@ -469,10 +469,10 @@ module DTK
       # In development mode we want bigger timeout allowing us to debbug on server while still
       # keeping connection alive and receivinga response
       if ::DTK::Configuration.get(:development_mode)
-        DefaultRestOpts = {:timeout => 2000, :open_timeout => 2, :error_response_class => Client::Response::Error}
+        DefaultRestOpts = {:timeout => 2000, :open_timeout => 10, :error_response_class => Client::Response::Error}
         # DefaultRestOpts = {:timeout => 50, :open_timeout => 2, :error_response_class => Client::Response::Error}
       else
-        DefaultRestOpts = {:timeout => 100, :open_timeout => 1, :error_response_class => Client::Response::Error}
+        DefaultRestOpts = {:timeout => 100, :open_timeout => 5, :error_response_class => Client::Response::Error}
       end
 
       # enable SSL verification
