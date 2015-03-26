@@ -89,8 +89,11 @@ module DTK::Client
           },
           :delete_node => {
             :endpoint => "assembly",
-            :url => "assembly/info_about",
-            :opts => {:subtype=>"instance", :about=>"nodes"}
+            :url => "assembly/get_nodes_without_node_groups"
+          },
+          :delete_node_group => {
+            :endpoint => "assembly",
+            :url => "assembly/get_node_groups"
           }
         }
       }
@@ -619,6 +622,21 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_node(context_params)
       response = delete_node_aux(context_params)
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      @@invalidate_map << :workspace
+      @@invalidate_map << :workspace_node
+
+      return response
+    end
+
+    desc "SERVICE-NAME/ID delete-node-group ^^NODE-NAME [-y]","Delete node group and all nodes that are part of that group."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def delete_node_group(context_params)
+      response = delete_node_group_aux(context_params)
 
       @@invalidate_map << :assembly
       @@invalidate_map << :assembly_node

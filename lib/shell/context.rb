@@ -7,6 +7,7 @@ module DTK
 
     class Context
       include DTK::Client::Auxiliary
+      include DTK::Client::CommandBase
 
       # client commands
       CLIENT_COMMANDS       = ['cc','exit','clear','pushc','popc','dirs','help']
@@ -792,7 +793,9 @@ module DTK
           id = entity_name.identifier
           opts[id_label] = id
 
-          response_ruby_obj = DTK::Client::CommandBaseThor.get_cached_response(endpoint.to_sym, url, opts)
+          # response_ruby_obj = DTK::Client::CommandBaseThor.get_cached_response(endpoint.to_sym, url, opts)
+          # when extended context autocomplete always send new request
+          response_ruby_obj = post rest_url(url), opts
           return [] if(response_ruby_obj.nil? || !response_ruby_obj.ok?)
 
           response_ruby_obj.data.each do |d|

@@ -808,7 +808,22 @@ module DTK::Client
         :node_id => node_id
       }
       response = post(rest_url("assembly/delete_node"),post_body)
-      # @@invalidate_map << :assembly_node
+      response
+    end
+
+    def delete_node_group_aux(context_params)
+      assembly_or_workspace_id, node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
+
+      unless options.force?
+        what = "node"
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{node_id}'"+'?')
+      end
+
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :node_id => node_id
+      }
+      response = post(rest_url("assembly/delete_node_group"),post_body)
       response
     end
 
