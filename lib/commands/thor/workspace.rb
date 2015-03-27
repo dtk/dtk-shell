@@ -487,6 +487,11 @@ module DTK::Client
       list_violations_aux(context_params)
     end
 
+    desc "WORKSPACE-NAME/ID print-includes", "Finds includes in the workspace."
+    def print_includes(context_params)
+      print_includes_aux(context_params)
+    end
+
     desc "WORKSPACE-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def purge(context_params)
