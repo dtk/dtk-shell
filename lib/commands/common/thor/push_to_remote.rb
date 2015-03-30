@@ -14,6 +14,7 @@ module DTK::Client
       }
 
       response = Helper(:git_repo).push_changes(module_type,full_module_name,version,opts)
+
       return response unless response.ok?
       if response.data(:diffs).empty?
         raise DtkError, "No changes to push"

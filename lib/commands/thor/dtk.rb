@@ -1,12 +1,12 @@
 
 module DTK::Client
 
-  # Following are descriptions of available commands 
+  # Following are descriptions of available commands
   class Dtk < CommandBaseThor
 
     # entities that are not available on root but later in n-context
     def self.additional_entities()
-      ['component','attribute','utils','node','task','component-template','assembly']
+      ['component','attribute','utils','node','task','component-template','assembly','remotes']
     end
 
     desc "workspace","Sandbox for development and testing"
@@ -18,7 +18,7 @@ module DTK::Client
     def target
       # API descriptor, SYM_LINK!
     end
-    
+
 
     # NOTE
     # Following methods are just api descriptors, invocation happens at "bin/dtk" entry point
@@ -37,7 +37,7 @@ module DTK::Client
     #   # API descriptor
     # end
 
-    #TODO: not exposed 
+    #TODO: not exposed
     #desc "dependency","DESCRIPTION TO BE ADDED."
     #def dependency
     #  # API descriptor
@@ -61,7 +61,7 @@ module DTK::Client
     # desc "node", "Commands to list, query, and delete/destroy node instances."
     # def node
     #   # API descriptor
-    # end    
+    # end
 
     # desc "node-group", "Add/Destroy/List available groups of nodes."
     # def node_group
@@ -82,7 +82,7 @@ module DTK::Client
     #desc "repo", "Part of dtk client which enables us to sync, destroy, view available repos."
     #def repo
     #  # API descriptor
-    #end    
+    #end
 
     #TODO: not supported yet
     #desc "project", "View available projects."
@@ -112,7 +112,7 @@ module DTK::Client
         # API descriptor
       end
     end
-    
+
 
     desc "provider", "Manage infrastructure providers and deployment targets (ie: EC2 and us-east)"
     def provider

@@ -26,11 +26,15 @@ module DTK::Client
     end
 
     def self.valid_children()
-      [:"assembly"]
+      [:assembly, :remotes]
     end
 
     def self.all_children()
-      [:"assembly"]
+      [:assembly]
+    end
+
+    def self.multi_context_children()
+      [[:assembly], [:remotes], [:assembly, :remotes]]
     end
 
     def self.valid_child?(name_of_sub_context)
@@ -55,8 +59,14 @@ module DTK::Client
           :self => [
             ["list"," list [--remote] [--diff] [-n NAMESPACE]","# List service modules (local/remote). Use --diff to compare loaded and remote modules."]
           ],
-          :"assembly" => [
+          :assembly => [
             ["list","list","# List assemblies for given service module."]
+          ],
+          :remotes => [
+            ["list-remotes",  "list-remotes",  "# List git remotes for given module"],
+            ["add-remote",    "add-remote REMOTE-NAME REMOTE-URL", "# Add git remote for given module"],
+            ["remove-remote", "remove-remote REPO-NAME [-y]", "# Remove git remote for given module"],
+            ["make-active",   "make-active REMOTE-NAME", "# Make remote active one"]
           ]
         },
         :identifier_only => {
@@ -64,7 +74,7 @@ module DTK::Client
             ["list-assemblies","list-assemblies","# List assemblies associated with service module."],
             ["list-modules","list-modules","# List modules associated with service module."]
           ],
-          :"assembly" => [
+          :assembly => [
             ["info","info","# Info for given assembly in current service module."],
             ["stage", "stage [INSTANCE-NAME] [-t TARGET-NAME/ID]", "# Stage assembly in target."],
             # ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
@@ -567,6 +577,30 @@ module DTK::Client
       @@invalidate_map << :assembly if response && response.ok?
 
       response
+    end
+
+
+    # REMOTE INTERACTION
+
+    desc "HIDE_FROM_BASE list-remotes", "List git remotes for given module"
+    def list_remotes(context_params)
+      remote_list_aux(context_params)
+    end
+
+    desc "HIDE_FROM_BASE add-remote REMOTE-NAME REMOTE-URL", "Add git remote for given module"
+    def add_remote(context_params)
+      remote_add_aux(context_params)
+    end
+
+    desc "HIDE_FROM_BASE remove-remote REPO-NAME [-y]", "Remove git remote for given module"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def remove_remote(context_params)
+      remote_remove_aux(context_params)
+    end
+
+    desc "HIDE_FROM_BASE make-active REPO-NAME", "Make remote active one"
+    def make_active(context_params)
+      remote_active_aux(context_params)
     end
 
     #

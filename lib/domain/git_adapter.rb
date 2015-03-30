@@ -98,9 +98,9 @@ module DTK
       end
 
       def add_remote(name, url)
-        unless is_there_remote?(name)
-          @git_repo.add_remote(name, url)
-        end
+        @git_repo.remove_remote(name) if is_there_remote?(name)
+
+        @git_repo.add_remote(name, url)
       end
 
       def fetch(remote = 'origin')

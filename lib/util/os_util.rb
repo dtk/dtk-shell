@@ -233,7 +233,7 @@ module DTK
         # color   - Symbol describing the color to be used on STDOUT
         #
         # Void
-        def print(message, color)
+        def print(message, color = :white)
           puts colorize(message, color)
         end
 
@@ -286,6 +286,7 @@ module DTK
             load File.expand_path('../../lib/shell/domain/active_context.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/shell/domain/context_params.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/shell/domain/override_tasks.rb', File.dirname(__FILE__))
+            load File.expand_path('../../lib/shell.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/shell/context.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/domain/git_adapter.rb', File.dirname(__FILE__))
             load File.expand_path('../../lib/command_helpers/git_repo.rb', File.dirname(__FILE__))

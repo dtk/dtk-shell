@@ -1,6 +1,7 @@
-# This is wrapper for holding rest response information as well as 
-# passing selection of ViewProcessor from Thor selection to render view 
+# This is wrapper for holding rest response information as well as
+# passing selection of ViewProcessor from Thor selection to render view
 # selection
+require 'git'
 
 module DTK
   module Client
@@ -17,16 +18,16 @@ module DTK
       end
 
       def initialize(command_class=nil,hash={})
-        super(hash)           
+        super(hash)
         @command_class     = command_class
         @skip_render       = false
         @print_error_table = false
         # default values
-        @render_view = RenderView::AUG_SIMPLE_LIST 
+        @render_view = RenderView::AUG_SIMPLE_LIST
         @render_data_type = nil
       end
 
-      def clone_me()      
+      def clone_me()
         return Marshal.load(Marshal.dump(self))
       end
 
@@ -34,21 +35,33 @@ module DTK
         begin
           results = (block ? yield : data)
           Ok.new(results)
-         rescue ErrorUsage => e
-          Error::Usage.new("message"=> e.to_s)
-         rescue => e
-          error_hash =  {
-            "message"=> e.message,
-            "backtrace" => e.backtrace,
-            "on_client" => true
-            }
 
-          if DTK::Configuration.get(:development_mode)
-            DtkLogger.instance.error_pp("Error inside wrapper DEV ONLY: #{e.message}", e.backtrace)
+        rescue Git::GitExecuteError => e
+          if e.message.include?('Please make sure you have the correct access rights')
+            error_msg  = "You do not have git access from this client, please add following SSH key in your git account: \n\n"
+            error_msg += SSHUtil.rsa_pub_key_content() + "\n"
+            raise DTK::Client::DtkError, error_msg
           end
-
-          Error::Internal.new(error_hash)
+          handle_error_in_wrapper(e)
+        rescue ErrorUsage => e
+          Error::Usage.new("message"=> e.to_s)
+        rescue => e
+          handle_error_in_wrapper(e)
         end
+      end
+
+      def handle_error_in_wrapper(exception)
+        error_hash =  {
+          "message"=> exception.message,
+          "backtrace" => exception.backtrace,
+          "on_client" => true
+          }
+
+        if DTK::Configuration.get(:development_mode)
+          DtkLogger.instance.error_pp("Error inside wrapper DEV ONLY: #{exception.message}", e.backtrace)
+        end
+
+        Error::Internal.new(error_hash)
       end
 
       def get_label_for_column_name(column, type)
@@ -69,7 +82,7 @@ module DTK
             "target:" => "TARGET:"
           }
         end
-        
+
         mappings[column]
       end
 
@@ -106,19 +119,19 @@ module DTK
 
         columns.each do |column|
           STDOUT << column
-        end 
+        end
         puts "\n"
       end
 
       def render_custom_info(type)
-        puts "--- \n"     
+        puts "--- \n"
 
         unless data.empty?
           data.each do |k,v|
             label = get_custom_labels(k, type)
             v = array_to_string(v) if v.is_a?(Array)
             STDOUT << " #{label} #{v}\n" if label
-          end 
+          end
         end
 
         puts "\n"
@@ -151,10 +164,10 @@ module DTK
         array_data.each do |a|
           info << "#{a.values.first},"
         end
-        
+
         "#{info.gsub!(/,$/,'')}"
       end
-      
+
 
       def render_data(print_error_table=false)
         unless @skip_render
@@ -174,7 +187,7 @@ module DTK
 
             # sending raw data from response
             rendered_data = ViewProcessor.render(@command_class, data, @render_view, @render_data_type, nil, @print_error_table)
-            
+
             puts "\n" unless rendered_data
             return rendered_data
           else
@@ -230,14 +243,14 @@ module DTK
         def initialize(hash={})
           super(nil,{"errors" => [hash]})
         end
-        
+
         class Usage < self
           def initialize(hash_or_string={})
             hash = (hash_or_string.kind_of?(String) ? {'message' => hash_or_string} : hash_or_string)
             super({"code" => "error"}.merge(hash))
           end
         end
-      
+
         class Internal < self
           def initialize(hash={})
             super({"code" => "error"}.merge(hash).merge("internal" => true))

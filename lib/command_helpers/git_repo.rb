@@ -333,6 +333,7 @@ module DTK; module Client; class CommandHelper
       else
         raise Error.new("Unexpected merge_rel (#{merge_rel})")
       end
+
       {"diffs" => diffs, "commit_sha" => commit_sha, "repo_obj" => repo}
     end
 

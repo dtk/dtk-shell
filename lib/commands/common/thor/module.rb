@@ -9,6 +9,7 @@ dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/reparse')
 dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/common')
+dtk_require_common_commands('thor/remotes')
 
 dtk_require_from_base('configurator')
 dtk_require_from_base('command_helpers/service_importer')
@@ -52,6 +53,10 @@ module DTK::Client
   end
 
   module ModuleMixin
+
+    REQ_MODULE_ID   = [:service_module_id!, :component_module_id!, :test_module_id!]
+    REQ_MODULE_NAME = [:service_module_name!, :component_module_name!, :test_module_name!]
+
     include PuppetForgeMixin
     include CloneMixin
     include PushToRemoteMixin
@@ -63,9 +68,7 @@ module DTK::Client
     include ListDiffsMixin
     include ServiceImporter
     include AccessControlMixin
-
-    REQ_MODULE_ID   = [:service_module_id!, :component_module_id!, :test_module_id!]
-    REQ_MODULE_NAME = [:service_module_name!, :component_module_name!, :test_module_name!]
+    include RemotesMixin
 
     def get_module_type(context_params)
       forwarded_type = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:module_type] : nil
@@ -439,8 +442,6 @@ module DTK::Client
       reparse_aux(module_location) unless internal_trigger
       local_namespace, local_module_name = get_namespace_and_name(module_name,':')
 
-#      if catalog.to_s.eql?("origin")
-#        push_clone_changes_aux(:component_module,component_module_id,version,options["message"]||DEFAULT_COMMIT_MSG,internal_trigger)
       if catalog.to_s.eql?("dtkn")
         module_refs_content = RemoteDependencyUtil.module_ref_content(module_location)
         remote_module_info  = get_remote_module_info_aux(module_type.to_sym, module_id, options["namespace"], version, module_refs_content, local_namespace)
@@ -462,6 +463,7 @@ module DTK::Client
         raise DtkValidationError, "You have to provide valid catalog to push changes to! Valid catalogs: #{PushCatalogs}"
       end
     end
+
     PushCatalogs = ["origin", "dtkn"]
 
     def list_diffs_module_aux(context_params)
