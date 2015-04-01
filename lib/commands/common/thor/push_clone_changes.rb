@@ -23,7 +23,7 @@ module DTK::Client
         end
       end
 
-      push_opts = opts.merge(:commit_msg => commit_msg, :local_branch => branch)
+      push_opts = opts.merge(:commit_msg => commit_msg, :local_branch => branch, :where => 'server')
       response  = Helper(:git_repo).push_changes(module_type, full_module_name, version, push_opts)
       return response unless response.ok?
 

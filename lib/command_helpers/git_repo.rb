@@ -335,7 +335,8 @@ module DTK; module Client; class CommandHelper
       if merge_rel == :equal
         commit_sha = commit_shas[:other_sha]
       elsif [:branchpoint,:local_behind].include?(merge_rel)
-        raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to server")
+        where = opts[:where]||'server'
+        raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to #{where}")
       elsif merge_rel == :no_remote_ref
         repo.push(remote_branch_ref)
         diffs = DiffSummary.new_version(repo)

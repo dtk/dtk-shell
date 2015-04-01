@@ -10,7 +10,8 @@ module DTK::Client
         :remote_repo_url => remote_module_info.data(:remote_repo_url),
         :remote_repo => remote_module_info.data(:remote_repo),
         :remote_branch => remote_module_info.data(:remote_branch),
-        :local_branch => remote_module_info.data(:workspace_branch)
+        :local_branch => remote_module_info.data(:workspace_branch),
+        :where => 'catalog'
       }
 
       response = Helper(:git_repo).push_changes(module_type,full_module_name,version,opts)
