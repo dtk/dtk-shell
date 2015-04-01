@@ -558,6 +558,30 @@ module DTK::Client
       response.render_table(:assembly)
     end
 
+    def fork_aux(context_params)
+      module_type = get_module_type(context_params)
+      module_id, fork_namespace = context_params.retrieve_arguments([REQ_MODULE_ID, :option_1!], method_argument_names)
+
+      raise DtkValidationError, "Namespace '#{fork_namespace}' contains invalid characters. Valid characters are letters, numbers, dash and underscore." unless fork_namespace.to_s =~ /^[0-9a-zA-Z\_\-]*$/
+
+      module_name = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
+      namespace, name = get_namespace_and_name(module_name,':')
+      response = Helper(:git_repo).cp_r_to_new_namespace(module_type, name, namespace, fork_namespace)
+      return response unless response.ok?
+
+      new_context_params = DTK::Shell::ContextParams.new
+      new_context_params.add_context_to_params(module_type, module_type)
+      new_context_params.method_arguments = ["#{fork_namespace}:#{name}"]
+
+      create_response = CommonModule::Import.new(self, new_context_params).from_file()
+      unless create_response.ok?
+        FileUtils.rm_rf("#{response['data']['module_directory']}")
+        return create_response
+      end
+
+      Response::Ok.new()
+    end
+
     def print_ambiguous(ambiguous)
     end
 

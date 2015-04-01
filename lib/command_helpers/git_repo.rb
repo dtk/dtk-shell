@@ -160,7 +160,7 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    def check_local_dir_exists_with_content(type,module_name,version=nil,module_namespace=nil)
+    def check_local_dir_exists_with_content(type, module_name, version=nil, module_namespace=nil)
       full_module_name = ModuleUtil.join_name(module_name, module_namespace)
       Response.wrap_helper_actions() do
         ret = Hash.new
@@ -186,6 +186,28 @@ module DTK; module Client; class CommandHelper
           raise ErrorUsage.new("Directory (#{local_repo_dir}) must have ths initial content for module (#{full_module_name})")
         end
         {"module_directory" => local_repo_dir}
+      end
+    end
+
+    def cp_r_to_new_namespace(type, module_name, src_namespace, dest_namespace, version = nil)
+      full_name_src  = ModuleUtil.join_name(module_name, src_namespace)
+      full_name_dest = ModuleUtil.join_name(module_name, dest_namespace)
+
+      local_src_dir  = local_repo_dir(type, full_name_src, version)
+      local_dest_dir = local_repo_dir(type, full_name_dest, version)
+
+      Response.wrap_helper_actions() do
+        if File.directory?(local_src_dir) && !(Dir["#{local_src_dir}/*"].empty?)
+          raise ErrorUsage.new("Directory (#{local_dest_dir}) already exist with content.",:log_error=>false) if File.directory?(local_dest_dir) && !(Dir["#{local_dest_dir}/*"].empty?)
+
+          # create namespace directory if does not exist, and copy source to destination module directory
+          namespace_dir = local_repo_dir(type, dest_namespace, version)
+          FileUtils.mkdir_p(namespace_dir)
+          FileUtils.cp_r(local_src_dir, local_dest_dir)
+        else
+          raise ErrorUsage.new("The content for module (#{full_name_src}) should be put in directory (#{local_src_dir})",:log_error=>false)
+        end
+        {"module_directory" => local_dest_dir}
       end
     end
 

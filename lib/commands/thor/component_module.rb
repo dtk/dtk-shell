@@ -415,6 +415,13 @@ module DTK::Client
       # list_diffs_module_aux(context_params)
     end
 
+    desc "COMPONENT-MODULE-NAME/ID fork NAMESPACE", "Fork component module to new namespace"
+    def fork(context_params)
+      fork_aux(context_params)
+    end
+
+
+
     #
     # DEVELOPMENT MODE METHODS
     #
