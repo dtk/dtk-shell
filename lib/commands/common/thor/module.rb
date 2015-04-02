@@ -457,7 +457,7 @@ module DTK::Client
           return response
         end
 
-        push_to_remote_aux(remote_module_info, module_type.to_sym)
+        push_to_remote_aux(remote_module_info, module_type.to_sym, options.force?)
       else
         raise DtkValidationError, "You have to provide valid catalog to push changes to! Valid catalogs: #{PushCatalogs}"
       end

@@ -172,14 +172,14 @@ module DTK
         end
       end
 
-      def push(remote_branch_ref)
+      def push(remote_branch_ref, opts={})
         remote, remote_branch = remote_branch_ref.split('/')
-        push_with_remote(remote, remote_branch)
+        push_with_remote(remote, remote_branch, opts)
       end
 
-      def push_with_remote(remote, remote_branch)
+      def push_with_remote(remote, remote_branch, opts={})
         branch_for_push = "#{local_branch_name}:refs/heads/#{remote_branch||local_branch_name}"
-        @git_repo.push(remote, branch_for_push)
+        @git_repo.push(remote, branch_for_push, opts)
       end
 
       def add_file(file_rel_path, content)

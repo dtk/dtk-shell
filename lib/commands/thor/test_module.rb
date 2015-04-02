@@ -202,7 +202,7 @@ module DTK::Client
       push_module_aux(context_params, internal_trigger)
     end
 
-    desc "TEST-MODULE-NAME/ID push-dtkn [-n NAMESPACE]", "Push changes from local copy of test module to remote repository (dtkn)."
+    desc "TEST-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of test module to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
@@ -212,7 +212,7 @@ module DTK::Client
         :banner => "NAMESPACE",
         :desc => "Remote namespace"
     #hidden option for dev
-    method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def push_dtkn(context_params, internal_trigger=false)
       push_dtkn_module_aux(context_params, internal_trigger)
     end

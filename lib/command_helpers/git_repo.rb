@@ -75,11 +75,11 @@ module DTK; module Client; class CommandHelper
     # :local_branch
     # :no_fetch
     #
-    def push_changes(type,full_module_name,version,opts={})
+    def push_changes(type, full_module_name, version, opts={})
       Response.wrap_helper_actions() do
-        repo_dir = local_repo_dir(type,full_module_name,version,opts)
+        repo_dir = local_repo_dir(type, full_module_name, version, opts)
         repo = create(repo_dir,opts[:local_branch])
-        push_repo_changes_aux(repo,opts)
+        push_repo_changes_aux(repo, opts)
       end
     end
 
@@ -305,7 +305,7 @@ module DTK; module Client; class CommandHelper
     #returns hash with keys
     #: diffs - hash with diffs
     # commit_sha - sha of currenet_commit
-    def push_repo_changes_aux(repo,opts={})
+    def push_repo_changes_aux(repo, opts={})
       diffs = DiffSummary.new()
 
       # adding untracked files (newly added files)
@@ -330,26 +330,33 @@ module DTK; module Client; class CommandHelper
 
       #check if merge needed
       commit_shas = Hash.new
-      merge_rel = repo.merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
-      commit_sha = nil
+      merge_rel   = repo.merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
+      commit_sha  = nil
+      diffs       = DiffSummary.new_version(repo)
+
       if merge_rel == :equal
         commit_sha = commit_shas[:other_sha]
       elsif [:branchpoint,:local_behind].include?(merge_rel)
-        where = opts[:where]||'server'
-        raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to #{where}")
+        if opts[:force]
+          diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
+          if diffs.any_diffs?()
+            repo.push(remote_branch_ref, {:force => opts[:force]})
+          end
+          commit_sha = repo.find_remote_sha(remote_branch_ref)
+        else
+          where = opts[:where]||'server'
+          raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to #{where}. If you want to force push use push-dtkn --force.")
+        end
       elsif merge_rel == :no_remote_ref
         repo.push(remote_branch_ref)
-        diffs = DiffSummary.new_version(repo)
         commit_sha = commit_shas[:local_sha]
       elsif merge_rel == :local_ahead
         # see if any diffs between fetched remote and local branch
         # this has be done after commit
-
         diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
 
-
         if diffs.any_diffs?()
-          repo.push(remote_branch_ref)
+          repo.push(remote_branch_ref, {:force => opts[:force]})
         end
 
         commit_sha = repo.find_remote_sha(remote_branch_ref)
