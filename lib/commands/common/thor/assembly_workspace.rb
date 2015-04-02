@@ -5,7 +5,7 @@ dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
 dtk_require_from_base("command_helper")
 dtk_require_common_commands('thor/task_status')
-dtk_require_common_commands('thor/set_required_params')
+dtk_require_common_commands('thor/set_required_attributes')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/list_diffs')
@@ -1022,9 +1022,9 @@ module DTK::Client
       response.render_table(:ps_data)
     end
 
-    def set_required_params(context_params)
+    def set_required_attributes(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
-      set_required_params_aux(assembly_or_workspace_id,:assembly,:instance)
+      set_required_attributes_aux(assembly_or_workspace_id,:assembly,:instance)
     end
 
     def tail_aux(context_params)

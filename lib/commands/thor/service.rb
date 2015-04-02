@@ -6,7 +6,7 @@ dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
 dtk_require_from_base("command_helper")
 dtk_require_common_commands('thor/task_status')
-dtk_require_common_commands('thor/set_required_params')
+dtk_require_common_commands('thor/set_required_attributes')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/assembly_workspace')
@@ -704,10 +704,10 @@ TODO: will put in dot release and will rename to 'extend'
       get_ps_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
-    def set_required_params(context_params)
+    desc "SERVICE-NAME/ID set-required-attributes", "Interactive dialog to set required attributes that are not currently set"
+    def set_required_attributes(context_params)
       assembly_id = context_params.retrieve_arguments([:service_id!],method_argument_names)
-      set_required_params_aux(assembly_id,:assembly,:instance)
+      set_required_attributes_aux(assembly_id,:assembly,:instance)
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)

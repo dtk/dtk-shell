@@ -1,5 +1,5 @@
 dtk_require_common_commands('thor/task_status')
-dtk_require_common_commands('thor/set_required_params')
+dtk_require_common_commands('thor/set_required_attributes')
 dtk_require_common_commands('thor/test_action_agent')
 
 module DTK::Client
@@ -242,10 +242,10 @@ module DTK::Client
       post rest_url("node/set_attributes"), post_body
     end
 
-    desc "NODE-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
-    def set_required_params(context_params)
+    desc "NODE-NAME/ID set-required-attributes", "Interactive dialog to set required attributes that are not currently set"
+    def set_required_attributes(context_params)
       node_id = context_params.retrieve_arguments([:node_id!],method_argument_names)
-      set_required_params_aux(node_id,:node)
+      set_required_attributes_aux(node_id,:node)
     end
 
     # desc "NODE-NAME/ID create-component COMPONENT-TEMPLATE-NAME/ID [-v VERSION]", "Add component template to node"

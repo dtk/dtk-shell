@@ -1,6 +1,6 @@
 module DTK::Client
   module SetRequiredParamsMixin
-    def set_required_params_aux(id,type,subtype=nil)
+    def set_required_attributes_aux(id,type,subtype=nil)
       id_field = "#{type}_id".to_sym
       post_body = {
         id_field => id,

@@ -1,5 +1,5 @@
 dtk_require_common_commands('thor/task_status')
-dtk_require_common_commands('thor/set_required_params')
+dtk_require_common_commands('thor/set_required_attributes')
 module DTK::Client
   class NodeGroup < CommandBaseThor
     no_tasks do
@@ -27,10 +27,10 @@ module DTK::Client
       post rest_url("node_group/set_attributes"), post_body
     end
 
-    desc "NODE-GROUP-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
-    def set_required_params(context_params)
+    desc "NODE-GROUP-NAME/ID set-required-attributes", "Interactive dialog to set required attributes that are not currently set"
+    def set_required_attributes(context_params)
       node_group_id = context_params.retrieve_arguments([:node_group_id!],method_argument_names)
-      set_required_params_aux(node_group_id,:node_group)
+      set_required_attributes_aux(node_group_id,:node_group)
     end
 
     desc "create NODE-GROUP-NAME [-t TARGET-ID] [--spans-target]", "Create node group"
