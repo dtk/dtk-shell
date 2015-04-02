@@ -13,20 +13,25 @@ conn = Session.get_connection()
 exit if validate_connection(conn)
 
 require 'optparse'
-banner = "Usage: dtk-execute add-tenant TENANT-NAME"
-tenant_name = nil
-if ARGV.size == 2
+banner = "Usage: dtk-execute add-tenant TENANT-NAME CATALOG-USERNAME -p PASSWORD"
+tenant_name = catalog_username = nil
+if ARGV.size > 2
   if ARGV[0] == 'add-tenant'
     tenant_name = ARGV[1]
+    catalog_username = ARGV[2]
   end
 end
 unless tenant_name
   # forces usage then exit
   ARGV[0] = '--help'
 end
-options = {}
+params = {}
 OptionParser.new do |opts|
   opts.banner = banner
+
+  opts.on( '-p', '--password PASSWORD', "Password for tenant and catalog" ) do |pw|
+    params[:password] = pw
+  end
 end.parse!
   
-Execute.add_tenant(tenant_name)
+Execute.add_tenant(tenant_name,catalog_username,params)
