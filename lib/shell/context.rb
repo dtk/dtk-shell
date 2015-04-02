@@ -172,14 +172,6 @@ module DTK
         # component-templates to autocomplete
         extended_candidates, new_context, line_buffer_first = {}, nil, nil
         command_clazz = Context.get_command_class(active_context_copy.last_command_name)
-        # require 'debugger'
-        # Debugger.start
-        # debugger
-        # unless (line_buffer.empty? || line_buffer.strip().empty?)
-        #   line_buffer_last = line_buffer.split(' ').last
-        #   line_buffer = line_buffer.split(' ').first
-        #   line_buffer.gsub!('-','_') unless (line_buffer.nil? || line_buffer.empty?)
-        # end
 
         unless (line_buffer.empty? || line_buffer.strip().empty?)
           line_buffer = line_buffer.split(' ')
@@ -335,6 +327,16 @@ module DTK
 
           clazz = DTK::Shell::Context.get_command_class(command)
           error_message, invalid_context = validate_command(clazz, current_context_clazz, command, active_context_copy)
+
+          # restrict utils subcontext in service/service_name/node_group only
+          if active_context_copy.last_context_is_shadow_entity? && active_context_copy.last_context.shadow_entity().eql?('node_group')
+            if current_context_clazz.respond_to?(:multi_context_children)
+              multi_context_children = current_context_clazz.multi_context_children()
+              if command.eql?('utils') && multi_context_children.include?(command.to_sym)
+                return active_context_copy, "'#{command}' context is not valid.", invalid_context
+              end
+            end
+          end
 
           break if error_message
           # if we are dealing with new entries add them to active_context
@@ -746,6 +748,11 @@ module DTK
               node_names = node_ids ? node_ids.collect { |e| e[:name] } : []
 
               n_level_ac_candidates.concat(node_names)
+            end
+
+            # restrict autocomple to utils subcontext in service/service_name/node_group only
+            if active_context_copy.last_context_is_shadow_entity? && active_context_copy.last_context().shadow_entity().eql?('node_group')
+              n_level_ac_candidates.delete('utils')
             end
 
             n_level_ac_candidates

@@ -237,6 +237,10 @@ class Thor
         if @@shell_context && @@shell_context.active_context.current_identifier?
           sub_children += command_clazz.valid_children() if command_clazz.respond_to?(:valid_children)
           sub_children += command_clazz.invisible_context_list()
+          # remove utils subcontext from help in service/service_name/node_group only
+          if @@shell_context.active_context.last_context_is_shadow_entity? && @@shell_context.active_context.shadow_entity().eql?('node_group')
+            sub_children.delete(:utils)
+          end
         else
           if command_clazz.respond_to?(:validation_list)
             sub_children += ["#{last_command_name}-identifier"]
