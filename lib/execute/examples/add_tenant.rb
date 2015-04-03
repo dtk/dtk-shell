@@ -3,7 +3,7 @@ class DTK::Client::Execute
   def self.add_tenant(tenant_name,catalog_username,params={})
     component_with_namespace = "dtk-meta-user:dtk_tenant[#{tenant_name}]"
     component_namespace, component = (component_with_namespace =~ /(^[^:]+):(.+$)/; [$1,$2])
-    service = params[:service_instance] || 'dtkhost5'
+    service = params[:service_instance] || 'dtkhost6'
     node = params[:node_name] || 'server'
     unless password = params[:password]
       raise ErrorUsage.new("Password is manditory; use -p commadn line option")
