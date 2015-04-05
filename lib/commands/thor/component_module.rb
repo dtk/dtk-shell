@@ -167,8 +167,18 @@ module DTK::Client
       :desc => "DTK Repo Manager from which to resolve requested module."
     def install(context_params)
       response = install_module_aux(context_params)
-      @@invalidate_map << :component_module if response && response.ok?
-
+      if response && response.ok?
+        @@invalidate_map << :component_module 
+        # TODO: hack before clean up way to indicate to better format what is passed as hash; these lines print the created module,
+        # not the module_directory
+        if module_directory = response.data(:module_directory)
+          split = module_directory.split('/')
+          if split.size > 2
+            installed_module = split[split.size-2..split.size-1].join(':')
+            response = Response::Ok.new('installed_module' => installed_module)
+          end
+        end
+      end
       response
     end
 
