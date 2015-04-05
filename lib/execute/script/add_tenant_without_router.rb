@@ -1,7 +1,7 @@
 class DTK::Client::Execute::Script
-  class AddTenant < self
+  class AddTenantWithoutRouter < self
     def self.ret_params_from_argv()
-      banner = "Usage: dtk-execute add-tenant TENANT-NAME CATALOG-USERNAME -p PASSWORD [-s SERVICE-INSTANCE]"
+      banner = "Usage: dtk-execute add-tenant-no-router TENANT-NAME CATALOG-USERNAME -p PASSWORD [-s SERVICE-INSTANCE]"
       tenant_name = catalog_username = tenant_number = nil
       if ARGV.size > 2
         tenant_name = ARGV[1]
@@ -43,9 +43,8 @@ class DTK::Client::Execute::Script
       catalog_username = params[:catalog_username]
       service = params[:service_instance]
       password = params[:password]
-      server_node = params[:server_node_name] || 'server'
-      router_node = params[:router_node_name] || 'router'
-
+      node = params[:node_name] || 'server'
+      
       component_with_namespace = "dtk-meta-user:dtk_tenant[#{tenant_name}]"
       component_namespace, component = (component_with_namespace =~ /(^[^:]+):(.+$)/; [$1,$2])
 
@@ -58,7 +57,7 @@ class DTK::Client::Execute::Script
       ExecuteContext(:print_results => true) do
         result = call 'service/add_component',
           :service               => service,
-          :node                  => server_node,
+          :node                  => node,
           :component             => component,
           :namespace             => component_namespace,
           :donot_update_workflow => true
@@ -66,23 +65,20 @@ class DTK::Client::Execute::Script
         av_pairs.each_pair do |a,v|
           result = call 'service/set_attribute',
             :service        => service,
-            :attribute_path => "#{server_node}/#{component}/#{a}",
+            :attribute_path => "#{node}/#{component}/#{a}",
             :value          => v
         end
         
-        result = call 'service/link_components',
-          :service          => service,
-          :input_component  => "#{server_node}/#{component}",
-          :output_component => "#{server_node}/dtk_postgresql::databases"
-
-        result = call 'service/link_components',
-          :service          => service,
-          :input_component  => "#{server_node}/#{component}",
-          :output_component => "#{router_node}/dtk_nginx::vhosts_for_router"
+        ['dtk_postgresql::databases'].each do |shared_service_component|
+          result = call 'service/link_components',
+            :service          => service,
+            :input_component  => "#{node}/#{component}",
+            :output_component => "#{node}/#{shared_service_component}"
+        end
         
         result = call 'service/execute_workflow',
           :service         => service,
-          :workflow_name   => 'add_tenant',
+          :workflow_name   => 'add_tenant_without_router',
           :workflow_params => {'name' => tenant_name}
         
       end

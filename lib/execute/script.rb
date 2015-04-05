@@ -1,23 +1,26 @@
 class DTK::Client::Execute
   class Script < self
     dtk_require('script/add_tenant')
+    dtk_require('script/add_tenant_without_router')
     def self.execute()
-      script_name = script_name()
-      unless script_class = Scripts[script_name]
-        raise ErrorUsage.new("Unsupported script '#{script_name}'")
-      end
-      script_class.execute_script()
+      script_class().execute_script()
     end
-    Scripts = {
-      'add-tenant' => AddTenant
-    }
   
    private
-    def self.script_name()
-      unless ARGV.size > 0
-        raise ErrorUsage.new("Script name must be given as first argument")
+    Scripts = {
+      'add-tenant' => AddTenant,
+      'add-tenant-without-router' => AddTenantWithoutRouter
+    }
+
+    def self.script_class()
+      script_name = ARGV.size > 0 && ARGV[0]
+      unless script_class = script_name && Scripts[script_name]
+        legal_scripts = Scripts.keys
+           err_msg = (script_name ? "Unsupported script '#{script_name}'" : "Missing script name")
+        err_msg << "; supported scripts are (#{legal_scripts.join(',')})"
+        raise ErrorUsage.new(err_msg)
       end
-      ARGV[0]
+      script_class
     end
 
     def self.execute_script()
