@@ -45,8 +45,9 @@ module DTK::Client
     # TODO: when we do this for other areas we can move these things up and use as common classes
     # helpers
     def retrieve_arguments(mapping, method_info = nil)
-      @context_params.retrieve_arguments(mapping, method_info||@command.method_argument_names)
+      @context_params.retrieve_arguments(mapping, method_info || @command.method_argument_names)
     end
+
     def get_namespace_and_name(*args)
       @command.get_namespace_and_name(*args)
     end
@@ -428,6 +429,14 @@ module DTK::Client
       base_file_name = "dtk.model"
       opts.merge!(:edit_file => {:base_file_name => base_file_name}) if edit_dsl
       edit_aux(module_type.to_sym, module_id, module_name, version, opts)
+    end
+
+    def push_remote_module_aux(context_params)
+      module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME],method_argument_names)
+
+      # DEBUG SNIPPET >>> REMOVE <<<
+      require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
+      puts "HIY"
     end
 
     def push_dtkn_module_aux(context_params, internal_trigger=false)

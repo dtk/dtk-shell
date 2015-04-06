@@ -29,6 +29,8 @@ module DTK::Client
       }
 
       response = post rest_url("#{module_type}/remove_git_remote"), post_body
+      return response unless response.ok?
+      OsUtil.print("Successfully removed remote '#{remote_name}'", :green)
       nil
     end
 
@@ -43,7 +45,9 @@ module DTK::Client
       }
 
       response = post rest_url("#{module_type}/add_git_remote"), post_body
-      response.ok? ? nil : response
+      return response unless response.ok?
+      OsUtil.print("Successfully added remote '#{remote_name}'", :green)
+      nil
     end
 
     def remote_list_aux(context_params)

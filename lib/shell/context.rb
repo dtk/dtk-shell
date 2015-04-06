@@ -908,7 +908,6 @@ module DTK
               options_param_args = nil
               invalid_options << e
               break
-              # raise DTK::Client::DtkValidationError, "Option '#{e}' is not valid for current command!"
             else
               options_param_args << e
               options_param_args << args[i+1] unless type == :boolean

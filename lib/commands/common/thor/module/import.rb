@@ -13,10 +13,10 @@ module DTK::Client
       def from_git()
         git_repo_url, module_name    = retrieve_arguments([:option_1!, :option_2!])
         namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
-        
+
         module_type  = @command.get_module_type(@context_params)
         thor_options = { :git_import => true}
-        
+
         unless namespace
           namespace_response = post rest_url("namespace/default_namespace_name")
           return namespace_response unless namespace_response.ok?
@@ -29,6 +29,7 @@ module DTK::Client
           :namespace => namespace,
           :branch    => @options['branch']
         }
+
         response = Helper(:git_repo).create_clone_from_optional_branch(module_type.to_sym, local_module_name, git_repo_url, opts)
         return response unless response.ok?
 
@@ -102,11 +103,18 @@ module DTK::Client
       private
 
       def from_git_or_file()
+
         default_ns = @context_params.get_forwarded_options()[:default_namespace]
         git_import = @context_params.get_forwarded_options()[:git_import]
 
         name_option = git_import ? :option_2! : :option_1!
-        module_name = @context_params.retrieve_arguments([name_option])
+
+        if git_import
+          module_git_url, module_name = @context_params.retrieve_arguments([:option_1!, :option_2!])
+        else
+          module_name, module_git_url = @context_params.retrieve_arguments([:option_1!, :option_2!])
+        end
+
         module_type = @command.get_module_type(@context_params)
         version     = @options["version"]
 
@@ -125,8 +133,10 @@ module DTK::Client
         # first make call to server to create an empty repo
         post_body = {
           :module_name => local_module_name,
-          :module_namespace => namespace
+          :module_namespace => namespace,
+          :module_git_url   => module_git_url
         }
+
         response = post(rest_url("#{module_type}/create"), post_body)
         return response unless response.ok?
 
