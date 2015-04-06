@@ -432,11 +432,50 @@ module DTK::Client
     end
 
     def push_remote_module_aux(context_params)
-      module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME],method_argument_names)
+      module_id, module_name, remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME, :option_1],method_argument_names)
+      version     = options["version"]
+      module_type = get_module_type(context_params)
 
-      # DEBUG SNIPPET >>> REMOVE <<<
-      require (RUBY_VERSION.match(/1\.8\..*/) ? 'ruby-debug' : 'debugger');Debugger.start; debugger
-      puts "HIY"
+      post_body = {
+        "#{module_type}_id".to_sym => module_id
+      }
+
+      response      = post rest_url("#{module_type}/info_git_remote"), post_body
+      remotes_list  = response.data
+
+      # vital information, abort if it does not exist
+      raise DtkError, "There are no registered remotes, aborting action" if remotes_list.empty?
+
+      # check if there is provided remote
+      if remote_name
+        target_remote = remotes_list.find { |r| remote_name.eql?(r['display_name']) }
+        raise DtkError, "Not able to find remote '#{remote_name}'" unless target_remote
+      end
+
+      # if only one take it, else raise ambiguous error
+      unless target_remote
+        if remotes_list.size == 1
+          target_remote = remotes_list.first
+        else
+          remote_names = remotes_list.collect { |r| r['display_name'] }
+          raise DtkError, "Call is ambiguous, please provide remote name. Remotes: #{remote_names.join(', ')} "
+        end
+      end
+
+      # clone if necessry
+      module_location = OsUtil.module_location(resolve_module_type(), module_name, version)
+      unless File.directory?(module_location)
+        response = clone_aux(module_type.to_sym, module_id, version, true, true)
+        return response unless response.ok?
+      end
+
+
+      OsUtil.print("Pushing local content to remote #{target_remote['repo_url']} ... ", :yellow)
+      push_to_git_remote_aux(module_name, module_type.to_sym, version, {
+          :remote_repo_url => target_remote['repo_url'],
+          :remote_branch   => 'master',
+          :remote_repo     =>  "#{target_remote['display_name']}--remote}"
+        },  options.force?)
     end
 
     def push_dtkn_module_aux(context_params, internal_trigger=false)
