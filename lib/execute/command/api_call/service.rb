@@ -14,6 +14,7 @@ class DTK::Client::Execute
             :subtype               => 'instance',
             :node_id               => Required(:node),
             :component_template_id => Required(:component),
+            :namespace             => Required(:namespace),
             :idempotent            => Equal::OrDefault(true),
             :donot_update_workflow => Equal::OrDefault(false)
           }

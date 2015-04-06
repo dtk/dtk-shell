@@ -532,7 +532,7 @@ module DTK::Client
     end
 
 #    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of service module to remote repository (dtkn)."
-    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE]", "Push changes from local copy of service module to remote repository (dtkn)."
+    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of service module to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
@@ -541,6 +541,7 @@ module DTK::Client
         :type => :string,
         :banner => "NAMESPACE",
         :desc => "Remote namespace"
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def push_dtkn(context_params, internal_trigger=false)
       push_dtkn_module_aux(context_params, internal_trigger)
     end

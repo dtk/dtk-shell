@@ -67,8 +67,11 @@ module DTK::Client
           },
           :delete_node => {
             :endpoint => "assembly",
-            :url => "assembly/info_about",
-            :opts => {:subtype=>"instance", :about=>"nodes"}
+            :url => "assembly/get_nodes_without_node_groups"
+          },
+          :delete_node_group => {
+            :endpoint => "assembly",
+            :url => "assembly/get_node_groups"
           }
         }
       }
@@ -338,6 +341,21 @@ module DTK::Client
       return response
     end
 
+    desc "WORKSPACE-NAME/ID delete-node-group ^^NODE-NAME [-y]","Delete node group and all nodes that are part of that group."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    def delete_node_group(context_params)
+      response = delete_node_group_aux(context_params)
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      @@invalidate_map << :workspace
+      @@invalidate_map << :workspace_node
+
+      return response
+    end
+
     desc "WORKSPACE-NAME/ID unlink-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]", "Remove a component link."
     def unlink_components(context_params)
       unlink_components_aux(context_params)
@@ -469,6 +487,11 @@ module DTK::Client
       list_violations_aux(context_params)
     end
 
+    desc "WORKSPACE-NAME/ID print-includes", "Finds includes in the workspace."
+    def print_includes(context_params)
+      print_includes_aux(context_params)
+    end
+
     desc "WORKSPACE-NAME/ID purge [-y]", "Purge the workspace, deleting and terminating any nodes that have been spun up."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def purge(context_params)
@@ -492,10 +515,10 @@ module DTK::Client
       set_attribute_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID set-required-params", "Interactive dialog to set required params that are not currently set"
-    def set_required_params(context_params)
+    desc "WORKSPACE-NAME/ID set-required-attributes", "Interactive dialog to set required attributes that are not currently set"
+    def set_required_attributes(context_params)
       workspace_id = context_params.retrieve_arguments([:workspace_id!],method_argument_names)
-      set_required_params_aux(workspace_id,:assembly,:instance)
+      set_required_attributes_aux(workspace_id,:assembly,:instance)
     end
 
 #    desc "WORKSPACE-NAME/ID start [NODE-ID-PATTERN]", "Starts all workspace's nodes,  specific nodes can be selected via node id regex."

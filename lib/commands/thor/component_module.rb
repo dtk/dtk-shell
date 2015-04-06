@@ -178,8 +178,18 @@ module DTK::Client
       :desc => "DTK Repo Manager from which to resolve requested module."
     def install(context_params)
       response = install_module_aux(context_params)
-      @@invalidate_map << :component_module if response && response.ok?
-
+      if response && response.ok?
+        @@invalidate_map << :component_module
+        # TODO: hack before clean up way to indicate to better format what is passed as hash; these lines print the created module,
+        # not the module_directory
+        if module_directory = response.data(:module_directory)
+          split = module_directory.split('/')
+          if split.size > 2
+            installed_module = split[split.size-2..split.size-1].join(':')
+            response = Response::Ok.new('installed_module' => installed_module)
+          end
+        end
+      end
       response
     end
 
@@ -400,7 +410,7 @@ module DTK::Client
      end
 
 #    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to remote repository (dtkn)."
-    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE]", "Push changes from local copy of component module to remote repository (dtkn)."
+    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of component module to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
@@ -410,7 +420,7 @@ module DTK::Client
         :banner => "NAMESPACE",
         :desc => "Remote namespace"
     #hidden option for dev
-    method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def push_dtkn(context_params, internal_trigger=false)
       push_dtkn_module_aux(context_params, internal_trigger)
     end
@@ -426,6 +436,7 @@ module DTK::Client
       # list_diffs_module_aux(context_params)
     end
 
+<<<<<<< HEAD
     # REMOTE INTERACTION
 
     desc "HIDE_FROM_BASE push-remote [REMOTE-NAME]", "Push local changes to remote git repository"
@@ -452,6 +463,11 @@ module DTK::Client
     desc "HIDE_FROM_BASE make-active REPO-NAME", "Make remote active one"
     def make_active(context_params)
       remote_active_aux(context_params)
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID fork NAMESPACE", "Fork component module to new namespace"
+    def fork(context_params)
+      fork_aux(context_params)
     end
 
     #

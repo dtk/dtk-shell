@@ -75,11 +75,11 @@ module DTK; module Client; class CommandHelper
     # :local_branch
     # :no_fetch
     #
-    def push_changes(type,full_module_name,version,opts={})
+    def push_changes(type, full_module_name, version, opts={})
       Response.wrap_helper_actions() do
-        repo_dir = local_repo_dir(type,full_module_name,version,opts)
+        repo_dir = local_repo_dir(type, full_module_name, version, opts)
         repo = create(repo_dir,opts[:local_branch])
-        push_repo_changes_aux(repo,opts)
+        push_repo_changes_aux(repo, opts)
       end
     end
 
@@ -160,7 +160,7 @@ module DTK; module Client; class CommandHelper
       end
     end
 
-    def check_local_dir_exists_with_content(type,module_name,version=nil,module_namespace=nil)
+    def check_local_dir_exists_with_content(type, module_name, version=nil, module_namespace=nil)
       full_module_name = ModuleUtil.join_name(module_name, module_namespace)
       Response.wrap_helper_actions() do
         ret = Hash.new
@@ -186,6 +186,28 @@ module DTK; module Client; class CommandHelper
           raise ErrorUsage.new("Directory (#{local_repo_dir}) must have ths initial content for module (#{full_module_name})")
         end
         {"module_directory" => local_repo_dir}
+      end
+    end
+
+    def cp_r_to_new_namespace(type, module_name, src_namespace, dest_namespace, version = nil)
+      full_name_src  = ModuleUtil.join_name(module_name, src_namespace)
+      full_name_dest = ModuleUtil.join_name(module_name, dest_namespace)
+
+      local_src_dir  = local_repo_dir(type, full_name_src, version)
+      local_dest_dir = local_repo_dir(type, full_name_dest, version)
+
+      Response.wrap_helper_actions() do
+        if File.directory?(local_src_dir) && !(Dir["#{local_src_dir}/*"].empty?)
+          raise ErrorUsage.new("Directory (#{local_dest_dir}) already exist with content.",:log_error=>false) if File.directory?(local_dest_dir) && !(Dir["#{local_dest_dir}/*"].empty?)
+
+          # create namespace directory if does not exist, and copy source to destination module directory
+          namespace_dir = local_repo_dir(type, dest_namespace, version)
+          FileUtils.mkdir_p(namespace_dir)
+          FileUtils.cp_r(local_src_dir, local_dest_dir)
+        else
+          raise ErrorUsage.new("The content for module (#{full_name_src}) should be put in directory (#{local_src_dir})",:log_error=>false)
+        end
+        {"module_directory" => local_dest_dir}
       end
     end
 
@@ -283,7 +305,7 @@ module DTK; module Client; class CommandHelper
     #returns hash with keys
     #: diffs - hash with diffs
     # commit_sha - sha of currenet_commit
-    def push_repo_changes_aux(repo,opts={})
+    def push_repo_changes_aux(repo, opts={})
       diffs = DiffSummary.new()
 
       # adding untracked files (newly added files)
@@ -308,25 +330,33 @@ module DTK; module Client; class CommandHelper
 
       #check if merge needed
       commit_shas = Hash.new
-      merge_rel = repo.merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
-      commit_sha = nil
+      merge_rel   = repo.merge_relationship(:remote_branch,remote_branch_ref, :ret_commit_shas => commit_shas)
+      commit_sha  = nil
+      diffs       = DiffSummary.new_version(repo)
+
       if merge_rel == :equal
         commit_sha = commit_shas[:other_sha]
       elsif [:branchpoint,:local_behind].include?(merge_rel)
-        raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to server")
+        if opts[:force]
+          diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
+          if diffs.any_diffs?()
+            repo.push(remote_branch_ref, {:force => opts[:force]})
+          end
+          commit_sha = repo.find_remote_sha(remote_branch_ref)
+        else
+          where = opts[:where]||'server'
+          raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to #{where}. If you want to force push use push-dtkn --force.")
+        end
       elsif merge_rel == :no_remote_ref
         repo.push(remote_branch_ref)
-        diffs = DiffSummary.new_version(repo)
         commit_sha = commit_shas[:local_sha]
       elsif merge_rel == :local_ahead
         # see if any diffs between fetched remote and local branch
         # this has be done after commit
-
         diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
 
-
         if diffs.any_diffs?()
-          repo.push(remote_branch_ref)
+          repo.push(remote_branch_ref, {:force => opts[:force]})
         end
 
         commit_sha = repo.find_remote_sha(remote_branch_ref)
