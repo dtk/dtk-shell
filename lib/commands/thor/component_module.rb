@@ -436,7 +436,6 @@ module DTK::Client
       # list_diffs_module_aux(context_params)
     end
 
-<<<<<<< HEAD
     # REMOTE INTERACTION
 
     desc "HIDE_FROM_BASE push-remote [REMOTE-NAME]", "Push local changes to remote git repository"
