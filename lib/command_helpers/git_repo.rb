@@ -345,7 +345,7 @@ module DTK; module Client; class CommandHelper
           commit_sha = repo.find_remote_sha(remote_branch_ref)
         else
           where = opts[:where]||'server'
-          raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to #{where}. If you want to force push use push-dtkn --force.")
+          raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to #{where}. If you want to force push use '--force' option.")
         end
       elsif merge_rel == :no_remote_ref
         repo.push(remote_branch_ref)
