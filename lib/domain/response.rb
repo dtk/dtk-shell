@@ -50,7 +50,7 @@ module DTK
         end
       end
 
-      def handle_error_in_wrapper(exception)
+      def self.handle_error_in_wrapper(exception)
         error_hash =  {
           "message"=> exception.message,
           "backtrace" => exception.backtrace,
@@ -58,7 +58,7 @@ module DTK
           }
 
         if DTK::Configuration.get(:development_mode)
-          DtkLogger.instance.error_pp("Error inside wrapper DEV ONLY: #{exception.message}", e.backtrace)
+          DtkLogger.instance.error_pp("Error inside wrapper DEV ONLY: #{exception.message}", exception.backtrace)
         end
 
         Error::Internal.new(error_hash)

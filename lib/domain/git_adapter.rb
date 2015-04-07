@@ -6,7 +6,14 @@ module DTK
       attr_accessor :git_repo
 
       def initialize(repo_dir, local_branch_name = nil)
-        @git_repo = Git.init(repo_dir)
+
+        if DTK::Configuration.get(:debug_grit)
+          logger       = Logger.new(STDOUT)
+          logger.level = Logger::INFO
+          @git_repo = Git.init(repo_dir, :log => logger)
+        else
+          @git_repo = Git.init(repo_dir)
+        end
 #       If we want to log GIT interaction
 #       @git_repo = Git.init(repo_dir, :log => Logger.new(STDOUT))
         @local_branch_name = local_branch_name

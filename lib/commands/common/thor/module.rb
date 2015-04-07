@@ -474,7 +474,7 @@ module DTK::Client
       push_to_git_remote_aux(module_name, module_type.to_sym, version, {
           :remote_repo_url => target_remote['repo_url'],
           :remote_branch   => 'master',
-          :remote_repo     =>  "#{target_remote['display_name']}--remote}"
+          :remote_repo     =>  "#{target_remote['display_name']}--remote"
         },  options.force?)
     end
 

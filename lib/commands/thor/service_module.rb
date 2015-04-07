@@ -63,6 +63,7 @@ module DTK::Client
             ["list","list","# List assemblies for given service module."]
           ],
           :remotes => [
+            ["push-remote",   "push-remote [REMOTE-NAME] [--force]",  "# Push local changes to remote git repository"],
             ["list-remotes",  "list-remotes",  "# List git remotes for given module"],
             ["add-remote",    "add-remote REMOTE-NAME REMOTE-URL", "# Add git remote for given module"],
             ["remove-remote", "remove-remote REPO-NAME [-y]", "# Remove git remote for given module"],
@@ -582,6 +583,12 @@ module DTK::Client
 
 
     # REMOTE INTERACTION
+
+    desc "HIDE_FROM_BASE push-remote [REMOTE-NAME] [--force]", "Push local changes to remote git repository"
+    method_option :force, :type => :boolean, :default => false
+    def push_remote(context_params)
+      push_remote_module_aux(context_params)
+    end
 
     desc "HIDE_FROM_BASE list-remotes", "List git remotes for given module"
     def list_remotes(context_params)

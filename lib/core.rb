@@ -6,7 +6,12 @@ require 'restclient'
 require 'colorize'
 require 'json'
 require 'pp'
-require 'ap' if ::DTK::Configuration.get(:development_mode)
+
+# Development Gems
+if ::DTK::Configuration.get(:development_mode)
+  require 'ap'
+  require 'looksee'
+end
 
 #TODO: for testing; fix by pass in commadn line argument
 #RestClient.log = STDOUT
