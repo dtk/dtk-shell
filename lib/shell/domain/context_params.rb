@@ -9,8 +9,8 @@ module DTK::Shell
       @method_arguments = override_method_arguments
       @thor_options     = Hash.new
 
-      # freeze this
-      @method_arguments.freeze
+      # freeze this - removed because we try to make a modification on this array later which raises error
+      #@method_arguments.freeze
     end
 
     def add_context_to_params(context_name, entity_name, context_value = nil)
