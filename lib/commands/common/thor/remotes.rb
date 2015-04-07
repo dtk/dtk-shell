@@ -2,19 +2,6 @@
 module DTK::Client
   module RemotesMixin
 
-    def remote_active_aux(context_params)
-      module_id, remote_name = context_params.retrieve_arguments([::DTK::Client::ModuleMixin::REQ_MODULE_ID,:option_1!], method_argument_names)
-      module_type = get_module_type(context_params)
-
-      post_body = {
-        "#{module_type}_id".to_sym => module_id,
-        :remote_name => remote_name
-      }
-
-      response = post rest_url("#{module_type}/make_git_remote_active"), post_body
-      response
-    end
-
     def remote_remove_aux(context_params)
       module_id, remote_name = context_params.retrieve_arguments([::DTK::Client::ModuleMixin::REQ_MODULE_ID,:option_1!], method_argument_names)
       module_type = get_module_type(context_params)

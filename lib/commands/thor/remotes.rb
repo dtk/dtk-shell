@@ -28,10 +28,5 @@ module DTK::Client
       raise "NOT IMPLEMENTED"
     end
 
-    desc "make-active", "Make remote active one"
-    def make_active(context_params)
-      raise "NOT IMPLEMENTED"
-    end
-
   end
 end

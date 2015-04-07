@@ -44,9 +44,7 @@ module DTK::Client
               ["push-remote",  "push-remote [REMOTE-NAME] [--force]",  "# Push local changes to remote git repository"],
               ["list-remotes",  "list-remotes",  "# List git remotes for given module"],
               ["add-remote",    "add-remote REMOTE-NAME REMOTE-URL", "# Add git remote for given module"],
-              ["remove-remote", "remove-remote REPO-NAME [-y]", "# Remove git remote for given module"],
-              ["make-active",   "make-active REMOTE-NAME", "# Make remote active one"]
-            ]
+              ["remove-remote", "remove-remote REPO-NAME [-y]", "# Remove git remote for given module"]            ]
           }
       })
     end
@@ -266,11 +264,6 @@ module DTK::Client
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def remove_remote(context_params)
       remote_remove_aux(context_params)
-    end
-
-    desc "HIDE_FROM_BASE make-active REPO-NAME", "Make remote active one"
-    def make_active(context_params)
-      remote_active_aux(context_params)
     end
 
     #
