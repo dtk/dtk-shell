@@ -173,6 +173,7 @@ module DTK::Client
       edit_opts = {
         :automatically_clone => true,
         :pull_if_needed => false,
+        :service_instance_module => true,
         :assembly_module => {
           :assembly_name => assembly_name,
           :version => version

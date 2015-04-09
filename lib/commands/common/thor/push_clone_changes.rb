@@ -35,6 +35,7 @@ module DTK::Client
       post_body.merge!(:modification_type => opts[:modification_type]) if opts[:modification_type]
       post_body.merge!(:force_parse => true) if options['force-parse'] || opts[:force_parse]
       post_body.merge!(:update_from_includes => true) if opts[:update_from_includes]
+      post_body.merge!(:service_instance_module => true) if opts[:service_instance_module]
 
       if opts[:set_parsed_false]
         post_body.merge!(:set_parsed_false => true)
