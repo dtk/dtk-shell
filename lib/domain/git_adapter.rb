@@ -279,6 +279,10 @@ module DTK
         end
       end
 
+      def reset_hard(current_branch_sha)
+        @git_repo.reset_hard(current_branch_sha)
+      end
+
     private
       def handle_git_error(&block)
         self.class.handle_git_error(&block)

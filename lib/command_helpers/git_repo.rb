@@ -128,6 +128,16 @@ module DTK; module Client; class CommandHelper
       end
     end
 
+    def hard_reset_branch_to_sha(type, module_name, opts={})
+      Response.wrap_helper_actions() do
+        full_module_name   = full_module_name(module_name,opts)
+        repo_dir           = local_repo_dir(type, full_module_name, opts[:version], opts)
+        repo               = create(repo_dir, opts[:local_branch])
+        current_branch_sha = opts[:current_branch_sha]
+        repo.reset_hard(current_branch_sha)
+      end
+    end
+
     # opts can have the following keys
     #
     # :version
