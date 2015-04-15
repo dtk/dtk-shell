@@ -163,7 +163,7 @@ module DTK::Client
           ]
         },
         :identifier_only => {
-          :node      => [
+          :node => [
             ['add-component',"add-component COMPONENT","# Add a component to the node."],
             ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from service's node"],
             ['info',"info","# Return info about node instance belonging to given workspace."],
@@ -620,7 +620,7 @@ TODO: will put in dot release and will rename to 'extend'
 
     # only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE add-component NODE-NAME COMPONENT", "Add a component to the service."
+    desc "SERVICE-NAME/ID add-component COMPONENT", "Add a component to the service."
     def add_component(context_params)
       response = create_component_aux(context_params)
 

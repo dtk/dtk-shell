@@ -142,7 +142,7 @@ module DTK::Client
           ]
         },
         :identifier_only => {
-          :node      => [
+          :node => [
             ['add-component',"add-component COMPONENT","# Add a component to the node."],
             ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from workspace's node"],
             ['info',"info","# Return info about node instance belonging to given workspace."],
@@ -257,7 +257,7 @@ module DTK::Client
 
     #only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
-    desc "HIDE_FROM_BASE add-component NODE-NAME COMPONENT", "Add a component to a workspace."
+    desc "WORKSPACE-NAME/ID add-component COMPONENT", "Add a component to a workspace."
     def add_component(context_params)
       response = create_component_aux(context_params)
       return response unless response.ok?

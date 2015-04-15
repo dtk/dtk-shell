@@ -523,13 +523,16 @@ module DTK::Client
       # If method is invoked from 'assembly/node' level retrieve node_id argument
       # directly from active context
       if context_params.is_there_identifier?(:node)
-        mapping = [REQ_ASSEMBLY_OR_WS_ID,:node_id!,:option_1!]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID, :node_id!, :option_1!]
+        assembly_id, node_id, component_template_id = context_params.retrieve_arguments(mapping, method_argument_names)
       else
         # otherwise retrieve node_id from command options
-        mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID, :option_1!]
+        assembly_id, component_template_id = context_params.retrieve_arguments(mapping, method_argument_names)
+        node_id = nil
       end
 
-      assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
+      # assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
       namespace, component_template_id = get_namespace_and_name_for_component(component_template_id)
 
       post_body = {
