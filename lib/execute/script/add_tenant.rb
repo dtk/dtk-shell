@@ -1,14 +1,14 @@
 class DTK::Client::Execute::Script
   class AddTenant < self
     def self.ret_params_from_argv()
-      banner = "Usage: dtk-execute add-tenant TENANT-NAME CATALOG-USERNAME -p PASSWORD [-s SERVICE-INSTANCE]"
-      tenant_name = catalog_username = tenant_number = nil
-      if ARGV.size > 2
+      banner = "Usage: dtk-execute add-tenant TENANT-NAME CATALOG-USERNAME -p PASSWORD -v VERSION [-s SERVICE-INSTANCE]"
+      version = tenant_name = catalog_username = tenant_number = nil
+      if ARGV.size > 3
         tenant_name = ARGV[1]
         if tenant_name =~ /^dtk([0-9]+)$/
           tenant_number = $1
         else
-          raise ErrorUsage.new("TENANT-NAME must be of form 'dtkNUMs', like dtk601")
+          raise ErrorUsage.new("TENANT-NAME must be of form 'dtkNUM', like dtk601")
         end
         catalog_username = ARGV[2]
       else
@@ -23,12 +23,19 @@ class DTK::Client::Execute::Script
         opts.on( '-s', '--service SERVICE-INSTANCE', "Name of Service instance" ) do |s|
           params[:service_instance] = s
         end
+        opts.on( '-v', '--version VERSION', "Version of code" ) do |v|
+          params[:version] = v
+        end
       end
 
-      # TODO: use opt parser to enforce that :password option is manditory
-      unless password = params[:password]
+      # TODO: use opt parser to enforce that :password and :version options are manditory
+      unless params[:password]
         raise ErrorUsage.new("Password is mandatory; use -p commnd line option")
       end
+      unless params[:version]
+        raise ErrorUsage.new("Version is mandatory; use -v commnd line option")
+      end
+      
       service_instance = params[:service_instance] || "dtkhost#{tenant_number[0]}"
       to_add = {
         :tenant_name      => tenant_name,
@@ -43,6 +50,7 @@ class DTK::Client::Execute::Script
       catalog_username = params[:catalog_username]
       service = params[:service_instance]
       password = params[:password]
+      version =  params[:version]
       server_node = params[:server_node_name] || 'server'
       router_node = params[:router_node_name] || 'router'
 
@@ -52,7 +60,8 @@ class DTK::Client::Execute::Script
       av_pairs = {
         :catalog_username => catalog_username,
         :tenant_password  => password,
-        :catalog_password => password
+        :catalog_password => password,
+        :server_branch    => version,
       }
       
       ExecuteContext(:print_results => true) do
