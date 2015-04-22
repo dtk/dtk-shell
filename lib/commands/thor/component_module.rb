@@ -127,6 +127,7 @@ module DTK::Client
       namespace, module_name = get_namespace_and_name(full_module_name, ModuleUtil::NAMESPACE_SEPERATOR)
       module_type            = get_module_type(context_params)
 
+      OsUtil.print('Retrieving puppet module metadata, please wait ...')
       response = puppet_forge_install_aux(context_params, pf_module_name, module_name, namespace, nil, module_type)
 
       @@invalidate_map << :component_module

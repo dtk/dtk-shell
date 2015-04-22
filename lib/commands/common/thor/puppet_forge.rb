@@ -14,7 +14,7 @@ module DTK::Client
       raise DtkError, "Puppet forge module name should be in format USERNAME-NAME" unless pf_module_name.match(NAME_REGEX)
 
       response = poller_response do
-        post rest_url("component_module/install_puppet_forge_modules"),PostBody.new(post_body_hash)
+        post rest_url("component_module/install_puppet_forge_modules"), PostBody.new(post_body_hash)
       end
 
       return response unless response.ok?
