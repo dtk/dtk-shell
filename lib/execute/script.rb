@@ -1,7 +1,6 @@
 class DTK::Client::Execute
   class Script < self
     dtk_require('script/add_tenant')
-    dtk_require('script/add_tenant_without_router')
     def self.execute()
       script_class().execute_script()
     end
@@ -9,7 +8,6 @@ class DTK::Client::Execute
    private
     Scripts = {
       'add-tenant' => AddTenant,
-      'add-tenant-without-router' => AddTenantWithoutRouter
     }
 
     def self.script_class()

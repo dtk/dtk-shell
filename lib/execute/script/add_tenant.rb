@@ -63,6 +63,13 @@ class DTK::Client::Execute::Script
         :catalog_password => password,
         :server_branch    => version,
       }
+
+      linked_component_instances = 
+        [
+         "#{router_node}/dtk_nginx::vhosts_for_router",
+         "#{server_node}/dtk_postgresql::databases",
+         "#{server_node}/host::hostname"
+        ]
       
       ExecuteContext(:print_results => true) do
         result = call 'service/add_component',
@@ -79,16 +86,13 @@ class DTK::Client::Execute::Script
             :value          => v
         end
         
+       linked_component_instances.each do |linked_component_instance| 
         result = call 'service/link_components',
           :service          => service,
           :input_component  => "#{server_node}/#{component}",
-          :output_component => "#{server_node}/dtk_postgresql::databases"
+          :output_component => linked_component_instance
+        end
 
-        result = call 'service/link_components',
-          :service          => service,
-          :input_component  => "#{server_node}/#{component}",
-          :output_component => "#{router_node}/dtk_nginx::vhosts_for_router"
-        
         result = call 'service/execute_workflow',
           :service         => service,
           :workflow_name   => 'add_tenant',
