@@ -348,7 +348,7 @@ module DTK::Client
       module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID,REQ_MODULE_NAME,:option_1],method_argument_names)
 
       catalog      = 'dtkn'
-      version      = options["version"]
+      version      = options.version
       module_type  = get_module_type(context_params)
       skip_recursive_pull = context_params.get_forwarded_options()[:skip_recursive_pull]
 
@@ -358,7 +358,12 @@ module DTK::Client
 
       if catalog.to_s.eql?("dtkn")
         clone_aux(module_type.to_sym, module_id, version, true, true) unless File.directory?(module_location)
-        opts = {:version => version, :remote_namespace => options.namespace, :skip_recursive_pull => skip_recursive_pull}
+        opts = {
+          :force               => options.force?,   
+          :version             => version, 
+          :remote_namespace    => options.namespace, 
+          :skip_recursive_pull => skip_recursive_pull
+        }
 
         response = pull_from_remote_aux(module_type.to_sym, module_id, opts)
         return response unless response.ok?

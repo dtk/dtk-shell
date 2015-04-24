@@ -293,11 +293,15 @@ module DTK::Client
     # end
 
     # desc "SERVICE-MODULE-NAME/ID pull-from-dtkn [-n NAMESPACE] [-v VERSION]", "Update local service module from remote repository."
-    desc "SERVICE-MODULE-NAME/ID pull-dtkn [-n NAMESPACE]", "Update local service module from remote repository."
-    method_option "namespace",:aliases => "-n",
-      :type => :string,
+    desc "SERVICE-MODULE-NAME/ID pull-dtkn [-n NAMESPACE] [--force]", "Update local service module from remote repository."
+    method_option :namespace,:aliases => '-n',
+      :type   => :string,
       :banner => "NAMESPACE",
-      :desc => "Remote namespace"
+      :desc   => "Remote namespace"
+    method_option :force,:aliases => '-f',
+      :type    => :boolean, 
+      :desc   => "Force pull",
+      :default => false
     def pull_dtkn(context_params)
       pull_dtkn_aux(context_params)
     end

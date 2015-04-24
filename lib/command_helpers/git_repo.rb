@@ -446,7 +446,7 @@ module DTK; module Client; class CommandHelper
 
     def pull_repo_changes_aux(repo,opts={})
       diffs = DiffSummary.new()
-      hard_reset = opts[:hard_reset]
+      hard_reset = opts[:hard_reset] || opts[:force]
 
       # default commit in case it is needed
       repo.stage_and_commit("Commit prior to pull from remote") if repo.changed?

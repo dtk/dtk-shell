@@ -34,7 +34,7 @@ module DTK::Client
         unless rsa_pub_key
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
         end
-        opts_perform_locally = remote_params.merge(:full_module_name => full_module_name)
+        opts_perform_locally = remote_params.merge(:full_module_name => full_module_name, :force => opts[:force])
         PullFromRemote.perform_locally(self,module_type,module_id,module_name,opts_perform_locally)
       else
         # TODO: see if this works correctly

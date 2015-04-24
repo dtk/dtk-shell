@@ -148,11 +148,15 @@ module DTK::Client
       publish_module_aux(context_params)
     end
 
-    desc "TEST-MODULE-NAME/ID pull-dtkn [-n NAMESPACE]", "Update local test module from remote repository."
-    method_option "namespace",:aliases => "-n",
-      :type => :string,
+    desc "TEST-MODULE-NAME/ID pull-dtkn [-n NAMESPACE] [--force]", "Update local test module from remote repository."
+    method_option :namespace,:aliases => '-n',
+      :type   => :string,
       :banner => "NAMESPACE",
-      :desc => "Remote namespace"
+      :desc   => "Remote namespace"
+    method_option :force,:aliases => '-f',
+      :type    => :boolean, 
+      :desc   => "Force pull",
+      :default => false
     def pull_dtkn(context_params)
       pull_dtkn_aux(context_params)
     end
