@@ -28,7 +28,7 @@ module DTK::Client
       end
 
       # check whether a local module exists to determine whether pull from local clone or try to pull from server
-      OsUtil.print("Pulling changes to remote: #{remote_params[:remote_repo]} @ #{remote_params[:remote_repo_url]}")
+      OsUtil.print("Pulling changes from remote: #{remote_params[:remote_repo]} @ #{remote_params[:remote_repo_url]}")
 
       if Helper(:git_repo).local_clone_dir_exists?(module_type,module_name,:full_module_name=>full_module_name,:version=>version)
         unless rsa_pub_key
