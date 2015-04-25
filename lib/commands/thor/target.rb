@@ -1,10 +1,11 @@
+dtk_require_common_commands('thor/common_base')
 dtk_require_common_commands('thor/inventory_parser')
 dtk_require_common_commands('thor/create_target')
 module DTK::Client
   class Target < CommandBaseThor
+    include Commands
     include InventoryParserMixin
-    include CreateTargetMixin
-
+    
     def self.pretty_print_cols()
       PPColumns.get(:target)
     end
@@ -86,14 +87,27 @@ module DTK::Client
       post rest_url("target/install_agents"), post_body
     end
 
-    desc "create-target [TARGET-NAME] --provider PROVIDER --region REGION [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]", "Create target based on given provider"
+    desc "create-target-ec2-classic [TARGET-NAME] --provider PROVIDER --region REGION [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]", "Create target based on given provider"
     method_option :provider, :type => :string
     method_option :region, :type => :string
     method_option :keypair, :type => :string
     method_option :security_group, :type => :string, :aliases => '--security-groups'
-    def create_target(context_params)
+    def create_target_ec2_classic(context_params)
       option_list = [:provider!, :region, :keypair, :security_group]
-      response = create_target_aux(context_params,option_list)
+      response = Common::CreateTarget.new(self,context_params).execute(:ec2_classic,option_list)
+      @@invalidate_map << :target
+      response
+    end
+
+    desc "create-target-ec2-vpc [TARGET-NAME] --provider PROVIDER --region REGION --subnet SUBNET-ID [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]", "Create target based on given provider"
+    method_option :provider, :type => :string
+    method_option :subnet, :type => :string
+    method_option :region, :type => :string
+    method_option :keypair, :type => :string
+    method_option :security_group, :type => :string, :aliases => '--security-groups'
+    def create_target_ec2_vpc(context_params)
+      option_list = [:provider!, :subnet!, :region, :keypair, :security_group]
+      response = Common::CreateTarget.new(self,context_params).execute(:ec2_vpc,option_list)
       @@invalidate_map << :target
       response
     end
