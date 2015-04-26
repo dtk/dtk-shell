@@ -188,10 +188,10 @@ module DTK::Client
       return post rest_url("target/delete"), post_body
     end
 
-    desc "TARGET-NAME/ID edit-target [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]","Edit keypair or security-group for given target"
+    desc "TARGET-NAME/ID update-target [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]","Edit keypair or security-group for given target"
     method_option :keypair, :type => :string
     method_option :security_group, :type => :string, :aliases => '--security-groups'
-    def edit_target(context_params)
+    def update_target(context_params)
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
       keypair, security_group = context_params.retrieve_thor_options([:keypair, :security_group], options)
 
@@ -215,7 +215,7 @@ module DTK::Client
         :target_id => target_id,
         :iaas_properties => iaas_properties
       }
-      return post rest_url("target/edit_target"), post_body
+      return post rest_url("target/update_target"), post_body
     end
   end
 end
