@@ -188,10 +188,12 @@ module DTK::Client
     end
 
 =begin
-    desc "TARGET-NAME/ID update-target [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]","Edit keypair or security-group for given target"
+# TODO: DTK-2056: rewite
+also put in list property
+    desc "TARGET-NAME/ID set-property PROPERTY VALUE
     method_option :keypair, :type => :string
     method_option :security_group, :type => :string, :aliases => '--security-groups'
-    def update_target(context_params)
+    def set_property(context_params)
       raise "change so that param is seperated key value parts"
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
       keypair, security_group = context_params.retrieve_thor_options([:keypair, :security_group], options)
@@ -216,7 +218,7 @@ module DTK::Client
         :target_id => target_id,
         :iaas_properties => iaas_properties
       }
-      post rest_url("target/update_target"), post_body
+      post rest_url("target/set_properties"), post_body
     end
 =end
   end

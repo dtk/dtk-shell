@@ -148,14 +148,6 @@ module DTK
           "dsl_parsed" => "DSL PARSED:"
         }
 
-        mappings["target"] = {
-          "id" => "ID:",
-          "display_name" => "NAME:",
-          "type" => "TYPE:",
-          "iaas_type" => "PROVIDER_TYPE:",
-          "provider_name" => "PROVIDER_NAME:"
-        }
-
         mappings[type][label] if mappings[type]
       end
 
