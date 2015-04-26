@@ -34,8 +34,7 @@ module DTK::Client
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
 
       post_body = {:target_id => target_id}
-      response = post rest_url('target/info'), post_body
-      response.render_custom_info("target")
+      post rest_url('target/info'), post_body
     end
 
     desc "TARGET-NAME/ID import-nodes --source SOURCE","Reads from inventory dsl and populates the node instance objects (SOURCE: file:/path/to/file.yaml)."
@@ -188,10 +187,12 @@ module DTK::Client
       return post rest_url("target/delete"), post_body
     end
 
+=begin
     desc "TARGET-NAME/ID update-target [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]","Edit keypair or security-group for given target"
     method_option :keypair, :type => :string
     method_option :security_group, :type => :string, :aliases => '--security-groups'
     def update_target(context_params)
+      raise "change so that param is seperated key value parts"
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
       keypair, security_group = context_params.retrieve_thor_options([:keypair, :security_group], options)
 
@@ -215,7 +216,8 @@ module DTK::Client
         :target_id => target_id,
         :iaas_properties => iaas_properties
       }
-      return post rest_url("target/update_target"), post_body
+      post rest_url("target/update_target"), post_body
     end
+=end
   end
 end

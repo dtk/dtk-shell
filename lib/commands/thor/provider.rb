@@ -107,6 +107,8 @@ module DTK::Client
       return response
     end
 
+=begin
+TODO: deprecated until this can be in sync with create-targets from target context where params depend on type
 
     desc "PROVIDER-ID/NAME create-target [TARGET-NAME] --region REGION --keypair KEYPAIR --security-group SECURITY-GROUP(S)", "Create target based on given provider"
     method_option :region, :type => :string
@@ -144,7 +146,7 @@ module DTK::Client
 
       return response
     end
-
+=end
 
     desc "list","Lists available providers."
     def list(context_params)
@@ -172,14 +174,6 @@ module DTK::Client
       response = post rest_url("target/list"), { :subtype => :instance, :parent_id => provider_id }
       response.render_table(:target)
     end
-
-    # Aldin: moved to target base context (target>set-default-target)
-    #
-    # desc "set-default-target TARGET-NAME/ID","Sets the default target."
-    # def set_default_target(context_params)
-    #   target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
-    #   post rest_url("target/set_default"), { :target_id => target_id }
-    # end
 
     desc "delete-provider PROVIDER-IDENTIFIER [-y]","Deletes targets provider"
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
