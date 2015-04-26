@@ -18,27 +18,33 @@ module DTK; module Client; module Commands::Common
 
    private
     def iaas_properties(type,option_list)
-pp option_list
-      provider, region, keypair, security_group = retrieve_thor_options(option_list)
-      iaas_properties = Hash.new
-iaas_properties.merge!(:provider => provider) if provider
+      iaas_properties = retrieve_option_hash(option_list)
+      special_processing_security_groups!(iaas_properties)
+      special_processing_region!(iaas_properties)
+      iaas_properties
+    end
 
-      Shell::InteractiveWizard.validate_region(region) if region
-      iaas_properties.merge!(:keypair => keypair) if keypair
-      
-      if security_group 
-        security_groups = []
-        raise DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ") if security_group.end_with?(',')
-        
+    def special_processing_region!(iaas_properties)
+      if region = iaas_properties[:region]
+        Shell::InteractiveWizard.validate_region(region)
+      end
+      iaas_properties
+    end
+
+    def special_processing_security_groups!(iaas_properties)
+      if security_group = iaas_properties[:security_group] 
+        if security_group.end_with?(',')
+          raise DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ")
+        end
         security_groups = security_group.split(',')
         
-        if (security_groups.empty? || security_groups.size==1)
-          iaas_properties.merge!(:security_group => security_group)
-        else
+        unless security_groups.empty? || security_groups.size==1
+          iaas_properties.delete(:security_group)
           iaas_properties.merge!(:security_group_set => security_groups)
         end
       end
       iaas_properties
     end
+
   end
 end; end; end
