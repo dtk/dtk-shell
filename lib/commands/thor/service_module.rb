@@ -609,6 +609,11 @@ module DTK::Client
       remote_remove_aux(context_params)
     end
 
+    desc "SERVICE-MODULE-NAME/ID fork NAMESPACE", "Fork service module to new namespace"
+    def fork(context_params)
+      fork_aux(context_params)
+    end
+
     #
     # DEVELOPMENT MODE METHODS
     #

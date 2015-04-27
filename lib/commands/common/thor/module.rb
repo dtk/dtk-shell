@@ -628,7 +628,7 @@ module DTK::Client
       new_context_params.add_context_to_params(module_type, module_type)
       new_context_params.method_arguments = ["#{fork_namespace}:#{name}"]
 
-      create_response = CommonModule::Import.new(self, new_context_params).from_file()
+      create_response = DTK::Client::ContextRouter.routeTask(module_type, "import", new_context_params, @conn)
       unless create_response.ok?
         FileUtils.rm_rf("#{response['data']['module_directory']}")
         return create_response
