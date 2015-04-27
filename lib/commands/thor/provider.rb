@@ -48,7 +48,7 @@ module DTK::Client
 
       keypair, security_group = context_params.retrieve_thor_options([:keypair, :security_group], options)
 
-      iaas_properties.merge!(:keypair_name => keypair) if keypair
+      iaas_properties.merge!(:keypair => keypair) if keypair
       if security_group
         if security_group.end_with?(',')
           raise ::DTK::Client::DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ")
