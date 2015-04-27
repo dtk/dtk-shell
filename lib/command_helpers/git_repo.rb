@@ -9,7 +9,7 @@ module DTK; module Client; class CommandHelper
   class GitRepo < self; class << self
 
     def create(repo_dir,branch=nil,opts={})
-      GitAdapter.new(repo_dir,branch)
+      GitAdapter.new(repo_dir, branch)
     end
 
     def create_clone_from_optional_branch(type, module_name, repo_url, opts={})
@@ -18,6 +18,7 @@ module DTK; module Client; class CommandHelper
       namespace =  opts[:namespace]
       create_clone_with_branch(type,module_name,repo_url,branch,version,namespace,{:track_remote_branch => true}.merge(opts))
     end
+
     # TODO: should we deprecate below for above, subsituting the body of below for above ?
     def create_clone_with_branch(type, module_name, repo_url, branch=nil, version=nil, module_namespace=nil, opts={})
       Response.wrap_helper_actions do
@@ -40,7 +41,7 @@ module DTK; module Client; class CommandHelper
 
         begin
           opts_clone = (opts[:track_remote_branch] ? {:track_remote_branch => true} : {})
-          GitAdapter.clone(repo_url, target_repo_dir, branch,opts_clone)
+          GitAdapter.clone(repo_url, target_repo_dir, branch, opts_clone)
         rescue => e
           # Handling Git error messages with more user friendly messages
           e = GitErrorHandler.handle(e)
@@ -73,12 +74,13 @@ module DTK; module Client; class CommandHelper
     # :remote_branch
     # :remote_repo_url
     # :local_branch
+    # :override_repo_dir_location
     # :no_fetch
     #
     def push_changes(type, full_module_name, version, opts={})
       Response.wrap_helper_actions() do
-        repo_dir = local_repo_dir(type, full_module_name, version, opts)
-        repo = create(repo_dir,opts[:local_branch])
+        repo_dir = opts[:override_repo_dir_location] ? opts[:override_repo_dir_location] : local_repo_dir(type, full_module_name, version, opts)
+        repo = create(repo_dir, opts[:local_branch])
         push_repo_changes_aux(repo, opts)
       end
     end
@@ -505,6 +507,7 @@ module DTK; module Client; class CommandHelper
     def remote(remote_repo=nil)
       remote_repo||"origin"
     end
+
     def remote_branch_ref(local_branch,opts={})
       "#{remote(opts[:remote_repo])}/#{opts[:remote_branch]||opts[:local_branch]||local_branch}"
     end
@@ -525,7 +528,7 @@ module DTK; module Client; class CommandHelper
     end
 
     def local_repo_dir(type,full_module_name,version=nil,opts={})
-      OsUtil.module_location(type,full_module_name,version,opts)
+      OsUtil.module_location(type, full_module_name, version, opts)
     end
 
     def backup_dir(type, full_module_name, opts={})

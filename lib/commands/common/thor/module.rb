@@ -475,13 +475,22 @@ module DTK::Client
         return response unless response.ok?
       end
 
-
-      OsUtil.print("Pushing local content to remote #{target_remote['repo_url']} ... ", :yellow)
-      push_to_git_remote_aux(module_name, module_type.to_sym, version, {
-          :remote_repo_url => target_remote['repo_url'],
-          :remote_branch   => 'master',
-          :remote_repo     =>  "#{target_remote['display_name']}--remote"
-        },  options.force?)
+      if target_remote['base_git_location']
+        OsUtil.print("Pushing local content to remote #{target_remote['base_git_url']} in folder #{target_remote['base_git_location']} ...")
+        return push_to_git_remote_location_aux(module_name, module_type.to_sym, version, {
+                  :remote_repo_url      => target_remote['base_git_url'],
+                  :remote_repo_location => target_remote['base_git_location'],
+                  :remote_branch        => 'master',
+                  :remote_repo          => "#{target_remote['display_name']}--remote"
+               }, options.force?)
+      else
+        OsUtil.print("Pushing local content to remote #{target_remote['repo_url']} ... ", :yellow)
+        return push_to_git_remote_aux(module_name, module_type.to_sym, version, {
+                  :remote_repo_url => target_remote['repo_url'],
+                  :remote_branch   => 'master',
+                  :remote_repo     =>  "#{target_remote['display_name']}--remote"
+                },  options.force?)
+      end
     end
 
     def push_dtkn_module_aux(context_params, internal_trigger=false)
