@@ -269,7 +269,7 @@ module DTK::Client
       :banner => "NAMESPACE",
       :desc   => "Remote namespace"
     method_option :force,:aliases => '-f',
-      :type    => :boolean, 
+      :type    => :boolean,
       :desc   => "Force pull",
       :default => false
     def pull_dtkn(context_params)

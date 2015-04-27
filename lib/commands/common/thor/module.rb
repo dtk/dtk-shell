@@ -222,6 +222,7 @@ module DTK::Client
     end
 
     def import_git_module_aux(context_params)
+      OsUtil.print('Retrieving git module data, please wait ...')
       CommonModule::Import.new(self, context_params).from_git()
     end
 
@@ -359,9 +360,9 @@ module DTK::Client
       if catalog.to_s.eql?("dtkn")
         clone_aux(module_type.to_sym, module_id, version, true, true) unless File.directory?(module_location)
         opts = {
-          :force               => options.force?,   
-          :version             => version, 
-          :remote_namespace    => options.namespace, 
+          :force               => options.force?,
+          :version             => version,
+          :remote_namespace    => options.namespace,
           :skip_recursive_pull => skip_recursive_pull
         }
 
