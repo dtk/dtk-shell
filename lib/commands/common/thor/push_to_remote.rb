@@ -24,7 +24,7 @@ module DTK::Client
 
       begin
         # clone desired repo
-        GitAdapter.clone(opts[:remote_repo_url], temp_stage_dir, opts[:remote_branch])
+        ::DTK::Client::GitAdapter.clone(opts[:remote_repo_url], temp_stage_dir, opts[:remote_branch])
         # make sure that content dir exist
         FileUtils.mkdir_p(content_dir)
         # copy content of module to new dir (overriding everything in process)
