@@ -621,6 +621,15 @@ module DTK::Client
 
       module_name = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
       namespace, name = get_namespace_and_name(module_name,':')
+
+      module_location = OsUtil.module_location(module_type, module_name, nil)
+      unless File.directory?(module_location)
+        if Console.confirmation_prompt("Module '#{module_name}' has not been cloned. Would you like to clone module now"+'?')
+          response = clone_aux(module_type.to_sym, module_id, nil, true)
+          return response unless response.ok?
+        end
+      end
+
       response = Helper(:git_repo).cp_r_to_new_namespace(module_type, name, namespace, fork_namespace)
       return response unless response.ok?
 
