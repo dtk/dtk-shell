@@ -297,8 +297,22 @@ module DTK
         # we remove '..' from our entries
         entries = entries.select { |e| !(e.empty? || DTK::Shell::ContextAux.is_double_dot?(e)) }
 
+        # need this for autocomplete from service/node to service/utils
+        is_utils = active_context_copy.last_command_name.eql?('utils')
+
         # we go back in context based on '..'
         active_context_copy.pop_context(double_dots_count)
+
+        # if cd ../utils from service/node
+        if active_context_copy.current_command? && active_context_copy.last_command_name.eql?('node')
+          active_context_copy.pop_context(1)
+          entries = Context.check_invisible_context(active_context_copy, entries, root?, line_buffer, args, self)
+        end
+
+        # need this for autocomplete from service/node to service/utils
+        if is_utils
+          entries = Context.check_invisible_context(active_context_copy, entries, root?, line_buffer, args, self)
+        end
 
         # if cd .. back to node, skip node context and go to assembly/workspace context
         if (active_context_copy.last_context && entries)
