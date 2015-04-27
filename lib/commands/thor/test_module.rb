@@ -116,8 +116,9 @@ module DTK::Client
     #
     desc "import-git GIT-SSH-REPO-URL [NAMESPACE:]TEST-MODULE-NAME", "Create new local test module by importing from provided git repo URL"
     def import_git(context_params)
-      import_git_module_aux(context_params)
-      nil
+      response = import_git_module_aux(context_params)
+      @@invalidate_map << :test_module
+      response
     end
 
     desc "install NAMESPACE/REMOTE-TEST-MODULE-NAME","Install remote test module into local environment"
