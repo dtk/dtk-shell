@@ -1,4 +1,7 @@
 dtk_require_common_commands('thor/common')
+dtk_require("../../../domain/git_adapter")
+
+
 module DTK::Client
   module PushToRemoteMixin
 
