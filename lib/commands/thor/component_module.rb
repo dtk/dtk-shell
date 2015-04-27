@@ -142,7 +142,7 @@ module DTK::Client
     def import_git(context_params)
       response = import_git_module_aux(context_params)
       @@invalidate_map << :component_module
-      nil
+      response
     end
 
 =begin
