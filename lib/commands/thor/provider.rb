@@ -32,32 +32,35 @@ module DTK::Client
     end
 
     def self.valid_child?(name_of_sub_context)
-      return Provider.valid_children().include?(name_of_sub_context.to_sym)
+      Provider.valid_children().include?(name_of_sub_context.to_sym)
     end
 
-    desc "create-ec2-provider PROVIDER-NAME --keypair KEYPAIR --security-group SECURITY-GROUP(S) [--bootstrap]", "Create ec2 provider. Multiple security groups separated with ',' (gr1,gr2,gr3,...)"
+    desc "create-provider-ec2 PROVIDER-NAME [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]", "Create provider for ec2 vpc or classic. Multiple security groups separated with ',' (gr1,gr2,gr3,...)"
     method_option :keypair, :type => :string
     method_option :security_group, :type => :string, :aliases => '--security-groups'
+    # TODO: made this a hidden option; needs to be updated because now choice if vpc or classic
     method_option :bootstrap, :type => :boolean, :default => false
-    def create_ec2_provider(context_params)
+    def create_provider_ec2(context_params)
       provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       provider_type = 'ec2'
 
       iaas_properties = Hash.new
-      #TODO: data-driven check if legal provider type and then what options needed depending on provider type
 
-      security_groups = []
-      keypair, security_group = context_params.retrieve_thor_options([:keypair!, :security_group!], options)
+      keypair, security_group = context_params.retrieve_thor_options([:keypair, :security_group], options)
 
-      raise ::DTK::Client::DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ") if security_group.end_with?(',')
+      iaas_properties.merge!(:keypair_name => keypair) if keypair
+      if security_group
+        if security_group.end_with?(',')
+          raise ::DTK::Client::DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ")
+        end
 
-      security_groups = security_group.split(',')
-      iaas_properties.merge!(:keypair_name => keypair)
+        security_groups = security_group.split(',')
 
-      if (security_groups.empty? || security_groups.size==1)
-        iaas_properties.merge!(:security_group => security_group)
-      else
-        iaas_properties.merge!(:security_group_set => security_groups)
+        if (security_groups.empty? || security_groups.size==1)
+          iaas_properties.merge!(:security_group => security_group)
+        else
+          iaas_properties.merge!(:security_group_set => security_groups)
+        end
       end
 
       result = DTK::Shell::InteractiveWizard::interactive_user_input(
@@ -73,38 +76,33 @@ module DTK::Client
 
       post_body =  {
         :iaas_properties => iaas_properties,
-        :provider_name => provider_name,
-        :iaas_type => provider_type,
-        :no_bootstrap => ! options.bootstrap?
+        :provider_name   => provider_name,
+        :iaas_type       => 'ec2',
+        :no_bootstrap    => ! options.bootstrap?
       }
 
       response = post rest_url("target/create_provider"), post_body
       @@invalidate_map << :provider
 
-      return response
+      response
     end
 
-    desc "create-physical-provider PROVIDER-NAME", "Create physical provider."
-    method_option :keypair, :type => :string
-    method_option :security_group, :type => :string, :aliases => '--security-groups'
-    method_option :bootstrap, :type => :boolean, :default => false
-    def create_physical_provider(context_params)
+    desc "create-provider-physical PROVIDER-NAME", "Create provider to manage physical nodes."
+    def create_provider_physical(context_params)
       provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
-      provider_type = 'physical'
 
       # Remove sensitive readline history
       OsUtil.pop_readline_history(2)
 
       post_body =  {
         :provider_name => provider_name,
-        :iaas_type => provider_type,
-        :no_bootstrap => ! options.bootstrap?
+        :iaas_type => 'physical'
       }
 
       response = post rest_url("target/create_provider"), post_body
       @@invalidate_map << :provider
 
-      return response
+      response
     end
 
 =begin
@@ -144,7 +142,7 @@ TODO: deprecated until this can be in sync with create-targets from target conte
       response = post rest_url("target/create"), post_body
       @@invalidate_map << :target
 
-      return response
+      response
     end
 =end
 
@@ -175,17 +173,12 @@ TODO: deprecated until this can be in sync with create-targets from target conte
       response.render_table(:target)
     end
 
-    desc "delete-provider PROVIDER-IDENTIFIER [-y]","Deletes targets provider"
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    desc "delete-provider PROVIDER-IDENTIFIER","Deletes target provider, its targets, and their assemblies"
     def delete_provider(context_params)
       provider_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
-      unless options.force?
-        return unless Console.confirmation_prompt("Are you sure you want to delete provider with identifier '#{provider_id}'"+'?')
-      end
-      
-      # this goes to provider
-      # Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies that belong to this target will be deleted as well)'"+'?')
+      # require explicit acknowldegement since deletes all targtes under it
+      return unless Console.confirmation_prompt("Are you sure you want to delete provider with identifier '#{provider_id}' and all target and service isntances under it" +'?')
       
       post_body = {
         :provider_id => provider_id
