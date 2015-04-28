@@ -17,7 +17,7 @@ module DTK::Client
       return DTK::Shell::OverrideTasks.new({
         :command_only => {
           :target => [
-            ['delete-target',"delete-target TARGET-IDENTIFIER","# Deletes target"],
+            ['delete-and-destroy',"delete-and-destroy TARGET-NAME","# Deletes target"],
             ['list',"list","# Lists available targets."]
 
           ]
@@ -173,20 +173,21 @@ TODO: deprecated until this can be in sync with create-targets from target conte
       response.render_table(:target)
     end
 
-    desc "delete-provider PROVIDER-IDENTIFIER","Deletes target provider, its targets, and their assemblies"
-    def delete_provider(context_params)
+    desc "delete-and-destroy PROVIDER-NAME","Deletes target provider, its targets, and their assemblies"
+    def delete_and_destroy(context_params)
       provider_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       # require explicit acknowldegement since deletes all targtes under it
-      return unless Console.confirmation_prompt("Are you sure you want to delete provider with identifier '#{provider_id}' and all target and service isntances under it" +'?')
+      return unless Console.confirmation_prompt("Are you sure you want to delete provider '#{provider_id}' and all target and service isntances under it" +'?')
       
       post_body = {
-        :provider_id => provider_id
+        :target_id => provider_id,
+        :type      => 'template'
       }
 
       @@invalidate_map << :provider
 
-      post rest_url("target/delete_provider"), post_body
+      post rest_url("target/delete_and_destroy"), post_body
     end
 
     no_tasks do

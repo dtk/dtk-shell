@@ -179,7 +179,8 @@ module DTK::Client
       return unless Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies/nodes that belong to this target will be deleted as well)'"+'?')
      
       post_body = {
-        :target_id => target_id
+        :target_id => target_id,
+        :type      => 'instance'
       }
 
       @@invalidate_map << :target
