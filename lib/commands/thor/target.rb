@@ -172,8 +172,8 @@ module DTK::Client
     end
 
     desc "delete-and-destroy TARGET-NAME","Deletes target or provider"
-    def delete_and_destory(context_params)
-      target_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
+    def delete_and_destroy(context_params)
+      target_id  = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       # No -y options since risk is too great
       return unless Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies/nodes that belong to this target will be deleted as well)'"+'?')
