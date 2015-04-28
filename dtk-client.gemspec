@@ -30,7 +30,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'thor','~> 0.15.4'
   gem.add_dependency 'erubis','~> 2.7.0'
   gem.add_dependency 'dtk-common-core','0.7.1'
-  gem.add_dependency 'git','~> 1.2.6'
+  gem.add_dependency 'git','1.2.8'
   gem.add_dependency 'colorize','~> 0.5.8'
   gem.add_dependency 'highline', '1.6.16'
   gem.add_dependency 'awesome_print', '1.1.0'
