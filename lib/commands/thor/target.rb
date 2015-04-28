@@ -72,7 +72,7 @@ module DTK::Client
     end
     ValidImportTypes = ["file"]
 
-    desc "set-default-target TARGET-IDENTIFIER","Sets the default target."
+    desc "set-default-target TARGET-NAME/ID","Sets the default target."
     def set_default_target(context_params)
       target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post rest_url("target/set_default"), { :target_id => target_id }
@@ -171,8 +171,8 @@ module DTK::Client
       end
     end
 
-    desc "delete-target TARGET-IDENTIFIER","Deletes target or provider"
-    def delete_target(context_params)
+    desc "delete-and-destroy TARGET-NAME/ID","Deletes target or provider"
+    def delete_and_destory(context_params)
       target_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       # No -y options since risk is too great
@@ -184,7 +184,7 @@ module DTK::Client
 
       @@invalidate_map << :target
 
-      return post rest_url("target/delete"), post_body
+      return post rest_url("target/delete_and_destroy"), post_body
     end
 
 =begin
