@@ -92,7 +92,7 @@ module DTK::Client
     method_option :keypair, :type => :string
     method_option :security_group, :type => :string, :aliases => '--security-groups'
     def create_target_ec2_classic(context_params)
-      option_list = [:provider!, :region, :keypair, :security_group]
+      option_list = [:provider!, :region!, :keypair, :security_group]
       response = Common::CreateTarget.new(self,context_params).execute(:ec2_classic,option_list)
       @@invalidate_map << :target
       response
@@ -105,7 +105,7 @@ module DTK::Client
     method_option :keypair, :type => :string
     method_option :security_group, :type => :string, :aliases => '--security-groups'
     def create_target_ec2_vpc(context_params)
-      option_list = [:provider!, :subnet!, :region, :keypair, :security_group]
+      option_list = [:provider!, :subnet!, :region!, :keypair, :security_group]
       response = Common::CreateTarget.new(self,context_params).execute(:ec2_vpc,option_list)
       @@invalidate_map << :target
       response
