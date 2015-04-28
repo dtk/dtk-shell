@@ -44,12 +44,12 @@ module DTK::Client
       source = context_params.retrieve_thor_options([:source!], options)
 
       parsed_source = source.match(/^(\w+):(.+)/)
-      raise DTK::Client::DtkValidationError, "Invalid source! Valid source should contain source_type:source_path (e.g. --source file:path/to/file.yaml)." unless parsed_source
+      raise DtkValidationError, "Invalid source! Valid source should contain source_type:source_path (e.g. --source file:path/to/file.yaml)." unless parsed_source
 
       import_type = parsed_source[1]
       path = parsed_source[2]
       
-      raise DTK::Client::DtkValidationError, "We do not support '#{import_type}' as import source at the moment. Valid sources: #{ValidImportTypes}" unless ValidImportTypes.include?(import_type)
+      raise DtkValidationError, "We do not support '#{import_type}' as import source at the moment. Valid sources: #{ValidImportTypes}" unless ValidImportTypes.include?(import_type)
 
       post_body = {:target_id => target_id}
 
@@ -72,7 +72,7 @@ module DTK::Client
     end
     ValidImportTypes = ["file"]
 
-    desc "set-default-target TARGET-NAME/ID","Sets the default target."
+    desc "set-default-target TARGET-NAME","Sets the default target."
     def set_default_target(context_params)
       target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post rest_url("target/set_default"), { :target_id => target_id }
@@ -171,7 +171,7 @@ module DTK::Client
       end
     end
 
-    desc "delete-and-destroy TARGET-NAME/ID","Deletes target or provider"
+    desc "delete-and-destroy TARGET-NAME","Deletes target or provider"
     def delete_and_destory(context_params)
       target_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
