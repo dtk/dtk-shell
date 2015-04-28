@@ -36,9 +36,9 @@ module DTK::Client
       inconsistent     = external_dependencies["inconsistent"]||[]
       possibly_missing = external_dependencies["possibly_missing"]||[]
 
-      OsUtil.print("There are inconsistent module dependencies mentioned in #{location}: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
-      OsUtil.print("There are missing module dependencies mentioned in #{location}: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
-      OsUtil.print("There are ambiguous module dependencies mentioned in #{location}: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
+      OsUtil.print("There are inconsistent module dependencies mentioned #{location}: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
+      OsUtil.print("There are missing module dependencies mentioned #{location}: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
+      OsUtil.print("There are ambiguous module dependencies mentioned #{location}: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
     end
 
    private
