@@ -178,7 +178,7 @@ TODO: deprecated until this can be in sync with create-targets from target conte
       provider_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       # require explicit acknowldegement since deletes all targtes under it
-      return unless Console.confirmation_prompt("Are you sure you want to delete provider '#{provider_id}' and all target and service isntances under it" +'?')
+      return unless Console.confirmation_prompt("Are you sure you want to delete provider '#{provider_id}' and all target and service instances under it" +'?')
       
       post_body = {
         :target_id => provider_id,
