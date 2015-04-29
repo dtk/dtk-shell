@@ -82,7 +82,7 @@ module DTK::Client
           else
             "Would you like to commit ALL the changes?"
           end
-        confirmed_ok = Console.confirmation_prompt(confirm_msg)
+        confirmed_ok = Console.confirmation_prompt_simple(confirm_msg)
       end
       if (auto_commit || confirmed_ok)
         if auto_commit
