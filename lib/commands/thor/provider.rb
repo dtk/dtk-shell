@@ -187,7 +187,12 @@ TODO: deprecated until this can be in sync with create-targets from target conte
 
       @@invalidate_map << :provider
 
-      post rest_url("target/delete_and_destroy"), post_body
+      response = post(rest_url("target/delete_and_destroy"),post_body)
+      return response unless response.ok?
+      if info_array = response.data['info']
+        info_array.each{|info_msg|OsUtil.print(info_msg, :yellow)}
+      end
+      Response::Ok.new()
     end
 
     no_tasks do

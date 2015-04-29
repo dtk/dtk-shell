@@ -185,7 +185,12 @@ module DTK::Client
 
       @@invalidate_map << :target
 
-      return post rest_url("target/delete_and_destroy"), post_body
+      response = post(rest_url("target/delete_and_destroy"),post_body)
+      return response unless response.ok?
+      if info_array = response.data['info']
+        info_array.each{|info_msg|OsUtil.print(info_msg, :yellow)}
+      end
+      Response::Ok.new()
     end
 
 =begin
