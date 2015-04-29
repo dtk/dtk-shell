@@ -33,7 +33,7 @@ module DTK::Client
       [response, key_exists_already]
     end
 
-    def self.add_key(path_to_key, name=nil)
+    def self.add_key(path_to_key, name='dtk-client')
       match, matched_username = nil, nil
 
       unless File.file?(path_to_key)
