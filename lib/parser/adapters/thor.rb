@@ -330,7 +330,7 @@ module DTK
               identifiers = []
               response['data'].each do |element|
                 # special flag to filter out data not needed here
-                next if element['dtk_client_hidden']
+                next if element['dtk_context_hidden']
 
                 identifiers << { :name => element['display_name'], :identifier => element['id'], :shadow_entity => element['dtk_client_type'] }
               end
