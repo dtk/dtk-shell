@@ -174,6 +174,12 @@ class Thor
               if override_tasks_obj && is_n_level_context
                 last_entity_name = active_context.last_context_entity_name.to_sym
 
+                # special case for node_id/utils (we don't want to use utils from service context)
+                command_list = active_context.command_list
+                if (command_list.size > 2) && command_list.last.eql?('utils')
+                  last_entity_name = command_list.last(2).join('_').to_sym
+                end
+
                 # we get commands task, and identifier tasks for given entity (e.g. :assembly)
                 command_o_tasks, identifier_o_tasks = override_tasks_obj.get_all_tasks(last_entity_name)
 

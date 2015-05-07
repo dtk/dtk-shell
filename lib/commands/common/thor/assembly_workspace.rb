@@ -1201,6 +1201,7 @@ module DTK::Client
     def grep_aux(context_params)
       if context_params.is_there_identifier?(:node)
         mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:node_id!,:option_2!]
+        is_node = true
       else
         mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!,:option_3!]
       end
@@ -1263,7 +1264,7 @@ module DTK::Client
             console_width.times do
               print "="
             end
-            puts "NODE-ID: #{message_colorized}\n"
+            puts "NODE-ID: #{message_colorized}\n" unless is_node
             puts "Log output:\n"
             puts r[1]["output"].gsub(/`/,'\'')
           end
