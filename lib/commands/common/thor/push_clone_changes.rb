@@ -7,7 +7,7 @@ module DTK::Client
     ##
     #
     # module_type: will be :component_module or :service_module
-    def push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger=false,opts={})
+    def push_clone_changes_aux(module_type, module_id, version, commit_msg, internal_trigger=false, opts={})
       module_name, module_namespace, repo_url, branch, not_ok_response = workspace_branch_info(module_type, module_id, version, opts)
       return not_ok_response if not_ok_response
 

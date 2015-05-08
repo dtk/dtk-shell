@@ -524,13 +524,12 @@ module DTK::Client
 =end
 
 #    desc "SERVICE-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy to server (origin)."
-    desc "SERVICE-MODULE-NAME/ID push", "Push changes from local copy to server."
+    desc "SERVICE-MODULE-NAME/ID push [--force]", "Push changes from local copy to server."
     method_option "message",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    #hidden option for dev
-    method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def push(context_params, internal_trigger=false)
       push_module_aux(context_params, internal_trigger)
     end
