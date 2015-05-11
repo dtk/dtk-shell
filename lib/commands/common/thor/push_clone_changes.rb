@@ -37,6 +37,7 @@ module DTK::Client
       post_body.merge!(:update_from_includes => true) if opts[:update_from_includes]
       post_body.merge!(:service_instance_module => true) if opts[:service_instance_module]
       post_body.merge!(:current_branch_sha => opts[:current_branch_sha]) if opts[:current_branch_sha]
+      post_body.merge!(:force => opts[:force]) if opts[:force]
 
       if opts[:set_parsed_false]
         post_body.merge!(:set_parsed_false => true)
