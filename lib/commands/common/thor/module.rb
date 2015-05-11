@@ -193,6 +193,7 @@ module DTK::Client
 
       git_import = opts[:git_import]
       opts.merge!(:update_from_includes => true, :force_parse => true) unless git_import
+      opts.merge!(:force => options.force?)
 
       reparse_aux(module_location)
       push_clone_changes_aux(module_type.to_sym, module_id, version, options["message"]||DEFAULT_COMMIT_MSG, internal_trigger, opts)
@@ -309,8 +310,8 @@ module DTK::Client
       module_type        = get_module_type(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
-      # for service_module we are doing this on server side
-      remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name,'/') unless module_type.eql?('service_module')
+      # remote_module_name can be namespace:name or namespace/name
+      remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name, ':')
 
       unless options.force?
         return unless Console.confirmation_prompt("Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace+'/'}#{remote_module_name}' and all items contained in it"+'?')
