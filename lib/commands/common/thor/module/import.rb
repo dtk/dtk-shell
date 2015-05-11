@@ -10,7 +10,9 @@ module DTK::Client
       include PushCloneChangesMixin
       include ReparseMixin
 
-      def from_git()
+      def from_git(internal_trigger = false)
+        OsUtil.print('Retrieving git module data, please wait ...') unless internal_trigger
+
         git_repo_url, module_name    = retrieve_arguments([:option_1!, :option_2!])
         namespace, local_module_name = get_namespace_and_name(module_name, ModuleUtil::NAMESPACE_SEPERATOR)
 
@@ -59,7 +61,9 @@ module DTK::Client
           print_external_dependencies(external_dependencies, 'in the git repo')
         end
 
-        OsUtil.print("Successfully installed #{ModuleUtil.module_name(module_type)} '#{ModuleUtil.join_name(@module_name, @module_namespace)}' from git.", :green)
+        unless internal_trigger
+          OsUtil.print("Successfully installed #{ModuleUtil.module_name(module_type)} '#{ModuleUtil.join_name(@module_name, @module_namespace)}' from git.", :green)
+        end
       end
 
       def from_file()
