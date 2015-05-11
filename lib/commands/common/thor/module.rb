@@ -223,8 +223,7 @@ module DTK::Client
     end
 
     def import_git_module_aux(context_params)
-      OsUtil.print('Retrieving git module data, please wait ...')
-      CommonModule::Import.new(self, context_params).from_git()
+      CommonModule::Import.new(self, context_params).from_git(context_params.get_forwarded_options()[:internal_trigger])
     end
 
     def import_module_aux(context_params)

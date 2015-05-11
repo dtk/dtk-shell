@@ -15,7 +15,7 @@ module DTK
       end
 
       def self.module_name(module_type)
-        module_type.gsub('_',' ')
+        module_type.to_s.gsub('_',' ')
       end
 
       # returns [namespace,name]; namespace can be null if cant determine it

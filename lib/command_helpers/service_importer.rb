@@ -45,9 +45,8 @@ module DTK::Client
     ##
     # Method will trigger import for each missing module component
     #
-    def trigger_module_auto_import(missing_modules, required_modules, opts={})
+    def trigger_module_auto_import(modules_to_import, required_modules, opts={})
       puts "Auto-importing missing module(s)"
-      modules_to_import = missing_modules
 
       # Print out installed modules
       required_modules.each do |r_module|
@@ -62,12 +61,27 @@ module DTK::Client
         module_name = full_module_name(m_module)
         module_type = m_module['type']
 
-        print "Importing #{module_type.gsub('_',' ')} '#{module_name}' ... "
-        new_context_params = ::DTK::Shell::ContextParams.new([module_name])
-        new_context_params.override_method_argument!('option_2', m_module['version'])
-        new_context_params.forward_options( { :skip_cloning => false, :skip_auto_install => true, :module_type => module_type}).merge!(opts)
+        # we check if there is module_url if so we install from git
+        module_url  = m_module['module_url']
 
-        response = ContextRouter.routeTask(module_type, "install", new_context_params, @conn)
+        # descriptive message
+        import_msg  = "Importing #{module_type.gsub('_',' ')} '#{module_name}'"
+        import_msg += " from git source #{module_url}" if module_url
+        print "#{import_msg} ... "
+
+        unless module_url
+          # import from Repo Manager
+          new_context_params = ::DTK::Shell::ContextParams.new([module_name])
+          new_context_params.override_method_argument!('option_2', m_module['version'])
+          new_context_params.forward_options( { :skip_cloning => false, :skip_auto_install => true, :module_type => module_type}).merge!(opts)
+          response = ContextRouter.routeTask(module_type, "install", new_context_params, @conn)
+        else
+          # import from Git source
+          new_context_params = ::DTK::Shell::ContextParams.new([module_url, module_name])
+          new_context_params.forward_options( { :internal_trigger => true })
+          response = ContextRouter.routeTask(module_type, "import_git", new_context_params, @conn)
+        end
+
         puts(response.data(:does_not_exist) ? response.data(:does_not_exist) : "Done.")
         raise DTK::Client::DtkError, response.error_message unless response.ok?
       end
