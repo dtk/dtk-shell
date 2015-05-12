@@ -131,7 +131,7 @@ end
 def resolve_direct_access(params, config_exists=nil)
   return if params[:username_exists]
 
-  puts "Processing..." if config_exists
+  puts "Processing ..." if config_exists
   # check to see if catalog credentials are set
   conn = DTK::Client::Session.get_connection()
   response = conn.post DTK::Client::CommandBase.class, conn.rest_url("account/check_catalog_credentials"), {}

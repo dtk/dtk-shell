@@ -59,7 +59,7 @@ module DTK::Client
           print_external_dependencies(external_dependencies, 'in the git repo')
         end
 
-        Response::Ok.new()
+        OsUtil.print("Successfully installed #{ModuleUtil.module_name(module_type)} '#{ModuleUtil.join_name(@module_name, @module_namespace)}' from git.", :green)
       end
 
       def from_file()

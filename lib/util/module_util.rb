@@ -14,6 +14,10 @@ module DTK
         module_namespace ? resolve_name(module_name, module_namespace) : module_name
       end
 
+      def self.module_name(module_type)
+        module_type.gsub('_',' ')
+      end
+
       # returns [namespace,name]; namespace can be null if cant determine it
       def self.full_module_name_parts?(name_or_full_module_name)
         if name_or_full_module_name.nil?

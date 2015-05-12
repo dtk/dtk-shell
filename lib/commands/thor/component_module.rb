@@ -127,6 +127,7 @@ module DTK::Client
       namespace, module_name = get_namespace_and_name(full_module_name, ModuleUtil::NAMESPACE_SEPERATOR)
       module_type            = get_module_type(context_params)
 
+      OsUtil.print('Retrieving puppet module metadata, please wait ...')
       response = puppet_forge_install_aux(context_params, pf_module_name, module_name, namespace, nil, module_type)
 
       @@invalidate_map << :component_module
@@ -262,15 +263,18 @@ module DTK::Client
       publish_module_aux(context_params)
     end
 
-    desc "COMPONENT-MODULE-NAME/ID pull-dtkn [-n NAMESPACE]", "Update local component module from remote repository."
-    method_option "namespace",:aliases => "-n",
-      :type => :string,
+    desc "COMPONENT-MODULE-NAME/ID pull-dtkn [-n NAMESPACE] [--force]", "Update local component module from remote repository."
+    method_option :namespace,:aliases => '-n',
+      :type   => :string,
       :banner => "NAMESPACE",
-      :desc => "Remote namespace"
+      :desc   => "Remote namespace"
+    method_option :force,:aliases => '-f',
+      :type    => :boolean,
+      :desc   => "Force pull",
+      :default => false
     def pull_dtkn(context_params)
       pull_dtkn_aux(context_params)
     end
-
 
 =begin
     desc "COMPONENT-MODULE-NAME/ID chown REMOTE-USER", "Set remote module owner"
@@ -396,14 +400,14 @@ module DTK::Client
 
 #    desc "COMPONENT-MODULE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
 #    desc "COMPONENT-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
-    desc "COMPONENT-MODULE-NAME/ID push", "Push changes from local copy of component module to server"
+    desc "COMPONENT-MODULE-NAME/ID push [--force]", "Push changes from local copy of component module to server"
      version_method_option
      method_option "message",:aliases => "-m" ,
        :type => :string,
        :banner => "COMMIT-MSG",
        :desc => "Commit message"
      # hidden option for dev
-     method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
+     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
      def push(context_params, internal_trigger=false)
       push_module_aux(context_params, internal_trigger)
      end

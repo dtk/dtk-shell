@@ -1,8 +1,11 @@
+dtk_require_common_commands('thor/common_base')
 dtk_require_common_commands('thor/inventory_parser')
+dtk_require_common_commands('thor/create_target')
 module DTK::Client
   class Target < CommandBaseThor
+    include Commands
     include InventoryParserMixin
-
+    
     def self.pretty_print_cols()
       PPColumns.get(:target)
     end
@@ -31,8 +34,7 @@ module DTK::Client
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
 
       post_body = {:target_id => target_id}
-      response = post rest_url('target/info'), post_body
-      response.render_custom_info("target")
+      post rest_url('target/info'), post_body
     end
 
     desc "TARGET-NAME/ID import-nodes --source SOURCE","Reads from inventory dsl and populates the node instance objects (SOURCE: file:/path/to/file.yaml)."
@@ -42,12 +44,12 @@ module DTK::Client
       source = context_params.retrieve_thor_options([:source!], options)
 
       parsed_source = source.match(/^(\w+):(.+)/)
-      raise DTK::Client::DtkValidationError, "Invalid source! Valid source should contain source_type:source_path (e.g. --source file:path/to/file.yaml)." unless parsed_source
+      raise DtkValidationError, "Invalid source! Valid source should contain source_type:source_path (e.g. --source file:path/to/file.yaml)." unless parsed_source
 
       import_type = parsed_source[1]
       path = parsed_source[2]
       
-      raise DTK::Client::DtkValidationError, "We do not support '#{import_type}' as import source at the moment. Valid sources: #{ValidImportTypes}" unless ValidImportTypes.include?(import_type)
+      raise DtkValidationError, "We do not support '#{import_type}' as import source at the moment. Valid sources: #{ValidImportTypes}" unless ValidImportTypes.include?(import_type)
 
       post_body = {:target_id => target_id}
 
@@ -70,7 +72,7 @@ module DTK::Client
     end
     ValidImportTypes = ["file"]
 
-    desc "set-default-target TARGET-IDENTIFIER","Sets the default target."
+    desc "set-default-target TARGET-NAME","Sets the default target."
     def set_default_target(context_params)
       target_id = context_params.retrieve_arguments([:option_1!],method_argument_names)
       post rest_url("target/set_default"), { :target_id => target_id }
@@ -84,43 +86,31 @@ module DTK::Client
       post rest_url("target/install_agents"), post_body
     end
 
-    desc "create-target [TARGET-NAME] --provider PROVIDER --region REGION --keypair KEYPAIR --security-group SECURITY-GROUP(S)", "Create target based on given provider"
+    desc "create-target-ec2-classic [TARGET-NAME] --provider PROVIDER --region REGION [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]", "Create target based on given provider"
     method_option :provider, :type => :string
     method_option :region, :type => :string
     method_option :keypair, :type => :string
     method_option :security_group, :type => :string, :aliases => '--security-groups'
-    def create_target(context_params)
-      # we use :target_id but that will retunr provider_id (another name for target template ID)
-      target_name = context_params.retrieve_arguments([:option_1],method_argument_names)
-      provider, region, keypair, security_group = context_params.retrieve_thor_options([:provider!, :region, :keypair!, :security_group!], options)
-
-      #TODO: data-driven check if legal provider type and then what options needed depending on provider type
-      iaas_properties = Hash.new
-      DTK::Shell::InteractiveWizard.validate_region(region) if region
-
-      security_groups = []
-      raise ::DTK::Client::DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ") if security_group.end_with?(',')
-
-      security_groups = security_group.split(',')
-      iaas_properties.merge!(:keypair => keypair)
-
-      if (security_groups.empty? || security_groups.size==1)
-        iaas_properties.merge!(:security_group => security_group)
-      else
-        iaas_properties.merge!(:security_group_set => security_groups)
-      end
-
-      post_body = {
-        :provider_id => provider,
-        :iaas_properties => iaas_properties
-      }
-      post_body.merge!(:target_name => target_name) if target_name
-      post_body.merge!(:region => region) if region
-      response = post rest_url("target/create"), post_body
-
+    def create_target_ec2_classic(context_params)
+      option_list = [:provider!, :region!, :keypair, :security_group]
+      response = Common::CreateTarget.new(self,context_params).execute(:ec2_classic,option_list)
       @@invalidate_map << :target
-      return response
+      response
     end
+
+    desc "create-target-ec2-vpc [TARGET-NAME] --provider PROVIDER --region REGION --subnet SUBNET-ID [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]", "Create target based on given provider"
+    method_option :provider, :type => :string
+    method_option :subnet, :type => :string
+    method_option :region, :type => :string
+    method_option :keypair, :type => :string
+    method_option :security_group, :type => :string, :aliases => '--security-groups'
+    def create_target_ec2_vpc(context_params)
+      option_list = [:provider!, :subnet!, :region!, :keypair, :security_group]
+      response = Common::CreateTarget.new(self,context_params).execute(:ec2_vpc,option_list)
+      @@invalidate_map << :target
+      response
+    end
+
 
     desc "TARGET-NAME/ID list-services","Lists service instances in given targets."
     def list_services(context_params)
@@ -181,27 +171,36 @@ module DTK::Client
       end
     end
 
-    desc "delete-target TARGET-IDENTIFIER","Deletes target or provider"
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    def delete_target(context_params)
-      target_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
+    desc "delete-and-destroy TARGET-NAME","Deletes target or provider"
+    def delete_and_destroy(context_params)
+      target_id  = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       # No -y options since risk is too great
       return unless Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies/nodes that belong to this target will be deleted as well)'"+'?')
      
       post_body = {
-        :target_id => target_id
+        :target_id => target_id,
+        :type      => 'instance'
       }
 
       @@invalidate_map << :target
 
-      return post rest_url("target/delete"), post_body
+      response = post(rest_url("target/delete_and_destroy"),post_body)
+      return response unless response.ok?
+      if info_array = response.data['info']
+        info_array.each{|info_msg|OsUtil.print(info_msg, :yellow)}
+      end
+      Response::Ok.new()
     end
 
-    desc "TARGET-NAME/ID edit-target [--keypair KEYPAIR] [--security-group SECURITY-GROUP(S)]","Edit keypair or security-group for given target"
+=begin
+# TODO: DTK-2056: rewite
+also put in list property
+    desc "TARGET-NAME/ID set-property PROPERTY VALUE
     method_option :keypair, :type => :string
     method_option :security_group, :type => :string, :aliases => '--security-groups'
-    def edit_target(context_params)
+    def set_property(context_params)
+      raise "change so that param is seperated key value parts"
       target_id   = context_params.retrieve_arguments([:target_id!],method_argument_names)
       keypair, security_group = context_params.retrieve_thor_options([:keypair, :security_group], options)
 
@@ -225,7 +224,8 @@ module DTK::Client
         :target_id => target_id,
         :iaas_properties => iaas_properties
       }
-      return post rest_url("target/edit_target"), post_body
+      post rest_url("target/set_properties"), post_body
     end
+=end
   end
 end

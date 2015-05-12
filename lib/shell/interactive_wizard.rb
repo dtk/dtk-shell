@@ -103,7 +103,7 @@ module DTK
 
         # while line = Readline.readline(prompt_input, true)
         #using 'ask' from highline gem to be able to hide input for key and secret
-        while line = ask("#{prompt_input}") { |q| q.echo = true }
+        while line = ask("#{prompt_input}") { |q| q.echo = false }
           if is_required && line.empty?
             puts INVALID_INPUT
             next

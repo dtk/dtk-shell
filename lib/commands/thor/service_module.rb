@@ -293,11 +293,15 @@ module DTK::Client
     # end
 
     # desc "SERVICE-MODULE-NAME/ID pull-from-dtkn [-n NAMESPACE] [-v VERSION]", "Update local service module from remote repository."
-    desc "SERVICE-MODULE-NAME/ID pull-dtkn [-n NAMESPACE]", "Update local service module from remote repository."
-    method_option "namespace",:aliases => "-n",
-      :type => :string,
+    desc "SERVICE-MODULE-NAME/ID pull-dtkn [-n NAMESPACE] [--force]", "Update local service module from remote repository."
+    method_option :namespace,:aliases => '-n',
+      :type   => :string,
       :banner => "NAMESPACE",
-      :desc => "Remote namespace"
+      :desc   => "Remote namespace"
+    method_option :force,:aliases => '-f',
+      :type    => :boolean, 
+      :desc   => "Force pull",
+      :default => false
     def pull_dtkn(context_params)
       pull_dtkn_aux(context_params)
     end
@@ -520,13 +524,12 @@ module DTK::Client
 =end
 
 #    desc "SERVICE-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy to server (origin)."
-    desc "SERVICE-MODULE-NAME/ID push", "Push changes from local copy to server."
+    desc "SERVICE-MODULE-NAME/ID push [--force]", "Push changes from local copy to server."
     method_option "message",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
-    #hidden option for dev
-    method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def push(context_params, internal_trigger=false)
       push_module_aux(context_params, internal_trigger)
     end
@@ -603,6 +606,11 @@ module DTK::Client
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def remove_remote(context_params)
       remote_remove_aux(context_params)
+    end
+
+    desc "SERVICE-MODULE-NAME/ID fork NAMESPACE", "Fork service module to new namespace"
+    def fork(context_params)
+      fork_aux(context_params)
     end
 
     #

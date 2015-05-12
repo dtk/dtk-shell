@@ -145,6 +145,10 @@ module DTK
             end
         end
 
+        def temp_git_remote_location()
+          File::join(dtk_local_folder, 'temp_remote_location')
+        end
+
         def component_clone_location()
           clone_base_path(:component_module)
         end

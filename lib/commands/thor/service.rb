@@ -159,7 +159,13 @@ module DTK::Client
             ['get-netstats',"get-netstats","# Get netstats."],
             ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
             ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."],
-            ['tail',"tail NODE-NAME LOG-PATH [REGEX-PATTERN] [--more]","# Tail specified number of lines from log."]
+            ['tail',"tail NODE-NAME LOG-PATH [REGEX-PATTERN] [--more]","# Tail log from specified node."]
+          ],
+          :node_utils => [
+            ['get-netstats',"get-netstats","# Get netstats."],
+            ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
+            ['grep',"grep LOG-PATH GREP-PATTERN [--first]","# Grep log from node. --first option returns first match (latest log entry)."],
+            ['tail',"tail LOG-PATH [REGEX-PATTERN] [--more]","# Tail log from node."]
           ]
         },
         :identifier_only => {

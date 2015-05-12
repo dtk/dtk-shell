@@ -33,6 +33,25 @@ module DTK::Client
         end
       end
 
+      #
+      # Display confirmation prompt and repeat message until expected answer is given
+      #
+      def confirmation_prompt_simple(message, add_options=true)
+        # used to disable skip with ctrl+c
+        trap("INT", "SIG_IGN")
+        message += " (y/n)" if add_options
+
+        while line = Readline.readline("#{message}: ", true)
+          if (line.eql?("yes") || line.eql?("y") || line.empty?)
+            trap("INT",false)
+            return true
+          elsif (line.eql?("no") || line.eql?("n"))
+            trap("INT",false)
+            return false
+          end
+        end
+      end
+
       # Loading output used to display waiting status
       def wait_animation(message, time_seconds)
         print message

@@ -33,7 +33,7 @@ module DTK::Client
       [response, key_exists_already]
     end
 
-    def self.add_key(path_to_key, name=nil)
+    def self.add_key(path_to_key, name='dtk-client')
       match, matched_username = nil, nil
 
       unless File.file?(path_to_key)
@@ -120,7 +120,7 @@ module DTK::Client
       response, matched, matched_username = Account.add_key(path_to_key, name)
 
       if matched
-        DTK::Client::OsUtil.print("Provided ssh pub key has already been added.", :yellow)
+        DTK::Client::OsUtil.print("Provided SSH pub key has already been added.", :yellow)
       elsif matched_username
         DTK::Client::OsUtil.print("User ('#{matched_username}') already exists.", :yellow)
       else
@@ -128,7 +128,7 @@ module DTK::Client
       end
 
       if response.ok? && !response.data(:registered_with_repoman)
-        OsUtil.print("Warning: We were not able to register your key with remote catalog!", :yellow)
+        OsUtil.print("Warning: We were not able to register your key with remote catalog! Contact DTK team for more infromation.", :yellow)
       end
 
       response.ok? ? nil : response

@@ -28,13 +28,13 @@ module DTK::Client
       end
 
       # check whether a local module exists to determine whether pull from local clone or try to pull from server
-      OsUtil.print("Pulling changes to remote: #{remote_params[:remote_repo]} @ #{remote_params[:remote_repo_url]}")
+      OsUtil.print("Pulling changes from remote: #{remote_params[:remote_repo]} @ #{remote_params[:remote_repo_url]}")
 
       if Helper(:git_repo).local_clone_dir_exists?(module_type,module_name,:full_module_name=>full_module_name,:version=>version)
         unless rsa_pub_key
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
         end
-        opts_perform_locally = remote_params.merge(:full_module_name => full_module_name)
+        opts_perform_locally = remote_params.merge(:full_module_name => full_module_name, :force => opts[:force])
         PullFromRemote.perform_locally(self,module_type,module_id,module_name,opts_perform_locally)
       else
         # TODO: see if this works correctly

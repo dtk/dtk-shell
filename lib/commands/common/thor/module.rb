@@ -36,9 +36,9 @@ module DTK::Client
       inconsistent     = external_dependencies["inconsistent"]||[]
       possibly_missing = external_dependencies["possibly_missing"]||[]
 
-      OsUtil.print("There are inconsistent module dependencies mentioned in #{location}: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
-      OsUtil.print("There are missing module dependencies mentioned in #{location}: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
-      OsUtil.print("There are ambiguous module dependencies mentioned in #{location}: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
+      OsUtil.print("There are inconsistent module dependencies mentioned #{location}: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
+      OsUtil.print("There are missing module dependencies mentioned #{location}: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
+      OsUtil.print("There are ambiguous module dependencies mentioned #{location}: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
     end
 
    private
@@ -193,6 +193,7 @@ module DTK::Client
 
       git_import = opts[:git_import]
       opts.merge!(:update_from_includes => true, :force_parse => true) unless git_import
+      opts.merge!(:force => options.force?)
 
       reparse_aux(module_location)
       push_clone_changes_aux(module_type.to_sym, module_id, version, options["message"]||DEFAULT_COMMIT_MSG, internal_trigger, opts)
@@ -222,6 +223,7 @@ module DTK::Client
     end
 
     def import_git_module_aux(context_params)
+      OsUtil.print('Retrieving git module data, please wait ...')
       CommonModule::Import.new(self, context_params).from_git()
     end
 
@@ -309,8 +311,8 @@ module DTK::Client
       module_type        = get_module_type(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
-      # for service_module we are doing this on server side
-      remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name,'/') unless module_type.eql?('service_module')
+      # remote_module_name can be namespace:name or namespace/name
+      remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name, ':')
 
       unless options.force?
         return unless Console.confirmation_prompt("Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace+'/'}#{remote_module_name}' and all items contained in it"+'?')
@@ -348,7 +350,7 @@ module DTK::Client
       module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID,REQ_MODULE_NAME,:option_1],method_argument_names)
 
       catalog      = 'dtkn'
-      version      = options["version"]
+      version      = options.version
       module_type  = get_module_type(context_params)
       skip_recursive_pull = context_params.get_forwarded_options()[:skip_recursive_pull]
 
@@ -358,7 +360,12 @@ module DTK::Client
 
       if catalog.to_s.eql?("dtkn")
         clone_aux(module_type.to_sym, module_id, version, true, true) unless File.directory?(module_location)
-        opts = {:version => version, :remote_namespace => options.namespace, :skip_recursive_pull => skip_recursive_pull}
+        opts = {
+          :force               => options.force?,
+          :version             => version,
+          :remote_namespace    => options.namespace,
+          :skip_recursive_pull => skip_recursive_pull
+        }
 
         response = pull_from_remote_aux(module_type.to_sym, module_id, opts)
         return response unless response.ok?
@@ -469,13 +476,22 @@ module DTK::Client
         return response unless response.ok?
       end
 
-
-      OsUtil.print("Pushing local content to remote #{target_remote['repo_url']} ... ", :yellow)
-      push_to_git_remote_aux(module_name, module_type.to_sym, version, {
-          :remote_repo_url => target_remote['repo_url'],
-          :remote_branch   => 'master',
-          :remote_repo     =>  "#{target_remote['display_name']}--remote"
-        },  options.force?)
+      if target_remote['base_git_location']
+        OsUtil.print("Pushing local content to remote #{target_remote['base_git_url']} in folder #{target_remote['base_git_location']} ...")
+        return push_to_git_remote_location_aux(module_name, module_type.to_sym, version, {
+                  :remote_repo_url      => target_remote['base_git_url'],
+                  :remote_repo_location => target_remote['base_git_location'],
+                  :remote_branch        => 'master',
+                  :remote_repo          => "#{target_remote['display_name']}--remote"
+               }, options.force?)
+      else
+        OsUtil.print("Pushing local content to remote #{target_remote['repo_url']} ... ", :yellow)
+        return push_to_git_remote_aux(module_name, module_type.to_sym, version, {
+                  :remote_repo_url => target_remote['repo_url'],
+                  :remote_branch   => 'master',
+                  :remote_repo     =>  "#{target_remote['display_name']}--remote"
+                },  options.force?)
+      end
     end
 
     def push_dtkn_module_aux(context_params, internal_trigger=false)
@@ -616,6 +632,15 @@ module DTK::Client
 
       module_name = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
       namespace, name = get_namespace_and_name(module_name,':')
+
+      module_location = OsUtil.module_location(module_type, module_name, nil)
+      unless File.directory?(module_location)
+        if Console.confirmation_prompt("Module '#{module_name}' has not been cloned. Would you like to clone module now"+'?')
+          response = clone_aux(module_type.to_sym, module_id, nil, true)
+          return response unless response.ok?
+        end
+      end
+
       response = Helper(:git_repo).cp_r_to_new_namespace(module_type, name, namespace, fork_namespace)
       return response unless response.ok?
 
@@ -623,7 +648,7 @@ module DTK::Client
       new_context_params.add_context_to_params(module_type, module_type)
       new_context_params.method_arguments = ["#{fork_namespace}:#{name}"]
 
-      create_response = CommonModule::Import.new(self, new_context_params).from_file()
+      create_response = DTK::Client::ContextRouter.routeTask(module_type, "import", new_context_params, @conn)
       unless create_response.ok?
         FileUtils.rm_rf("#{response['data']['module_directory']}")
         return create_response
