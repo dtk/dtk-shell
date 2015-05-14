@@ -326,7 +326,7 @@ module DTK::Client
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
-    desc "HIDE_FROM_BASE delete-component COMPONENT-NAME [-y]","Delete component from the workspace."
+    desc "WORKSPACE-NAME/ID delete-component COMPONENT-NAME [-y]","Delete component from the workspace."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
       response = delete_component_aux(context_params)

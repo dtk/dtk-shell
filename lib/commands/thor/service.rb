@@ -692,7 +692,7 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE delete-component COMPONENT-NAME [-y]","Delete component from the service."
+    desc "SERVICE-NAME/ID delete-component COMPONENT-NAME [-y]","Delete component from the service."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
       response = delete_component_aux(context_params)

@@ -911,14 +911,24 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete #{what} '#{component_id}'"+'?')
       end
 
+      if node_id.nil? && !(component_id.to_s =~ /^[0-9]+$/)
+        if component_id.to_s.include?('/')
+          node_id, component_id = component_id.split('/')
+          node_name = node_id
+        else
+          node_id = node_name = 'assembly_wide'
+        end
+      end
+
       post_body = {
         :assembly_id => assembly_or_workspace_id,
-        :node_id => node_id,
         :component_id => component_id
       }
 
       # delete component by name (e.g. delete-component dtk_java)
       post_body.merge!(:cmp_full_name => "#{node_name}/#{component_id}") if (node_name && !(component_id.to_s =~ /^[0-9]+$/))
+      post_body.merge!(:node_id => node_id) if node_id
+
       response = post(rest_url("assembly/delete_component"),post_body)
     end
 
