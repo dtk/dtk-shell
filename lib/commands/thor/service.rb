@@ -571,8 +571,10 @@ TODO: will put in dot release and will rename to 'extend'
       response
     end
 
-    desc "SERVICE-NAME/ID set-attribute ATTRIBUTE-NAME [VALUE] [-u]", "(Un)Set attribute value. The option -u will unset the attribute's value."
+    desc "SERVICE-NAME/ID set-attribute ATTRIBUTE-NAME [VALUE] [-u] [-c] [-n]", "(Un)Set attribute value. The option -u will unset the attribute's value, -c to set component-attribute, -n to set node-attribute."
     method_option :unset, :aliases => '-u', :type => :boolean, :default => false
+    method_option :component_attribute, :aliases => '-c', :type => :boolean, :default => false
+    method_option :node_attribute, :aliases => '-n', :type => :boolean, :default => false
     def set_attribute(context_params)
       set_attribute_aux(context_params)
     end

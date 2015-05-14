@@ -739,8 +739,26 @@ module DTK::Client
         :assembly_id => assembly_or_workspace_id,
         :pattern => pattern
       }
+
+      raise DTK::Client::DtkValidationError, "Please use only component-attribute (-c) or node-attribute (-n) option" if options.component_attribute? && options.node_attribute?
+
+      post_body.merge!(:component_attribute => true) if options.component_attribute?
+      post_body.merge!(:node_attribute => true) if options.node_attribute? || context_params.is_there_identifier?(:node)
       post_body.merge!(:value => value) unless options.unset?
-      post rest_url("assembly/set_attributes"), post_body
+
+      response = post rest_url("assembly/set_attributes"), post_body
+      return response unless response.ok?
+
+      if r_data = response.data
+        if r_data.is_a?(Hash) && (ambiguous = r_data['ambiguous'])
+          unless ambiguous.empty?
+            msg = "It is ambiguous whether '#{ambiguous.join(', ')}' #{ambiguous.size == 1 ? 'is' : 'are'} node or component attribute(s). Run set-attribute again with one of options -c [--component-attribute] or -n [--node-attribute]."
+            raise DTK::Client::DtkError, msg
+          end
+        end
+      end
+
+      Response::Ok.new()
     end
 
     def create_attribute_aux(context_params)
