@@ -313,14 +313,15 @@ module DTK::Client
       # remote_module_name can be namespace:name or namespace/name
       remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name, ':')
 
-      unless options.force?
+      unless options.force? || options.confirmed?
         return unless Console.confirmation_prompt("Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace+'/'}#{remote_module_name}' and all items contained in it"+'?')
       end
 
       post_body = {
         :rsa_pub_key             => SSHUtil.rsa_pub_key_content(),
         :remote_module_name      => remote_module_name,
-        :remote_module_namespace => remote_namespace
+        :remote_module_namespace => remote_namespace,
+        :force_delete            => options.force?
       }
 
       post rest_url("#{module_type}/delete_remote"), post_body
