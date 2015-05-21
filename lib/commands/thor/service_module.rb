@@ -184,6 +184,7 @@ module DTK::Client
     desc "install NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y] [-i]", "Install remote service module into local environment. -y will automatically clone component modules. -i will ignore component import error."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :ignore, :aliases => '-i', :type => :boolean, :default => false
+    method_option :update_none, :type => :boolean, :default => false
     def install(context_params)
       response = install_module_aux(context_params)
       @@invalidate_map << :service_module if response && response.ok?
@@ -299,7 +300,7 @@ module DTK::Client
       :banner => "NAMESPACE",
       :desc   => "Remote namespace"
     method_option :force,:aliases => '-f',
-      :type    => :boolean, 
+      :type    => :boolean,
       :desc   => "Force pull",
       :default => false
     def pull_dtkn(context_params)
@@ -568,8 +569,9 @@ module DTK::Client
       response
     end
 
-    desc "delete-from-catalog NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y]", "Delete the service module from the DTK Network catalog"
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    desc "delete-from-catalog NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y] [--force]", "Delete the service module from the DTK Network catalog"
+    method_option :confirmed, :aliases => '-y', :type => :boolean, :default => false
+    method_option :force, :type => :boolean, :default => false
     def delete_from_catalog(context_params)
       delete_from_catalog_aux(context_params)
     end

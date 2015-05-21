@@ -138,7 +138,7 @@ module DTK::Client
     # Creates component module from input git repo, removing .git dir to rid of pointing to user github, and creates component module
     #
     method_option :branch, :aliases => '-b'
-    desc "import-git GIT-SSH-REPO-URL [-b BRANCH/TAG] [NAMESPACE:]COMPONENT-MODULE-NAME", "Create new local component module by importing from provided git repo URL"
+    desc "import-git GIT-SSH-REPO-URL [NAMESPACE:]COMPONENT-MODULE-NAME [-b BRANCH/TAG]", "Create new local component module by importing from provided git repo URL"
     def import_git(context_params)
       response = import_git_module_aux(context_params)
       @@invalidate_map << :component_module
@@ -236,8 +236,9 @@ module DTK::Client
     end
 =end
 
-    desc "delete-from-catalog NAMESPACE/REMOTE-COMPONENT-MODULE-NAME [-y]", "Delete the component module from the DTK Network catalog"
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    desc "delete-from-catalog NAMESPACE/REMOTE-COMPONENT-MODULE-NAME [-y] [--force]", "Delete the component module from the DTK Network catalog"
+    method_option :confirmed, :aliases => '-y', :type => :boolean, :default => false
+    method_option :force, :type => :boolean, :default => false
     def delete_from_catalog(context_params)
       delete_from_catalog_aux(context_params)
     end

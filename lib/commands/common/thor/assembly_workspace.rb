@@ -270,7 +270,7 @@ module DTK::Client
       if dsl_parsing_errors = response.data(:dsl_parsing_errors)
         error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors using 'edit' command from module context and invoke promote-module-updates again.\n"
         OsUtil.print(error_message, :red)
-        return Response::Error.new()
+        return Response::NoOp.new()
       end
       module_name,namespace,branch,ff_change = response.data(:module_name,:module_namespace,:workspace_branch,:fast_forward_change)
       ff_change ||= true
@@ -323,7 +323,7 @@ module DTK::Client
       response = Helper(:git_repo).pull_changes?(:component_module, module_name, edit_opts.merge!(opts))
       return response unless response.ok?()
 
-      edit_opts.merge!(:force_parse => true, :update_from_includes => true, :print_dependencies => true)
+      edit_opts.merge!(:force_parse => true, :update_from_includes => true, :print_dependencies => true, :remote_branch => local_branch)
       response = push_clone_changes_aux(:component_module, module_id, nil, "Pull base module updates", true, edit_opts)
       
       unless response.ok?()

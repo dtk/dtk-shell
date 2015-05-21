@@ -39,7 +39,7 @@ module DTK::Client
       def confirmation_prompt_simple(message, add_options=true)
         # used to disable skip with ctrl+c
         trap("INT", "SIG_IGN")
-        message += " (y/n)" if add_options
+        message += " (Y/n)" if add_options
 
         while line = Readline.readline("#{message}: ", true)
           if (line.eql?("yes") || line.eql?("y") || line.empty?)
@@ -48,6 +48,30 @@ module DTK::Client
           elsif (line.eql?("no") || line.eql?("n"))
             trap("INT",false)
             return false
+          end
+        end
+      end
+
+      #
+      # Display confirmation prompt and repeat message until expected answer is given
+      # options should be sent as array ['all', 'none']
+      def confirmation_prompt_additional_options(message, options = [])
+        raise DTK::Client::DtkValidationError, "Options should be sent as array: ['all', 'none']" unless options.is_a?(Array)
+
+        # used to disable skip with ctrl+c
+        trap("INT", "SIG_IGN")
+        message += " (yes/no#{options.empty? ? '' : ('/' + options.join('/'))})"
+
+        while line = Readline.readline("#{message}: ", true)
+          if line.eql?("yes") || line.eql?("y")
+            trap("INT",false)
+            return true
+          elsif line.eql?("no") || line.eql?("n")
+            trap("INT",false)
+            return false
+          elsif options.include?(line)
+            trap("INT",false)
+            return line
           end
         end
       end

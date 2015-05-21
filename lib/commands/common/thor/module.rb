@@ -223,8 +223,7 @@ module DTK::Client
     end
 
     def import_git_module_aux(context_params)
-      OsUtil.print('Retrieving git module data, please wait ...')
-      CommonModule::Import.new(self, context_params).from_git()
+      CommonModule::Import.new(self, context_params).from_git(context_params.get_forwarded_options()[:internal_trigger])
     end
 
     def import_module_aux(context_params)
@@ -276,6 +275,7 @@ module DTK::Client
         required_components = response.data(:required_modules)
         opts = {:do_not_raise=>true}
         module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message=>true)
+        module_opts.merge!(:update_none => true) if options.update_none?
 
         continue = trigger_module_auto_import(missing_components, required_components, module_opts)
         return unless continue
@@ -314,14 +314,15 @@ module DTK::Client
       # remote_module_name can be namespace:name or namespace/name
       remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name, ':')
 
-      unless options.force?
+      unless options.force? || options.confirmed?
         return unless Console.confirmation_prompt("Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace+'/'}#{remote_module_name}' and all items contained in it"+'?')
       end
 
       post_body = {
         :rsa_pub_key             => SSHUtil.rsa_pub_key_content(),
         :remote_module_name      => remote_module_name,
-        :remote_module_namespace => remote_namespace
+        :remote_module_namespace => remote_namespace,
+        :force_delete            => options.force?
       }
 
       post rest_url("#{module_type}/delete_remote"), post_body
@@ -367,6 +368,7 @@ module DTK::Client
           :skip_recursive_pull => skip_recursive_pull
         }
 
+        opts.merge!(:do_not_raise => true) if (context_params.get_forwarded_options()||{})[:do_not_raise]
         response = pull_from_remote_aux(module_type.to_sym, module_id, opts)
         return response unless response.ok?
 
