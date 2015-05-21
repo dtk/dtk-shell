@@ -52,6 +52,30 @@ module DTK::Client
         end
       end
 
+      #
+      # Display confirmation prompt and repeat message until expected answer is given
+      # options should be sent as array ['all', 'none']
+      def confirmation_prompt_additional_options(message, options = [])
+        raise DTK::Client::DtkValidationError, "Options should be sent as array: ['all', 'none']" unless options.is_a?(Array)
+
+        # used to disable skip with ctrl+c
+        trap("INT", "SIG_IGN")
+        message += " (yes/no#{options.empty? ? '' : ('/' + options.join('/'))})"
+
+        while line = Readline.readline("#{message}: ", true)
+          if line.eql?("yes") || line.eql?("y")
+            trap("INT",false)
+            return true
+          elsif line.eql?("no") || line.eql?("n")
+            trap("INT",false)
+            return false
+          elsif options.include?(line)
+            trap("INT",false)
+            return line
+          end
+        end
+      end
+
       # Loading output used to display waiting status
       def wait_animation(message, time_seconds)
         print message

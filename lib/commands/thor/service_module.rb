@@ -184,6 +184,7 @@ module DTK::Client
     desc "install NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y] [-i]", "Install remote service module into local environment. -y will automatically clone component modules. -i will ignore component import error."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :ignore, :aliases => '-i', :type => :boolean, :default => false
+    method_option :update_none, :type => :boolean, :default => false
     def install(context_params)
       response = install_module_aux(context_params)
       @@invalidate_map << :service_module if response && response.ok?
