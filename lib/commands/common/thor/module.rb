@@ -275,6 +275,7 @@ module DTK::Client
         required_components = response.data(:required_modules)
         opts = {:do_not_raise=>true}
         module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message=>true)
+        module_opts.merge!(:update_none => true) if options.update_none?
 
         continue = trigger_module_auto_import(missing_components, required_components, module_opts)
         return unless continue

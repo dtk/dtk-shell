@@ -18,9 +18,10 @@ module DTK::Client
     ##
     # Method will trigger pull from dtkn for each existing module
     #
+    def trigger_module_auto_pull(required_modules, force = false)
+      return if required_modules.empty?
 
-    def trigger_module_auto_pull(required_modules)
-      if !required_modules.empty? && Console.confirmation_prompt("Do you want to update in addition to this module its dependent modules from the catalog?")
+      if force || Console.confirmation_prompt("Do you want to update in addition to this module its dependent modules from the catalog?")
         required_modules.each do |r_module|
           module_name = full_module_name(r_module)
           module_type = r_module['type']
@@ -37,7 +38,7 @@ module DTK::Client
           raise DTK::Client::DtkError, response.error_message unless response.ok?
         end
 
-        print "Resuming pull ... "
+        print "Resuming pull ... " unless force
       end
     end
 
@@ -47,13 +48,31 @@ module DTK::Client
     #
     def trigger_module_auto_import(modules_to_import, required_modules, opts={})
       puts "Auto-importing missing module(s)"
+      update_all, update_none = false, false
 
-      # Print out installed modules
+      # Print out or update installed modules from catalog
       required_modules.each do |r_module|
         module_name = full_module_name(r_module)
         module_type = r_module['type']
 
         print "Using #{module_type.gsub('_',' ')} '#{module_name}'\n"
+        next if update_none || opts[:update_none]
+
+        if update_all
+          trigger_module_auto_pull([r_module], true)
+        else
+          update = Console.confirmation_prompt_additional_options("Do you want to update dependent #{module_type.gsub('_',' ')} '#{module_name}' from the catalog?", ['all', 'none'])
+          next unless update
+
+          if update.to_s.eql?('all')
+            update_all = true
+            trigger_module_auto_pull([r_module], true)
+          elsif update.to_s.eql?('none')
+            update_none = true
+          else
+            trigger_module_auto_pull([r_module], true)
+          end
+        end
       end
 
       # Trigger import/install for missing modules
