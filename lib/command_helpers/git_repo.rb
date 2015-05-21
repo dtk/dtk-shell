@@ -477,7 +477,7 @@ module DTK; module Client; class CommandHelper
       if merge_rel == :equal
         { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif [:branchpoint,:local_ahead].include?(merge_rel)
-        raise ErrorUsage.new("Unable to do fast-forward merge. You can use --force but all changes in the service instance will be lost") unless opts[:force]
+        raise Error.new("Unable to do fast-forward merge. You can use --force but all changes will be lost") unless opts[:force]
         # TODO: right now just wiping out what is in repo
         diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
         repo.merge_theirs(remote_branch_ref)

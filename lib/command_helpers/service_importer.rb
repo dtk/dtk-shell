@@ -18,10 +18,10 @@ module DTK::Client
     ##
     # Method will trigger pull from dtkn for each existing module
     #
-    def trigger_module_auto_pull(required_modules, force = false)
+    def trigger_module_auto_pull(required_modules, opts = {})
       return if required_modules.empty?
 
-      if force || Console.confirmation_prompt("Do you want to update in addition to this module its dependent modules from the catalog?")
+      if opts[:force] || Console.confirmation_prompt("Do you want to update in addition to this module its dependent modules from the catalog?")
         required_modules.each do |r_module|
           module_name = full_module_name(r_module)
           module_type = r_module['type']
@@ -31,14 +31,23 @@ module DTK::Client
           new_context_params = DTK::Shell::ContextParams.new
           new_context_params.add_context_to_params(module_type, module_type)
           new_context_params.add_context_name_to_params(module_type, module_type, module_name)
-          new_context_params.forward_options( { :skip_recursive_pull => true })
+
+          forwarded_opts = { :skip_recursive_pull => true }
+          forwarded_opts.merge!(:do_not_raise => true) if opts[:do_not_raise]
+          new_context_params.forward_options(forwarded_opts)
 
           response = ContextRouter.routeTask(module_type, "pull_dtkn", new_context_params, @conn)
 
-          raise DTK::Client::DtkError, response.error_message unless response.ok?
+          unless response.ok?
+            if opts[:do_not_raise]
+              OsUtil.print("#{response.error_message}", :red)
+            else
+              raise DTK::Client::DtkError, response.error_message
+            end
+          end
         end
 
-        print "Resuming pull ... " unless force
+        print "Resuming pull ... " unless opts[:force]
       end
     end
 
@@ -59,18 +68,18 @@ module DTK::Client
         next if update_none || opts[:update_none]
 
         if update_all
-          trigger_module_auto_pull([r_module], true)
+          trigger_module_auto_pull([r_module], {:force => true, :do_not_raise => true})
         else
           update = Console.confirmation_prompt_additional_options("Do you want to update dependent #{module_type.gsub('_',' ')} '#{module_name}' from the catalog?", ['all', 'none'])
           next unless update
 
           if update.to_s.eql?('all')
             update_all = true
-            trigger_module_auto_pull([r_module], true)
+            trigger_module_auto_pull([r_module], {:force => true, :do_not_raise => true})
           elsif update.to_s.eql?('none')
             update_none = true
           else
-            trigger_module_auto_pull([r_module], true)
+            trigger_module_auto_pull([r_module], {:force => true, :do_not_raise => true})
           end
         end
       end

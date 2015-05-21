@@ -368,6 +368,7 @@ module DTK::Client
           :skip_recursive_pull => skip_recursive_pull
         }
 
+        opts.merge!(:do_not_raise => true) if (context_params.get_forwarded_options()||{})[:do_not_raise]
         response = pull_from_remote_aux(module_type.to_sym, module_id, opts)
         return response unless response.ok?
 
