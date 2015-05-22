@@ -16,7 +16,7 @@ module DTK::Client
 
       unless File.directory?(module_location)
         return if opts[:skip_cloning]
-        if Console.confirmation_prompt("Push not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
+        if opts[:force_clone] || Console.confirmation_prompt("Push not possible, module '#{module_name}#{version && "-#{version}"}' has not been cloned. Would you like to clone module now"+'?')
           clone_aux(module_type, module_id, version, true, true, opts)
         else
           return
