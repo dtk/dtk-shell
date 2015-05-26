@@ -323,7 +323,7 @@ module DTK::Client
       response = Helper(:git_repo).pull_changes?(:component_module, module_name, edit_opts.merge!(opts))
       return response unless response.ok?()
 
-      edit_opts.merge!(:force_parse => true, :update_from_includes => true, :print_dependencies => true, :remote_branch => local_branch)
+      edit_opts.merge!(:force_parse => true, :update_from_includes => true, :print_dependencies => true, :remote_branch => local_branch, :force_clone => true)
       response = push_clone_changes_aux(:component_module, module_id, nil, "Pull base module updates", true, edit_opts)
       
       unless response.ok?()
