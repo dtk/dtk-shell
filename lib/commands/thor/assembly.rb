@@ -194,10 +194,13 @@ module DTK::Client
       :type => :string
     method_option :settings, :type => :string, :aliases => '-s'
     def stage(context_params)
-      assembly_template_id, name = context_params.retrieve_arguments([:assembly_id!, :option_1],method_argument_names)
+      assembly_template_id, service_module_id, name = context_params.retrieve_arguments([:assembly_id!, :service_module_id, :option_1],method_argument_names)
       post_body = {
         :assembly_id => assembly_template_id
       }
+
+      # special case when we need service module id
+      post_body[:service_module_id] = service_module_id if context_params.pure_cli_mode
 
       # using this to make sure cache will be invalidated after new assembly is created from other commands e.g.
       # 'assembly-create', 'install' etc.
@@ -251,10 +254,14 @@ module DTK::Client
     method_option :settings, :type => :string, :aliases => '-s'
     def deploy(context_params)
       context_params.forward_options(options)
-      assembly_template_id, name = context_params.retrieve_arguments([:assembly_id!, :option_1],method_argument_names)
+      assembly_template_id, service_module_id, name = context_params.retrieve_arguments([:assembly_id!, :service_module_id, :option_1],method_argument_names)
       post_body = {
         :assembly_id => assembly_template_id
       }
+
+      # special case when we need service module id
+      post_body[:service_module_id] = service_module_id if context_params.pure_cli_mode
+
       if commit_msg = options["commit_msg"]
         post_body.merge!(:commit_msg => commit_msg)
       end

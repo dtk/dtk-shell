@@ -25,7 +25,7 @@ module DTK
         DTK::Client::Session.get_connection()
       end
 
-      def self.handle_argument_error(task, error) 
+      def self.handle_argument_error(task, error)
         super
       end
 
@@ -35,6 +35,6 @@ module DTK
         self.class.pretty_print_cols()
       end
     end
-  
+
   end
 end

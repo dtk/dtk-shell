@@ -113,7 +113,7 @@ module DTK::Client
 
     def converge_aux(context_params)
       assembly_or_workspace_id,task_action,task_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1,:option_2],method_argument_names)
-      
+
       task_params = nil
       if task_params_string
         task_params = task_params_string.split(',').inject(Hash.new) do |h,av|
@@ -325,7 +325,7 @@ module DTK::Client
 
       edit_opts.merge!(:force_parse => true, :update_from_includes => true, :print_dependencies => true, :remote_branch => local_branch, :force_clone => true)
       response = push_clone_changes_aux(:component_module, module_id, nil, "Pull base module updates", true, edit_opts)
-      
+
       unless response.ok?()
         # if parsing error on assembly module (components/attributes/link_defs integrity violations) do git reset --hard
         Helper(:git_repo).hard_reset_branch_to_sha(:component_module, module_name, edit_opts)
@@ -737,7 +737,9 @@ module DTK::Client
         :pattern => pattern
       }
       post_body.merge!(:value => value) unless options.unset?
-      post rest_url("assembly/set_attributes"), post_body
+
+      response = post rest_url("assembly/set_attributes"), post_body
+      response
     end
 
     def create_attribute_aux(context_params)

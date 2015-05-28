@@ -63,20 +63,8 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
 
     response_ruby_obj = entity_class.execute_from_cli(conn,method_name,context_params,options_args,shell_execute)
 
-    # this will raise error if found
-    DTK::Client::ResponseErrorHandler.check(response_ruby_obj)
-
-    # this will find appropriate render adapter and give output, returns boolean
-    if print = response_ruby_obj.render_data()
-      print = [print] unless print.kind_of?(Array)
-      print.each do |el|
-        if el.kind_of?(String)
-          el.each_line{|l| STDOUT << l}
-        else
-          PP.pp(el,STDOUT)
-        end
-      end
-    end
+    # it will raise DTK::Client::Error in case of error response
+    print_method_response!(response_ruby_obj)
 
     # process/print queued message from server
     DTK::Shell::MessageQueue.print_messages()
@@ -111,6 +99,23 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
   end
 end
 
+def print_method_response!(response_ruby_obj)
+  # this will raise error if found
+  DTK::Client::ResponseErrorHandler.check(response_ruby_obj)
+
+  # this will find appropriate render adapter and give output, returns boolean
+  if print = response_ruby_obj.render_data()
+    print = [print] unless print.kind_of?(Array)
+    print.each do |el|
+      if el.kind_of?(String)
+        el.each_line{|l| STDOUT << l}
+      else
+        PP.pp(el,STDOUT)
+      end
+    end
+  end
+end
+
 def load_command(command_name)
   parser_adapter = DTK::Client::Config[:cli_parser] || "thor"
 
@@ -125,6 +130,8 @@ def validate_connection(connection)
     puts "\nDTK will now exit. Please set up your connection properly and try again."
     return true
   end
+
+  false
 end
 
 # check if .add_direct_access file exists, if not then add direct access and create .add_direct_access file

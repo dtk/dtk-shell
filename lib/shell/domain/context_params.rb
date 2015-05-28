@@ -3,11 +3,13 @@ module DTK::Shell
 
     attr_accessor :current_context
     attr_accessor :method_arguments
+    attr_accessor :pure_cli_mode
 
     def initialize(override_method_arguments = [])
       @current_context  = ActiveContext.new
       @method_arguments = override_method_arguments
       @thor_options     = Hash.new
+      @pure_cli_mode    = false
 
       @method_arguments
     end

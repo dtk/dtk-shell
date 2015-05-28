@@ -15,9 +15,11 @@ require File.expand_path('../lib/shell/domain/shadow_entity', File.dirname(__FIL
 require File.expand_path('../lib/commands/thor/account', File.dirname(__FILE__))
 require File.expand_path('../lib/shell/parse_monkey_patch', File.dirname(__FILE__))
 require File.expand_path('../lib/shell/help_monkey_patch', File.dirname(__FILE__))
+require File.expand_path('../lib/execute/cli_pure/cli_rerouter', File.dirname(__FILE__))
 
 
 require 'shellwords'
+require 'json'
 
 $: << "/usr/lib/ruby/1.8/" #TODO: put in to get around path problem in rvm 1.9.2 environment
 
@@ -47,9 +49,14 @@ end
 context = DTK::Shell::Context.new(true)
 
 begin
-  entity_name, method_name, context_params, thor_options = context.get_dtk_command_parameters(entity_name, args)
-
-  top_level_execute(entity_name, method_name, context_params, thor_options, false)
+  if ::DTK::CLIRerouter.is_candidate?(entity_name, args)
+    response_obj = ::DTK::CLIRerouter.new(entity_name, args).run()
+    puts response_obj.to_json
+  else
+    # default execution
+    entity_name, method_name, context_params, thor_options = context.get_dtk_command_parameters(entity_name, args)
+    top_level_execute(entity_name, method_name, context_params, thor_options, false)
+  end
 rescue DTK::Client::DtkError => e
   DtkLogger.instance.error(e.message, true)
 rescue Exception => e

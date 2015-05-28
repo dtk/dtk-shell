@@ -6,8 +6,12 @@ module DTK
     #
     class ContextRouter
 
+      extend DTK::Client::Auxiliary
+
       # This method invokes target context task
       def self.routeTask(target_context, target_method, target_context_params, conn)
+        target_context = target_context.to_s
+        target_method  = target_method.to_s
 
         # Initing required params and invoking target_context.target_method
         load_command(target_context)
