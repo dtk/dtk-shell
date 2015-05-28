@@ -169,7 +169,7 @@ module DTK::Client
           ]
         },
         :identifier_only => {
-          :node      => [
+          :node => [
             ['add-component',"add-component COMPONENT","# Add a component to the node."],
             ['delete-component',"delete-component COMPONENT-NAME [-y]","# Delete component from service's node"],
             ['info',"info","# Return info about node instance belonging to given workspace."],
@@ -571,8 +571,10 @@ TODO: will put in dot release and will rename to 'extend'
       response
     end
 
-    desc "SERVICE-NAME/ID set-attribute ATTRIBUTE-NAME [VALUE] [-u]", "(Un)Set attribute value. The option -u will unset the attribute's value."
+    desc "SERVICE-NAME/ID set-attribute ATTRIBUTE-NAME [VALUE] [-u] [-c] [-n]", "(Un)Set attribute value. The option -u will unset the attribute's value, -c to set component-attribute, -n to set node-attribute."
     method_option :unset, :aliases => '-u', :type => :boolean, :default => false
+    method_option :component_attribute, :aliases => '-c', :type => :boolean, :default => false
+    method_option :node_attribute, :aliases => '-n', :type => :boolean, :default => false
     def set_attribute(context_params)
       set_attribute_aux(context_params)
     end
@@ -626,7 +628,7 @@ TODO: will put in dot release and will rename to 'extend'
 
     # only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE add-component NODE-NAME COMPONENT", "Add a component to the service."
+    desc "SERVICE-NAME/ID add-component COMPONENT", "Add a component to the service."
     def add_component(context_params)
       response = create_component_aux(context_params)
 
@@ -690,7 +692,7 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE delete-component COMPONENT-NAME [-y]","Delete component from the service."
+    desc "SERVICE-NAME/ID delete-component COMPONENT-NAME [-y]","Delete component from the service."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
       response = delete_component_aux(context_params)

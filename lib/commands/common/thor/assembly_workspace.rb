@@ -523,13 +523,16 @@ module DTK::Client
       # If method is invoked from 'assembly/node' level retrieve node_id argument
       # directly from active context
       if context_params.is_there_identifier?(:node)
-        mapping = [REQ_ASSEMBLY_OR_WS_ID,:node_id!,:option_1!]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID, :node_id!, :option_1!]
+        assembly_id, node_id, component_template_id = context_params.retrieve_arguments(mapping, method_argument_names)
       else
         # otherwise retrieve node_id from command options
-        mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!]
+        mapping = [REQ_ASSEMBLY_OR_WS_ID, :option_1!]
+        assembly_id, component_template_id = context_params.retrieve_arguments(mapping, method_argument_names)
+        node_id = nil
       end
 
-      assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
+      # assembly_id,node_id,component_template_id = context_params.retrieve_arguments(mapping,method_argument_names)
       namespace, component_template_id = get_namespace_and_name_for_component(component_template_id)
 
       post_body = {
@@ -736,10 +739,26 @@ module DTK::Client
         :assembly_id => assembly_or_workspace_id,
         :pattern => pattern
       }
+
+      raise DTK::Client::DtkValidationError, "Please use only component-attribute (-c) or node-attribute (-n) option" if options.component_attribute? && options.node_attribute?
+
+      post_body.merge!(:component_attribute => true) if options.component_attribute?
+      post_body.merge!(:node_attribute => true) if options.node_attribute? || context_params.is_there_identifier?(:node)
       post_body.merge!(:value => value) unless options.unset?
 
       response = post rest_url("assembly/set_attributes"), post_body
-      response
+      return response unless response.ok?
+
+      if r_data = response.data
+        if r_data.is_a?(Hash) && (ambiguous = r_data['ambiguous'])
+          unless ambiguous.empty?
+            msg = "It is ambiguous whether '#{ambiguous.join(', ')}' #{ambiguous.size == 1 ? 'is' : 'are'} node or component attribute(s). Run set-attribute again with one of options -c [--component-attribute] or -n [--node-attribute]."
+            raise DTK::Client::DtkError, msg
+          end
+        end
+      end
+
+      Response::Ok.new()
     end
 
     def create_attribute_aux(context_params)
@@ -892,14 +911,24 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete #{what} '#{component_id}'"+'?')
       end
 
+      if node_id.nil? && !(component_id.to_s =~ /^[0-9]+$/)
+        if component_id.to_s.include?('/')
+          node_id, component_id = component_id.split('/')
+          node_name = node_id
+        else
+          node_id = node_name = 'assembly_wide'
+        end
+      end
+
       post_body = {
         :assembly_id => assembly_or_workspace_id,
-        :node_id => node_id,
         :component_id => component_id
       }
 
       # delete component by name (e.g. delete-component dtk_java)
       post_body.merge!(:cmp_full_name => "#{node_name}/#{component_id}") if (node_name && !(component_id.to_s =~ /^[0-9]+$/))
+      post_body.merge!(:node_id => node_id) if node_id
+
       response = post(rest_url("assembly/delete_component"),post_body)
     end
 

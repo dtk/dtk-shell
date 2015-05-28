@@ -230,6 +230,12 @@ module DTK
         end
       end
 
+      class NotOk < self
+        def initialize(data={})
+          super(nil,{"data"=> data, "status" => "notok"})
+        end
+      end
+
       class Error < self
         include Common::Response::ErrorMixin
         def initialize(hash={})

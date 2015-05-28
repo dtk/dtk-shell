@@ -51,6 +51,7 @@ module DTK::Client
       response = resolve_pull_from_remote_on_server(module_type, module_id, remote_namespace)
 
       print "Resolving dependencies please wait ... "
+      RemoteDependencyUtil.check_permission_warnings(response)
 
       # install them all!
       if (response.ok? && !(missing_components = response.data(:missing_modules)).empty?)
