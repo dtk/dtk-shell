@@ -113,19 +113,27 @@ module DTK::Client
       response = post rest_url("assembly/print_includes"),:assembly_id => assembly_or_workspace_id
     end
 
+   # desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]"
+    def execute_action_aux(context_params)
+      assembly_or_workspace_id,component_id,cmp_action,action_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2,:option_3],method_argument_names)
+
+      action_params = parse_params?(action_params_string)
+
+      post_body = {
+        :assembly_id  => assembly_or_workspace_id,
+        :component_id => component_id 
+      }
+      post_body.merge!(:action_name => cmp_action) if cmp_action
+      post_body.merge!(:action_parameters => action_params) if action_params
+
+      post rest_url("assembly/execute_action"), post_body
+    end
+
+
     def converge_aux(context_params)
       assembly_or_workspace_id,task_action,task_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1,:option_2],method_argument_names)
 
-      task_params = nil
-      if task_params_string
-        task_params = task_params_string.split(',').inject(Hash.new) do |h,av|
-          av_split = av.split('=')
-          unless av_split.size == 2
-            raise DTK::Client::DtkValidationError, "The task parameters (#{task_params_string}) is ill-formed"
-          end
-          h.merge(av_split[0] => av_split[1])
-        end
-      end
+      task_params = parse_params?(task_params_string)
 
       post_body = {
         :assembly_id => assembly_or_workspace_id
@@ -162,6 +170,19 @@ module DTK::Client
       task_id = response.data(:task_id)
       post rest_url("task/execute"), "task_id" => task_id
     end
+
+    def parse_params?(params_string)
+      if params_string
+        params_string.split(',').inject(Hash.new) do |h,av|
+          av_split = av.split('=')
+          unless av_split.size == 2
+            raise DtkValidationError, "The parameter string (#{params_string}) is ill-formed"
+          end
+          h.merge(av_split[0] => av_split[1])
+        end
+      end
+    end
+    private :parse_params?
 
     def edit_module_aux(context_params)
       assembly_or_workspace_id, component_module_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)

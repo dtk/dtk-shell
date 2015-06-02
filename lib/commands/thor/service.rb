@@ -274,6 +274,11 @@ module DTK::Client
       response.ok? ? Response::Ok.new() : response
     end
 
+    desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]", "Converge the component or execute tha action on the component."
+    def execute_action(context_params)
+      execute_action_aux(context_params)
+    end
+
     desc "SERVICE-NAME/ID push-assembly-updates [NAMESPACE:SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push changes made to this service instance to the designated assembly; default is parent assembly."
     def push_assembly_updates(context_params)
       assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:service_id!, :option_1], method_argument_names)
