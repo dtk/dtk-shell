@@ -115,7 +115,7 @@ module DTK::Client
 
    # desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]"
     def execute_action_aux(context_params)
-      assembly_or_workspace_id,component_id,cmp_action,action_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2,:option_3],method_argument_names)
+      assembly_or_workspace_id,component_id,method_name,action_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2,:option_3],method_argument_names)
 
       action_params = parse_params?(action_params_string)
 
@@ -123,12 +123,11 @@ module DTK::Client
         :assembly_id  => assembly_or_workspace_id,
         :component_id => component_id 
       }
-      post_body.merge!(:action_name => cmp_action) if cmp_action
-      post_body.merge!(:action_parameters => action_params) if action_params
+      post_body.merge!(:method_name => method_name) if method_name
+      post_body.merge!(:action_params => action_params) if action_params
 
-      post rest_url("assembly/execute_action"), post_body
+      post rest_url("assembly/execute_component_action"), post_body
     end
-
 
     def converge_aux(context_params)
       assembly_or_workspace_id,task_action,task_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1,:option_2],method_argument_names)
