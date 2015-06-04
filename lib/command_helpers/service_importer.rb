@@ -51,35 +51,36 @@ module DTK::Client
       end
     end
 
-
     ##
     # Method will trigger import for each missing module component
     #
-    def trigger_module_auto_import(modules_to_import, required_modules, opts={})
-      puts "Auto-importing missing module(s)"
-      update_all, update_none = false, false
+    def trigger_module_auto_import(modules_to_import, required_modules, opts = {})
+      puts 'Auto-importing missing module(s)'
+      update_all  = false
+      update_none = false
 
       # Print out or update installed modules from catalog
       required_modules.each do |r_module|
         module_name = full_module_name(r_module)
         module_type = r_module['type']
 
-        print "Using #{module_type.gsub('_',' ')} '#{module_name}'\n"
+        print "Using #{module_type.gsub('_', ' ')} '#{module_name}'\n"
         next if update_none || opts[:update_none]
 
         if update_all
-          trigger_module_auto_pull([r_module], {:force => true, :do_not_raise => true})
+          trigger_module_auto_pull([r_module], :force => true, :do_not_raise => true)
         else
-          update = Console.confirmation_prompt_additional_options("Do you want to update dependent #{module_type.gsub('_',' ')} '#{module_name}' from the catalog?", ['all', 'none'])
+          options = required_modules.size > 1 ? %w(all none) : []
+          update  = Console.confirmation_prompt_additional_options("Do you want to update dependent #{module_type.gsub('_', ' ')} '#{module_name}' from the catalog?", options)
           next unless update
 
           if update.to_s.eql?('all')
             update_all = true
-            trigger_module_auto_pull([r_module], {:force => true, :do_not_raise => true})
+            trigger_module_auto_pull([r_module], :force => true, :do_not_raise => true)
           elsif update.to_s.eql?('none')
             update_none = true
           else
-            trigger_module_auto_pull([r_module], {:force => true, :do_not_raise => true})
+            trigger_module_auto_pull([r_module], :force => true, :do_not_raise => true)
           end
         end
       end
@@ -93,7 +94,7 @@ module DTK::Client
         module_url  = m_module['module_url']
 
         # descriptive message
-        import_msg  = "Importing #{module_type.gsub('_',' ')} '#{module_name}'"
+        import_msg  = "Importing #{module_type.gsub('_', ' ')} '#{module_name}'"
         import_msg += " from git source #{module_url}" if module_url
         print "#{import_msg} ... "
 
