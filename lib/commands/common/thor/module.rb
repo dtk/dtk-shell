@@ -157,7 +157,7 @@ module DTK::Client
       unless method_opts[:no_error_msg]
         msg = "Module '#{module_name}' "
         if version then msg << "version #{version} has been deleted"
-        else  msg << "has been deleted"; end
+        else msg << "has been deleted"; end
         OsUtil.print(msg, :yellow)
       end
 
@@ -166,9 +166,9 @@ module DTK::Client
 
     def set_attribute_module_aux(context_params)
       if context_params.is_there_identifier?(:attribute)
-        mapping = [REQ_MODULE_ID,:attribute_id!, :option_1]
+        mapping = [REQ_MODULE_ID, :attribute_id!, :option_1]
       else
-        mapping = [REQ_MODULE_ID,:option_1!,:option_2]
+        mapping = [REQ_MODULE_ID, :option_1!, :option_2]
       end
 
       module_id, attribute_id, value = context_params.retrieve_arguments(mapping, method_argument_names)
@@ -181,13 +181,13 @@ module DTK::Client
         "#{module_type}_id".to_sym => module_id
       }
 
-      post rest_url("attribute/set"), post_body
+      post rest_url('attribute/set'), post_body
     end
 
-    def push_module_aux(context_params, internal_trigger=false, opts={})
+    def push_module_aux(context_params, internal_trigger = false, opts = {})
       module_type = get_module_type(context_params)
-      module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID, "#{module_type}_name".to_sym],method_argument_names)
-      version = options["version"]
+      module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID, "#{module_type}_name".to_sym], method_argument_names)
+      version = options['version']
 
       module_location = OsUtil.module_location(module_type, module_name, version)
 
@@ -196,8 +196,8 @@ module DTK::Client
       opts.merge!(:force => options.force?)
 
       reparse_aux(module_location)
-      push_clone_changes_aux(module_type.to_sym, module_id, version, options["message"]||DEFAULT_COMMIT_MSG, internal_trigger, opts)
-     end
+      push_clone_changes_aux(module_type.to_sym, module_id, version, options['message'] || DEFAULT_COMMIT_MSG, internal_trigger, opts)
+    end
 
     def create_test_module_aux(context_params)
       test_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
@@ -209,10 +209,10 @@ module DTK::Client
       create_response = import(context_params)
 
       unless create_response.ok?
-        error_msg = create_response['errors'].select { |er| er['message'].include? "cannot be created since it exists already" }
+        error_msg = create_response['errors'].select { |er| er['message'].include? 'cannot be created since it exists already' }
         if error_msg.empty?
           # If server response is not ok and module does not exist on server, delete cloned module, invoke delete method
-          delete(context_params,:force_delete => true, :no_error_msg => true)
+          delete(context_params, :force_delete => true, :no_error_msg => true)
         end
 
         # remove temp directory
@@ -227,13 +227,13 @@ module DTK::Client
     end
 
     def import_module_aux(context_params)
-      CommonModule::Import.new(self,context_params).from_file()
+      CommonModule::Import.new(self, context_params).from_file()
     end
 
     def install_module_aux(context_params)
       create_missing_clone_dirs()
       resolve_direct_access(::DTK::Client::Configurator.check_direct_access)
-      remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
+      remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
       # in case of auto-import via service import, we skip cloning to speed up a process
       skip_cloning = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
       do_not_raise = context_params.get_forwarded_options()[:do_not_raise] if context_params.get_forwarded_options()
@@ -244,7 +244,7 @@ module DTK::Client
       ignore_component_error = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:ignore_component_error] : options.ignore?
       additional_message     = context_params.get_forwarded_options()[:additional_message] if context_params.get_forwarded_options()
 
-      remote_namespace, local_module_name = get_namespace_and_name(remote_module_name,':')
+      remote_namespace, local_module_name = get_namespace_and_name(remote_module_name, ':')
 
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, :namespace => remote_namespace, :version => version)
         message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed"
@@ -289,7 +289,7 @@ module DTK::Client
         response = post rest_url("#{module_type}/import"), post_body
 
         # we set skip cloning since it is already done by import
-        puts " Done"
+        puts ' Done'
       end
 
       return response if(!response.ok? || response.data(:does_not_exist))
