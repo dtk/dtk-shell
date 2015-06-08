@@ -248,13 +248,13 @@ module DTK::Client
 
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, :namespace => remote_namespace, :version => version)
         message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed"
-        message += ". To ignore this conflict and use existing component module please use -i switch (install REMOTE-SERVICE-NAME -i)." if additional_message
+        message += '. To ignore this conflict and use existing component module please use -i switch (install REMOTE-SERVICE-NAME -i).' if additional_message
 
         raise DtkError, message unless ignore_component_error
       end
 
       post_body = {
-        :remote_module_name => remote_module_name.sub(':','/'),
+        :remote_module_name => remote_module_name.sub(':', '/'),
         :local_module_name => local_module_name,
         :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
@@ -263,18 +263,21 @@ module DTK::Client
       post_body.merge!(:additional_message => additional_message) if additional_message
 
       response = post rest_url("#{module_type}/import"), post_body
-      are_there_warnings = RemoteDependencyUtil.print_dependency_warnings(response)
+
+      # print permission warnings and then check for other warnings
+      are_there_warnings = RemoteDependencyUtil.check_permission_warnings(response)
+      are_there_warnings ||= RemoteDependencyUtil.print_dependency_warnings(response, nil, :ignore_permission_warnings => true)
 
       # prompt to see if user is ready to continue with warnings/errors
       if are_there_warnings
-        return false unless Console.confirmation_prompt("Do you still want to proceed with import"+'?')
+        return false unless Console.confirmation_prompt('Do you still want to proceed with import' + '?')
       end
 
       # case when we need to import additional components
-      if (response.ok? && !skip_ainstall && (missing_components = response.data(:missing_module_components)))
+      if response.ok? && !skip_ainstall && (missing_components = response.data(:missing_module_components))
         required_components = response.data(:required_modules)
-        opts = {:do_not_raise=>true}
-        module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message=>true)
+        opts = { :do_not_raise => true }
+        module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message => true)
         module_opts.merge!(:update_none => true) if options.update_none?
 
         continue = trigger_module_auto_import(missing_components, required_components, module_opts)

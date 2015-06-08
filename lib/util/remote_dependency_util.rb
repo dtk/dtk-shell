@@ -4,17 +4,19 @@
 module DTK
   module Client
     module RemoteDependencyUtil
-
       MODULE_REF_FILE = 'module_refs.yaml'
 
       class << self
-
-        def print_dependency_warnings(response, success_msg=nil)
+        def print_dependency_warnings(response, success_msg = nil, opts = {})
           are_there_warnings = false
           return are_there_warnings if response.nil? || response.data.nil?
 
           warnings = response.data['dependency_warnings']
           if warnings && !warnings.empty?
+            if opts[:ignore_permission_warnings]
+              warnings.delete_if { |warning| warning['error_type'].eql?('no_permission') }
+              return if warnings.empty?
+            end
             print_out "Following warnings have been detected for current module by Repo Manager:\n"
             warnings.each { |w| print_out("  - #{w['message']}") }
             puts
@@ -25,14 +27,14 @@ module DTK
         end
 
         def check_permission_warnings(response)
-          errors = ""
+          errors = ''
           dependency_warnings = response.data['dependency_warnings']
 
           if dependency_warnings && !dependency_warnings.empty?
-            no_permissions = dependency_warnings.select{|warning| warning['error_type'].eql?('no_permission')}
+            no_permissions = dependency_warnings.select { |warning| warning['error_type'].eql?('no_permission') }
 
             errors << "\n\nYou do not have (R) permissions for modules:\n\n"
-            no_permissions.each {|np| errors << "  - #{np['module_namespace']}:#{np['module_name']} (owner: #{np['module_owner']})\n"}
+            no_permissions.each { |np| errors << "  - #{np['module_namespace']}:#{np['module_name']} (owner: #{np['module_owner']})\n" }
             errors << "\nPlease contact owner(s) to change permissions for those modules."
           end
 

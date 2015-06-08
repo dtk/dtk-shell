@@ -47,7 +47,7 @@ module DTK::Client
     ##
     #
     # module_type: will be :component_module or :service_module
-    def import_module_component_dependencies(module_type, module_id, remote_namespace=nil)
+    def import_module_component_dependencies(module_type, module_id, remote_namespace = nil)
       response = resolve_pull_from_remote_on_server(module_type, module_id, remote_namespace)
 
       print "Resolving dependencies please wait ... "
