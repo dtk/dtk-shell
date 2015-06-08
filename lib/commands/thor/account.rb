@@ -127,8 +127,8 @@ module DTK::Client
         DTK::Client::Configurator.add_current_user_to_direct_access() if response.ok?
       end
 
-      if response.ok? && !response.data(:registered_with_repoman)
-        OsUtil.print("Warning: We were not able to register your key with remote catalog! Contact DTK team for more infromation.", :yellow)
+      if response.ok? && response.data(:repoman_registration_error)
+        OsUtil.print("Warning: We were not able to register your key with remote catalog! #{response.data(:repoman_registration_error)}", :yellow)
       end
 
       response.ok? ? nil : response
@@ -147,8 +147,8 @@ module DTK::Client
       response = post rest_url("account/remove_user_direct_access"), { :username => name.chomp }
       return response unless response.ok?
 
-      if response.ok? && !response.data(:unregistered_with_repoman)
-        OsUtil.print("Warning: We were not able to unregister your key with remote catalog!", :yellow)
+      if response.ok? && response.data(:repoman_registration_error)
+        OsUtil.print("Warning: We were not able to unregister your key with remote catalog! #{response.data(:repoman_registration_error)}", :yellow)
       end
 
       OsUtil.print("SSH key '#{name}' removed successfully!", :yellow)

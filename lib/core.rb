@@ -295,7 +295,7 @@ module DTK
       def validate
         #TODO: need to check for legal values
         missing_keys = REQUIRED_KEYS - keys
-        raise DTK::Client::DtkError,"Missing config keys (#{missing_keys.join(",")}). Please check your configuration file #{CONFIG_FILE} for required keys!" unless missing_keys.empty?
+        raise DTK::Client::DtkError, "Missing config keys (#{missing_keys.join(",")}). Please check your configuration file #{CONFIG_FILE} for required keys!" unless missing_keys.empty?
       end
 
     end

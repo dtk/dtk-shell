@@ -1,11 +1,11 @@
 module DTK::Client
   module TaskStatusMixin
-    def task_status_aux(id,type,opts={})
+    def task_status_aux(id, type, opts={})
         if opts[:wait]
           # there will be infinite loop until intereputed with CTRL+C
           begin
             response = nil
-            loop do 
+            loop do
               response = task_status_aux_post(id,type,opts)
               raise DTK::Client::DtkError, "[ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
 
@@ -14,7 +14,7 @@ module DTK::Client
                 #TODO: may fix in server, but now top can have non executing state but a concurrent branch can execute; so
                 #chanding bloew for time being
                 #break unless response.data.first["status"].eql? "executing"
-                # TODO: There is bug where we do not see executing status on start so we have to wait until at 
+                # TODO: There is bug where we do not see executing status on start so we have to wait until at
                 # least one 'successed' has been found
 
                 top_task_failed = response.data.first['status'].eql?('failed')
@@ -22,7 +22,7 @@ module DTK::Client
                 is_executing = (response.data.select {|r|r["status"].eql? "executing"}).size > 0
                 is_failed    = (response.data.select {|r|r["status"].eql? "failed"}).size > 0
                 is_cancelled = response.data.first["status"].eql?("cancelled")
-                
+
                 # commented out because of DTK-1804
                 # when some of the converge tasks fail, stop task-status --wait and set task status to '' for remaining tasks which are not executed
                 # if is_failed
@@ -30,7 +30,7 @@ module DTK::Client
                   # is_cancelled = true
                 # end
                 is_cancelled = true if top_task_failed
-                
+
                 unless (is_executing || is_pending) && !is_cancelled
                   system('clear')
                   response.print_error_table = true
@@ -64,9 +64,9 @@ module DTK::Client
           :format => :list
         }
         response = post rest_url("#{type}/task_status"), post_body
-        
+
         raise DTK::Client::DtkError, "[SERVER ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
-           
+
         response.override_command_class("list_task")
         puts response.render_data
       end
