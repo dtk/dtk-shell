@@ -17,7 +17,6 @@ DEBUG_SLEEP_TIME = DTK::Configuration.get(:debug_task_frequency)
 
 module DTK::Client
   class Service < CommandBaseThor
-
     no_tasks do
       include TaskStatusMixin
       include SetRequiredParamsMixin
@@ -264,19 +263,19 @@ module DTK::Client
 
     desc "SERVICE-NAME/ID push-assembly-updates [NAMESPACE:SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push changes made to this service instance to the designated assembly; default is parent assembly."
     def push_assembly_updates(context_params)
-      assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:service_id!,:option_1],method_argument_names)
+      assembly_id, qualified_assembly_name = context_params.retrieve_arguments([:service_id!, :option_1], method_argument_names)
       service_module_name, assembly_template_name =
         if qualified_assembly_name
           if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
             [$1,$2]
           else
-            raise DtkError,"The term (#{qualified_assembly_name}) must have form SERVICE-MODULE-NAME/ASSEMBLY-NAME"
+            raise DtkError, "The term (#{qualified_assembly_name}) must have form SERVICE-MODULE-NAME/ASSEMBLY-NAME"
           end
         else
-          [nil,nil]
+          [nil, nil]
         end
 
-      response = promote_assembly_aux(:update,assembly_id, service_module_name, assembly_template_name,{:use_module_namespace=>true})
+      response = promote_assembly_aux(:update, assembly_id, service_module_name, assembly_template_name, :use_module_namespace => true)
       return response unless response.ok?
       @@invalidate_map << :assembly
       Response::Ok.new()

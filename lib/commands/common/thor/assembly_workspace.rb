@@ -56,8 +56,10 @@ module DTK::Client
 
     # mode will be :create or :update
     # service_module_name_x can be name or fullname (NS:MOduleName)
-    def promote_assembly_aux(mode,assembly_or_workspace_id,service_module_name_x=nil,assembly_template_name=nil,opts={})
-      namespace,local_clone_dir_exists = nil, nil
+    def promote_assembly_aux(mode, assembly_or_workspace_id, service_module_name_x = nil, assembly_template_name = nil, opts = {})
+      namespace = nil
+      local_clone_dir_exists = nil
+
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :mode => mode.to_s
@@ -66,7 +68,7 @@ module DTK::Client
       if service_module_name_x
         service_module_name = service_module_name_x
         if service_module_name_x =~ /(^[^:]+):([^:]+$)/
-          namespace,service_module_name = [$1,$2]
+          namespace, service_module_name = [$1,$2]
         end
         post_body.merge!(:service_module_name => service_module_name)
       end
@@ -81,16 +83,16 @@ module DTK::Client
       post_body.merge!(:assembly_template_name => assembly_template_name) if assembly_template_name
       post_body.merge!(:use_module_namespace => true) if opts[:use_module_namespace]
       post_body.merge!(:description => opts[:description]) if opts[:description]
-      response = post rest_url("assembly/promote_to_template"), post_body
+      response = post rest_url('assembly/promote_to_template'), post_body
       return response unless response.ok?()
 
-      #synchronize_clone will load new assembly template into service clone on workspace (if it exists)
-      commit_sha,workspace_branch,namespace,full_module_name,repo_url,version = response.data(:commit_sha,:workspace_branch,:module_namespace,:full_module_name,:repo_url,:version)
+      # synchronize_clone will load new assembly template into service clone on workspace (if it exists)
+      commit_sha, workspace_branch, namespace, full_module_name, repo_url, version = response.data(:commit_sha, :workspace_branch, :module_namespace, :full_module_name, :repo_url, :version)
       service_module_name ||= response.data(:module_name)
-      opts = {:local_branch=>workspace_branch, :namespace => namespace}
+      opts = { :local_branch => workspace_branch, :namespace => namespace }
 
       if (mode == :update) || local_clone_dir_exists
-        response = Helper(:git_repo).synchronize_clone(:service_module,service_module_name,commit_sha,opts)
+        response = Helper(:git_repo).synchronize_clone(:service_module, service_module_name, commit_sha, opts)
       else
         response = Helper(:git_repo).create_clone_with_branch(:service_module, service_module_name, repo_url, workspace_branch, version, namespace)
       end
