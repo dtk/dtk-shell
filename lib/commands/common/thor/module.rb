@@ -241,7 +241,7 @@ module DTK::Client
       module_type  = get_module_type(context_params)
 
       # ignore_component_error = context_params.get_forwarded_options()[:ignore_component_error]||options.ignore? if context_params.get_forwarded_options()
-      ignore_component_error = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:ignore_component_error] : options.ignore?
+      ignore_component_error = context_params.get_forwarded_options().empty? ? options.ignore? : context_params.get_forwarded_options()[:ignore_component_error]
       additional_message     = context_params.get_forwarded_options()[:additional_message] if context_params.get_forwarded_options()
 
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name, ':')
@@ -292,8 +292,7 @@ module DTK::Client
         puts ' Done'
       end
 
-      return response if(!response.ok? || response.data(:does_not_exist))
-      # module_name,repo_url,branch,version = response.data(:module_name, :repo_url, :workspace_branch, :version)
+      return response if !response.ok? || response.data(:does_not_exist)
       module_id, module_name, namespace, repo_url, branch, version = response.data(:module_id, :module_name, :namespace, :repo_url, :workspace_branch, :version)
 
       if error = response.data(:dsl_parse_error)
@@ -312,13 +311,13 @@ module DTK::Client
 
     def delete_from_catalog_aux(context_params)
       module_type        = get_module_type(context_params)
-      remote_module_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+      remote_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
 
       # remote_module_name can be namespace:name or namespace/name
       remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name, ':')
 
       unless options.force? || options.confirmed?
-        return unless Console.confirmation_prompt("Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace+'/'}#{remote_module_name}' and all items contained in it"+'?')
+        return unless Console.confirmation_prompt("Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace + '/'}#{remote_module_name}' and all items contained in it" + '?')
       end
 
       post_body = {
@@ -333,7 +332,7 @@ module DTK::Client
 
     def publish_module_aux(context_params)
       module_type  = get_module_type(context_params)
-      module_id, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, :option_1],method_argument_names)
+      module_id, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, :option_1], method_argument_names)
 
       post_body = {
         "#{module_type}_id".to_sym => module_id,
