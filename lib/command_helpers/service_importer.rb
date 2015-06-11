@@ -102,17 +102,18 @@ module DTK::Client
           # import from Repo Manager
           new_context_params = ::DTK::Shell::ContextParams.new([module_name])
           new_context_params.override_method_argument!('option_2', m_module['version'])
-          new_context_params.forward_options( { :skip_cloning => false, :skip_auto_install => true, :module_type => module_type}).merge!(opts)
-          response = ContextRouter.routeTask(module_type, "install", new_context_params, @conn)
+          new_context_params.forward_options(:skip_cloning => false, :skip_auto_install => true, :module_type => module_type).merge!(opts)
+          response = ContextRouter.routeTask(module_type, 'install', new_context_params, @conn)
         else
           # import from Git source
           new_context_params = ::DTK::Shell::ContextParams.new([module_url, module_name])
-          new_context_params.forward_options( { :internal_trigger => true })
-          response = ContextRouter.routeTask(module_type, "import_git", new_context_params, @conn)
+          new_context_params.forward_options(:internal_trigger => true)
+          response = ContextRouter.routeTask(module_type, 'import_git', new_context_params, @conn)
         end
 
-        puts(response.data(:does_not_exist) ? response.data(:does_not_exist) : "Done.")
-        raise DTK::Client::DtkError, response.error_message unless response.ok?
+        ignore_component_error = (new_context_params.get_forwarded_options() || {})[:ignore_component_error] && module_type.eql?('component_module')
+        puts(response.data(:does_not_exist) ? response.data(:does_not_exist) : 'Done.')
+        raise DTK::Client::DtkError, response.error_message if !response.ok? && !ignore_component_error
       end
 
       Response::Ok.new()
