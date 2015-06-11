@@ -44,8 +44,6 @@ module DTK::Client
         assembly_id
       end
 
-
-
     end
 
     def self.whoami()
@@ -258,7 +256,15 @@ module DTK::Client
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def converge(context_params)
-      converge_aux(context_params)
+      response = converge_aux(context_params)
+
+      if context_params.pure_cli_mode
+        assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
+
+        cli_task_status_aux(assembly_or_workspace_id)
+      end
+
+      Response::Ok.new()
     end
 
     desc "SERVICE-NAME/ID push-assembly-updates [NAMESPACE:SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push changes made to this service instance to the designated assembly; default is parent assembly."

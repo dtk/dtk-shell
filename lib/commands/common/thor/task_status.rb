@@ -1,3 +1,5 @@
+require 'hirb'
+
 module DTK::Client
   module TaskStatusMixin
     def task_status_aux(id, type, opts={})
@@ -6,7 +8,7 @@ module DTK::Client
           begin
             response = nil
             loop do
-              response = task_status_aux_post(id,type,opts)
+              response = task_status_aux_post(id, type, opts)
               raise DTK::Client::DtkError, "[ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
 
               # stop pulling when top level task succeds, fails or timeout
@@ -43,7 +45,7 @@ module DTK::Client
               system('clear')
               response.render_data(true)
 
-              Console.wait_animation("Watching '#{type}' task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ",DEBUG_SLEEP_TIME)
+              Console.wait_animation("Watching '#{type}' task status [ #{DEBUG_SLEEP_TIME} seconds refresh ] ", DEBUG_SLEEP_TIME)
             end
           rescue Interrupt => e
             puts ""
@@ -57,13 +59,56 @@ module DTK::Client
         end
       end
 
-      def list_task_info_aux(type, id)
+
+      def cli_task_status_aux(assembly_or_workspace_id)
+        current_index = 1
+        last_printed_index = 0
+        success_indices = []
+
+        loop do
+          response = get_task_status(assembly_or_workspace_id, :assembly, :table)
+          return response unless response.ok?
+
+          current_tasks = response.data.select { |el| el['index'] == current_index }
+          main_task     = current_tasks.find { |el| el['sub_index'].nil? }
+
+          # this means this is last tasks
+          return Response::Ok.new() unless main_task
+
+          case main_task['status']
+          when 'executing'
+            if (last_printed_index != current_index)
+              OsUtil.clear_screen
+              print_succeeded_tasks(response.data, success_indices)
+              print_tasks(current_tasks)
+              last_printed_index = current_index
+            end
+          when 'succeeded'
+            success_indices << current_index
+            current_index  += 1
+          when nil
+            # ignore
+          else
+            errors = current_tasks.collect { |ct| ct['errors'] }.compact
+            error_msg = errors.collect { |err| err['message'] }.uniq.join(', ')
+            raise DTK::Client::DtkError, "We've run into an error on task '#{main_task['type']}' status '#{main_task['status']}', error: #{error_msg}"
+          end
+
+          sleep(5)
+        end
+      end
+
+      def get_task_status(id, type, format = :list)
         id_sym = "#{type}_id".to_sym
         post_body = {
           id_sym => id,
-          :format => :list
+          :format => format
         }
-        response = post rest_url("#{type}/task_status"), post_body
+        post rest_url("#{type}/task_status"), post_body
+      end
+
+      def list_task_info_aux(type, id)
+        response = get_task_status(id, type, :list)
 
         raise DTK::Client::DtkError, "[SERVER ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
 
@@ -72,7 +117,35 @@ module DTK::Client
       end
 
      private
-      def task_status_aux_post(id,type,opts={})
+
+      def parse_date(string_date)
+        string_date.nil? ? (' ' * 17) : DateTime.parse(string_date).strftime('%H:%M:%S %d/%m/%y')
+      end
+
+      def append_to(number_of_chars, value)
+        value ||= ''
+        value.strip!
+        appending_str = ' ' * (number_of_chars - value.size)
+        value.insert(0, appending_str)
+      end
+
+      def print_tasks(tasks)
+        hirb_options = { :headers => nil, :filters => [Proc.new { |a| append_to(25, a) }, Proc.new { |a| append_to(15, a)}, Proc.new { |a| append_to(15, a)}, Proc.new { |a| append_to(8, a)}], :unicode => true, :description => false }
+
+
+        tasks.each do |task|
+          node_name = task['node'] ? task['node']['name'] : ''
+
+          puts Hirb::Helpers::AutoTable.render([[task['type'], task['status'], node_name, task['duration'], parse_date(task['started_at']), parse_date(task['ended_at'])]], hirb_options)
+        end
+      end
+
+      def print_succeeded_tasks(tasks, success_indices)
+        succeeded_tasks = tasks.select { |task| success_indices.include?(task['index']) }
+        print_tasks(succeeded_tasks)
+      end
+
+      def task_status_aux_post(id, type, opts={})
         id_field = "#{type}_id".to_sym
         post_body_hash = {
           id_field                => id,
