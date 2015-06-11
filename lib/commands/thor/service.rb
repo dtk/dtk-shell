@@ -414,7 +414,7 @@ TODO: will put in dot release and will rename to 'extend'
       print_includes_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID workflow-info", "Get the structure of the workflow associated with service."
+    desc "SERVICE-NAME/ID workflow-info [WORKFLOW-NAME]", "Get the contents of a workflow associated with the service."
     def workflow_info(context_params)
       workflow_info_aux(context_params)
     end

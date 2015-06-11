@@ -493,7 +493,7 @@ module DTK::Client
       list_tasks_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID workflow-info", "Get the structure of the workflow associated with workspace."
+    desc "SERVICE-NAME/ID workflow-info [WORKFLOW-NAME]", "Get the contents of a workflow associated with the workspace."
     def workflow_info(context_params)
       workflow_info_aux(context_params)
     end

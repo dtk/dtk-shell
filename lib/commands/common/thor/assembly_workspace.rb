@@ -338,11 +338,12 @@ module DTK::Client
     end
 
     def workflow_info_aux(context_params)
-      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
+      assembly_or_workspace_id,workflow_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :subtype     => 'instance'
       }
+      post_body.merge!(:task_action => workflow_name) if workflow_name
       post(rest_url("assembly/info_about_task"),post_body)
     end
 
