@@ -211,14 +211,16 @@ module DTK::Client
     end
 
     def edit_workflow_aux(context_params)
-      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
+      assembly_or_workspace_id, workflow_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1],method_argument_names)
       post_body = {
-        :assembly_id => assembly_or_workspace_id,
-        :module_type => 'service_module',
+        :assembly_id       => assembly_or_workspace_id,
+        :module_type       => 'service_module',
         :modification_type => 'workflow'
       }
+      post_body.merge!(:task_action => workflow_name) if workflow_name
       response = post rest_url("assembly/prepare_for_edit_module"), post_body
       return response unless response.ok?
+
       assembly_name,service_module_id,service_module_name,version,repo_url,branch,branch_head_sha,edit_file = response.data(:assembly_name,:module_id,:full_module_name,:version,:repo_url,:workspace_branch,:branch_head_sha,:edit_file)
       edit_opts = {
         :automatically_clone => true,
@@ -236,6 +238,7 @@ module DTK::Client
         :modification_type => :workflow,
         :edit_file => edit_file
       }
+      edit_opts.merge!(:task_action => workflow_name) if workflow_name
       version = nil #TODO: version associated with assembly is passed in edit_opts, which is a little confusing
       edit_aux(:service_module,service_module_id,service_module_name,version,edit_opts)
     end

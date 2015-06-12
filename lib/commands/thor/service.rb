@@ -248,8 +248,15 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    # TODO: DTK-1986 introduces the hidden optional terms [WORKFLOW-ACTION [WORKFLOW-PARAMS]]
-    # desc "SERVICE-NAME/ID converge [-m COMMIT-MSG] [WORKFLOW-ACTION [WORKFLOW-PARAMS]]", "Converge service instance."
+    desc "SERVICE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow."
+    method_option "commit_msg",:aliases => "-m" ,
+      :type => :string,
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    def execute_workflow(context_params)
+      converge(context_params)
+    end
+
     desc "SERVICE-NAME/ID converge [-m COMMIT-MSG]", "Converge service instance."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
@@ -264,7 +271,7 @@ module DTK::Client
         cli_task_status_aux(assembly_or_workspace_id)
       end
 
-      Response::Ok.new()
+      response.ok? ? Response::Ok.new() : response
     end
 
     desc "SERVICE-NAME/ID push-assembly-updates [NAMESPACE:SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push changes made to this service instance to the designated assembly; default is parent assembly."
@@ -305,7 +312,7 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID edit-workflow", "Edit service's workflow."
+    desc "SERVICE-NAME/ID edit-workflow [WORKFLOW-NAME]", "Edit service's workflow."
     def edit_workflow(context_params)
       edit_workflow_aux(context_params)
     end

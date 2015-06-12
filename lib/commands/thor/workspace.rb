@@ -181,13 +181,23 @@ module DTK::Client
     #  clear_tasks_aux(context_params)
     #end
 
+    desc "WORKSPACE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow."
+    method_option "commit_msg",:aliases => "-m",
+      :type => :string,
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    def execute_workflow(context_params)
+      converge(context_params)
+    end
+
     desc "WORKSPACE-NAME/ID converge [-m COMMIT-MSG]", "Converge workspace instance."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message" 
     def converge(context_params)
-      converge_aux(context_params)
+      response = converge_aux(context_params)
+      response.ok? ? Response::Ok.new() : response
     end
 
     desc "WORKSPACE-NAME/ID push-component-module-updates COMPONENT-MODULE-NAME [--force]", "Push changes made to a component module in the workspace to its base component module."
@@ -379,7 +389,7 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID edit-workflow", "Edit workflow"
+    desc "WORKSPACE-NAME/ID edit-workflow [WORKFLOW-NAME]", "Edit workflow"
     def edit_workflow(context_params)
       edit_workflow_aux(context_params)
     end
