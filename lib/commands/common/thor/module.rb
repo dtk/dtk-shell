@@ -247,8 +247,8 @@ module DTK::Client
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name, ':')
 
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, :namespace => remote_namespace, :version => version)
-        message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed"
-        message += '. To ignore this conflict and use existing component module please use -i switch (install REMOTE-SERVICE-NAME -i).' if additional_message
+        message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed."
+        # message += '. To ignore this conflict and use existing component module please use -i switch (install REMOTE-SERVICE-NAME -i).' if additional_message
 
         raise DtkError, message unless ignore_component_error
       end
