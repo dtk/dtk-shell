@@ -446,46 +446,46 @@ module DTK; module Client; class CommandHelper
       { "diffs" => (diffs[:diffs]||"").to_s, "status" => repo.local_summary() }
     end
 
-    def pull_repo_changes_aux(repo,opts={})
+    def pull_repo_changes_aux(repo, opts = {})
       diffs = DiffSummary.new()
       hard_reset = opts[:hard_reset] || opts[:force]
 
       # default commit in case it is needed
-      repo.stage_and_commit("Commit prior to pull from remote") if repo.changed?
+      repo.stage_and_commit('Commit prior to pull from remote') if repo.changed?
 
       if commit_sha = opts[:commit_sha]
-        #no op if at commit_sha
+        # no op if at commit_sha
         return diffs if (commit_sha == repo.head_commit_sha()) && !hard_reset
       end
 
-      if opts[:remote_repo] and opts[:remote_repo_url]
-        repo.add_remote(opts[:remote_repo],opts[:remote_repo_url])
+      if opts[:remote_repo] && opts[:remote_repo_url]
+        repo.add_remote(opts[:remote_repo], opts[:remote_repo_url])
       end
 
       repo.fetch(remote(opts[:remote_repo]))
       local_branch = repo.local_branch_name
-      remote_branch_ref = remote_branch_ref(local_branch,opts)
+      remote_branch_ref = remote_branch_ref(local_branch, opts)
 
       if hard_reset
-        diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
+        diffs = DiffSummary.diff(repo, local_branch, remote_branch_ref)
         repo.merge_theirs(remote_branch_ref)
-        return({:diffs => diffs, :commit_sha => repo.head_commit_sha()})
+        return({ :diffs => diffs, :commit_sha => repo.head_commit_sha() })
       end
 
-      #check if merge needed
-      merge_rel = repo.merge_relationship(:remote_branch,remote_branch_ref)
+      # check if merge needed
+      merge_rel = repo.merge_relationship(:remote_branch, remote_branch_ref)
       if merge_rel == :equal
         { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
-      elsif [:branchpoint,:local_ahead].include?(merge_rel)
-        raise Error.new("Unable to do fast-forward merge. You can use --force but all changes will be lost") unless opts[:force]
+      elsif [:branchpoint, :local_ahead].include?(merge_rel)
+        raise Error.new('Unable to do fast-forward merge. You can use --force but all changes will be lost') unless opts[:force]
         # TODO: right now just wiping out what is in repo
-        diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
+        diffs = DiffSummary.diff(repo, local_branch, remote_branch_ref)
         repo.merge_theirs(remote_branch_ref)
         { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif merge_rel == :local_behind
-        #see if any diffs between fetched remote and local branch
-        #this has be done after commit
-        diffs = DiffSummary.diff(repo,local_branch, remote_branch_ref)
+        # see if any diffs between fetched remote and local branch
+        # this has be done after commit
+        diffs = DiffSummary.diff(repo, local_branch, remote_branch_ref)
         return diffs unless diffs.any_diffs?()
 
         begin
@@ -494,7 +494,7 @@ module DTK; module Client; class CommandHelper
           puts e
         end
 
-        if commit_sha and commit_sha != repo.head_commit_sha()
+        if commit_sha && commit_sha != repo.head_commit_sha()
           raise Error.new("Git synchronization problem: expected local head to have sha (#{commit_sha})")
         end
 
