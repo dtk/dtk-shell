@@ -312,9 +312,15 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID edit-workflow [WORKFLOW-NAME]", "Edit service's workflow."
+    desc "SERVICE-NAME/ID create-workflow WORKFLOW-NAME [--from BASE-WORKFLOW-NAME]", "Create a new workflow in the service instance."
+    method_option :from, :type => :string
+    def create_workflow(context_params)
+      edit_or_create_workflow_aux(context_params,:create => true,:create_from => options.from)
+    end
+
+    desc "SERVICE-NAME/ID edit-workflow [WORKFLOW-NAME]", "Edit a workflow in the service instance."
     def edit_workflow(context_params)
-      edit_workflow_aux(context_params)
+      edit_or_create_workflow_aux(context_params)
     end
 
     desc "SERVICE-NAME/ID edit-attributes", "Edit service's attributes."

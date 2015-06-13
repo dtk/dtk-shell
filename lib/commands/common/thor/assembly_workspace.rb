@@ -210,14 +210,21 @@ module DTK::Client
       response = post rest_url("assembly/prepare_for_edit_module"), post_body
     end
 
-    def edit_workflow_aux(context_params)
-      assembly_or_workspace_id, workflow_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1],method_argument_names)
+    def edit_or_create_workflow_aux(context_params,opts={})
+      option_1 = (opts[:create] ? :option_1! : :option_1)
+      assembly_or_workspace_id, workflow_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,option_1],method_argument_names)
       post_body = {
         :assembly_id       => assembly_or_workspace_id,
         :module_type       => 'service_module',
         :modification_type => 'workflow'
       }
-      post_body.merge!(:task_action => workflow_name) if workflow_name
+      if workflow_name
+        post_body.merge!(:task_action => workflow_name)
+      end
+      if opts[:create]
+        post_body.merge!(:create => true) 
+        post_body.merge!(:base_task_action => opts[:create_from]) if opts[:create_from]
+      end
       response = post rest_url("assembly/prepare_for_edit_module"), post_body
       return response unless response.ok?
 
