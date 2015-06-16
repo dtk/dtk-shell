@@ -746,24 +746,27 @@ module DTK::Client
 
     def set_attribute_aux(context_params)
       if context_params.is_there_identifier?(:attribute)
-        mapping = (options.unset? ? [REQ_ASSEMBLY_OR_WS_ID,:attribute_id!] : [REQ_ASSEMBLY_OR_WS_ID,:attribute_id!,:option_1!])
+        mapping = (options.unset? ? [REQ_ASSEMBLY_OR_WS_ID, :attribute_id!] : [REQ_ASSEMBLY_OR_WS_ID, :attribute_id!, :option_1!])
       else
-        mapping = (options.unset? ? [REQ_ASSEMBLY_OR_WS_ID,:option_1!] : [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!])
+        mapping = (options.unset? ? [REQ_ASSEMBLY_OR_WS_ID, :option_1!] : [REQ_ASSEMBLY_OR_WS_ID, :option_1!, :option_2!])
       end
 
-      assembly_or_workspace_id, pattern, value = context_params.retrieve_arguments(mapping,method_argument_names)
+      assembly_or_workspace_id, pattern, value = context_params.retrieve_arguments(mapping, method_argument_names)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :pattern => pattern
       }
 
-      raise DTK::Client::DtkValidationError, "Please use only component-attribute (-c) or node-attribute (-n) option" if options.component_attribute? && options.node_attribute?
+      raise DTK::Client::DtkValidationError, 'Please use only component-attribute (-c) or node-attribute (-n) option' if options.component_attribute? && options.node_attribute?
+
+      # if try to set service instance attribute but using -n option to sepicify it is node attribute, say that node attribute does not exist
+      raise DTK::Client::DtkError, "[ERROR] Node attribute '#{pattern}' does not exist" if options.node_attribute? && !pattern.include?('/')
 
       post_body.merge!(:component_attribute => true) if options.component_attribute?
       post_body.merge!(:node_attribute => true) if options.node_attribute? || context_params.is_there_identifier?(:node)
       post_body.merge!(:value => value) unless options.unset?
 
-      response = post rest_url("assembly/set_attributes"), post_body
+      response = post rest_url('assembly/set_attributes'), post_body
       return response unless response.ok?
 
       if r_data = response.data
