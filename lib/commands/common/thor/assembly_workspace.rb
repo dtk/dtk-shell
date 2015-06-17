@@ -762,6 +762,9 @@ module DTK::Client
       # if try to set service instance attribute but using -n option to sepicify it is node attribute, say that node attribute does not exist
       raise DTK::Client::DtkError, "[ERROR] Node attribute '#{pattern}' does not exist" if options.node_attribute? && !pattern.include?('/')
 
+      # make sure -c and -n are used only with node or cmp attributes directly on service instance
+      validate_service_instance_node_or_cmp_attrs(pattern, options) if options.component_attribute? || options.node_attribute?
+
       post_body.merge!(:component_attribute => true) if options.component_attribute?
       post_body.merge!(:node_attribute => true) if options.node_attribute? || context_params.is_there_identifier?(:node)
       post_body.merge!(:value => value) unless options.unset?
@@ -1464,5 +1467,14 @@ module DTK::Client
       post rest_url("assembly/clear_tasks"), post_body
     end
 
+    def validate_service_instance_node_or_cmp_attrs(pattern, options)
+      split_pattern = pattern.split('/')
+      return if split_pattern.size == 2
+      if options.node_attribute?
+        raise DTK::Client::DtkError, 'Please use -n option only with service instance node attributes (node_name/attribute_name)'
+      elsif options.component_attribute?
+        raise DTK::Client::DtkError, 'Please use -c option only with service instance component attributes (cmp_name/attribute_name)'
+      end
+    end
   end
 end
