@@ -171,7 +171,7 @@ module DTK::Client
     def set_catalog_credentials(context_params)
       creds = DTK::Client::Configurator.enter_catalog_credentials()
 
-      response = post rest_url("account/set_catalog_credentials"), { :username => creds[:username], :password => creds[:password] }
+      response = post rest_url("account/set_catalog_credentials"), { :username => creds[:username], :password => creds[:password], :validate => true }
       return response unless response.ok?
 
       OsUtil.print("Your catalog credentials have been set!", :yellow)
