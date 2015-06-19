@@ -3,11 +3,11 @@ module DTK
 
     ROUTER_DATA = {
       :service_module => [
-          { :regex => /service-module (?<service_module_id>[\w:\-]+) (?<method_name>stage) (?<assembly_id>[\w:\-]+) (?<instance_name>[\w:\-]+)/, :entity => 'assembly' },
-          { :regex => /service-module (?<service_module_id>[\w:\-]+) (?<method_name>deploy) (?<assembly_id>[\w:\-]+) (?<instance_name>[\w:\-]+)/ }
+          { :regex => /service-module (?<service_module_id>[\w:\-]+) (?<method_name>stage) (?<assembly_id>[\w:\-]+) (?<instance_name>[\w:\-\.\:]+)/, :entity => 'assembly' },
+          { :regex => /service-module (?<service_module_id>[\w:\-]+) (?<method_name>deploy) (?<assembly_id>[\w:\-]+) (?<instance_name>[\w:\-\.\:]+)/ }
         ],
       :service        => [
-          { :regex => /service (?<service_id>[\w:\-]+) (?<method_name>set-attribute) (?<name>[\w:\-]+) (?<value>[\w:\-]+)/ },
+          { :regex => /service (?<service_id>[\w:\-]+) (?<method_name>set-attribute) (?<name>[\w:\-\.\:]+) (?<value>[\w:\-\.\:]+)/ },
           { :regex => /service (?<service_id>[\w:\-]+) (?<method_name>converge)/ },
           { :regex => /service (?<method_name>delete-and-destroy) (?<instance_name>[\w:\-]+)/ }
         ]

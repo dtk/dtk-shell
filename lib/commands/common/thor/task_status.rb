@@ -73,7 +73,10 @@ module DTK::Client
           main_task     = current_tasks.find { |el| el['sub_index'].nil? }
 
           # this means this is last tasks
-          return Response::Ok.new() unless main_task
+          unless main_task
+            print_succeeded_tasks(response.data, success_indices)
+            return Response::Ok.new()
+          end
 
           case main_task['status']
           when 'executing'
