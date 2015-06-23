@@ -33,7 +33,7 @@ def top_level_execute(entity_name, method_name, context_params=nil, options_args
   rescue DTK::Client::DtkLoginRequiredError
     # re-logging user and repeating request
     DTK::Client::OsUtil.print("Session expired: re-establishing session & repeating given task", :yellow)
-    DTK::Client::Session.re_initialize()
+    DTK::Client::Session.re_initialize
     top_level_execute_core(entity_name, method_name, context_params, options_args, shell_execute)
   end
 end
@@ -48,7 +48,7 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
 
     entity_name = entity_name.gsub("-","_")
     load_command(entity_name)
-    conn = DTK::Client::Session.get_connection()
+    conn = DTK::Client::Session.get_connection
 
     # if connection parameters are not set up properly then don't execute any command
     return if validate_connection(conn)
@@ -67,7 +67,7 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
     print_method_response!(response_ruby_obj)
 
     # process/print queued message from server
-    DTK::Shell::MessageQueue.print_messages()
+    DTK::Shell::MessageQueue.print_messages
 
   rescue DTK::Client::DtkLoginRequiredError => e
     # this error is handled in method above
@@ -104,7 +104,7 @@ def print_method_response!(response_ruby_obj)
   DTK::Client::ResponseErrorHandler.check(response_ruby_obj)
 
   # this will find appropriate render adapter and give output, returns boolean
-  if print = response_ruby_obj.render_data()
+  if print = response_ruby_obj.render_data
     print = [print] unless print.kind_of?(Array)
     print.each do |el|
       if el.kind_of?(String)
@@ -140,13 +140,13 @@ def resolve_direct_access(params, config_exists=nil)
 
   puts "Processing ..." if config_exists
   # check to see if catalog credentials are set
-  conn = DTK::Client::Session.get_connection()
+  conn = DTK::Client::Session.get_connection
   response = conn.post DTK::Client::CommandBase.class, conn.rest_url("account/check_catalog_credentials"), {}
 
   # set catalog credentails
   if response.ok? && !response.data['catalog_credentials_set']
     # setting up catalog credentials
-    catalog_creds = DTK::Client::Configurator.ask_catalog_credentials()
+    catalog_creds = DTK::Client::Configurator.ask_catalog_credentials
     unless catalog_creds.empty?
       response = conn.post DTK::Client::CommandBase.class, conn.rest_url("account/set_catalog_credentials"), { :username => catalog_creds[:username], :password => catalog_creds[:password], :validate => true}
       if errors = response['errors']
@@ -156,20 +156,20 @@ def resolve_direct_access(params, config_exists=nil)
   end
 
   # response = DTK::Client::Account.add_access(params[:ssh_key_path])
-  response, matched_pub_key, matched_username = DTK::Client::Account.add_key(params[:ssh_key_path], true)
+  response, matched_pub_key, matched_username = DTK::Client::Account.add_key(params[:ssh_key_path], true, "#{DTK::Client::Session.connection_username}-dtk-client")
 
   if !response.ok?
     DTK::Client::OsUtil.print("We were not able to add access for current user. #{response.error_message}. In order to properly use dtk-shell you will have to add access manually ('dtk account add-ssh-key').\n", :yellow)
   elsif matched_pub_key
     # message will be displayed by add key # TODO: Refactor this flow
     DTK::Client::OsUtil.print("Provided SSH PUB key has already been added.", :yellow)
-    DTK::Client::Configurator.add_current_user_to_direct_access()
+    DTK::Client::Configurator.add_current_user_to_direct_access
   elsif matched_username
     DTK::Client::OsUtil.print("User with provided name already exists.", :yellow)
   else
     # commented out because 'add_key' method called above will also print the same message
     # DTK::Client::OsUtil.print("Your SSH PUB key has been successfully added.", :yellow)
-    DTK::Client::Configurator.add_current_user_to_direct_access()
+    DTK::Client::Configurator.add_current_user_to_direct_access
   end
 
   response
@@ -276,19 +276,19 @@ module DTK
         Config.instance[k]
       end
      private
-      def initialize()
-        set_defaults()
-        load_config_file()
-        validate()
+      def initialize
+        set_defaults
+        load_config_file
+        validate
       end
-      def set_defaults()
+      def set_defaults
         self[:server_port] = 80
         self[:assembly_module_base_location] = 'assemblies'
         self[:secure_connection] = true
         self[:secure_connection_server_port] = 443
       end
 
-      def load_config_file()
+      def load_config_file
         parse_key_value_file(CONFIG_FILE).each{|k,v|self[k]=v}
       end
 
@@ -310,31 +310,35 @@ module DTK
 
       attr_accessor :conn
 
-      def initialize()
-        @conn = DTK::Client::Conn.new()
+      def initialize
+        @conn = DTK::Client::Conn.new
       end
 
-      def self.get_connection()
+      def self.get_connection
         Session.instance.conn
       end
 
-      def self.re_initialize()
+      def self.connection_username
+        Session.instance.conn.get_username
+      end
+
+      def self.re_initialize
         Session.instance.conn = nil
-        Session.instance.conn = DTK::Client::Conn.new()
+        Session.instance.conn = DTK::Client::Conn.new
         Session.instance.conn.cookies
       end
 
-      def self.logout()
+      def self.logout
         # from this point @conn is not valid, since there are no cookies set
-        Session.instance.conn.logout()
+        Session.instance.conn.logout
       end
     end
 
     class Conn
-      def initialize()
+      def initialize
         @cookies = Hash.new
         @connection_error = nil
-        login()
+        login
       end
 
       VERBOSE_MODE_ON = ::DTK::Configuration.get(:verbose_rest_calls)
@@ -345,7 +349,7 @@ module DTK
         require 'ap'
       end
 
-      def self.get_timeout()
+      def self.get_timeout
         DefaultRestOpts[:timeout]
       end
 
@@ -353,6 +357,9 @@ module DTK
         DefaultRestOpts[:timeout] = timeout_sec
       end
 
+      def get_username
+        get_credentials[:username]
+      end
 
       def rest_url(route=nil)
         protocol, port = "http", Config[:server_port].to_s
@@ -394,7 +401,7 @@ module DTK
         if ResponseErrorHandler.check_for_session_expiried(response)
           # re-logging user and repeating request
           DTK::Client::OsUtil.print("Session expired: re-establishing session & re-trying request ...", :yellow)
-          @cookies = DTK::Client::Session.re_initialize()
+          @cookies = DTK::Client::Session.re_initialize
           response = rest_method_func.call
         end
 
@@ -412,7 +419,7 @@ module DTK
         return !@connection_error.nil?
       end
 
-      def logout()
+      def logout
         response = get_raw rest_url("user/process_logout")
 
         # save cookies - no need to persist them
@@ -446,8 +453,8 @@ module DTK
 
       include ParseFile
 
-      def login()
-        creds = get_credentials()
+      def login
+        creds = get_credentials
         response = post_raw rest_url("user/process_login"),creds
         errors = response['errors']
 
@@ -462,7 +469,7 @@ module DTK
         end
       end
 
-      def get_credentials()
+      def get_credentials
         unless @parsed_credentials
           cred_file = Config::CRED_FILE
           raise DTK::Client::DtkError,"Authorization configuration file (#{cred_file}) does not exist" unless File.exists?(cred_file)
