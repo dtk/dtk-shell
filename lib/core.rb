@@ -156,7 +156,7 @@ def resolve_direct_access(params, config_exists=nil)
   end
 
   # response = DTK::Client::Account.add_access(params[:ssh_key_path])
-  response, matched_pub_key, matched_username = DTK::Client::Account.add_key(params[:ssh_key_path])
+  response, matched_pub_key, matched_username = DTK::Client::Account.add_key(params[:ssh_key_path], true)
 
   if !response.ok?
     DTK::Client::OsUtil.print("We were not able to add access for current user. #{response.error_message}. In order to properly use dtk-shell you will have to add access manually ('dtk account add-ssh-key').\n", :yellow)
