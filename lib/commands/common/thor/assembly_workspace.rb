@@ -120,7 +120,8 @@ module DTK::Client
         :assembly_id  => assembly_or_workspace_id
       }
 
-      post rest_url("assembly/ad_hoc_action_list"), post_body
+      response = post rest_url("assembly/ad_hoc_action_list"), post_body
+      response.render_table(:ad_hoc_action)
     end
 
    # desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]"
