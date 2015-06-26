@@ -358,6 +358,16 @@ module DTK::Client
       post(rest_url("assembly/info_about_task"),post_body)
     end
 
+    def workflow_list_aux(context_params)
+      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
+      post_body = {
+        :assembly_id => assembly_or_workspace_id
+      }
+      response = post(rest_url("assembly/task_action_list"),post_body)
+      data_type = 'task_action'
+      response.render_table(data_type)
+    end
+
     def task_status_aw_aux(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
       response = task_status_aux(assembly_or_workspace_id,:assembly,:wait => options.wait?,:summarize => options.summarize?)

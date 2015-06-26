@@ -33,7 +33,7 @@ module DTK::Client
       [response, key_exists_already]
     end
 
-    def self.add_key(path_to_key, name='dtk-client')
+    def self.add_key(path_to_key, first_registration=false, name='dtk-client')
       match, matched_username = nil, nil
 
       unless File.file?(path_to_key)
@@ -45,6 +45,7 @@ module DTK::Client
 
       post_body = { :rsa_pub_key => rsa_pub_key.chomp }
       post_body.merge!(:username => name.chomp) if name
+      post_body.merge!(:first_registration => first_registration)
 
       proper_response = nil
       response, key_exists_already = Account.internal_add_user_access("account/add_user_direct_access", post_body, 'service module')
@@ -58,7 +59,8 @@ module DTK::Client
         repo_manager_fingerprint,repo_manager_dns = response.data_ret_and_remove!(:repo_manager_fingerprint,:repo_manager_dns)
 
         SSHUtil.update_ssh_known_hosts(repo_manager_dns,repo_manager_fingerprint)
-        name ||= response.data["new_username"]
+        name = response.data["new_username"]
+
         OsUtil.print("SSH key '#{name}' added successfully!", :yellow)
 
       end
@@ -117,7 +119,7 @@ module DTK::Client
       name, path_to_key = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
       path_to_key ||= SSHUtil.default_rsa_pub_key_path()
 
-      response, matched, matched_username = Account.add_key(path_to_key, name)
+      response, matched, matched_username = Account.add_key(path_to_key, false, name)
 
       if matched
         DTK::Client::OsUtil.print("Provided SSH pub key has already been added.", :yellow)
