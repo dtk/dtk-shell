@@ -432,6 +432,11 @@ TODO: will put in dot release and will rename to 'extend'
       workflow_info_aux(context_params)
     end
 
+    desc "SERVICE-NAME/ID workflow-list", "List the workflows associated with the service."
+    def workflow_list(context_params)
+      workflow_list_aux(context_params)
+    end
+
     desc "list","List services."
     def list(context_params)
       assembly_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([:service_id,:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
