@@ -276,12 +276,12 @@ module DTK::Client
 
     desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]", "Converge the component or execute tha action on the component."
     def execute_action(context_params)
-      execute_component_action_aux(context_params)
+      execute_ad_hoc_action_aux(context_params)
     end
 
     desc "SERVICE-NAME/ID list-actions", "List the actions defined on components in the service instance."
     def list_actions(context_params)
-      list_component_actions_aux(context_params)
+      list_ad_hoc_actions_aux(context_params)
     end
 
     desc "SERVICE-NAME/ID push-assembly-updates [NAMESPACE:SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push changes made to this service instance to the designated assembly; default is parent assembly."
