@@ -135,9 +135,8 @@ module DTK::Client
       post_body = {
         :assembly_id  => assembly_or_workspace_id
       }
-      post_body.merge!(:component_template_id => component_template_id) if component_template_id
 
-      post rest_url("assembly/component_action_list"), post_body
+      post rest_url("assembly/component_action_method_list"), post_body
     end
 
     def converge_aux(context_params)

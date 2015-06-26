@@ -278,7 +278,8 @@ module DTK::Client
     def execute_action(context_params)
       execute_component_action_aux(context_params)
     end
-    desc "SERVICE-NAME/ID list-actions [COMPONENT]", "List the defined actions."
+
+    desc "SERVICE-NAME/ID list-actions", "List the actions defined on components in the service instance."
     def list_actions(context_params)
       list_component_actions_aux(context_params)
     end
