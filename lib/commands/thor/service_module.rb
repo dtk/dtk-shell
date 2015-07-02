@@ -367,53 +367,6 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
-    # desc "SERVICE-MODULE-NAME/ID create-version NEW-VERSION", "Snapshot current state of service module as a new version"
-    # def create_version(context_params)
-    #   service_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!],method_argument_names)
-    #   post_body = {
-    #     :service_module_id => service_module_id,
-    #     :rsa_pub_key => SSHUtil.rsa_pub_key_content()
-    #   }
-    #   response = post rest_url("service_module/versions"), post_body
-    #   return response unless response.ok?
-    #   versions = (response.data.first && response.data.first['versions'])||Array.new
-    #   if versions.include?(version)
-    #     return Response::Error::Usage.new("Version #{version} exists already")
-    #   end
-
-    #   service_module_name = get_service_module_name(service_module_id)
-    #   module_location = OsUtil.module_location(:service_module,service_module_name,version)
-    #   if File.directory?(module_location)
-    #     raise DtkError, "Target service module directory for version #{version} (#{module_location}) exists already; it must be deleted and this comamnd retried"
-    #   end
-
-    #   post_body = {
-    #     :service_module_id => service_module_id,
-    #     :version => version
-    #   }
-
-    #   response = post rest_url("service_module/create_new_version"), post_body
-    #   return response unless response.ok?
-
-    #   internal_trigger = omit_output = true
-    #   clone_aux(:service_module,service_module_name,version,internal_trigger,omit_output)
-    # end
-
-    # desc "SERVICE-MODULE-NAME/ID set-component-module-version COMPONENT-MODULE-NAME VERSION", "Set the version of the component module to use in the service module's assemblies"
-    # def set_component_module_version(context_params)
-    #   service_module_id,component_module_id,version = context_params.retrieve_arguments([:service_module_id!,:option_1!,:option_2!],method_argument_names)
-    #   post_body = {
-    #     :service_module_id => service_module_id,
-    #     :component_module_id => component_module_id,
-    #     :version => version
-    #   }
-    #   response = post rest_url("service_module/set_component_module_version"), post_body
-    #   @@invalidate_map << :service_module
-    #   return response unless response.ok?()
-    #   module_name,commit_sha,workspace_branch = response.data(:module_name,:commit_sha,:workspace_branch)
-    #   Helper(:git_repo).synchronize_clone(:service_module,module_name,commit_sha,:local_branch=>workspace_branch)
-    # end
-
     # TODO: put in two versions, one that creates empty and anotehr taht creates from local dir; use --empty flag
     desc "import [NAMESPACE:]SERVICE-MODULE-NAME", "Create new service module from local clone"
     def import(context_params)
