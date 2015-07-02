@@ -4,7 +4,7 @@ dtk_require_from_base("command_helper")
 
 module DTK::Client
   class CommonModule
-    class Import < self
+    class Import < BaseCommandHelper
       include CommandBase
       include CommandHelperMixin
       include PushCloneChangesMixin
