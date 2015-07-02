@@ -261,9 +261,9 @@ module DTK::Client
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def converge(context_params)
-      opts = hash.new
+      opts = Hash.new
       if context_params.pure_cli_mode
-        opts.merge!(:mode => :foreground)
+        opts.merge!(:mode => :stream)
       end
       converge_aux(context_params,opts)
     end

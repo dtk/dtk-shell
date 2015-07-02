@@ -21,14 +21,9 @@ DEFAULT_COMMIT_MSG = "Initial commit."
 PULL_CATALOGS = ["dtkn"]
 
 module DTK::Client
+  dtk_require_common_commands('thor/base_command_helper')
   class CommonModule
     dtk_require_common_commands('thor/module/import')
-
-    def initialize(command,context_params)
-      @command        = command
-      @context_params = context_params
-      @options        = command.options
-    end
 
     def print_external_dependencies(external_dependencies, location)
       ambiguous        = external_dependencies["ambiguous"]||[]
@@ -41,16 +36,6 @@ module DTK::Client
       OsUtil.print("There are ambiguous module dependencies mentioned #{location}: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
     end
 
-   private
-    # TODO: when we do this for other areas we can move these things up and use as common classes
-    # helpers
-    def retrieve_arguments(mapping, method_info = nil)
-      @context_params.retrieve_arguments(mapping, method_info || @command.method_argument_names)
-    end
-
-    def get_namespace_and_name(*args)
-      @command.get_namespace_and_name(*args)
-    end
   end
 
   module ModuleMixin

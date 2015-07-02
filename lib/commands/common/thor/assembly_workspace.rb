@@ -141,8 +141,7 @@ module DTK::Client
       response = post rest_url("assembly/ad_hoc_action_execute"), post_body
       return response unless response.ok?
 
-      # block and follow task if mode is to run iin foreground
-      follow_task_in_foreground(assembly_or_workspace_id)
+      task_status_stream(assembly_or_workspace_id)
       Response::Ok.new()
     end
 
@@ -160,11 +159,13 @@ module DTK::Client
         return response.render_table(:violation)
       end
 
-      post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
-      post_body.merge!(:task_action => task_action) if task_action
-      post_body.merge!(:task_params => task_params) if task_params
-
-      response = post rest_url("assembly/create_task"), post_body
+      post_body_hash = {
+        :assembly_id  => assembly_or_workspace_id,
+        :commit_msg?  => options.commit_msg,
+        :task_action? => task_action,
+        :task_params? => task_params
+      }
+      response = post rest_url("assembly/create_task"), PostBody.new(post_body_hash)
       return response unless response.ok?
 
       if response.data
@@ -183,9 +184,8 @@ module DTK::Client
       response = post rest_url("task/execute"), "task_id" => task_id
       return response unless response.ok?
 
-      # block and follow task if mode is to run iin foreground
-      if opts[:mode] == :foreground
-        follow_task_in_foreground(assembly_or_workspace_id)
+      if opts[:mode] == :stream
+        task_status_stream(assembly_or_workspace_id)
       end
 
       Response::Ok.new()
