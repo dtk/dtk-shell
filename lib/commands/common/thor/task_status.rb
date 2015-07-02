@@ -60,7 +60,7 @@ module DTK::Client
       end
 
 
-      def cli_task_status_aux(assembly_or_workspace_id)
+      def follow_task_in_foreground(assembly_or_workspace_id)
         current_index = 1
         last_printed_index = 0
         success_indices = []

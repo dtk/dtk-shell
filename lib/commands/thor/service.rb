@@ -255,26 +255,17 @@ module DTK::Client
     def execute_workflow(context_params)
       converge(context_params)
     end
-
     desc "SERVICE-NAME/ID converge [-m COMMIT-MSG]", "Converge service instance."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def converge(context_params)
-      response, error_message = converge_aux(context_params)
-      if error_message 
-        DTK::Client::OsUtil.print(error_message, :red)
-        return response
-      end
-      return response unless response.ok?
-
+      opts = hash.new
       if context_params.pure_cli_mode
-        assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
-
-        cli_task_status_aux(assembly_or_workspace_id)
+        opts.merge!(:mode => :foreground)
       end
-      Response::Ok.new()
+      converge_aux(context_params,opts)
     end
 
     desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]", "Converge the component or execute tha action on the component."

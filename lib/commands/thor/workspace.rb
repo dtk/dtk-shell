@@ -187,7 +187,7 @@ module DTK::Client
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def execute_workflow(context_params)
-      converge(context_params)
+      converge_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID converge [-m COMMIT-MSG]", "Converge workspace instance."
@@ -196,8 +196,7 @@ module DTK::Client
       :banner => "COMMIT-MSG",
       :desc => "Commit message" 
     def converge(context_params)
-      response = converge_aux(context_params)
-      response.ok? ? Response::Ok.new() : response
+      converge_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID push-component-module-updates COMPONENT-MODULE-NAME [--force]", "Push changes made to a component module in the workspace to its base component module."

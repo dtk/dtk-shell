@@ -138,24 +138,26 @@ module DTK::Client
       post_body.merge!(:method_name => method_name) if method_name
       post_body.merge!(:action_params => action_params) if action_params
 
-      post rest_url("assembly/ad_hoc_action_execute"), post_body
+      response = post rest_url("assembly/ad_hoc_action_execute"), post_body
+      return response unless response.ok?
+
+      # block and follow task if mode is to run iin foreground
+      follow_task_in_foreground(assembly_or_workspace_id)
+      Response::Ok.new()
     end
 
-    # returns [response,error_msg] where error_msg may be nil
-    def converge_aux(context_params)
+    def converge_aux(context_params,opts={})
       assembly_or_workspace_id,task_action,task_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1,:option_2],method_argument_names)
 
       task_params = parse_params?(task_params_string)
 
-      post_body = {
-        :assembly_id => assembly_or_workspace_id
-      }
-
-      response = post rest_url("assembly/find_violations"), post_body
+      # check for violations
+      response = post rest_url("assembly/find_violations"), :assembly_id => assembly_or_workspace_id
       return response unless response.ok?
       if response.data and response.data.size > 0
         error_message = "The following violations were found; they must be corrected before workspace can be converged"
-        return [response.render_table(:violation),error_message]
+        DTK::Client::OsUtil.print(error_message, :red)
+        return response.render_table(:violation)
       end
 
       post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
@@ -178,7 +180,15 @@ module DTK::Client
 
       # execute task
       task_id = response.data(:task_id)
-      post rest_url("task/execute"), "task_id" => task_id
+      response = post rest_url("task/execute"), "task_id" => task_id
+      return response unless response.ok?
+
+      # block and follow task if mode is to run iin foreground
+      if opts[:mode] == :foreground
+        follow_task_in_foreground(assembly_or_workspace_id)
+      end
+
+      Response::Ok.new()
     end
 
     def parse_params?(params_string)
