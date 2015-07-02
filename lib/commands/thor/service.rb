@@ -262,15 +262,19 @@ module DTK::Client
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def converge(context_params)
-      response = converge_aux(context_params)
+      response, error_message = converge_aux(context_params)
+      if error_message 
+        DTK::Client::OsUtil.print(error_message, :red)
+        return response
+      end
+      return response unless response.ok?
 
       if context_params.pure_cli_mode
         assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
 
         cli_task_status_aux(assembly_or_workspace_id)
       end
-
-      response.ok? ? Response::Ok.new() : response
+      Response::Ok.new()
     end
 
     desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]", "Converge the component or execute tha action on the component."

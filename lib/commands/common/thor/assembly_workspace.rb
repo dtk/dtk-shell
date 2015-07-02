@@ -141,6 +141,7 @@ module DTK::Client
       post rest_url("assembly/ad_hoc_action_execute"), post_body
     end
 
+    # returns [response,error_msg] where error_msg may be nil
     def converge_aux(context_params)
       assembly_or_workspace_id,task_action,task_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1,:option_2],method_argument_names)
 
@@ -153,10 +154,8 @@ module DTK::Client
       response = post rest_url("assembly/find_violations"), post_body
       return response unless response.ok?
       if response.data and response.data.size > 0
-        #TODO: may not directly print here; isntead use a lower level fn
         error_message = "The following violations were found; they must be corrected before workspace can be converged"
-        DTK::Client::OsUtil.print(error_message, :red)
-        return response.render_table(:violation)
+        return [response.render_table(:violation),error_message]
       end
 
       post_body.merge!(:commit_msg => options.commit_msg) if options.commit_msg
