@@ -117,11 +117,12 @@ module DTK::Client
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
 
       post_body = {
-        :assembly_id  => assembly_or_workspace_id
+        :assembly_id  => assembly_or_workspace_id,
+        :type         => options.detail? ? :component_instance : :component_type
       }
 
       response = post rest_url("assembly/ad_hoc_action_list"), post_body
-      response.render_table(:ad_hoc_action)
+      response.render_table()
     end
 
    # desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]"
