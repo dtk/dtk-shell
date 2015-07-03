@@ -159,19 +159,17 @@ module DTK::Client
         return response.render_table(:violation)
       end
 
-      post_body_hash = {
+      post_body = PostBody.new(
         :assembly_id  => assembly_or_workspace_id,
         :commit_msg?  => options.commit_msg,
         :task_action? => task_action,
         :task_params? => task_params
-      }
-      response = post rest_url("assembly/create_task"), PostBody.new(post_body_hash)
+      )
+      response = post rest_url("assembly/create_task"), post_body
       return response unless response.ok?
 
       if response.data
-        confirmation_message = response.data["confirmation_message"]
-
-        if confirmation_message
+        if confirmation_message = response.data["confirmation_message"]
           return unless Console.confirmation_prompt("Workspace service is stopped, do you want to start it"+'?')
           post_body.merge!(:start_assembly=>true)
           response = post rest_url("assembly/create_task"), post_body
