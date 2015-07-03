@@ -246,6 +246,7 @@ module DTK::Client
       post_body.merge!(:do_not_raise => do_not_raise) if do_not_raise
       post_body.merge!(:ignore_component_error => ignore_component_error) if ignore_component_error
       post_body.merge!(:additional_message => additional_message) if additional_message
+      post_body.merge!(:skip_auto_install => skip_ainstall) if skip_ainstall
 
       response = post rest_url("#{module_type}/import"), post_body
 
