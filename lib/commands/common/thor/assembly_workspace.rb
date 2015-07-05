@@ -409,7 +409,13 @@ module DTK::Client
 
     def task_status_aw_aux(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
-      response = task_status_aux(assembly_or_workspace_id,:assembly,:wait => options.wait?,:summarize => options.summarize?)
+      mode = 
+        if options.wait?
+          :refresh
+        else
+         (options.mode || :snapshot).to_sym
+        end
+      response = task_status_aux(mode,assembly_or_workspace_id,:assembly,:summarize => options.summarize?)
 
       # TODO: Hack which is necessery for the specific problem (DTK-725), we don't get proper error message when there is a timeout doing converge
       unless response == true

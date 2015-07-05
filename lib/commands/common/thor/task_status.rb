@@ -1,10 +1,15 @@
 module DTK::Client
   module TaskStatusMixin
-    def task_status_aux(object_id, object_type, opts={})
-      if opts[:wait]
-        TaskStatus::RefreshMode.new(self,object_id,object_type).task_status(opts)
-      else
-        TaskStatus::SnapshotMode.new(self,object_id,object_type).task_status(opts)
+    def task_status_aux(mode, object_id, object_type, opts={})
+      case mode
+        when :refresh
+          TaskStatus::RefreshMode.new(self,object_id,object_type).task_status(opts)
+        when :snapshot 
+          TaskStatus::SnapshotMode.new(self,object_id,object_type).task_status(opts)
+        when :stream  
+          task_status_stream(assembly_or_workspace_id)
+        else
+          raise DtkError, "[ERROR] illegal mode '#{mode}'"
       end
     end
 
