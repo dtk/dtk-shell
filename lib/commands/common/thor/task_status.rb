@@ -3,9 +3,9 @@ module DTK::Client
     def task_status_aux(mode, object_id, object_type, opts={})
       case mode
         when :refresh
-          TaskStatus::RefreshMode.new(self,object_id,object_type).task_status(opts)
+          TaskStatus::RefreshMode.new(self,mode,object_id,object_type).task_status(opts)
         when :snapshot 
-          TaskStatus::SnapshotMode.new(self,object_id,object_type).task_status(opts)
+          TaskStatus::SnapshotMode.new(self,mode,object_id,object_type).task_status(opts)
         when :stream  
           task_status_stream(assembly_or_workspace_id)
         else
@@ -14,11 +14,11 @@ module DTK::Client
     end
 
     def task_status_stream(assembly_or_workspace_id)
-      TaskStatus::StreamMode.new(self,assembly_or_workspace_id,:assembly).task_status(:format => :table)
+      TaskStatus::StreamMode.new(self,:stream,assembly_or_workspace_id,:assembly).task_status()
     end
 
     def list_task_info_aux(object_type, object_id)
-      response = TaskStatus.new(self,object_id,object_type).task_status_post_call(:format => :list)
+      response = TaskStatus.new(self,object_id,object_type).task_status_post_call(:form => :list)
       raise DtkError, "[SERVER ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
       response.override_command_class("list_task")
       puts response.render_data
@@ -31,8 +31,9 @@ module DTK::Client
     dtk_require_common_commands('thor/task_status/refresh_mode')
     dtk_require_common_commands('thor/task_status/stream_mode')
 
-    def initialize(command,object_id,object_type)
+    def initialize(command,mode,object_id,object_type)
       super(command)
+      @mode        = mode
       @object_id   = object_id
       @object_type = object_type
     end
@@ -40,12 +41,12 @@ module DTK::Client
     private
     def task_status_post_call(opts={})
       id_field = "#{@object_type}_id".to_sym
-      post_body_hash = {
+      post_body = PostBody.new(
         id_field                => @object_id,
-        :format                 => opts[:format] || :table,
+        :form?                  => opts[:form],
         :summarize_node_groups? => opts[:summarize]
-      }
-      post rest_url("#{@object_type}/task_status"), PostBody.new(post_body_hash)
+      )
+      post rest_url("#{@object_type}/task_status"), post_body
     end
 
   end

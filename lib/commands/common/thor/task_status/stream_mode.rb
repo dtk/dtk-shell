@@ -2,13 +2,12 @@ require 'hirb'
 module DTK::Client
   class TaskStatus
     class StreamMode < self
-      def task_status(opts={})
+      def task_status()
         current_index = 1
         last_printed_index = 0
         success_indices = []
-        
         loop do
-          response = task_status_post_call(opts)
+          response = task_status_post_call(:form => :stream_form)
           return response unless response.ok?
           
           current_tasks = response.data.select { |el| el['index'] == current_index }
