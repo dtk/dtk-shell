@@ -55,6 +55,34 @@ module DTK
         @backtrace = opts[:backtrace]
       end
       attr_reader :backtrace
+
+      class InternalError < self
+        def initialize(msg,opts={})
+          msg_to_pass_to_super = "[#{label(opts[:where])}] #{error_msg}"
+          super(msg_to_pass_to_super.opts)
+        end
+        def self.label(where=nil)
+          prefix = (where ? "#{where.to_s.upcase} " : '')
+          "#{prefix}#{InternalErrorLabel}"
+        end
+        InternalErrorLabel = 'INTERNAL ERROR'
+        class Client < self
+          def initialize(msg,opts={})
+            super(msg,opts.merge(:where => :client))
+          end
+          def self.label()
+            super(:client)
+          end
+        end
+        class Server < self
+          def initialize(msg,opts={})
+            super(msg,opts.merge(:where => :server))
+          end
+          def self.label()
+            super(:server)
+          end
+        end
+      end 
     end
 
     class DtkLoginRequiredError < Error

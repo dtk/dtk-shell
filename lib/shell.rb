@@ -60,7 +60,8 @@ def run_shell_command()
     #system('stty', stty_save) # Restore
     retry
   rescue Exception => e
-    DtkLogger.instance.error_pp("[CLI INTERNAL ERROR] #{e.message}", e.backtrace)
+    client_internal_error = DTK::Client::DtkError::InternalError::Client.label()
+    DtkLogger.instance.error_pp("[#{client_internal_error}] #{e.message}", e.backtrace)
   ensure
     puts "\n" unless e.is_a? DTK::Shell::ExitSignal
     # logout

@@ -95,7 +95,8 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
     # this are expected application errors
     DtkLogger.instance.error_pp(e.message, e.backtrace)
   rescue Exception => e
-    DtkLogger.instance.fatal_pp("[INTERNAL ERROR] DTK has encountered an error #{e.class}: #{e.message}", e.backtrace)
+    client_internal_error = DTK::Client::DtkError::InternalError::Client.label()
+    DtkLogger.instance.fatal_pp("[#{client_internal_error}] DTK has encountered an error #{e.class}: #{e.message}", e.backtrace)
   end
 end
 
@@ -232,9 +233,8 @@ module DTK
             elsif error_code == "pg_error"
               raise DTK::Client::DtkError, "[PG_ERROR] #{error_msg}"
             elsif error_internal
-              where = (error_on_server ? "SERVER" : "CLIENT")
-              #opts = (error_backtrace ? {:backtrace => error_backtrace} : {})
-              raise DTK::Client::DtkError.new("[#{where} INTERNAL ERROR] #{error_msg}", :backtrace => error_backtrace)
+              where = (error_on_server ? :server : :client)
+              raise DTK::Client::DtkError::InternalError.new(where,error_msg,:backtrace => error_backtrace)
             else
               # if usage error occurred, display message to console and display that same message to log
               raise DTK::Client::DtkError, "[ERROR] #{error_msg}"
