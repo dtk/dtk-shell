@@ -273,8 +273,8 @@ module DTK::Client
       execute_ad_hoc_action_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID list-actions [--detail]", "List the actions defined on components in the service instance."
-    method_option :detail, :aliases => '-d', :type => :boolean, :default => false
+    desc "SERVICE-NAME/ID list-actions [--summary]", "List the actions defined on components in the service instance."
+    method_option :summary, :aliases => '-s', :type => :boolean, :default => false
     def list_actions(context_params)
       list_ad_hoc_actions_aux(context_params)
     end

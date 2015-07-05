@@ -118,7 +118,7 @@ module DTK::Client
 
       post_body = {
         :assembly_id  => assembly_or_workspace_id,
-        :type         => options.detail? ? :component_instance : :component_type
+        :type         => options.summary? ? :component_type : :component_instance  
       }
 
       response = post rest_url("assembly/ad_hoc_action_list"), post_body
