@@ -18,7 +18,7 @@ module DTK::Client
     end
 
     def list_task_info_aux(object_type, object_id)
-      response = TaskStatus.new(self,object_id,object_type).task_status_post_call(:form => :list)
+      response = TaskStatus.new(self,object_id,object_type).post_call(:form => :list)
       raise DtkError, "[SERVER ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
       response.override_command_class("list_task")
       puts response.render_data
@@ -38,15 +38,23 @@ module DTK::Client
       @object_type = object_type
     end
 
+
     private
-    def task_status_post_call(opts={})
+
+    def post_body(opts={})
       id_field = "#{@object_type}_id".to_sym
-      post_body = PostBody.new(
+      PostBody.new(
         id_field                => @object_id,
         :form?                  => opts[:form],
         :summarize_node_groups? => opts[:summarize]
-      )
-      post rest_url("#{@object_type}/task_status"), post_body
+     )
+    end
+    def post_call(opts={})
+      response = post rest_url("#{@object_type}/task_status"), post_body(opts)
+      unless response.ok?
+        raise DtkError, "[SERVER ERROR] #{response['errors'].first['message']}." 
+      end
+      response
     end
 
   end

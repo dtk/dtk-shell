@@ -2,12 +2,42 @@ require 'hirb'
 module DTK::Client
   class TaskStatus
     class StreamMode < self
+      dtk_require_common_commands('thor/task_status/stream_mode/element')
+      dtk_require_common_commands('thor/task_status/stream_mode/task_start')
+      dtk_require_common_commands('thor/task_status/stream_mode/stage')
+
+      # This uses a cursor based interface to the server
+      #  get_task_status
+      #    start_position: START_INDEX
+      #    end_position: END_INDEX
+      # detail_level: (optional) TODO: initially omit and default would be to have cursor iterate stage-by-stage 
+      #  convetion is start_position = 0 and end_position =0 means top level task with start time 
       def task_status()
+        # first get task start
+        task_start = TaskStart.get(self)
+        pp [:task_start,task_start]
+        Response::Ok.new
+      end
+
+      # opts will have
+      #  :start_index
+      #  :end_index
+      def get_task_status_element(element_type,opts={})
+        response = post_call(opts.merge(:form => :stream_form))
+        Element.create(element_type,response)
+      end
+
+      def post_body(opts={})
+        ret = super(opts)
+        ret.merge(:start_index => opts[:start_index], :end_index => opts[:end_index])
+      end
+
+      def task_status_old()
         current_index = 1
         last_printed_index = 0
         success_indices = []
         loop do
-          response = task_status_post_call(:form => :stream_form)
+          response = post_call(:form => :stream_form)
           return response unless response.ok?
           
           current_tasks = response.data.select { |el| el['index'] == current_index }

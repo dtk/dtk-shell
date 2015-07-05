@@ -5,7 +5,7 @@ module DTK::Client
         begin
           response = nil
           loop do
-            response = task_status_post_call(opts)
+            response = post_call(opts)
             return response unless response.ok?
             
             # stop pulling when top level task succeds, fails or timeout
