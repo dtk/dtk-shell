@@ -7,9 +7,11 @@ module DTK::Client
         when :snapshot 
           TaskStatus::SnapshotMode.new(self,mode,object_id,object_type).task_status(opts)
         when :stream  
+          assembly_or_workspace_id = object_id
           task_status_stream(assembly_or_workspace_id)
         else
-          raise DtkError, "[ERROR] illegal mode '#{mode}'"
+          legal_modes = [:refresh,:snapshot,:stream]
+          raise DtkError::Usage.new("Illegal mode '#{mode}'; legal modes are: #{legal_modes.join(', ')}")
       end
     end
 
@@ -19,7 +21,9 @@ module DTK::Client
 
     def list_task_info_aux(object_type, object_id)
       response = TaskStatus.new(self,object_id,object_type).post_call(:form => :list)
-      raise DtkError, "[SERVER ERROR] #{response['errors'].first['message']}." if response["status"].eql?('notok')
+      unless response.ok?
+        DtkError.raise_error(response)
+      end
       response.override_command_class("list_task")
       puts response.render_data
     end
@@ -27,9 +31,9 @@ module DTK::Client
 
   dtk_require_common_commands('thor/base_command_helper')
   class TaskStatus < BaseCommandHelper
-    dtk_require_common_commands('thor/task_status/snapshot_mode')
-    dtk_require_common_commands('thor/task_status/refresh_mode')
-    dtk_require_common_commands('thor/task_status/stream_mode')
+    require File.expand_path('task_status/snapshot_mode',File.dirname(__FILE__))
+    require File.expand_path('task_status/refresh_mode',File.dirname(__FILE__))
+    require File.expand_path('task_status/stream_mode',File.dirname(__FILE__))
 
     def initialize(command,mode,object_id,object_type)
       super(command)
@@ -38,9 +42,7 @@ module DTK::Client
       @object_type = object_type
     end
 
-
     private
-
     def post_body(opts={})
       id_field = "#{@object_type}_id".to_sym
       PostBody.new(
@@ -52,7 +54,7 @@ module DTK::Client
     def post_call(opts={})
       response = post rest_url("#{@object_type}/task_status"), post_body(opts)
       unless response.ok?
-        raise DtkError, "[SERVER ERROR] #{response['errors'].first['message']}." 
+        DtkError.raise_error(response)
       end
       response
     end

@@ -8,6 +8,9 @@ module DTK
     class Error < NameError
     end
 
+   # DtkError is child of Error; so order matters
+    require File.expand_path('dtk_error', File.dirname(__FILE__))
+
     class DSLParsing < Error
       def initialize(base_json_error,file_path=nil)
         super(err_msg(base_json_error,file_path))
@@ -46,43 +49,6 @@ module DTK
 
     # raise by developers to signal wrong usage of components
     class DtkImplementationError < Error
-    end
-
-    # we use this to log application errors
-    class DtkError < Error
-      def initialize(msg,opts={})
-        super(msg)
-        @backtrace = opts[:backtrace]
-      end
-      attr_reader :backtrace
-
-      class InternalError < self
-        def initialize(msg,opts={})
-          msg_to_pass_to_super = "[#{label(opts[:where])}] #{error_msg}"
-          super(msg_to_pass_to_super.opts)
-        end
-        def self.label(where=nil)
-          prefix = (where ? "#{where.to_s.upcase} " : '')
-          "#{prefix}#{InternalErrorLabel}"
-        end
-        InternalErrorLabel = 'INTERNAL ERROR'
-        class Client < self
-          def initialize(msg,opts={})
-            super(msg,opts.merge(:where => :client))
-          end
-          def self.label()
-            super(:client)
-          end
-        end
-        class Server < self
-          def initialize(msg,opts={})
-            super(msg,opts.merge(:where => :server))
-          end
-          def self.label()
-            super(:server)
-          end
-        end
-      end 
     end
 
     class DtkLoginRequiredError < Error

@@ -181,10 +181,10 @@ module DTK
     class ResponseErrorHandler
       class << self
 
-        def check_for_session_expiried(response_ruby_obj)
+        def check_for_session_expiried(response)
           error_code = nil
-          if response_ruby_obj && response_ruby_obj['errors']
-            response_ruby_obj['errors'].each do |err|
+          if response && response['errors']
+            response['errors'].each do |err|
               error_code      = err["code"]||(err["errors"] && err["errors"].first["code"])
             end
           end
@@ -192,58 +192,11 @@ module DTK
           return (error_code == "forbidden")
         end
 
-        def check(response_ruby_obj)
-          # check for errors in response
-
-          unless response_ruby_obj["errors"].nil?
-            error_msg       = ""
-            error_internal  = nil
-            error_backtrace = nil
-            error_code      = nil
-            error_on_server = nil
-
-            #TODO:  below just 'captures' first error
-            response_ruby_obj['errors'].each do |err|
-              error_msg       +=  err["message"] unless err["message"].nil?
-              error_msg       +=  err["error"]   unless err["error"].nil?
-              error_on_server = true unless err["on_client"]
-              error_code      = err["code"]||(err["errors"] && err["errors"].first["code"])
-              error_internal  ||= (err["internal"] or error_code == "not_found") #"not_found" code is at Ramaze level; so error_internal not set
-              error_backtrace ||= err["backtrace"]
-            end
-
-            # normalize it for display
-            error_msg = error_msg.empty? ? 'Internal DTK Client error, please try again' : "#{error_msg}"
-
-            # if error_internal.first == true
-            if error_code == "unauthorized"
-              raise DTK::Client::DtkError, "[UNAUTHORIZED] Your session has been suspended, please log in again."
-            elsif error_code == "session_timeout"
-              raise DTK::Client::DtkError, "[SESSION TIMEOUT] Your session has been suspended, please log in again."
-            elsif error_code == "broken"
-              raise DTK::Client::DtkError, "[BROKEN] Unable to connect to the DTK server at host: #{Config[:server_host]}"
-            elsif error_code == "forbidden"
-              raise DTK::Client::DtkLoginRequiredError, "[FORBIDDEN] Access not granted, please log in again."
-            elsif error_code == "timeout"
-              raise DTK::Client::DtkError, "[TIMEOUT ERROR] Server is taking too long to respond."
-            elsif error_code == "connection_refused"
-              raise DTK::Client::DtkError, "[CONNECTION REFUSED] Connection refused by server."
-            elsif error_code == "resource_not_found"
-              raise DTK::Client::DtkError, "[RESOURCE NOT FOUND] #{error_msg}"
-            elsif error_code == "pg_error"
-              raise DTK::Client::DtkError, "[PG_ERROR] #{error_msg}"
-            elsif error_internal
-              where = (error_on_server ? :server : :client)
-              raise DTK::Client::DtkError::InternalError.new(where,error_msg,:backtrace => error_backtrace)
-            else
-              # if usage error occurred, display message to console and display that same message to log
-              raise DTK::Client::DtkError, "[ERROR] #{error_msg}"
-            end
-          end
+        def check(response)
+          DtkError.raise_if_error?(response)
         end
       end
     end
-
 
     class Log
       #TODO Stubs
