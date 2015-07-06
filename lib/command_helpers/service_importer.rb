@@ -55,7 +55,7 @@ module DTK::Client
     # Method will trigger import for each missing module component
     #
     def trigger_module_auto_import(modules_to_import, required_modules, opts = {})
-      puts 'Auto-importing missing module(s)'
+      puts 'Auto-installing missing module(s)'
       update_all  = false
       update_none = false
 
@@ -94,21 +94,22 @@ module DTK::Client
         module_url  = m_module['module_url']
 
         # descriptive message
-        import_msg  = "Importing #{module_type.gsub('_', ' ')} '#{module_name}'"
+        importing  = module_url ? "Importing" : "Installing"
+        import_msg = "#{importing} #{module_type.gsub('_', ' ')} '#{module_name}'"
         import_msg += " from git source #{module_url}" if module_url
         print "#{import_msg} ... "
 
-        unless module_url
+        if module_url
+          # import from Git source
+          new_context_params = ::DTK::Shell::ContextParams.new([module_url, module_name])
+          new_context_params.forward_options(:internal_trigger => true)
+          response = ContextRouter.routeTask(module_type, 'import_git', new_context_params, @conn)
+        else
           # import from Repo Manager
           new_context_params = ::DTK::Shell::ContextParams.new([module_name])
           new_context_params.override_method_argument!('option_2', m_module['version'])
           new_context_params.forward_options(:skip_cloning => false, :skip_auto_install => true, :module_type => module_type).merge!(opts)
           response = ContextRouter.routeTask(module_type, 'install', new_context_params, @conn)
-        else
-          # import from Git source
-          new_context_params = ::DTK::Shell::ContextParams.new([module_url, module_name])
-          new_context_params.forward_options(:internal_trigger => true)
-          response = ContextRouter.routeTask(module_type, 'import_git', new_context_params, @conn)
         end
 
         ignore_component_error = (new_context_params.get_forwarded_options() || {})[:ignore_component_error] && module_type.eql?('component_module')
