@@ -1,4 +1,5 @@
-require 'jenkins-client' 
+# TODO: Marked for removal [Haris] - Do we need this?
+require 'jenkins-client'
 module DTK; module Client
   class JenkinsClient
     require File.expand_path('jenkins_client/config_xml', File.dirname(__FILE__))
@@ -58,7 +59,7 @@ module DTK; module Client
       def create_job(job_name,config_xml_contents)
         ::Jenkins::Client::Job.create(job_name, config_xml_contents)
       end
-    
+
       def get_info()
         get('api/json')
       end
@@ -86,6 +87,6 @@ module DTK; module Client
     end
   end
 end; end
- 
+
 
 
