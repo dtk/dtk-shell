@@ -66,7 +66,7 @@ module DTK
         error_code      = nil
         error_on_server = nil
         #TODO:  below just 'captures' first error
-        response_ruby_obj['errors'].each do |err|
+        response['errors'].each do |err|
           error_msg       +=  err["message"] unless err["message"].nil?
           error_msg       +=  err["error"]   unless err["error"].nil?
           error_on_server = true unless err["on_client"]
@@ -107,12 +107,18 @@ module DTK
           prefix = (where ? "#{where.to_s.upcase} " : '')
           "#{prefix}#{InternalErrorLabel}"
         end
+
+       private
+        def label(where=nil)
+          self.class.label(where)
+        end
+
         InternalErrorLabel = 'INTERNAL ERROR'
         class Client < self
           def initialize(error_msg,opts={})
             super(error_msg,opts.merge(:where => :client))
           end
-          def self.label()
+          def self.label(*args)
             super(:client)
           end
         end
@@ -120,7 +126,7 @@ module DTK
           def initialize(error_msg,opts={})
             super(error_msg,opts.merge(:where => :server))
           end
-          def self.label()
+          def self.label(*args)
             super(:server)
           end
         end
