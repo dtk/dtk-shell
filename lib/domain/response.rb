@@ -7,6 +7,9 @@ module DTK
   module Client
     #TODO: should make higher level class be above whether it is 'rest'
     class Response < Common::Response
+      require File.expand_path('response/error_handler',File.dirname(__FILE__))
+      include ErrorHandlerMixin
+
       # :render_view        => symbol specifing type of data to be rendered e.g. :assembly
       # :skip_render        => flag that specifies that render is not needed (default: false)
       # :print_error_table  => we use it if we want to print 'error legend' for given tables (default: false)

@@ -2,9 +2,9 @@ require 'hirb'
 module DTK::Client
   class TaskStatus
     class StreamMode < self
-      dtk_require_common_commands('thor/task_status/stream_mode/element')
-      dtk_require_common_commands('thor/task_status/stream_mode/task_start')
-      dtk_require_common_commands('thor/task_status/stream_mode/stage')
+      require File.expand_path('stream_mode/element',File.dirname(__FILE__))
+      require File.expand_path('stream_mode/task_start',File.dirname(__FILE__))
+      require File.expand_path('stream_mode/stage',File.dirname(__FILE__))
 
       # This uses a cursor based interface to the server
       #  get_task_status
