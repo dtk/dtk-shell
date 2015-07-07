@@ -95,7 +95,7 @@ def top_level_execute_core(entity_name, method_name, context_params=nil, options
     # this are expected application errors
     DtkLogger.instance.error_pp(e.message, e.backtrace)
   rescue Exception => e
-    client_internal_error = DTK::Client::DtkError::InternalError::Client.label()
+    client_internal_error = DTK::Client::DtkError::Client.label()
     DtkLogger.instance.fatal_pp("[#{client_internal_error}] DTK has encountered an error #{e.class}: #{e.message}", e.backtrace)
   end
 end

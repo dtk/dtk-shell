@@ -3,8 +3,6 @@ module DTK::Client
   class TaskStatus
     class StreamMode < self
       require File.expand_path('stream_mode/element',File.dirname(__FILE__))
-      require File.expand_path('stream_mode/task_start',File.dirname(__FILE__))
-      require File.expand_path('stream_mode/stage',File.dirname(__FILE__))
 
       # This uses a cursor based interface to the server
       #  get_task_status
@@ -14,17 +12,28 @@ module DTK::Client
       #  convetion is start_position = 0 and end_position =0 means top level task with start time 
       def task_status()
         # first get task start
-        task_start = TaskStart.get(self)
+        task_start = Element.get_task_start(self)
         pp [:task_start,task_start]
+        get_all_stages()
         Response::Ok.new
       end
 
-      # opts will have
-      #  :start_index
-      #  :end_index
-      def get_task_status_element(element_type,opts={})
-        response = post_call(opts.merge(:form => :stream_form))
-        Element.create(element_type,response)
+      # making this public for this class
+      def post_call(*args)
+        super
+      end
+
+     private
+      def get_all_stages()
+        stage = 1
+        loop do
+          begin
+            task_stage = Element.get_stage(self,stage)
+          rescue StreamAtEnd
+            return
+          end
+          stage += 1
+        end
       end
 
       def post_body(opts={})
@@ -32,6 +41,12 @@ module DTK::Client
         ret.merge(:start_index => opts[:start_index], :end_index => opts[:end_index])
       end
 
+      class StreamAtEnd
+      end
+    end
+  end
+end
+=begin
       def task_status_old()
         current_index = 1
         last_printed_index = 0
@@ -110,5 +125,5 @@ module DTK::Client
   end
 end
 
-
+=end
 
