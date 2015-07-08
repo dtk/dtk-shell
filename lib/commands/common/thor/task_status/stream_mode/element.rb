@@ -29,6 +29,7 @@ module DTK::Client; class TaskStatus::StreamMode
     # ovewritten
     def task_end?()
       #TODO: stub
+      true
     end
 
     private

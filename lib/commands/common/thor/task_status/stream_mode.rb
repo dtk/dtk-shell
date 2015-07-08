@@ -14,13 +14,15 @@ module DTK::Client
         task_elements = Element.get_task_start(self)
         Element.render_elements(task_elements)
         stage = 1
-        loop do
+        task_end = false
+        until task_end do
           task_elements = Element.get_stage(self,stage)
           Element.render_elements(task_elements)
           if task_elements.last.task_end?()
-            return
+            task_end = true
+          else
+            stage += 1
           end
-          stage += 1
         end
         Response::Ok.new
       end
