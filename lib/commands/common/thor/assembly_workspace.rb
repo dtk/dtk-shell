@@ -413,6 +413,9 @@ module DTK::Client
         if options.wait?
           :refresh
         else
+          if options.has_key?('mode') and options.mode.nil?
+            raise DtkError::Usage.new("option --mode needs an argument")
+          end
          (options.mode || :snapshot).to_sym
         end
       response = task_status_aux(mode,assembly_or_workspace_id,:assembly,:summarize => options.summarize?)
