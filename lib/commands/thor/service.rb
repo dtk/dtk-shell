@@ -364,16 +364,6 @@ TODO: will put in dot release and will rename to 'extend'
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID possible-extensions", "Lists the possible extensions to the assembly"
-    def possible_extensions(context_params)
-      assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-
-      post_body = {
-        :assembly_id => assembly_id
-      }
-      response = post(rest_url("assembly/list_possible_add_ons"),post_body)
-      response.render_table(:service_add_on)
-    end
 =end
 
     desc "SERVICE-NAME/ID task-status [--wait] [--summarize]", "Get the task status of the running or last running service task."
@@ -511,22 +501,6 @@ TODO: will put in dot release and will rename to 'extend'
     def list_diffs(context_params)
       list_remote_module_diffs(context_params)
     end
-
-    # desc "ASSEMBLY-NAME/ID list-attribute-mappings SERVICE-LINK-NAME/ID", "List attribute mappings associated with service link"
-    # def list_attribute_mappings(context_params)
-    #   post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
-    #   post rest_url("assembly/list_attribute_mappings"), post_body
-    # end
-
-    #desc "ASSEMBLY-NAME/ID list-smoketests","List smoketests on asssembly"
-    #def list_smoketests(context_params)
-    #  assembly_id = context_params.retrieve_arguments([:assembly_id!],method_argument_names)
-    #
-    #  post_body = {
-    #    :assembly_id => assembly_id
-    #  }
-    #  post rest_url("assembly/list_smoketests"), post_body
-    #end
 
     desc "SERVICE-NAME/ID grant-access USER-ACCOUNT PUB-KEY-NAME [PATH-TO-PUB-KEY] [--nodes NODE-NAMES]", "Grants ssh access to user account USER-ACCOUNT for nodes in service instance"
     method_option :nodes, :type => :string, :default => nil

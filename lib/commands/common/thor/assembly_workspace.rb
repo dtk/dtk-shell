@@ -261,7 +261,7 @@ module DTK::Client
         post_body.merge!(:task_action => workflow_name)
       end
       if opts[:create]
-        post_body.merge!(:create => true) 
+        post_body.merge!(:create => true)
         post_body.merge!(:base_task_action => opts[:create_from]) if opts[:create_from]
       end
       response = post rest_url("assembly/prepare_for_edit_module"), post_body
@@ -470,103 +470,6 @@ module DTK::Client
       list_aux(context_params)
     end
 
-    # desc "WORKSPACE-NAME/ID list-assemblies","List assemblies for current workspace."
-    # def list_assemblies(context_params)
-    #   data_type = :assembly
-    #   post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
-    #   rest_endpoint = "assembly/list"
-    #   response = post rest_url(rest_endpoint), post_body
-
-    #   response.render_table(data_type)
-    #   return response
-    # end
-
-    # desc "WORKSPACE-NAME/ID list-assemblies","List assemblies for current workspace."
-    # def list_assemblies(context_params)
-    #   data_type = :assembly
-    #   post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
-    #   rest_endpoint = "assembly/list"
-    #   response = post rest_url(rest_endpoint), post_body
-
-    #   response.render_table(data_type)
-    #   return response
-    # end
-
-    # desc "WORKSPACE-NAME/ID list-assemblies","List assemblies for current workspace."
-    # def list_assemblies(context_params)
-    #   workspace_id, node_id, component_id, attribute_id, about = context_params.retrieve_arguments([:workspace_id,:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
-    #   detail_to_include = nil
-
-    #   if about
-    #     case about
-    #       when "nodes"
-    #         data_type = :node
-    #       when "components"
-    #         data_type = :component
-    #         detail_to_include = [:component_dependencies]
-    #       when "attributes"
-    #         data_type = :attribute
-    #         detail_to_include = [:attribute_links]
-    #       when "tasks"
-    #         data_type = :task
-    #       else
-    #         raise_validation_error_method_usage('list')
-    #     end
-    #   end
-
-    #   post_body = {
-    #     :assembly_id => workspace_id,
-    #     :node_id => node_id,
-    #     :component_id => component_id,
-    #     :subtype     => 'instance'
-    #   }
-    #   post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
-    #   rest_endpoint = "assembly/info_about"
-
-    #   if context_params.is_last_command_eql_to?(:attribute)
-    #     raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
-    #     about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
-    #   elsif context_params.is_last_command_eql_to?(:component)
-    #     if component_id
-    #       about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
-    #     else
-    #       about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
-    #     end
-    #   elsif context_params.is_last_command_eql_to?(:node)
-    #     if node_id
-    #       about, data_type = get_type_and_raise_error_if_invalid(about, "components", ["attributes", "components"])
-    #       data_type = :workspace_attribute
-    #     else
-    #       about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes"])
-    #     end
-    #   else
-    #     if workspace_id
-    #       about, data_type = get_type_and_raise_error_if_invalid(about, "nodes", ["attributes", "components", "nodes", "tasks"])
-    #     else
-    #       data_type = :assembly
-    #       post_body = { :subtype  => 'instance', :detail_level => 'nodes' }
-    #       rest_endpoint = "assembly/list"
-    #     end
-    #   end
-
-    #   post_body[:about] = about
-    #   response = post rest_url(rest_endpoint), post_body
-
-    #   if (data_type.to_s.eql?("workspace_attribute") && response["data"])
-    #     response["data"].each do |data|
-    #       unless(data["linked_to_display_form"].to_s.empty?)
-    #         data_type = :workspace_attribute_w_link
-    #         break
-    #       end
-    #     end
-    #   end
-
-    #   # set render view to be used
-    #   response.render_table(data_type)
-
-    #   return response
-    # end
-
     def link_attribute_aux(context_params)
       assembly_or_workspace_id, target_attr_term, source_attr_term = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!],method_argument_names)
       post_body = {
@@ -575,11 +478,6 @@ module DTK::Client
         :source_attribute_term => source_attr_term
       }
       post rest_url("assembly/add_ad_hoc_attribute_links"), post_body
-    end
-
-    def list_attribute_mappings_aux(context_params)
-      post_body = Helper(:service_link).post_body_with_id_keys(context_params,method_argument_names)
-      post rest_url("assembly/list_attribute_mappings"), post_body
     end
 
     def create_component_aux(context_params)
@@ -660,15 +558,6 @@ module DTK::Client
       }
       response = post rest_url("assembly/list_connections"), post_body
       response.render_table(:possible_service_connection)
-    end
-
-    def list_smoketests(context_params)
-      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
-
-      post_body = {
-        :assembly_id => assembly_or_workspace_id
-      }
-      post rest_url("assembly/list_smoketests"), post_body
     end
 
     def info_aux(context_params)

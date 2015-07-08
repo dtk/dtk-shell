@@ -21,7 +21,7 @@ module DTK::Client
     desc "list", "List all node templates."
     method_option :all, :type => :boolean, :default => false
     method_option "target_identifier",:aliases => "-t" ,
-      :type => :string, 
+      :type => :string,
       :banner => "TARGET-IDENTIFIER",
       :desc => "Name or ID of desired target"
     def list(context_params)
@@ -46,10 +46,10 @@ module DTK::Client
     end
 
     desc "add-node-template NODE-TEMPLATE-NAME [-t TARGET-NAME/ID] --os OS --image-id IMAGE-ID --size SIZE[,SIZE2,..]", "Add new node template"
-    method_option "target",:aliases => "-t" 
+    method_option "target",:aliases => "-t"
     method_option "os"
-    method_option "image-id",:aliases => "-i" 
-    method_option "size",:aliases => "-s" 
+    method_option "image-id",:aliases => "-i"
+    method_option "size",:aliases => "-s"
     def add_node_template(context_params)
       node_template_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
       size_array = options[:size] && options[:size].split(',')
@@ -73,49 +73,6 @@ module DTK::Client
       post rest_url("node/delete_node_template"), post_body
     end
 
-=begin
-  #Not implemented yet
-    desc "NODE-TEMPLATE-NAME/ID info", "Get information about given node template."
-    method_option :list, :type => :boolean, :default => false
-    def info(context_params)
-      node_template_id = context_params.retrieve_arguments([:node_template_id!],method_argument_names)
-      data_type = :node
-
-      post_body = {
-        :node_id => node_template_id,
-        :subtype => 'template'
-      }
-      response = post rest_url("node/info"), post_body
-
-      response.render_table(data_type) unless options.list?
-
-      return response
-    end
-=end
-
-=begin
-    #TODO: move to form desc "NODE-TEMPLATE-NAME/ID stage [INSTANCE-NAME]"
-    #will then have to reverse arguments
-    desc "stage NODE-TEMPLATE-NAME [INSTANCE-NAME]", "Stage node template in target."
-    method_option "in-target",:aliases => "-t" ,
-      :type => :numeric, 
-      :banner => "TARGET-ID",
-      :desc => "Target (id) to create node instance in" 
-    def stage(context_params)
-      node_template_id, name = context_params.retrieve_arguments([:option_1!, :option_2],method_argument_names)
-      post_body = {
-        :node_template_identifier => node_template_id
-      }
-      post_body.merge!(:target_id => options["in-target"]) if options["in-target"]
-      post_body.merge!(:name => name) if name
-      response = post rest_url("node/stage"), post_body
-      # when changing context send request for getting latest node_templates instead of getting from cache
-      @@invalidate_map << :node_template
-      @@invalidate_map << :node
-
-      response
-    end
-=end
   end
 end
 

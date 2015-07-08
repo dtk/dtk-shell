@@ -20,7 +20,7 @@ module DTK::Client
       include PurgeCloneMixin
       include AssemblyWorkspaceMixin
       include ActionResultHandler
-      
+
       def get_workspace_name(workspace_id)
         get_name_from_id_helper(workspace_id)
       end
@@ -43,7 +43,7 @@ module DTK::Client
     end
 
     # using extended_context when we want to use autocomplete from other context
-    # e.g. we are in assembly/apache context and want to create-component we will use extended context to add 
+    # e.g. we are in assembly/apache context and want to create-component we will use extended context to add
     # component-templates to autocomplete
     def self.extended_context()
       {
@@ -56,13 +56,13 @@ module DTK::Client
         },
         :command => {
           :edit_component_module => {
-            :endpoint => "assembly", 
-            :url => "assembly/info_about", 
+            :endpoint => "assembly",
+            :url => "assembly/info_about",
             :opts => {:subtype=>"instance", :about=>"modules"}
           },
           :push_component_module_updates => {
-            :endpoint => "assembly", 
-            :url => "assembly/info_about", 
+            :endpoint => "assembly",
+            :url => "assembly/info_about",
             :opts => {:subtype=>"instance", :about=>"modules"}
           },
           :delete_node => {
@@ -154,7 +154,7 @@ module DTK::Client
             ['stop', "stop", "# Stop node instance."],
             ['ssh', "ssh REMOTE-USER [-i PATH-TO-PEM]","# SSH into node, optional parameters are path to identity file."]
           ],
-          
+
           :component => [
             ['info',"info","# Return info about component instance belonging to given node."],
             ['edit',"edit","# Edit component module related to given component."],
@@ -194,7 +194,7 @@ module DTK::Client
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
-      :desc => "Commit message" 
+      :desc => "Commit message"
     def converge(context_params)
       converge_aux(context_params)
     end
@@ -214,7 +214,7 @@ module DTK::Client
 
     desc "WORKSPACE-NAME/ID push-assembly-updates [NAMESPACE:]SERVICE-MODULE-NAME/ASSEMBLY-NAME", "Push changes made to this workspace to the designated assembly."
     def push_assembly_updates(context_params)
-      workspace_id, qualified_assembly_name = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names) 
+      workspace_id, qualified_assembly_name = context_params.retrieve_arguments([:workspace_id!,:option_1!],method_argument_names)
       if qualified_assembly_name =~ /(^[^\/]*)\/([^\/]*$)/
         service_module_name, assembly_template_name = [$1,$2]
       else
@@ -227,7 +227,7 @@ module DTK::Client
     end
 
     desc "WORKSPACE-NAME/ID create-assembly [NAMESPACE:]SERVICE-MODULE-NAME ASSEMBLY-NAME [-p] [-m DESCRIPTION]", "Create a new assembly from the workspace instance in the designated service module."
-   # The option -p will purge the workspace after assembly creation." 
+   # The option -p will purge the workspace after assembly creation."
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     method_option "description",:aliases => "-m" ,
       :type => :string,
@@ -328,7 +328,7 @@ module DTK::Client
         response = delete_component_aux(context_params)
         return response unless response.ok?
         @@invalidate_map << :service_node_component
-        
+
         response
       end
       # delete_aux(context_params)
@@ -339,7 +339,7 @@ module DTK::Client
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_component(context_params)
       response = delete_component_aux(context_params)
-      
+
       @@invalidate_map << :service
       @@invalidate_map << :service_node
       @@invalidate_map << :service_node_component
@@ -414,7 +414,7 @@ module DTK::Client
 # TODO: DTK-2027 might subsume by the dtk actions; currently server changes does not support this command
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
     desc "HIDE_FROM_BASE execute-tests [--component COMPONENT-NAME] [--timeout TIMEOUT]", "Execute tests. --component filters execution per component, --timeout changes default execution timeout"
-    method_option :component, :type => :string, :desc => "Component name" 
+    method_option :component, :type => :string, :desc => "Component name"
     method_option :timeout, :type => :string, :desc => "Timeout"
     def execute_tests(context_params)
       execute_tests_aux(context_params)
@@ -451,7 +451,7 @@ module DTK::Client
     def list_ssh_access(context_params)
       list_ssh_access_aux(context_params)
     end
-    
+
     desc "WORKSPACE-NAME/ID info", "Get info about content of the workspace."
     def info(context_params)
       info_aux(context_params)
@@ -462,11 +462,6 @@ module DTK::Client
       link_attributes_aux(context_params)
     end
 
-    #desc "WORKSPACE-NAME/ID list-attribute-mappings SERVICE-LINK-NAME/ID", "List attribute mappings associated with service link"
-    #def list_attribute_mappings(context_params)
-    #  list_attribute_mappings_aux(context_params)
-    #end
-
     desc "list", ""
     def list(context_params)
       if context_params.is_last_command_eql_to?(:node)
@@ -475,7 +470,7 @@ module DTK::Client
     end
 
     desc "WORKSPACE-NAME/ID list-attributes [-f FORMAT] [-t TAG,..] [--links]","List attributes associated with workspace."
-    method_option :format, :aliases => '-f' 
+    method_option :format, :aliases => '-f'
     method_option :tags, :aliases => '-t'
     method_option :links, :type => :boolean, :default => false, :aliases => '-l'
     def list_attributes(context_params)

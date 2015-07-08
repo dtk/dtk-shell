@@ -1,6 +1,5 @@
 dtk_require_common_commands('thor/task_status')
 dtk_require_common_commands('thor/set_required_attributes')
-dtk_require_common_commands('thor/test_action_agent')
 
 module DTK::Client
   class Node < CommandBaseThor
@@ -10,7 +9,6 @@ module DTK::Client
     no_tasks do
       include TaskStatusMixin
       include SetRequiredParamsMixin
-      include TestActionAgent
     end
 
     def self.pretty_print_cols()
@@ -96,39 +94,6 @@ module DTK::Client
        post rest_url("node/info"), post_body
     end
 
-    desc "NODE-NAME/ID test-action-agent BASH-COMMAND-LINE", "Run bash command on test action agent"
-    def test_action_agent(context_params)
-      response = test_agent_aux(context_params)
-      return response unless response.ok?
-
-      # this I will fix to have more clear output
-      data = response.data(:results)
-
-      datas  = data.values.first['results']
-      errors = data.values.first['errors']
-
-
-      datas.each do |data|
-        OsUtil.print("Command: #{data['description']}, status: #{data['status']}", :yellow)
-        if data['stdout'] && !data['stdout'].empty?
-          print data['stdout']
-        end
-
-        if data['stderr'] && !data['stderr'].empty?
-          print data['stderr']
-        end
-      end
-
-      if errors && !errors.empty?
-        puts; puts;
-        OsUtil.print('Some errors have been detected', :white)
-        errors.each_with_index { |err, index| OsUtil.print("#{index+1}. #{err}", :red) }
-      end
-
-
-      return nil
-    end
-
     desc "NODE-NAME/ID ssh REMOTE-USER [-i PATH-TO-PEM]","SSH into node, optional parameters are path to indentity file."
     method_option "--identity-file",:aliases => '-i',:type => :string, :desc => "Identity-File used for connection, if not provided default is used", :banner => "IDENTITY-FILE"
     def ssh(context_params)
@@ -164,7 +129,7 @@ module DTK::Client
 
         connection_string = "#{remote_user}@#{public_dns}"
 
- 
+
         ssh_command = nil
 
         if identity_file_location

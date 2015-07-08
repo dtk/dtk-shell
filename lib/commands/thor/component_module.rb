@@ -326,58 +326,6 @@ module DTK::Client
       list_collaborators_module_aux(context_params)
     end
 
-
-    #### end: commands to interact with remote repo ###
-
-    #### commands to manage workspace and versioning ###
-=begin
-    desc "COMPONENT-MODULE-NAME/ID create-version VERSION", "Snapshot current state of component module as a new version"
-    def create_version(context_params)
-      component_module_id,version = context_params.retrieve_arguments([:component_module_id!,:option_1!],method_argument_names)
-
-      post_body = {
-        :component_module_id => component_module_id,
-        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
-      }
-      response = post rest_url("component_module/versions"), post_body
-      return response unless response.ok?
-      versions = (response.data.first && response.data.first['versions'])||Array.new
-      if versions.include?(version)
-        return Response::Error::Usage.new("Version #{version} exists already")
-      end
-
-      component_module_name = get_module_name(component_module_id)
-      module_location = OsUtil.module_location(:component_module,component_module_name,version)
-      if File.directory?(module_location)
-        return Response::Error::Usage.new("Target component module directory for version #{version} (#{module_location}) exists already; it must be deleted and this comamnd retried")
-      end
-
-      post_body = {
-        :component_module_id => component_module_id,
-        :version => version
-      }
-      response = post rest_url("component_module/create_new_version"), post_body
-      return response unless response.ok?
-
-      internal_trigger = omit_output = true
-      clone_aux(:component_module,component_module_id,version,internal_trigger,omit_output)
-    end
-=end
-=begin
-    desc "COMPONENT-MODULE-NAME/ID list-versions","List all versions associated with this component module."
-    def list_versions(context_params)
-      component_module_id = context_params.retrieve_arguments([:component_module_id!],method_argument_names)
-      post_body = {
-        :component_module_id => component_module_id,
-        :detail_to_include => ["remotes"],
-        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
-      }
-      response = post rest_url("component_module/versions"), post_body
-
-      response.render_table(:module_version)
-    end
-=end
-
     ##
     #
     # internal_trigger: this flag means that other method (internal) has trigger this.
