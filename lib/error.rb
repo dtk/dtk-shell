@@ -8,6 +8,9 @@ module DTK
     class Error < NameError
     end
 
+   # DtkError is child of Error; so order matters
+    require File.expand_path('dtk_error', File.dirname(__FILE__))
+
     class DSLParsing < Error
       def initialize(base_json_error,file_path=nil)
         super(err_msg(base_json_error,file_path))
@@ -46,15 +49,6 @@ module DTK
 
     # raise by developers to signal wrong usage of components
     class DtkImplementationError < Error
-    end
-
-    # we use this to log application errors
-    class DtkError < Error
-      def initialize(msg,opts={})
-        super(msg)
-        @backtrace = opts[:backtrace]
-      end
-      attr_reader :backtrace
     end
 
     class DtkLoginRequiredError < Error
