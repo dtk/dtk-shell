@@ -469,14 +469,19 @@ module DTK
         end
       end
 
+      def set_credentials(username, password)
+        @parsed_credentials = { :username => username, :password => password}
+      end
+
       def get_credentials
         unless @parsed_credentials
           cred_file = Config::CRED_FILE
           raise DTK::Client::DtkError,"Authorization configuration file (#{cred_file}) does not exist" unless File.exists?(cred_file)
           ret = parse_key_value_file(cred_file)
-          [:username,:password].each{ |k| raise DTK::Client::DtkError,"cannot find #{k}" unless ret[k] }
+          [:username,:password].each{ |k| raise DTK::Client::DtkError, "cannot find #{k}" unless ret[k] }
           @parsed_credentials = ret
         end
+
         @parsed_credentials
       end
 
