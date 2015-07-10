@@ -7,27 +7,16 @@ module DTK::Client; class TaskStatus::StreamMode
     require File.expand_path('element/render',File.dirname(__FILE__))
     include RenderMixin
     
-    def initialize(response)
-      @response = response
+    def initialize(response_element)
+      @response_element = response_element
     end
-    
-    def self.create(element_type,response)
-      case element_type
-      when :task_start then TaskStart.new(response)
-      when :task_end   then TaskEnd.new(response)
-      when :stage      then Stage.new(response)
-      when :no_results then NoResults.new(response)
-      else raise DtkError::Client.new("Unexpected element_type '#{element_type}'")
-      end
-    end
-    private_class_method :create
 
     def self.get_and_render_task_start(task_status_handle)
       render_elements(TaskStart.get(task_status_handle))
     end
     
     # opts has
-    #  :wait - amount to wait if get no results (required)
+    #   :wait - amount to wait if get no results (required)
     def self.get_and_render_stages(task_status_handle,opts={})
       unless wait = opts[:wait]
         raise DtkError::Client, "opts[:wait] must be set"
@@ -59,6 +48,31 @@ module DTK::Client; class TaskStatus::StreamMode
     end
     
     private
+    # opts will have
+    #   :start_index
+    #   :end_index
+    def self.get_task_status_elements(task_status_handle,element_type,opts={})
+      response =  task_status_handle.post_call(opts.merge(:form => :stream_form))
+      create_elements(response)
+    end
+
+    def self.create_elements(response)
+      response_elements = response.data
+      unless response_elements.kind_of?(Array)
+        raise DtkError::Client.new("Unexpected that response.data no at array")
+      end
+      response_elements.map{|el|create(el)}
+    end
+    def self.create(response_element)
+      type = response_element['type'] 
+      case type && type.to_sym
+        when :task_start then TaskStart.new(response_element)
+        when :task_end   then TaskEnd.new(response_element)
+        when :stage      then Stage.new(response_element)
+        when :no_results then NoResults.new(response_element)
+        else raise DtkError::Client.new("Unexpected element type '#{type}'")
+      end
+    end
     
     def self.task_end?(elements)
       elements.empty? or elements.last.kind_of?(TaskEnd)
@@ -70,19 +84,6 @@ module DTK::Client; class TaskStatus::StreamMode
       
     def self.render_elements(elements)
       elements.each{|el|el.render()}
-    end
-    
-    # opts will have
-    #  :start_index
-    #  :end_index
-    def self.get_task_status_elements(task_status_handle,element_type,opts={})
-      response = task_status_handle.post_call(opts.merge(:form => :stream_form))
-      create_elements(element_type,response)
-    end
-    
-    def self.create_elements(element_type,response)
-      # TODO: stub
-      [create(element_type,response)]
     end
     
   end

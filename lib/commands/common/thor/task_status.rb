@@ -16,7 +16,7 @@ module DTK::Client
     end
 
     def task_status_stream(assembly_or_workspace_id)
-      TaskStatus::StreamMode.new(self,:stream,assembly_or_workspace_id,:assembly).task_status()
+      TaskStatus::StreamMode.new(self,:stream,assembly_or_workspace_id,:assembly).get_and_render()
     end
 
     def list_task_info_aux(object_type, object_id)

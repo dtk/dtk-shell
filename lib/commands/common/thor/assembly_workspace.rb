@@ -421,11 +421,13 @@ module DTK::Client
       response = task_status_aux(mode,assembly_or_workspace_id,:assembly,:summarize => options.summarize?)
 
       # TODO: Hack which is necessery for the specific problem (DTK-725), we don't get proper error message when there is a timeout doing converge
-      unless response == true
-        return response.merge("data" => [{ "errors" => {"message" => "Task does not exist for workspace."}}]) unless response["data"]
-        response["data"].each do |data|
-          if data["errors"]
-            data["errors"]["message"] = "[TIMEOUT ERROR] Server is taking too long to respond." if data["errors"]["message"] == "error"
+      unless mode == :stream
+        unless response == true
+          return response.merge("data" => [{ "errors" => {"message" => "Task does not exist for workspace."}}]) unless response["data"]
+          response["data"].each do |data|
+            if data["errors"]
+              data["errors"]["message"] = "[TIMEOUT ERROR] Server is taking too long to respond." if data["errors"]["message"] == "error"
+            end
           end
         end
       end
