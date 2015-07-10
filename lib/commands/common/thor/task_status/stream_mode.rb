@@ -10,23 +10,11 @@ module DTK::Client
       #    end_position: END_INDEX
       # convention is start_position = 0 and end_position =0 means top level task with start time 
       def task_status()
-        # first get task start
-        task_elements = Element.get_task_start(self)
-        Element.render_elements(task_elements)
-        stage = 1
-        task_end = false
-        until task_end do
-          task_elements = Element.get_stage(self,stage)
-          Element.render_elements(task_elements)
-          if task_elements.last.task_end?()
-            task_end = true
-          else
-            stage += 1
-          end
-        end
-        Response::Ok.new
+        Element.get_and_render_task_start(self)
+        Element.get_and_render_stages(self,:wait => WaitWhenNoResults)
       end
 
+      WaitWhenNoResults = 5 #in seconds
       # making this public for this class and its children
       def post_call(*args)
         super
