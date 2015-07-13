@@ -21,6 +21,11 @@ class DtkOpenStruct < OpenStruct
   end
 end
 
+# [Haris]
+# Elements with action column (taks status) have been removed since they are no longer in use. In case of bug that is relying
+# on existance of element and logic, please contact me to resolve it.
+#
+
 module DTK
   module Client
     class ViewProcTablePrint < ViewProcessor
@@ -41,6 +46,7 @@ module DTK
 
       def initialize(data, data_type, forced_metadata, print_error_table)
         # if there is no custom metadata, then we use metadata predefined in meta-response.json file
+
         if forced_metadata.nil?
           # get all table definitions from json file
           @table_defintions = get_metadata()
@@ -84,7 +90,7 @@ module DTK
           evaluated_element = DtkOpenStruct.new
           error_element     = DtkOpenStruct.new
 
-          # based on mappign we set key = eval(value)
+          # based on mapping we set key = eval(value)
           table_defintion.each do |k,v|
             begin
               # due to problems with space we have special way of handling error columns
@@ -124,29 +130,6 @@ module DTK
                   # add it with other
                   @error_data << error_element
                 end
-              elsif k.include?('action')
-                error_message = value_of(structured_element, v)
-
-                # here we see if there was an error if not we will skip this
-                # if so we add it to @error_data
-
-                if error_message.empty?
-                  # no error message just add it as regular element
-                  evaluated_element.send("#{k}=",value_of(structured_element, v))
-                else
-                  error_index = "[ #{value_of(structured_element,'logs.label')} ]" || ""
-                  error_type = value_of(structured_element,'logs.dtk_type') || ""
-
-                  # original table takes that index
-                  evaluated_element.send("#{k}=", error_index)
-
-                  # we set new error element
-                  error_element.id      = error_index
-                  error_element.message = error_message
-
-                  # add it with other
-                  @action_data << error_element
-                end
               else
                 evaluated_element.send("#{k}=", value_of(structured_element, v))
                 # eval "evaluated_element.#{k}=structured_element.#{v}"
@@ -161,7 +144,6 @@ module DTK
             end
           end
 
-          @order_definition.delete('action')
           @order_definition.delete('errors')
 
           @evaluated_data << evaluated_element
