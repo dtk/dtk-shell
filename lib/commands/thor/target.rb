@@ -5,7 +5,7 @@ module DTK::Client
   class Target < CommandBaseThor
     include Commands
     include InventoryParserMixin
-    
+
     def self.pretty_print_cols()
       PPColumns.get(:target)
     end
@@ -48,7 +48,7 @@ module DTK::Client
 
       import_type = parsed_source[1]
       path = parsed_source[2]
-      
+
       raise DtkValidationError, "We do not support '#{import_type}' as import source at the moment. Valid sources: #{ValidImportTypes}" unless ValidImportTypes.include?(import_type)
 
       post_body = {:target_id => target_id}
@@ -57,7 +57,7 @@ module DTK::Client
         inventory_data = parse_inventory_file(path)
         post_body.merge!(:inventory_data => inventory_data)
       end
-      
+
       response  = post rest_url("target/import_nodes"), post_body
       return response unless response.ok?
 
@@ -142,12 +142,12 @@ module DTK::Client
       provider_id, target_id, about = context_params.retrieve_arguments([:provider_id, :target_id, :option_1],method_argument_names||="")
 
       if target_id.nil?
-        post_body = { 
+        post_body = {
           :subtype   => :instance,
           :parent_id => provider_id
         }
         response  = post rest_url("target/list"), post_body
-           
+
         response.render_table(:target)
       else
         post_body = {
@@ -176,8 +176,8 @@ module DTK::Client
       target_id  = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       # No -y options since risk is too great
-      return unless Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all assemblies/nodes that belong to this target will be deleted as well)'"+'?')
-     
+      return unless Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all services/nodes that belong to this target will be deleted as well)'"+'?')
+
       post_body = {
         :target_id => target_id,
         :type      => 'instance'
