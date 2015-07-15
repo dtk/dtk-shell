@@ -32,7 +32,7 @@ module DTK::Client
           new_context_params.add_context_to_params(module_type, module_type)
           new_context_params.add_context_name_to_params(module_type, module_type, module_name)
 
-          forwarded_opts = { :skip_recursive_pull => true }
+          forwarded_opts = { skip_recursive_pull: true, ignore_dependency_merge_conflict: true }
           forwarded_opts.merge!(:do_not_raise => true) if opts[:do_not_raise]
           new_context_params.forward_options(forwarded_opts)
 

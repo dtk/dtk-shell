@@ -34,7 +34,7 @@ module DTK::Client
         unless rsa_pub_key
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
         end
-        opts_perform_locally = remote_params.merge(:full_module_name => full_module_name, :force => opts[:force], :do_not_raise => opts[:do_not_raise])
+        opts_perform_locally = remote_params.merge(:full_module_name => full_module_name, :force => opts[:force], :do_not_raise => opts[:do_not_raise], :ignore_dependency_merge_conflict => opts[:ignore_dependency_merge_conflict])
         PullFromRemote.perform_locally(self,module_type,module_id,module_name,opts_perform_locally)
       else
         # TODO: see if this works correctly
@@ -92,7 +92,9 @@ module DTK::Client
         response = cmd_obj.Helper(:git_repo).pull_changes(module_type,module_name,opts)
 
         # return response unless response.ok?
-        if (response.data[:diffs].nil? || response.data[:diffs].empty?)
+        if custom_message = response.data[:custom_message]
+          puts custom_message
+        elsif (response.data[:diffs].nil? || response.data[:diffs].empty?)
           puts "No changes to pull from remote." unless response['errors']
         else
           puts "Changes pulled from remote"

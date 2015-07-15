@@ -330,6 +330,7 @@ module DTK::Client
       version      = options.version
       module_type  = get_module_type(context_params)
       skip_recursive_pull = context_params.get_forwarded_options()[:skip_recursive_pull]
+      ignore_dependency_merge_conflict = context_params.get_forwarded_options()[:skip_recursive_pull]
 
       raise DtkValidationError, "You have to provide valid catalog to pull changes from! Valid catalogs: #{PULL_CATALOGS}" unless catalog
 
@@ -341,7 +342,8 @@ module DTK::Client
           :force               => options.force?,
           :version             => version,
           :remote_namespace    => options.namespace,
-          :skip_recursive_pull => skip_recursive_pull
+          :skip_recursive_pull => skip_recursive_pull,
+          :ignore_dependency_merge_conflict => ignore_dependency_merge_conflict
         }
 
         opts.merge!(:do_not_raise => true) if (context_params.get_forwarded_options()||{})[:do_not_raise]

@@ -1,6 +1,6 @@
 module DTK::Client
   module PurgeCloneMixin
-    def purge_clone_aux(module_type,opts={})
+    def purge_clone_aux(module_type, opts = {})
       module_name = opts[:module_name]
       version = opts[:version]
       opts_module_loc = (opts[:assembly_module] ? {:assembly_module => opts[:assembly_module]} : Hash.new)
