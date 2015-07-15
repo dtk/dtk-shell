@@ -118,6 +118,7 @@ module DTK; module Client; class CommandHelper
         full_module_name = full_module_name(module_name,opts)
         repo_dir = local_repo_dir(type,full_module_name,opts[:version],opts)
         repo = create(repo_dir,opts[:local_branch])
+        opts.merge!(:full_module_name => full_module_name)
         response = pull_repo_changes_aux(repo,opts)
         response
       end
@@ -477,11 +478,16 @@ module DTK; module Client; class CommandHelper
       if merge_rel == :equal
         { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
       elsif [:branchpoint, :local_ahead].include?(merge_rel)
-        raise Error.new('Unable to do fast-forward merge. You can use --force but all changes will be lost') unless opts[:force]
-        # TODO: right now just wiping out what is in repo
-        diffs = DiffSummary.diff(repo, local_branch, remote_branch_ref)
-        repo.merge_theirs(remote_branch_ref)
-        { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
+        if opts[:force]
+          # TODO: right now just wiping out what is in repo
+          diffs = DiffSummary.diff(repo, local_branch, remote_branch_ref)
+          repo.merge_theirs(remote_branch_ref)
+          { :diffs => diffs, :commit_sha => repo.head_commit_sha() }
+        elsif opts[:ignore_dependency_merge_conflict]
+          { :diffs => diffs, :commit_sha => repo.head_commit_sha(), :custom_message => "Unable to do fast-forward merge. You can go to '#{opts[:full_module_name]}' and pull with --force option but all changes will be lost." }
+        else
+          raise Error.new('Unable to do fast-forward merge. You can use --force but all changes will be lost.')
+        end
       elsif merge_rel == :local_behind
         # see if any diffs between fetched remote and local branch
         # this has be done after commit
