@@ -1,16 +1,14 @@
 module DTK::Client; class TaskStatus::StreamMode
   class Element
     class Stage < self
-      require File.expand_path('stage/start', File.dirname(__FILE__))
-      require File.expand_path('stage/end', File.dirname(__FILE__))
-      include StartMixin
-      include EndMixin
+      require File.expand_path('stage/render_mixin', File.dirname(__FILE__))
+      include RenderMixin
 
       def initialize(response_element, opts = {})
         super(response_element)
         @just_render = opts[:just_render]
       end
-
+      
       # opts has
       #   :wait - amount to wait if get no results (required)
       def self.get_and_render_stages(task_status_handle, opts = {})
@@ -18,46 +16,40 @@ module DTK::Client; class TaskStatus::StreamMode
           raise DtkError::Client, "opts[:wait] must be set"
         end
         
-        task_end = false
         cursor = Cursor.new
-        until task_end do
+        until cursor.task_end? do
           elements = get_single_stage(task_status_handle, cursor.stage, :wait_for => cursor.wait_for)
           if no_results_yet?(elements)
             sleep wait
             next
           end
           render_elements(elements)
-          if task_end?(elements)
-            task_end = true
-          else
-            cursor.advance!
-          end
+          cursor.advance!(task_end?(elements))
         end
       end
-
-      def render
-        render_start unless @just_render and @just_render != :start
-        render_end unless @just_render and @just_render != :end
-      end
-
-      private
-
+    
       class Cursor
         def initialize
           @stage    = 1
           @wait_for = :start
+          @task_end = false
         end
         attr_reader :stage, :wait_for
-        def advance!
-          if @wait_for == :start
-            @wait_for = :end
-          else
-            @stage += 1
-            @wait_for = :start
+        def task_end?
+          @task_end
+        end
+        def advance!(task_end)
+          unless @task_end = task_end
+            if @wait_for == :start
+              @wait_for = :end
+            else
+              @stage += 1
+              @wait_for = :start
+            end
           end
         end
       end
-
+      
       def self.get_single_stage(task_status_handle, stage_num, opts = {})
         get_stages(task_status_handle, stage_num, stage_num, opts)
       end
@@ -70,9 +62,6 @@ module DTK::Client; class TaskStatus::StreamMode
         get_task_status_elements(task_status_handle, :stage, opts_get)
       end
       
-      def stage_name?
-        field?(:display_name)
-      end
     end
   end
 end; end
