@@ -48,6 +48,7 @@ module DTK::Client
       PostBody.new(
         id_field                => @object_id,
         :form?                  => opts[:form],
+        :wait_for?              => opts[:wait_for],
         :summarize_node_groups? => opts[:summarize]
      )
     end
