@@ -1,14 +1,16 @@
 module DTK::Client; class TaskStatus::StreamMode
   class Element
-    require File.expand_path('element/task_start',File.dirname(__FILE__))
-    require File.expand_path('element/task_end',File.dirname(__FILE__))
-    require File.expand_path('element/stage',File.dirname(__FILE__))
-    require File.expand_path('element/no_results',File.dirname(__FILE__))
-    require File.expand_path('element/render',File.dirname(__FILE__))
-    include RenderMixin
-    
+    require File.expand_path('element/render', File.dirname(__FILE__))
+    require File.expand_path('element/task_start', File.dirname(__FILE__))
+    require File.expand_path('element/task_end', File.dirname(__FILE__))
+    require File.expand_path('element/stage', File.dirname(__FILE__))
+    require File.expand_path('element/no_results', File.dirname(__FILE__))
+    include Render::Mixin
+
     def initialize(response_element)
       @response_element = response_element
+      # TODO: hard coded now
+      @render_opts = Render::Opts.new(response_element['type'])
     end
 
     def self.get_and_render_task_start(task_status_handle)
@@ -17,7 +19,7 @@ module DTK::Client; class TaskStatus::StreamMode
     
     # opts has
     #   :wait - amount to wait if get no results (required)
-    def self.get_and_render_stages(task_status_handle,opts={})
+    def self.get_and_render_stages(task_status_handle, opts = {})
       unless wait = opts[:wait]
         raise DtkError::Client, "opts[:wait] must be set"
       end
@@ -30,7 +32,7 @@ module DTK::Client; class TaskStatus::StreamMode
           sleep wait
           next
         end
-        
+       
         render_elements(elements)
         
         if task_end?(elements)
@@ -40,18 +42,18 @@ module DTK::Client; class TaskStatus::StreamMode
         end
       end
     end
-    
-    def render()
-      #TODO: stub
-      #TODO: make this nil and overwride all elements types to render
-      pp [:element,self.class,self]
+
+    # TODO: for debugging
+    def render
+      pp self
     end
-    
+
     private
+
     # opts will have
     #   :start_index
     #   :end_index
-    def self.get_task_status_elements(task_status_handle,element_type,opts={})
+    def self.get_task_status_elements(task_status_handle, element_type, opts = {})
       response =  task_status_handle.post_call(opts.merge(:form => :stream_form))
       create_elements(response)
     end
@@ -81,10 +83,14 @@ module DTK::Client; class TaskStatus::StreamMode
     def self.no_results_yet?(elements)
       elements.find{|el|el.kind_of?(NoResults)}
     end
-      
+
     def self.render_elements(elements)
-      elements.each{|el|el.render()}
+      elements.each{ |el| el.render }
     end
-    
+
+    def field?(field)
+      @response_element[field.to_s]
+    end
+     
   end
 end; end
