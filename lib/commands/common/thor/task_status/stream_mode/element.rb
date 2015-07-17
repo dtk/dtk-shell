@@ -16,31 +16,9 @@ module DTK::Client; class TaskStatus::StreamMode
     def self.get_and_render_task_start(task_status_handle)
       render_elements(TaskStart.get(task_status_handle))
     end
-    
-    # opts has
-    #   :wait - amount to wait if get no results (required)
-    def self.get_and_render_stages(task_status_handle, opts = {})
-      unless wait = opts[:wait]
-        raise DtkError::Client, "opts[:wait] must be set"
-      end
 
-      stage = 1
-      task_end = false
-      until task_end do
-        elements = Stage.get(task_status_handle,stage)
-        if no_results_yet?(elements)
-          sleep wait
-          next
-        end
-       
-        render_elements(elements)
-        
-        if task_end?(elements)
-          task_end = true
-        else
-          stage += 1
-        end
-      end
+    def self.get_and_render_stages(task_status_handle, opts = {})
+      Stage.get_and_render_stages(task_status_handle, opts)
     end
 
     # TODO: for debugging
@@ -68,10 +46,12 @@ module DTK::Client; class TaskStatus::StreamMode
     def self.create(response_element)
       type = response_element['type'] 
       case type && type.to_sym
-        when :task_start then TaskStart.new(response_element)
-        when :task_end   then TaskEnd.new(response_element)
-        when :stage      then Stage.new(response_element)
-        when :no_results then NoResults.new(response_element)
+        when :task_start  then TaskStart.new(response_element)
+        when :task_end    then TaskEnd.new(response_element)
+        when :stage       then Stage.new(response_element)
+        when :stage_start then Stage.new(response_element, :just_render => :start)
+        when :stage_end   then Stage.new(response_element, :just_render => :end)
+        when :no_results  then NoResults.new(response_element)
         else raise DtkError::Client.new("Unexpected element type '#{type}'")
       end
     end

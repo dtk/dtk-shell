@@ -2,7 +2,7 @@ require 'hirb'
 module DTK::Client
   class TaskStatus
     class StreamMode < self
-      require File.expand_path('stream_mode/element',File.dirname(__FILE__))
+      require File.expand_path('stream_mode/element', File.dirname(__FILE__))
 
       def get_and_render()
         Element.get_and_render_task_start(self)
