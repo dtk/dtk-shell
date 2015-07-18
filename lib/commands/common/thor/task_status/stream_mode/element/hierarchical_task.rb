@@ -29,7 +29,9 @@ module DTK::Client; class TaskStatus::StreamMode::Element
 
     class BaseSubtask
       def initialize(hash)
-        @type = hash['executable_action_type']
+        @type          = hash['executable_action_type']
+        @node_name     = (hash['node'] || {})['name']
+        @is_node_group = HierarchicalTask.has_node_group?(hash)
       end
 
       def is_action?
@@ -40,8 +42,6 @@ module DTK::Client; class TaskStatus::StreamMode::Element
     class Steps < BaseSubtask
       def initialize(hash)
         super
-        @node_name        = (hash['node'] || {})['name']
-        @is_node_group    = HierarchicalTask.has_node_group?(hash)
         @action           = hash['action'] if is_action?    
         @component_names  = ret_component_names(hash) if !is_action?
       end
