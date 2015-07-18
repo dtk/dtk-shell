@@ -15,13 +15,13 @@ class DTK::Client::TaskStatus::StreamMode::Element::Stage
         render_border
         render_line? line__stage_heading?
         render_start_time? field?(:started_at)
-        render_lines Steps.lines(field?(:subtasks))
+        render_lines Steps.lines(stage_steps?)
       end
       
       def render_end
         render_line line__status
         render_duration? field?(:duration)
-        render_lines Results.lines()
+        render_lines Results.lines(stage_results?)
         render_border
         render_empty_line
       end
@@ -50,7 +50,6 @@ class DTK::Client::TaskStatus::StreamMode::Element::Stage
       def stage_name?
         field?(:display_name)
       end
-      
     end
   end
 end

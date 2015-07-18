@@ -1,7 +1,9 @@
 class DTK::Client::TaskStatus::StreamMode::Element::Stage
   module Render
     module Results
-      def self.lines(*args)
+      def self.lines(results)
+        ret = []
+        return ret unless results
         #TODO: stub
         []
       end

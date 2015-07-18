@@ -2,6 +2,7 @@ module DTK::Client; class TaskStatus::StreamMode
   class Element
     require File.expand_path('element/format', File.dirname(__FILE__))
     require File.expand_path('element/render', File.dirname(__FILE__))
+    require File.expand_path('element/hierarchical_task', File.dirname(__FILE__))
     require File.expand_path('element/task_start', File.dirname(__FILE__))
     require File.expand_path('element/task_end', File.dirname(__FILE__))
     require File.expand_path('element/stage', File.dirname(__FILE__))
@@ -66,6 +67,19 @@ module DTK::Client; class TaskStatus::StreamMode
 
     def self.render_elements(elements)
       elements.each{ |el| el.render }
+    end
+
+    def stage_steps?
+      if subtasks = field?(:subtasks)
+pp subtasks
+        HierarchicalTask.steps(subtasks)
+      end
+    end
+
+    def stage_results?
+      if subtasks = field?(:subtasks)
+        HierarchicalTask.results?(subtasks)
+      end
     end
 
     def field?(field)

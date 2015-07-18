@@ -1,8 +1,9 @@
 class DTK::Client::TaskStatus::StreamMode::Element::Stage
   module Render
     module Steps
-      def self.lines(subtasks)
-pp subtasks
+      def self.lines(steps)
+        ret = []
+        return ret unless steps
         #TODO: stub
         []
       end
