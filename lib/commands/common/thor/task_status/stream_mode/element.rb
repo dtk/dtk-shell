@@ -71,14 +71,18 @@ module DTK::Client; class TaskStatus::StreamMode
 
     def stage_steps?
       if subtasks = field?(:subtasks)
-pp subtasks
-        HierarchicalTask.steps(subtasks)
+
+        x = HierarchicalTask.steps(subtasks)
+        pp [:stage_steps,x]
+        x
       end
     end
 
     def stage_results?
       if subtasks = field?(:subtasks)
-        HierarchicalTask.results?(subtasks)
+        x = HierarchicalTask.results?(subtasks)
+        pp [:results,x]
+        x
       end
     end
 
