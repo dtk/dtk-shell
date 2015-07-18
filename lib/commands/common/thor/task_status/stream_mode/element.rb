@@ -1,16 +1,16 @@
 module DTK::Client; class TaskStatus::StreamMode
   class Element
+    require File.expand_path('element/format', File.dirname(__FILE__))
     require File.expand_path('element/render', File.dirname(__FILE__))
     require File.expand_path('element/task_start', File.dirname(__FILE__))
     require File.expand_path('element/task_end', File.dirname(__FILE__))
     require File.expand_path('element/stage', File.dirname(__FILE__))
     require File.expand_path('element/no_results', File.dirname(__FILE__))
-    include Render::Mixin
+    include RenderMixin
 
     def initialize(response_element)
       @response_element = response_element
-      # TODO: hard coded now
-      @render_opts = Render::Opts.new(response_element['type'])
+      @formatter        = Format.new(response_element['type'])
     end
 
     def self.get_and_render_task_start(task_status_handle)
@@ -71,43 +71,6 @@ module DTK::Client; class TaskStatus::StreamMode
     def field?(field)
       @response_element[field.to_s]
     end
-
-    ######## render related
-    def render_line(msg, params = {})
-      print_to_console(@render_opts.format(msg, params))
-      render_empty_line
-    end     
-
-    def render_lines(msg_array, params = {})
-      msg_array.each { |msg| render_line(msg, params) }
-    end     
-
-    def render_line?(msg, params = {})
-      if msg
-        render_line(msg, params)
-      end
-    end
-
-    def render_start_time?(started_at)
-      render_line(@render_opts.start_time_msg?(started_at))
-    end
-
-    def render_duration?(duration)
-      render_line(@render_opts.duration_msg?(duration))
-    end
-
-    def render_border
-      print_to_console(@render_opts.border)
-      render_empty_line
-    end     
-
-    def render_empty_line
-      render_empty_lines(1)
-    end
-
-    def render_empty_lines(num_empty_lines = 1)
-      print_to_console("\n" * num_empty_lines)
-    end
-
   end
 end; end
+
