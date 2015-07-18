@@ -1,77 +1,87 @@
-module DTK::Client; class TaskStatus::StreamMode
-  class Element
-    module Render
-      module Mixin
-        def render_line(line)
-          #TODO: stub
-          STDOUT << line
-          render_space
-        end
+class DTK::Client::TaskStatus::StreamMode::Element
+  module Render
+    module Mixin
+      private 
 
-        def render_space
-          STDOUT << "\n"
+      def print_to_console(string)
+        #TODO: stub
+        STDOUT << string
+      end
+    end
+
+    class Opts < ::Hash
+      Settings = {
+        :task_start => {
+        },
+        :task_end => {
+        },
+        :stage => {
+        },
+        :stage_start => {
+          :border_symbol      => '=',
+        },
+        :stage_end => {
+          :border_symbol      => '-',
+        },
+        :default => {
+          :border_symbol      => '=',
+          :border_size        => 60,
+          :bracket_symbol     => '=',
+          :bracket_size       => 25,
+          :duration_accuracy  => 2, # how many decimal places accuracy
+          :include_start_time => true
+        }
+      }
+      
+      def initialize(type)
+        super()
+        @type = type && type.to_sym
+        replace(Settings[:default].merge(Settings[@type] || {}))
+      end
+      
+      def format(msg, params = {})
+        aug_msg = augment(msg, params)
+        params[:bracket] ? bracket(aug_msg) : aug_msg
+      end
+      
+      def border
+        border_symbol = self[:border_symbol]
+        border_size    = self[:border_size]
+        "#{border_symbol * border_size}"
+      end
+
+      def start_time_msg?(started_at)
+        if started_at
+          "TIME START: #{started_at}"
         end
       end
 
-      class Opts < ::Hash
-        Defaults = {
-          :task_start => {
-            :include_time_stamp => true,
-          },
-          :stage => {
-            :include_time_stamp => true,
-          },
-          :default => {
-            :bracket_symbol     => '=',
-            :bracket_num        => 25,
-            :duration_accuracy  => 2,
-            :include_time_stamp => true,
-            :include_duration   => true,
-          }
-        }
+      def duration_msg?(duration)
+        if duration
+          "DURATION: #{duration.round(self[:duration_accuracy])}s"
+        end
+      end
 
-        def initialize(type)
-          @type = type && type.to_sym
-          super()
-          replace(Defaults[:default].merge(Defaults[@type] || {}))
+      private
+      
+      def bracket(aug_msg)
+        bracket_symbol = self[:bracket_symbol]
+        bracket_size    = self[:bracket_size]
+        "#{bracket_symbol * bracket_size} #{aug_msg} #{bracket_symbol * bracket_size}"
+      end
+      
+      def augment(msg, params = {})
+        msg_prefix = ''
+        msg_posfix = ''
+
+        started_at = params[:started_at]
+        if started_at and self[:include_start_time]
+          msg_prefix << "#{started_at} "
         end
 
-        def msg(msg, params = {})
-          aug_msg = augment(msg, params)
-          params[:bracket] ? bracket_msg(aug_msg) : aug_msg
-        end
-
-        private
-
-        def bracket_msg(aug_msg)
-          bracket_symbol = self[:bracket_symbol]
-          bracket_num    = self[:bracket_num]
-          "#{bracket_symbol * bracket_num} #{aug_msg} #{bracket_symbol * bracket_num}"
-        end
-
-        def augment(msg, params = {})
-          msg_prefix = ''
-          msg_posfix = ''
-          add__started_at?(msg_prefix, params)
-          add__duration?(msg_posfix, params)
-          "#{msg_prefix}#{msg}#{msg_posfix}"
-        end
-
-        def add__started_at?(msg_prefix, params)
-          started_at = params[:started_at]
-          if started_at and self[:include_time_stamp]
-            msg_prefix << "#{started_at} "
-          end
-        end
-
-        def add__duration?(msg_posfix, params)
-          duration = params[:duration]
-          if duration and self[:include_duration]
-            msg_posfix << " (duration: #{duration.round(self[:duration_accuracy])}s)"
-          end
-        end
-
+        "#{msg_prefix}#{msg}#{msg_posfix}"
       end
     end
   end
-end; end
+end
+

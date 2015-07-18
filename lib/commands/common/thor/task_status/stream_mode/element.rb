@@ -52,7 +52,7 @@ module DTK::Client; class TaskStatus::StreamMode
         when :stage_start then Stage.new(response_element, :just_render => :start)
         when :stage_end   then Stage.new(response_element, :just_render => :end)
         when :no_results  then NoResults.new(response_element)
-        else raise DtkError::Client.new("Unexpected element type '#{type}'")
+        else              raise DtkError::Client.new("Unexpected element type '#{type}'")
       end
     end
     
@@ -71,6 +71,39 @@ module DTK::Client; class TaskStatus::StreamMode
     def field?(field)
       @response_element[field.to_s]
     end
-     
+
+    # render related
+    def render_line(msg, params = {})
+      print_to_console(@render_opts.format(msg, params))
+      render_empty_line
+    end     
+
+    def render_line?(msg, params = {})
+      if msg
+        render_line(msg, params)
+      end
+    end
+
+    def render_start_time?(started_at)
+      render_line(@render_opts.start_time_msg?(started_at))
+    end
+
+    def render_duration?(duration)
+      render_line(@render_opts.duration_msg?(duration))
+    end
+
+    def render_border
+      print_to_console(@render_opts.border)
+      render_empty_line
+    end     
+
+    def render_empty_line
+      render_empty_lines(1)
+    end
+
+    def render_empty_lines(num_empty_lines = 1)
+      print_to_console("\n" * num_empty_lines)
+    end
+
   end
 end; end

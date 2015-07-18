@@ -7,7 +7,8 @@ module DTK::Client; class TaskStatus::StreamMode
 
       def render
         msg = "Start '#{field?(:display_name) || 'Workflow'}'"
-        render_line @render_opts.msg(msg, :bracket => true, :started_at => field?(:started_at))
+        render_line msg, :bracket => true, :started_at => field?(:started_at)
+        render_empty_lines 2
       end
     end
   end
