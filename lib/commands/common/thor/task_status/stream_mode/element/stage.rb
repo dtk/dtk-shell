@@ -1,8 +1,8 @@
 module DTK::Client; class TaskStatus::StreamMode
   class Element
     class Stage < self
-      require File.expand_path('stage/render_mixin', File.dirname(__FILE__))
-      include RenderMixin
+      require File.expand_path('stage/render', File.dirname(__FILE__))
+      include Render::Mixin
 
       def initialize(response_element, opts = {})
         super(response_element)

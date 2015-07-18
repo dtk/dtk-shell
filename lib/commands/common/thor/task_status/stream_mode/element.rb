@@ -72,10 +72,14 @@ module DTK::Client; class TaskStatus::StreamMode
       @response_element[field.to_s]
     end
 
-    # render related
+    ######## render related
     def render_line(msg, params = {})
       print_to_console(@render_opts.format(msg, params))
       render_empty_line
+    end     
+
+    def render_lines(msg_array, params = {})
+      msg_array.each { |msg| render_line(msg, params) }
     end     
 
     def render_line?(msg, params = {})
