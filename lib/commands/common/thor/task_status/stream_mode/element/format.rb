@@ -18,8 +18,9 @@ class DTK::Client::TaskStatus::StreamMode::Element
         :border_size        => 60,
         :bracket_symbol     => '=',
         :bracket_size       => 25,
-        :duration_accuracy  => 2, # how many decimal places accuracy
-        :include_start_time => true
+        :duration_accuracy  => 1, # how many decimal places accuracy
+        :include_start_time => true,
+        :tab_size           => 2, # how many spaces each tab has
       }
     }
     
@@ -63,7 +64,9 @@ class DTK::Client::TaskStatus::StreamMode::Element
     def augment(msg, params = {})
       msg_prefix = ''
       msg_posfix = ''
-      
+      if tabs = params[:tabs]
+        msg_prefix << ' ' * (tabs * self[:tab_size])
+      end
       started_at = params[:started_at]
       if started_at and self[:include_start_time]
         msg_prefix << "#{started_at} "
