@@ -34,7 +34,7 @@ module DTK::Client; class TaskStatus::StreamMode::Element
         @is_node_group = HierarchicalTask.has_node_group?(hash)
       end
 
-      def is_action?
+      def action_mode?
         @type == 'ComponentAction'
       end
     end
@@ -42,8 +42,8 @@ module DTK::Client; class TaskStatus::StreamMode::Element
     class Steps < BaseSubtask
       def initialize(hash)
         super
-        @action           = hash['action'] if is_action?    
-        @component_names  = ret_component_names(hash) if !is_action?
+        @action           = hash['action'] if action_mode?    
+        @component_names  = ret_component_names(hash) if !action_mode?
       end
       
       private
@@ -56,8 +56,8 @@ module DTK::Client; class TaskStatus::StreamMode::Element
     class Results < BaseSubtask
       def initialize(hash)
         super
-        @action_results = hash['action_results'] if is_action?
-        @errors         = hash['errors'] if !is_action?
+        @action_results = hash['action_results'] if action_mode?
+        @errors         = hash['errors'] if !action_mode?
       end
 
       attr_reader :action_results, :errors
