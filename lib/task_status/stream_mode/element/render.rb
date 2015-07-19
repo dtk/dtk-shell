@@ -1,6 +1,5 @@
 class DTK::Client::TaskStatus::StreamMode::Element
   module RenderMixin
-    private 
 
     def render_line(msg, params = {})
       print_to_console(@formatter.format(msg, params))
@@ -37,6 +36,8 @@ class DTK::Client::TaskStatus::StreamMode::Element
     def render_empty_lines(num_empty_lines = 1)
       print_to_console("\n" * num_empty_lines)
     end
+
+    private
 
     def print_to_console(string)
       #TODO: stub

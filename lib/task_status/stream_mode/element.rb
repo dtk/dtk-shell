@@ -78,9 +78,9 @@ module DTK::Client; class TaskStatus::StreamMode
       end
     end
 
-    def stage_results?
+    def render_stage_results?
       if subtasks = field?(:subtasks)
-        HierarchicalTask.results?(subtasks)
+        HierarchicalTask.render_results?(self, subtasks)
       end
     end
 

@@ -21,7 +21,7 @@ class DTK::Client::TaskStatus::StreamMode::Element::Stage
       def render_end
         render_line line__status
         render_duration? field?(:duration)
-        render_lines Results.lines(stage_results?)
+        render_stage_results?
         render_border
         render_empty_line
       end
