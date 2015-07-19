@@ -1,8 +1,5 @@
 class DTK::Client::TaskStatus::StreamMode::Element::Stage
   module Render
-    require File.expand_path('render/steps', File.dirname(__FILE__))   
-    require File.expand_path('render/results', File.dirname(__FILE__))   
-    
     module Mixin
       def render
         render_start unless @just_render and @just_render != :start
@@ -15,13 +12,12 @@ class DTK::Client::TaskStatus::StreamMode::Element::Stage
         render_border
         render_line? line__stage_heading?
         render_start_time? field?(:started_at)
-        render_lines Steps.lines(stage_steps?)
+        render_stage_steps
       end
       
       def render_end
-        render_line line__status
-        render_duration? field?(:duration)
-        render_stage_results?
+        render_duration_line?
+        render_stage_results
         render_border
         render_empty_line
       end

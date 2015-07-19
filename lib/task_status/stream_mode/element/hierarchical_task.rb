@@ -6,11 +6,11 @@ module DTK::Client; class TaskStatus::StreamMode::Element
     require File.expand_path('hierarchical_task/steps', File.dirname(__FILE__))
 
     def self.render_steps(element, stage_subtasks)
-      steps = base_subtasks(Steps, stage_subtasks, :stop_at_node_group => true)
+      steps = base_subtasks(Steps, element, stage_subtasks, :stop_at_node_group => true)
       steps.each { |step| step.render }
     end
 
-    def self.render_results?(element, stage_subtasks)
+    def self.render_results(element, stage_subtasks)
       results = base_subtasks(Results, element, stage_subtasks)
       results.each { |result| result.render }
     end
@@ -32,7 +32,6 @@ module DTK::Client; class TaskStatus::StreamMode::Element
         end
       end
     end
-
 
   end
 end; end

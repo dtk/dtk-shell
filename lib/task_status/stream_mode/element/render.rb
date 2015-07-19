@@ -6,10 +6,6 @@ class DTK::Client::TaskStatus::StreamMode::Element
       render_empty_line
     end     
 
-    def render_lines(msg_array, params = {})
-      msg_array.each { |msg| render_line(msg, params) }
-    end     
-    
     def render_line?(msg, params = {})
       if msg
         render_line(msg, params)
@@ -20,10 +16,14 @@ class DTK::Client::TaskStatus::StreamMode::Element
       render_line(@formatter.start_time_msg?(started_at))
     end
     
-    def render_duration?(duration)
-      render_line(@formatter.duration_msg?(duration))
+    def formatted_duration?
+      @formatter.formatted_duration?(field?(:duration))
     end
-    
+
+    def render_duration_line?
+      render_line?(@formatter.duration_msg?(field?(:duration)))
+    end
+  
     def render_border
       print_to_console(@formatter.border)
       render_empty_line

@@ -46,10 +46,16 @@ class DTK::Client::TaskStatus::StreamMode::Element
         "TIME START: #{started_at}"
       end
     end
-    
-    def duration_msg?(duration)
+
+    def formatted_duration?(duration)
       if duration
-        "DURATION: #{duration.round(self[:duration_accuracy])}s"
+        "#{duration.round(self[:duration_accuracy])}s"
+      end
+    end
+
+    def duration_msg?(duration)
+      if formatted_duration = formatted_duration?(duration)
+        "DURATION: #{formatted_duration}"
       end
     end
 
