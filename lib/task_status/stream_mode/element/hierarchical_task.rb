@@ -11,11 +11,11 @@ module DTK::Client; class TaskStatus::StreamMode::Element
     end
 
     def self.render_results(element, stage_subtasks)
-      Results.render(element, stage_subtasks)
+      stage_subtasks && Results.render(element, stage_subtasks)
     end
 
     def self.render_steps(element, stage_subtasks)
-      Steps.render(element, stage_subtasks)
+      stage_subtasks && Steps.render(element, stage_subtasks)
     end
 
     private
@@ -43,27 +43,31 @@ module DTK::Client; class TaskStatus::StreamMode::Element
     def render_empty_line
       @element.render_empty_line
     end
-    
-    def node_term?
+
+    def render_node_term
       if @node_name
-        ret = ''
-        if @is_node_group
-          ret << 'node-group:'
+        if @is_node_group 
+          render_line "NODE-GROUP: #{@node_name}"
+        else
+          render_line "NODE: #{@node_name}"
         end
-        if @node_name
-          ret << @node_name
-        end
-        ret.nil? ? nil : ret
       end
     end
-    
+
+    def node_term?
+      if @node_name
+        @is_node_group ? "node-group:#{@node_name}" : @node_name
+      end
+    end
+
     def self.type(hash)
       hash['executable_action_type']
     end
-    
+
     def self.action_mode?(hash)
       type(hash) == ComponentActionType
-      end
+    end
     ComponentActionType = 'ComponentAction'
+
   end
 end; end

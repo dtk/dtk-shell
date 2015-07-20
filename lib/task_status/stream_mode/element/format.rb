@@ -69,16 +69,16 @@ class DTK::Client::TaskStatus::StreamMode::Element
     
     def augment(msg, params = {})
       msg_prefix = ''
-      msg_posfix = ''
-      if tabs = params[:tabs]
-        msg_prefix << ' ' * (tabs * self[:tab_size])
-      end
       started_at = params[:started_at]
       if started_at and self[:include_start_time]
         msg_prefix << "#{started_at} "
       end
-      
-      "#{msg_prefix}#{msg}#{msg_posfix}"
+      ret = "#{msg_prefix}#{msg}"
+      if  tabs = params[:tabs]
+        ident = ' ' * (tabs * self[:tab_size])
+        ret = ret.split("\n").map { |line| "#{ident}#{line}" }.join("\n") 
+      end
+      ret
     end
   end
 end

@@ -10,14 +10,15 @@ class DTK::Client::TaskStatus::StreamMode::Element::Stage
       
       def render_start
         render_border
-        render_line? line__stage_heading?
-        render_start_time? field?(:started_at)
-        render_stage_steps
+        render_line line__stage_heading?
+        render_start_time field?(:started_at)
+        render_stage_steps field?(:subtasks)
       end
       
       def render_end
-        render_duration_line?
-        render_stage_results
+        render_line line__status
+        render_duration_line
+        render_stage_results field?(:subtasks)
         render_border
         render_empty_line
       end
