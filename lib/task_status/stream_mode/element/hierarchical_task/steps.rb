@@ -1,9 +1,9 @@
 module DTK::Client; class TaskStatus::StreamMode::Element
-  module HierarchicalTask 
+  class HierarchicalTask 
     class Steps < self
       private
 
-      def self.render_steps(element, stage_subtasks)
+      def self.render(element, stage_subtasks)
         steps = base_subtasks(element, stage_subtasks, :stop_at_node_group => true)
         steps.each { |step| step.render }
       end

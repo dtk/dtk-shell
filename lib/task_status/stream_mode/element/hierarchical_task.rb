@@ -7,7 +7,7 @@ module DTK::Client; class TaskStatus::StreamMode::Element
       @element       = element
       @type          = self.class.type(hash),
       @node_name     = (hash['node'] || {})['name']
-      @is_node_group = has_node_group?(hash)
+      @is_node_group = self.class.has_node_group?(hash)
     end
 
     def self.render_results(element, stage_subtasks)
