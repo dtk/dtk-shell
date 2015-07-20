@@ -1,6 +1,15 @@
 module DTK::Client; class TaskStatus::StreamMode::Element
   module HierarchicalTask 
-    class Steps < BaseSubtask
+    class Steps < self
+      private
+
+      def self.render_steps(element, stage_subtasks)
+        steps = base_subtasks(element, stage_subtasks, :stop_at_node_group => true)
+        steps.each { |step| step.render }
+      end
+
+      private
+
       def self.create(element, hash)
         if action_mode?(hash)
           Action.new(element, hash)
