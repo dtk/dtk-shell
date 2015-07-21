@@ -6,6 +6,7 @@ module DTK::Client; class TaskStatus::StreamMode
       end
 
       def render
+        return if @ignore_stage_level_info
         msg = "end: '#{field?(:display_name) || 'Workflow'}'"
         if duration = formatted_duration?
           msg << " (total duration: #{duration})"

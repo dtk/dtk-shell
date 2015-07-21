@@ -5,9 +5,7 @@ module DTK::Client
       require File.expand_path('stream_mode/element', File.dirname(__FILE__))
 
       def get_and_render(opts = {})
-        if opts[:ignore_stage_level_info]
-          Element.get_and_render_task_start(self)
-        end
+        Element.get_and_render_task_start(self, opts)
         Element.get_and_render_stages(self, {:wait => WaitWhenNoResults}.merge(opts))
         Response::Ok.new()
       end

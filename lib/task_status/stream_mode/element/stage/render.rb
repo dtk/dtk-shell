@@ -9,18 +9,25 @@ class DTK::Client::TaskStatus::StreamMode::Element::Stage
       private
       
       def render_start
-        render_border
-        render_line line__stage_heading?
-        render_start_time field?(:started_at)
-        render_stage_steps field?(:subtasks)
+        if @ignore_stage_level_info
+          render_stage_steps field?(:subtasks)
+          render_start_time field?(:started_at)
+        else
+          render_border
+          render_line line__stage_heading?
+          render_start_time field?(:started_at)
+          render_stage_steps field?(:subtasks)
+        end
       end
       
       def render_end
         render_line line__status
         render_duration_line
         render_stage_results field?(:subtasks)
-        render_border
-        render_empty_line
+        unless @ignore_stage_level_info
+          render_border
+          render_empty_line
+        end
       end
       
       def line__stage_heading?

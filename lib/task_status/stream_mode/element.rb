@@ -15,8 +15,8 @@ module DTK::Client; class TaskStatus::StreamMode
       @ignore_stage_level_info = opts[:ignore_stage_level_info]
     end
 
-    def self.get_and_render_task_start(task_status_handle)
-      render_elements(TaskStart.get(task_status_handle))
+    def self.get_and_render_task_start(task_status_handle, opts = {})
+      render_elements(TaskStart.get(task_status_handle, opts))
     end
 
     def self.get_and_render_stages(task_status_handle, opts = {})
