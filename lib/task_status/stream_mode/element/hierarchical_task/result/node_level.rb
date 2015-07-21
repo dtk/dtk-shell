@@ -1,6 +1,6 @@
 module DTK::Client; class TaskStatus::StreamMode::Element::HierarchicalTask
   class Results
-    class Components < self
+    class NodeLevel < self
       def render_results(results_per_node)
         results_per_node.each { |result| result.render }
       end

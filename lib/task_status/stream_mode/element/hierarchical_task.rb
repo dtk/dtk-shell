@@ -4,8 +4,8 @@ module DTK::Client; class TaskStatus::StreamMode::Element
     require File.expand_path('hierarchical_task/steps', File.dirname(__FILE__))
 
     def initialize(element, hash)
+      @type          = self.class.type(hash)
       @element       = element
-      @type          = self.class.type(hash),
       @node_name     = (hash['node'] || {})['name']
       @is_node_group = self.class.has_node_group?(hash)
     end
@@ -20,6 +20,7 @@ module DTK::Client; class TaskStatus::StreamMode::Element
 
     private
 
+
     def self.base_subtasks(element, stage_subtasks, opts = {})
       stage_subtasks.inject([]) do |a, subtask_hash|
         if opts[:stop_at_node_group] and has_node_group?(subtask_hash)
@@ -31,6 +32,25 @@ module DTK::Client; class TaskStatus::StreamMode::Element
         end
       end
     end      
+
+    def self.create(element, hash)
+      stage_type_class(hash).new(element, hash)
+    end
+
+    def self.type(hash)
+      hash['executable_action_type']
+    end
+
+    def self.stage_type_class(hash) 
+      case type(hash)
+        when 'ComponentAction'
+          self::Action
+        when 'ConfigNode'
+          self::Components
+        else # they will be node level
+          self::NodeLevel
+      end
+    end
     
     def self.has_node_group?(subtask_hash)
       subtask_hash['node'] and subtask_hash['node']['type'] == 'group'
@@ -44,12 +64,12 @@ module DTK::Client; class TaskStatus::StreamMode::Element
       @element.render_empty_line
     end
 
-    def render_node_term
+    def render_node_term(opts = {})
       if @node_name
         if @is_node_group 
-          render_line "NODE-GROUP: #{@node_name}"
+          render_line("NODE-GROUP: #{@node_name}", opts)
         else
-          render_line "NODE: #{@node_name}"
+          render_line("NODE: #{@node_name}", opts)
         end
       end
     end
@@ -59,15 +79,5 @@ module DTK::Client; class TaskStatus::StreamMode::Element
         @is_node_group ? "node-group:#{@node_name}" : @node_name
       end
     end
-
-    def self.type(hash)
-      hash['executable_action_type']
-    end
-
-    def self.action_mode?(hash)
-      type(hash) == ComponentActionType
-    end
-    ComponentActionType = 'ComponentAction'
-
   end
 end; end
