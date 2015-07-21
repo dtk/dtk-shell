@@ -11,9 +11,9 @@ module DTK::Client; class TaskStatus::StreamMode::Element::HierarchicalTask
       def render_steps(steps)
         step = steps.first
         if steps.size ==  1 and step.component_names.size == 1 
-          render_line "CONVERGE COMPONENT: #{step.component_term(step.component_names.first)}"
+          render_line "COMPONENT: #{step.component_term(step.component_names.first)}"
         else
-          render_line 'CONVERGE COMPONENTS:'
+          render_line 'COMPONENTS:'
           steps.each do |step| 
             @component_names.each do |component_name|
               render_line  step.component_term(component_name), :tabs => 1

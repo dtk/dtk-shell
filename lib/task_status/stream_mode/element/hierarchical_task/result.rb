@@ -18,21 +18,38 @@ module DTK::Client; class TaskStatus::StreamMode::Element
         results_per_node.first.render_results(results_per_node)
       end
 
-      private
-      
-      def render_node_errors
-        unless @errors.empty?
-          render_node_term
-          @errors.each { |error| render_error_lines(error) }
-          render_empty_line
+      protected 
+
+      attr_reader :errors
+
+      def render_errors(results_per_node)
+        return unless results_per_node.find { |result| not result.errors.empty?}
+        first_time = true
+        results_per_node.each do |result| 
+          if first_time
+            render_line 'ERRORS:' 
+            first_time = false
+          end
+          result.render_node_errors  
         end
       end
 
-      def render_error_lines(error)
-        #TODO stub
-        pp [:error,error]
+      def render_node_errors
+        return if @errors.empty?
+        render_node_term
+        @errors.each do |error| 
+          if err_msg = error['message']
+            render_error_line err_msg  
+            render_empty_line
+          end
+        end
       end
 
+      def render_error_line(line, opts = {})
+        render_line(line, ErrorRenderOpts.merge(opts))
+      end
+      ErrorRenderOpts = { :tabs => 1}
+      
     end
   end
 end; end
