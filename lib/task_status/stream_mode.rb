@@ -4,9 +4,11 @@ module DTK::Client
     class StreamMode < self
       require File.expand_path('stream_mode/element', File.dirname(__FILE__))
 
-      def get_and_render()
-        Element.get_and_render_task_start(self)
-        Element.get_and_render_stages(self,:wait => WaitWhenNoResults)
+      def get_and_render(opts = {})
+        if opts[:ignore_stage_level_info]
+          Element.get_and_render_task_start(self)
+        end
+        Element.get_and_render_stages(self, {:wait => WaitWhenNoResults}.merge(opts))
         Response::Ok.new()
       end
 
@@ -22,7 +24,7 @@ module DTK::Client
       #    start_index: START_INDEX
       #    end_index: END_INDEX
       # convention is start_position = 0 and end_position = 0 means top level task with start time 
-      def post_body(opts={})
+      def post_body(opts = {})
         ret = super(opts)
         ret.merge(:start_index => opts[:start_index], :end_index => opts[:end_index])
       end

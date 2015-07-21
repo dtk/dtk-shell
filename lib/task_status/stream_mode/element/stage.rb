@@ -5,7 +5,7 @@ module DTK::Client; class TaskStatus::StreamMode
       include Render::Mixin
 
       def initialize(response_element, opts = {})
-        super(response_element)
+        super
         @just_render = opts[:just_render]
       end
       
@@ -18,7 +18,7 @@ module DTK::Client; class TaskStatus::StreamMode
         
         cursor = Cursor.new
         until cursor.task_end? do
-          elements = get_single_stage(task_status_handle, cursor.stage, :wait_for => cursor.wait_for)
+          elements = get_single_stage(task_status_handle, cursor.stage, {:wait_for => cursor.wait_for}.merge(opts))
           if no_results_yet?(elements)
             sleep wait
             next

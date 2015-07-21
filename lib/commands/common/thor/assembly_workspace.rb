@@ -141,8 +141,8 @@ module DTK::Client
       response = post rest_url("assembly/ad_hoc_action_execute"), post_body
       return response unless response.ok?
 
-      task_status_stream(assembly_or_workspace_id)
-      Response::Ok.new()
+      task_status_stream(assembly_or_workspace_id, :ignore_stage_level_info => true)
+      nil
     end
 
     def converge_aux(context_params,opts={})
