@@ -420,8 +420,13 @@ module DTK::Client
         end
       response = task_status_aux(mode,assembly_or_workspace_id,:assembly,:summarize => options.summarize?)
 
-      # TODO: Hack which is necessery for the specific problem (DTK-725), we don't get proper error message when there is a timeout doing converge
-      unless mode == :stream
+      if mode == :stream
+        #no response if ok
+        response unless response.ok?
+      else
+        # TODO: Hack which is necessery for the specific problem (DTK-725), 
+        #       we don't get proper error message when there is a timeout doing converge
+        
         unless response == true
           return response.merge("data" => [{ "errors" => {"message" => "Task does not exist for workspace."}}]) unless response["data"]
           response["data"].each do |data|
@@ -430,9 +435,8 @@ module DTK::Client
             end
           end
         end
+        response
       end
-
-      response
     end
 
     def task_action_detail_aw_aux(context_params)
