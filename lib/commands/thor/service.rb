@@ -374,7 +374,7 @@ TODO: will put in dot release and will rename to 'extend'
       :banner => "MODE",
       :desc => "Mode in which task status display; one of [stream,snapshot,refresh]; default is 'snapshot'"
     method_option :summarize, :type => :boolean, :default => false, :aliases => '-s'
-    # leaving --wait in for backwards compatability
+    # TODO: leaving --wait in for backwards compatability
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
       task_status_aw_aux(context_params)
