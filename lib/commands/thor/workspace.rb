@@ -573,12 +573,22 @@ module DTK::Client
       tail_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID task-status [--wait] [--summarize]", "Get the task status of the running or last running workspace task."
-    method_option :wait, :type => :boolean, :default => false
+    #desc "WORKSPACE-NAME/ID task-status [--wait] [--summarize]", "Get the task status of the running or last running workspace task."
+    desc "WORKSPACE-NAME/ID task-status [--mode MODE] [--summarize]", "Get the task status of the running or last running workspace task."
+    method_option "mode",:aliases => "-m" ,
+      :type => :string,
+      :banner => "MODE",
+      :desc => "Mode in which task status display; one of [stream,snapshot,refresh]; default is 'snapshot'"
     method_option :summarize, :type => :boolean, :default => false, :aliases => '-s'
+    # TODO: leaving --wait in for backwards compatability  
+    method_option :wait, :type => :boolean, :default => false
+
     def task_status(context_params)
       task_status_aw_aux(context_params)
     end
+
+
+
 
     desc "WORKSPACE-NAME/ID task-action-detail", "Get the task info of the running or last running workspace task."
     def task_action_detail(context_params)
