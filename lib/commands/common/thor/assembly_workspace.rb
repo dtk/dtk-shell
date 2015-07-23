@@ -89,6 +89,7 @@ module DTK::Client
       # synchronize_clone will load new assembly template into service clone on workspace (if it exists)
       commit_sha, workspace_branch, namespace, full_module_name, repo_url, version = response.data(:commit_sha, :workspace_branch, :module_namespace, :full_module_name, :repo_url, :version)
       service_module_name ||= response.data(:module_name)
+      merge_warning_message = response.data(:merge_warning_message)
       opts = { :local_branch => workspace_branch, :namespace => namespace }
 
       if (mode == :update) || local_clone_dir_exists
@@ -99,6 +100,8 @@ module DTK::Client
       return response unless response.ok?
 
       DTK::Client::OsUtil.print("New assembly template '#{assembly_template_name}' created in service module '#{full_module_name}'.", :yellow) if mode == :create
+      DTK::Client::OsUtil.print(merge_warning_message, :yellow) if merge_warning_message
+
       response
     end
 
