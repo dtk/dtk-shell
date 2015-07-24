@@ -455,8 +455,16 @@ module DTK; module Client; class CommandHelper
       { "diffs" => (diffs[:diffs]||"").to_s, "status" => repo.local_summary() }
     end
 
+    
+    def diffs__no_diffs
+      DiffSummary.new
+    end
+    def compute_diffs(repo, remote_branch_ref)
+      DiffSummary.diff(repo, repo.local_branch_name, remote_branch_ref)
+    end
+    public :diffs__no_diffs, :compute_diffs
+
     def pull_repo_changes_aux(repo, opts = {})
-      diffs = DiffSummary.new()
       # TODO: cleanup use of hard_reset and force
       force = opts[:hard_reset] || opts[:force]
 
@@ -467,7 +475,7 @@ module DTK; module Client; class CommandHelper
 
       if commit_sha = opts[:commit_sha]
         # no op if at commit_sha
-        return diffs if (commit_sha == repo.head_commit_sha()) && !force
+        return diffs__no_diffs if (commit_sha == repo.head_commit_sha()) && !force
       end
 
       if opts[:remote_repo] && opts[:remote_repo_url]
@@ -475,6 +483,7 @@ module DTK; module Client; class CommandHelper
       end
 
       repo.fetch(remote(opts[:remote_repo]))
+      remote_branch_ref = remote_branch_ref(repo.local_branch_name, opts)
       # TODO: cleanup use of hard_reset and force; Merge.merge just uses :force
       Merge.merge(repo, remote_branch_ref, opts.merge(:force => force))
     end
