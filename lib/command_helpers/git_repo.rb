@@ -7,7 +7,8 @@ dtk_require("../domain/git_error_handler")
 
 module DTK; module Client; class CommandHelper
   class GitRepo < self; class << self
-
+    dtk_require('git_repo/merge')
+                          
     def create(repo_dir,branch=nil,opts={})
       GitAdapter.new(repo_dir, branch)
     end
@@ -456,7 +457,8 @@ module DTK; module Client; class CommandHelper
 
     def pull_repo_changes_aux(repo, opts = {})
       diffs = DiffSummary.new()
-      hard_reset = opts[:hard_reset] || opts[:force]
+      # TODO: cleanup use of hard_reset and force
+      force = opts[:hard_reset] || opts[:force]
 
       # default commit in case it is needed
       if repo.changed?
@@ -465,7 +467,7 @@ module DTK; module Client; class CommandHelper
 
       if commit_sha = opts[:commit_sha]
         # no op if at commit_sha
-        return diffs if (commit_sha == repo.head_commit_sha()) && !hard_reset
+        return diffs if (commit_sha == repo.head_commit_sha()) && !force
       end
 
       if opts[:remote_repo] && opts[:remote_repo_url]
@@ -473,109 +475,8 @@ module DTK; module Client; class CommandHelper
       end
 
       repo.fetch(remote(opts[:remote_repo]))
-
-      local_branch      = repo.local_branch_name
-      remote_branch_ref = remote_branch_ref(local_branch, opts)
-
-      if hard_reset
-        Merge.force(repo, local_branch, remote_branch_ref)
-      else
-        # check if merge needed
-        merge_rel = repo.merge_relationship(:remote_branch, remote_branch_ref)
-        case merge_rel
-          when :equal
-            Merge.response(repo, diffs)
-          when :branchpoint, :local_ahead
-            Merge.merge_not_fast_forward(repo, local_branch, remote_branch_ref, opts)
-          when :local_behind
-            Merge.merge(repo, local_branch, remote_branch_ref, opts)
-          else
-            raise Error.new("Unexpected merge_rel (#{merge_rel})")
-        end
-      end
-    end
-
-    module Merge
-      def self.force(repo, local_branch, remote_branch_ref)
-        diffs = diffs(repo, local_branch, remote_branch_ref)
-        repo.merge_theirs(remote_branch_ref)
-        response(repo, diffs)
-      end
-      
-      def self.merge_not_fast_forward(repo, local_branch, remote_branch_ref, opts = {})
-        if opts[:merge_if_no_conflict]
-          if any_conflicts?(repo, remote_branch_ref)
-            msg = 'Unable to do pull-dtkn merge without conflicts. Options are:'
-            msg << " a) command 'pull-dtkn --force', but all local changes wil be lost or" 
-            msg << " b) use command 'edit' to get in linux shell and directly use git commands."
-            raise ErrorUsage.new(msg)
-          else
-            merge(repo, local_branch, remote_branch_ref, opts)
-          end
-        elsif opts[:force]
-          force(repo, local_branch, remote_branch_ref)
-        elsif opts[:ignore_dependency_merge_conflict]
-          custom_message = "Unable to do fast-forward merge. You can go to '#{opts[:full_module_name]}' and pull with --force option but all changes will be lost." 
-          response(repo, diffs, :custom_message => :custom_message)
-        else
-          # this will only be reached if opts[:merge_if_no_conflict] is false 
-          raise ErrorUsage.new('Unable to do fast-forward merge. You can use --force on pull-dtkn, but all local changes will be lost.')
-        end
-      end
-
-      def self.merge(repo, local_branch, remote_branch_ref, opts = {})
-        # see if any diffs between fetched remote and local branch
-        # this has be done after commit
-        diffs = diffs(repo, local_branch, remote_branch_ref)
-        return diffs unless diffs.any_diffs?()
-
-        safe_execute do
-          repo.merge(remote_branch_ref)
-        end
-        
-        if commit_sha = opts[:commit_sha]
-          if commit_sha != repo.head_commit_sha()
-            raise Error.new("Git synchronization problem: expected local head to have sha (#{commit_sha})")
-          end
-        end
-
-        response(repo, diffs)
-      end
-
-      def self.response(repo, diffs, opts = {})
-       { :diffs => diffs, :commit_sha => repo.head_commit_sha() }.merge(opts)
-      end
-
-      private
-
-      def self.any_conflicts?(repo, remote_branch_ref)
-        ret = nil
-        begin
-          repo.command('merge',['--no-commit', remote_branch_ref])
-         rescue ::Git::GitExecuteError
-          ret = true
-         ensure
-          safe_execute do
-            repo.command('merge',['--abort'])
-          end
-        end
-        ret
-      end
-
-      def self.diffs(repo, local_branch, remote_branch_ref)
-        DiffSummary.diff(repo, local_branch, remote_branch_ref)
-      end
-
-
-      def self.safe_execute(&block)
-        begin
-          yield
-         rescue Exception => e
-          # TODO: this should be log message
-          puts e
-          nil
-        end
-      end
+      # TODO: cleanup use of hard_reset and force; Merge.merge just uses :force
+      Merge.merge(repo, remote_branch_ref, opts.merge(:force => force))
     end
 
     def remote(remote_repo=nil)
