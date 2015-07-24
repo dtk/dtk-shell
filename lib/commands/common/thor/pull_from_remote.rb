@@ -100,7 +100,7 @@ module DTK::Client
           puts "Changes pulled from remote"
         end
 
-        return response
+        response
       end
 
       def self.perform_on_server(cmd_obj,module_type,module_id,module_name,remote_params)
