@@ -357,8 +357,15 @@ module DTK; module Client; class CommandHelper
           end
           commit_sha = repo.find_remote_sha(remote_branch_ref)
         else
-          where = opts[:where]||'server'
-          raise ErrorUsage.new("Merge needed before module (#{pp_module(repo)}) can be pushed to #{where}. If you want to force push use '--force' option.")
+          where = opts[:where] || 'server'
+          msg = "Merge needed before module (#{pp_module(repo)}) can be pushed to #{where}. "
+          if where.to_sym == :catalog
+            msg <<  " Either a merge into the local module can be done with pull-dtkn command, followed by push-dtkn or force"
+          else
+            msg << "Force"
+          end
+          msg << " push can be used with the '--force' option, but this will overwrite remote contents"
+          raise ErrorUsage.new(msg)
         end
       elsif merge_rel == :no_remote_ref
         repo.push(remote_branch_ref)
@@ -494,21 +501,25 @@ module DTK; module Client; class CommandHelper
         repo.merge_theirs(remote_branch_ref)
         response(repo, diffs)
       end
-
-      def self.merge_not_fast_forward(repo, local_branch, remote_branch_ref, opts = {})
-        
-      end
       
-      def self.merge_if_no_conflict(repo, local_branch, remote_branch_ref, opts = {})
+      def self.merge_not_fast_forward(repo, local_branch, remote_branch_ref, opts = {})
         if opts[:merge_if_no_conflict]
-          merge_if_no_conflict(repo, diffs, opts)
+          if any_conflicts?(repo, remote_branch_ref)
+            msg = 'Unable to do pull-dtkn merge without conflicts. Options are:'
+            msg << " a) command 'pull-dtkn --force', but all local changes wil be lost or" 
+            msg << " b) use command 'edit' to get in linux shell and directly use git commands."
+            raise ErrorUsage.new(msg)
+          else
+            merge(repo, local_branch, remote_branch_ref, opts)
+          end
         elsif opts[:force]
           force(repo, local_branch, remote_branch_ref)
         elsif opts[:ignore_dependency_merge_conflict]
-          opts_response = { :custom_message => "Unable to do fast-forward merge. You can go to '#{opts[:full_module_name]}' and pull with --force option but all changes will be lost." }
-          response(repo, diffs, opts_response)
+          custom_message = "Unable to do fast-forward merge. You can go to '#{opts[:full_module_name]}' and pull with --force option but all changes will be lost." 
+          response(repo, diffs, :custom_message => :custom_message)
         else
-          raise DtkError.new('Unable to do fast-forward merge. You can use --force but all changes will be lost.')
+          # this will only be reached if opts[:merge_if_no_conflict] is false 
+          raise ErrorUsage.new('Unable to do fast-forward merge. You can use --force on pull-dtkn, but all local changes will be lost.')
         end
       end
 
@@ -518,10 +529,8 @@ module DTK; module Client; class CommandHelper
         diffs = diffs(repo, local_branch, remote_branch_ref)
         return diffs unless diffs.any_diffs?()
 
-        begin
+        safe_execute do
           repo.merge(remote_branch_ref)
-        rescue Exception => e
-          puts e
         end
         
         if commit_sha = opts[:commit_sha]
@@ -539,8 +548,33 @@ module DTK; module Client; class CommandHelper
 
       private
 
+      def self.any_conflicts?(repo, remote_branch_ref)
+        ret = nil
+        begin
+          repo.command('merge',['--no-commit', remote_branch_ref])
+         rescue ::Git::GitExecuteError
+          ret = true
+         ensure
+          safe_execute do
+            repo.command('merge',['--abort'])
+          end
+        end
+        ret
+      end
+
       def self.diffs(repo, local_branch, remote_branch_ref)
         DiffSummary.diff(repo, local_branch, remote_branch_ref)
+      end
+
+
+      def self.safe_execute(&block)
+        begin
+          yield
+         rescue Exception => e
+          # TODO: this should be log message
+          puts e
+          nil
+        end
       end
     end
 
