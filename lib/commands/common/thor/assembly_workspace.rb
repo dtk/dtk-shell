@@ -1,10 +1,10 @@
 require 'rest_client'
 require 'json'
 require 'colorize'
-dtk_require_from_base("dtk_logger")
-dtk_require_from_base("util/os_util")
-dtk_require_from_base("command_helper")
-dtk_require_common_commands('thor/task_status')
+dtk_require_from_base('dtk_logger')
+dtk_require_from_base('util/os_util')
+dtk_require_from_base('command_helper')
+dtk_require_from_base('task_status')
 dtk_require_common_commands('thor/set_required_attributes')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
@@ -89,6 +89,7 @@ module DTK::Client
       # synchronize_clone will load new assembly template into service clone on workspace (if it exists)
       commit_sha, workspace_branch, namespace, full_module_name, repo_url, version = response.data(:commit_sha, :workspace_branch, :module_namespace, :full_module_name, :repo_url, :version)
       service_module_name ||= response.data(:module_name)
+      merge_warning_message = response.data(:merge_warning_message)
       opts = { :local_branch => workspace_branch, :namespace => namespace }
 
       if (mode == :update) || local_clone_dir_exists
@@ -99,6 +100,8 @@ module DTK::Client
       return response unless response.ok?
 
       DTK::Client::OsUtil.print("New assembly template '#{assembly_template_name}' created in service module '#{full_module_name}'.", :yellow) if mode == :create
+      DTK::Client::OsUtil.print(merge_warning_message, :yellow) if merge_warning_message
+
       response
     end
 
@@ -141,8 +144,8 @@ module DTK::Client
       response = post rest_url("assembly/ad_hoc_action_execute"), post_body
       return response unless response.ok?
 
-      task_status_stream(assembly_or_workspace_id)
-      Response::Ok.new()
+      task_status_stream(assembly_or_workspace_id, :ignore_stage_level_info => true)
+      nil
     end
 
     def converge_aux(context_params,opts={})
@@ -420,8 +423,13 @@ module DTK::Client
         end
       response = task_status_aux(mode,assembly_or_workspace_id,:assembly,:summarize => options.summarize?)
 
-      # TODO: Hack which is necessery for the specific problem (DTK-725), we don't get proper error message when there is a timeout doing converge
-      unless mode == :stream
+      if mode == :stream
+        #no response if ok
+        response unless response.ok?
+      else
+        # TODO: Hack which is necessery for the specific problem (DTK-725), 
+        #       we don't get proper error message when there is a timeout doing converge
+        
         unless response == true
           return response.merge("data" => [{ "errors" => {"message" => "Task does not exist for workspace."}}]) unless response["data"]
           response["data"].each do |data|
@@ -430,9 +438,8 @@ module DTK::Client
             end
           end
         end
+        response
       end
-
-      response
     end
 
     def task_action_detail_aw_aux(context_params)

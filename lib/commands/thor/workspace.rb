@@ -1,10 +1,10 @@
 require 'rest_client'
 require 'json'
 require 'colorize'
-dtk_require_from_base("dtk_logger")
-dtk_require_from_base("util/os_util")
-dtk_require_from_base("command_helper")
-dtk_require_common_commands('thor/task_status')
+dtk_require_from_base('dtk_logger')
+dtk_require_from_base('util/os_util')
+dtk_require_from_base('command_helper')
+dtk_require_from_base('task_status')
 dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/assembly_workspace')
@@ -573,12 +573,22 @@ module DTK::Client
       tail_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID task-status [--wait] [--summarize]", "Get the task status of the running or last running workspace task."
-    method_option :wait, :type => :boolean, :default => false
+    #desc "WORKSPACE-NAME/ID task-status [--wait] [--summarize]", "Get the task status of the running or last running workspace task."
+    desc "WORKSPACE-NAME/ID task-status [--mode MODE] [--summarize]", "Get the task status of the running or last running workspace task."
+    method_option "mode",:aliases => "-m" ,
+      :type => :string,
+      :banner => "MODE",
+      :desc => "Mode in which task status display; one of [stream,snapshot,refresh]; default is 'snapshot'"
     method_option :summarize, :type => :boolean, :default => false, :aliases => '-s'
+    # TODO: leaving --wait in for backwards compatability  
+    method_option :wait, :type => :boolean, :default => false
+
     def task_status(context_params)
       task_status_aw_aux(context_params)
     end
+
+
+
 
     desc "WORKSPACE-NAME/ID task-action-detail", "Get the task info of the running or last running workspace task."
     def task_action_detail(context_params)
