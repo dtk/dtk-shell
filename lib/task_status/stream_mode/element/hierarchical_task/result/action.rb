@@ -5,11 +5,17 @@ module DTK::Client; class TaskStatus::StreamMode::Element::HierarchicalTask
         super
         @action_results = hash['action_results'] || [] 
       end
+
+      attr_reader :action_results
       
       def render_results(results_per_node)
-        render_line 'RESULTS:'
-        render_empty_line
-        results_per_node.each { |result| result.render }
+        if any_results?(results_per_node)
+          render_line 'RESULTS:'
+          render_empty_line
+          results_per_node.each { |result| result.render }
+        else
+          render_errors(results_per_node)
+        end
       end
 
       def render
@@ -21,9 +27,13 @@ module DTK::Client; class TaskStatus::StreamMode::Element::HierarchicalTask
         end
         render_empty_line
       end
-      
+
       private
-      
+
+      def any_results?(results_per_node)
+        !!results_per_node.find { |results| !results.action_results.empty? }
+      end
+
       def render_action_result_lines(action_result, opts = {})
         stdout = action_result['stdout']
         stderr = action_result['stderr']
