@@ -1,5 +1,6 @@
 dtk_require_from_base('task_status')
 dtk_require_common_commands('thor/set_required_attributes')
+dtk_require_common_commands('thor/assembly_workspace')
 
 module DTK::Client
   class Node < CommandBaseThor
