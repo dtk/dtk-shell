@@ -5,7 +5,7 @@ $shell_mode = false
 
 require File.expand_path('../lib/client', File.dirname(__FILE__))
 require File.expand_path('../lib/configurator', File.dirname(__FILE__))
-require File.expand_path('../lib/parser/adapters/thor',    File.dirname(__FILE__))
+require File.expand_path('../lib/parser/adapters/thor', File.dirname(__FILE__))
 require File.expand_path('../lib/shell/context', File.dirname(__FILE__))
 require File.expand_path('../lib/shell/domain/context_entity', File.dirname(__FILE__))
 require File.expand_path('../lib/shell/domain/active_context', File.dirname(__FILE__))
@@ -16,6 +16,17 @@ require File.expand_path('../lib/commands/thor/account', File.dirname(__FILE__))
 require File.expand_path('../lib/shell/parse_monkey_patch', File.dirname(__FILE__))
 require File.expand_path('../lib/shell/help_monkey_patch', File.dirname(__FILE__))
 require File.expand_path('../lib/execute/cli_pure/cli_rerouter', File.dirname(__FILE__))
+
+paths = []
+paths << File.expand_path('../lib/commands/thor/*.rb', File.dirname(__FILE__))
+paths << File.expand_path('../lib/commands/common/thor/*.rb', File.dirname(__FILE__))
+
+paths.each do |path|
+  Dir[path].each do |thor_class_file|
+    require thor_class_file
+  end
+end
+
 
 
 require 'shellwords'

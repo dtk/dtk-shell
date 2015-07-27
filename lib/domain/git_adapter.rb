@@ -1,4 +1,8 @@
 require 'git'
+# monkey patch
+class Git::Lib
+  public :command
+end
 
 module DTK
   module Client
@@ -17,6 +21,10 @@ module DTK
 #       If we want to log GIT interaction
 #       @git_repo = Git.init(repo_dir, :log => Logger.new(STDOUT))
         @local_branch_name = local_branch_name
+      end
+
+      def command(*args, &block)
+        @git_repo.lib.command(*args, &block)
       end
 
       def changed?

@@ -7,7 +7,14 @@ module DTK::Client
     GIT_LOG_LOCATION = File.expand_path('../../../lib/git-logs/git.log', File.dirname(__FILE__))
     PROJECT_ROOT     = File.expand_path('../../../', File.dirname(__FILE__))
 
-    desc "upload-agent PATH-TO-AGENT[.rb,.dll] NODE-ID-PATTERN", "Uploads agent and ddl file to requested nodes, pattern is regexp for filtering node ids." 
+
+    desc "monitor", "Test monitoring end point on DTK Server"
+    def monitor(context_params)
+      response = post rest_url("monitoring_item/check_idle")
+      response
+    end
+
+    desc "upload-agent PATH-TO-AGENT[.rb,.dll] NODE-ID-PATTERN", "Uploads agent and ddl file to requested nodes, pattern is regexp for filtering node ids."
     def upload_agent(context_params)
       agent, node_pattern = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
 
@@ -20,7 +27,7 @@ module DTK::Client
 
       # if it doesn't contain extension upload both *.rb and *.ddl
       files = (agent.match(MATCH_FILE_NAME) ? [agent] : ["#{agent}.rb","#{agent}.ddl"])
-    
+
     	# read require files and encode them
       request_body = {}
     	files.each do |file_name|
@@ -98,7 +105,7 @@ module DTK::Client
           puts File.open(fname).readlines
           DTK::Client::OsUtil.print("*"*header.size, :yellow)
         end
-      end  
+      end
 
     end
   end
