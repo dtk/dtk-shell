@@ -77,6 +77,14 @@ module DTK::Client
             :endpoint => "assembly",
             :url => "assembly/info_about",
             :opts => {:subtype=>"instance", :about=>"modules"}
+          },
+          :workflow_info => {
+            :endpoint => "assembly",
+            :url => "assembly/task_action_list"
+          },
+          :execute_workflow => {
+            :endpoint => "assembly",
+            :url => "assembly/task_action_list"
           }
         }
       }
