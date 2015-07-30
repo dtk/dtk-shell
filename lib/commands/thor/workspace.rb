@@ -508,8 +508,8 @@ module DTK::Client
       workflow_info_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID workflow-list", "List the workflows associated with the workspace."
-    def workflow_list(context_params)
+    desc "WORKSPACE-NAME/ID list-workflows", "List the workflows associated with the workspace."
+    def list_workflows(context_params)
       workflow_list_aux(context_params)
     end
 

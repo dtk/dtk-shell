@@ -96,6 +96,10 @@ module DTK::Client
             :endpoint => "assembly",
             :url => "assembly/info_about",
             :opts => {:subtype=>"instance", :about=>"modules"}
+          },
+          :workflow_info => {
+            :endpoint => "assembly",
+            :url => "assembly/task_action_list"
           }
         }
       }
@@ -434,8 +438,8 @@ TODO: will put in dot release and will rename to 'extend'
       workflow_info_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID workflow-list", "List the workflows associated with the service."
-    def workflow_list(context_params)
+    desc "SERVICE-NAME/ID list-workflows", "List the workflows associated with the service."
+    def list_workflows(context_params)
       workflow_list_aux(context_params)
     end
 
