@@ -116,8 +116,10 @@ module DTK::Client
       end
 
       context_params.forward_options({ :json_return => true })
+      # TODO: should call something taht just returnsinfo about nodes, rather than info_aux
+      #       also info that comes back shoudl indicate whether a node group and if so error message is that
+      #       ssh can be called on node group
       response = info_aux(context_params)
-
       if response.ok?
         node_info = {}
         response.data['nodes'].each do |node|
