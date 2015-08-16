@@ -132,7 +132,7 @@ module DTK
           warning_message = restricted[:message]
           node_specific = restricted[:node_specific]
 
-          DTK::Client::OsUtil.print(warning_message, :yellow) if warning_message
+          DTK::Client::OsUtil.print_warning(warning_messag) if warning_message
           # end
 
           # Validate and change context

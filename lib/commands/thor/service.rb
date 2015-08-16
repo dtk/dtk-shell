@@ -101,6 +101,11 @@ module DTK::Client
             :endpoint => "assembly",
             :url => "assembly/task_action_list"
           },
+          :exec => {
+            :endpoint => "assembly",
+            :url => "assembly/task_action_list"
+          },
+          # TODO: DEPRECATE execute_workflow 
           :execute_workflow => {
             :endpoint => "assembly",
             :url => "assembly/task_action_list"
@@ -255,14 +260,22 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "SERVICE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow."
+
+    desc "SERVICE-NAME/ID exec SERVICE-LEVEL-ACTION [PARAMS]", "Execute a service level action"
+    def exec(context_params)
+      converge_aux(context_params)
+    end
+    # TODO: DEPRECATE: keeping around for backward compatibiity but will be deprecating execute-workflow
+    desc "SERVICE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow.", :hide => true
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     def execute_workflow(context_params)
+      OsUtil.print_deprecate_message("Command 'execute-workflow' will be deprecated; use 'exec' instead")
       converge(context_params)
     end
+
     desc "SERVICE-NAME/ID converge [-m COMMIT-MSG]", "Converge service instance."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
@@ -479,7 +492,7 @@ TODO: will put in dot release and will rename to 'extend'
       rest_endpoint = "assembly/info_about"
 
       if context_params.is_last_command_eql_to?(:attribute)
-        raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
+        raise DtkError, "Not supported command for current context level." if attribute_id
         about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
       elsif context_params.is_last_command_eql_to?(:component)
         if component_id
@@ -618,7 +631,7 @@ TODO: will put in dot release and will rename to 'extend'
       @@invalidate_map << :workspace_node
 
       message = "Created node '#{response.data["display_name"]}'."
-      DTK::Client::OsUtil.print(message, :yellow)
+      OsUtil.print(message, :yellow)
     end
 
     desc "SERVICE-NAME/ID create-node-group ^^NODE-GROUP-NAME NODE-TEMPLATE [-n CARDINALITY]", "Add (stage) a new node group in the service."
@@ -635,7 +648,7 @@ TODO: will put in dot release and will rename to 'extend'
       @@invalidate_map << :workspace_node
 
       message = "Created node group '#{response.data["display_name"]}'."
-      DTK::Client::OsUtil.print(message, :yellow)
+      OsUtil.print(message, :yellow)
     end
 
     desc "SERVICE-NAME/ID link-components TARGET-CMP-NAME SOURCE-CMP-NAME [DEPENDENCY-NAME]","Link the target component to the source component."

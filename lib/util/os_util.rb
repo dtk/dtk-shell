@@ -241,6 +241,14 @@ module DTK
           puts colorize(message, color)
         end
 
+        def print_warning(message)
+          print(message, :yellow)
+        end
+
+        def print_deprecate_message(message)
+          print_warning(message)
+        end
+
         # Public block, method will suspend STDOUT, STDERR in body of it
         #
         # Example
