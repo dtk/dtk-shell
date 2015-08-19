@@ -15,7 +15,7 @@ module DTK::Client; class TaskStatus::StreamMode::Element::HierarchicalTask
         else
           render_line 'COMPONENTS:'
           steps.each do |step| 
-            @component_names.each do |component_name|
+            step.component_names.each do |component_name|
               render_line  step.component_term(component_name), :tabs => 1
             end
           end
