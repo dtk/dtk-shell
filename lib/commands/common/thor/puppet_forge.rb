@@ -11,7 +11,7 @@ module DTK::Client
         :module_namespace?   => namespace
       }
 
-      raise DtkError, "Puppet forge module name should be in format USERNAME-NAME" unless pf_module_name.match(NAME_REGEX)
+      raise DtkError, "Puppet forge module name should be in format NAMESPACE-MODULENAME" unless pf_module_name.match(NAME_REGEX)
 
       response = poller_response do
         post rest_url("component_module/install_puppet_forge_modules"), PostBody.new(post_body_hash)
