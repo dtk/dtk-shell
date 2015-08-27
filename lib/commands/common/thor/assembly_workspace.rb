@@ -541,7 +541,6 @@ module DTK::Client
         assembly_or_workspace_id, dep_cmp, antec_cmp, dependency_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :option_1!, :option_2!, :option_3], method_argument_names)
       end
 
-      antec_cmp = "assembly_wide/#{antec_cmp}" unless antec_cmp.include?('/')
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :input_component_id => dep_cmp,
@@ -895,6 +894,7 @@ module DTK::Client
           node_id, component_id = component_id.split('/')
           node_name = node_id
         else
+          # TODO: update server so dont have to pass in 'assembly_wide'
           node_id = node_name = 'assembly_wide'
         end
       end
