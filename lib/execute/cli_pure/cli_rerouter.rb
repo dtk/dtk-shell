@@ -6,6 +6,9 @@ module DTK
           { :regex => /service-module (?<service_module_id>[\w:\-]+) (?<method_name>stage) (?<assembly_id>[\w:\-]+) (?<instance_name>[\w:\-\.\:]+)/, :entity => 'assembly' },
           { :regex => /service-module (?<service_module_id>[\w:\-]+) (?<method_name>deploy) (?<assembly_id>[\w:\-]+) (?<instance_name>[\w:\-\.\:]+)/ }
         ],
+      :component_module => [
+          { :regex => /component-module (?<component_module_id>[\w:\-]+) (?<method_name>clone)/ }
+        ],
       :service        => [
           { :regex => /service (?<service_id>[\w:\-]+) (?<method_name>set-attribute) (?<name>[\w:\-\.\:]+) (?<value>[\w:\-\.\:]+)/ },
           { :regex => /service (?<service_id>[\w:\-]+) (?<method_name>converge)/ },

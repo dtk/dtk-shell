@@ -336,7 +336,9 @@ module DTK::Client
     # version_method_option
     desc "COMPONENT-MODULE-NAME/ID clone [-n]", "Locally clone component module and component files. Use -n to skip edit prompt"
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
-    def clone(context_params, internal_trigger=false)
+    # DEBUG SNIPPET >>> REMOVE <<<
+    # REMOVE TRIGGER!!!!
+    def clone(context_params, internal_trigger=true)
       clone_module_aux(context_params, internal_trigger)
     end
 

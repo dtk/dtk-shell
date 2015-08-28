@@ -1,22 +1,20 @@
 require 'base64'
+dtk_require_common_commands('thor/action_result_handler')
 
 module DTK::Client
   class Developer < CommandBaseThor
+
+    no_tasks do
+      include ActionResultHandler
+    end
 
     MATCH_FILE_NAME  = /[a-zA-Z0-9_]+\.[a-zA-Z]+$/
     GIT_LOG_LOCATION = File.expand_path('../../../lib/git-logs/git.log', File.dirname(__FILE__))
     PROJECT_ROOT     = File.expand_path('../../../', File.dirname(__FILE__))
 
-
-    desc "monitor", "Test monitoring end point on DTK Server"
-    def monitor(context_params)
-      response = post rest_url("monitoring_item/check_idle")
-      response
-    end
-
     desc "upload-agent PATH-TO-AGENT[.rb,.dll] NODE-ID-PATTERN", "Uploads agent and ddl file to requested nodes, pattern is regexp for filtering node ids."
     def upload_agent(context_params)
-      agent, node_pattern = context_params.retrieve_arguments([:option_1!, :option_2!],method_argument_names)
+      agent, node_pattern = context_params.retrieve_arguments([:option_1!, :option_2!], method_argument_names)
 
       nodes = post rest_url("node/list"), { :is_list_all => true }
 
@@ -41,6 +39,22 @@ module DTK::Client
     	response = post_file rest_url("developer/inject_agent"), { :agent_files => request_body, :node_pattern => node_pattern, :node_list => ids }
       puts "Agent uploaded successfully!";return if response.ok?
       return response
+    end
+
+    # run-agent haris1 dev_manager inject_agent "{ 'action_agent_branch': 'master', 'action_agent_url': 'git@github.com:rich-reactor8/dtk-action-agent.git' }"
+    desc "run-agent SERVICE-NAME AGENT-NAME AGENT-METHOD PARAMS", "Updates DTK Action Agent to provided branch, example: dev_manager inject_agent \"{ 'action_agent_branch': 'master', 'action_agent_url': 'url' }\""
+    def run_agent(context_params)
+      service_name, agent_name, agent_method, action_params = context_params.retrieve_arguments([:option_1!, :option_2!, :option_3!, :option_4], method_argument_names)
+
+      action_params ||= "{}"
+      action_params.gsub!("'",'"')
+
+      response = post_file rest_url("developer/run_agent"), { :service_name => service_name, :agent_name => agent_name, :agent_method => agent_method, :agent_params => action_params }
+
+      action_results_id = response.data(:action_results_id)
+      print_action_results(action_results_id)
+
+      nil
     end
 
     desc "remove-from-system SERVICE-NAME", "Removes objects associated with service, but does not destroy target isnatnces"
