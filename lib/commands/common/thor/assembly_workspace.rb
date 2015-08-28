@@ -322,7 +322,7 @@ module DTK::Client
       return response unless response.ok?
       return Response::Ok.new() unless response.data(:any_updates)
       if dsl_parsing_errors = response.data(:dsl_parsing_errors)
-        error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors using 'edit' command from module context and invoke promote-module-updates again.\n"
+        error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors using 'edit' command from referenced service modules and then invoke 'push-component-module-updates' again from this context.\n"
         OsUtil.print(error_message, :red)
         return Response::NoOp.new()
       end
@@ -348,6 +348,7 @@ module DTK::Client
       return response unless response.ok?
 
       if dsl_parsing_errors = response.data(:dsl_parsing_errors)
+        # TODO: DTK-2206; think error message below is incorrect
         error_message = "Module '#{component_module_name}' parsing errors found:\n#{dsl_parsing_errors}\nYou can fix errors using 'edit' command from module context and invoke promote-module-updates again.\n"
         OsUtil.print(error_message, :red)
         return Response::Error.new()

@@ -354,12 +354,6 @@ module DTK::Client
       edit_attributes_aux(context_params)
     end
 
-    # desc "ASSEMBLY-NAME/ID promote-module-updates COMPONENT-MODULE-NAME [--force]", "Promotes changes made to component module in assembly to base component module"
-    # method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-    # def promote_module_updates(context_params)
-    #   promote_module_updates_aux(context_params)
-    # end
-
 =begin
 TODO: will put in dot release and will rename to 'extend'
     desc "ASSEMBLY-NAME/ID add EXTENSION-TYPE [-n COUNT]", "Adds a sub assembly template to the assembly"
