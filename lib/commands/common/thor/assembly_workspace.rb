@@ -344,7 +344,7 @@ module DTK::Client
         :module_type => 'component_module'
       }
       post_body.merge!(:force => true) if options.force?
-      response = post(rest_url("assembly/get_component_module_info"),post_body)
+      response = post(rest_url("assembly/prepare_for_pull_from_base"),post_body)
       return response unless response.ok?
 
       if dsl_parsing_errors = response.data(:dsl_parsing_errors)
