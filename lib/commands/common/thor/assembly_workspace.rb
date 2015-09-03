@@ -99,8 +99,8 @@ module DTK::Client
       end
       return response unless response.ok?
 
-      DTK::Client::OsUtil.print("New assembly template '#{assembly_template_name}' created in service module '#{full_module_name}'.", :yellow) if mode == :create
-      DTK::Client::OsUtil.print(merge_warning_message, :yellow) if merge_warning_message
+      OsUtil.print("New assembly template '#{assembly_template_name}' created in service module '#{full_module_name}'.", :yellow) if mode == :create
+      OsUtil.print(merge_warning_message, :yellow) if merge_warning_message
 
       response
     end
@@ -158,7 +158,7 @@ module DTK::Client
       return response unless response.ok?
       if response.data and response.data.size > 0
         error_message = "The following violations were found; they must be corrected before workspace can be converged"
-        DTK::Client::OsUtil.print(error_message, :red)
+        OsUtil.print(error_message, :red)
         return response.render_table(:violation)
       end
 
@@ -179,9 +179,14 @@ module DTK::Client
           return response unless response.ok?
         end
       end
+      unless task_id = response.data(:task_id)
+        if message = response.data(:message)
+          OsUtil.print(message, :yellow)
+        end
+        return Response::Ok.new()
+      end
 
       # execute task
-      task_id = response.data(:task_id)
       response = post rest_url("task/execute"), "task_id" => task_id
       return response unless response.ok?
 
@@ -713,10 +718,10 @@ module DTK::Client
         :pattern => pattern
       }
 
-      raise DTK::Client::DtkValidationError, 'Please use only component-attribute (-c) or node-attribute (-n) option' if options.component_attribute? && options.node_attribute?
+      raise DtkValidationError, 'Please use only component-attribute (-c) or node-attribute (-n) option' if options.component_attribute? && options.node_attribute?
 
       # if try to set service instance attribute but using -n option to sepicify it is node attribute, say that node attribute does not exist
-      raise DTK::Client::DtkError, "[ERROR] Node attribute '#{pattern}' does not exist" if options.node_attribute? && !pattern.include?('/')
+      raise DtkError, "[ERROR] Node attribute '#{pattern}' does not exist" if options.node_attribute? && !pattern.include?('/')
 
       # make sure -c and -n are used only with node or cmp attributes directly on service instance
       validate_service_instance_node_or_cmp_attrs(pattern, options) if options.component_attribute? || options.node_attribute?
@@ -732,7 +737,7 @@ module DTK::Client
         if r_data.is_a?(Hash) && (ambiguous = r_data['ambiguous'])
           unless ambiguous.empty?
             msg = "It is ambiguous whether '#{ambiguous.join(', ')}' #{ambiguous.size == 1 ? 'is' : 'are'} node or component attribute(s). Run set-attribute again with one of options -c [--component-attribute] or -n [--node-attribute]."
-            raise DTK::Client::DtkError, msg
+            raise DtkError, msg
           end
         end
       end
@@ -924,7 +929,7 @@ module DTK::Client
       }
 
       response = post(rest_url("assembly/initiate_get_netstats"),post_body)
-      raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
+      raise DtkValidationError, response.data(:errors) if response.data(:errors)
       return response unless response.ok?
 
       action_results_id = response.data(:action_results_id)
@@ -965,7 +970,7 @@ module DTK::Client
         begin
           execute_test_tries = Integer(options['timeout'])
         rescue
-          raise DTK::Client::DtkValidationError, "Timeout value is not valid"
+          raise DtkValidationError, "Timeout value is not valid"
         end
       end
 
@@ -977,7 +982,7 @@ module DTK::Client
 
       response = post(rest_url("assembly/initiate_execute_tests"),post_body)
 
-      raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
+      raise DtkValidationError, response.data(:errors) if response.data(:errors)
       return response unless response.ok?
 
       action_results_id = response.data(:action_results_id)
@@ -1012,9 +1017,9 @@ module DTK::Client
       end
 
       if (response.data(:results).empty? && options['timeout'].nil?)
-        raise DTK::Client::DtkValidationError, "Could not finish execution of tests in default timeframe (#{execute_test_tries} seconds). Try again with passing --timeout TIMEOUT parameter"
+        raise DtkValidationError, "Could not finish execution of tests in default timeframe (#{execute_test_tries} seconds). Try again with passing --timeout TIMEOUT parameter"
       elsif (response.data(:results).empty? && !options['timeout'].nil?)
-        raise DTK::Client::DtkValidationError, "Could not finish execution of tests in set timeframe (#{execute_test_tries} seconds). Try again with increasing --timeout TIMEOUT parameter"
+        raise DtkValidationError, "Could not finish execution of tests in set timeframe (#{execute_test_tries} seconds). Try again with increasing --timeout TIMEOUT parameter"
       else
         response.print_error_table = true
         response.set_data(*response.data(:results))
@@ -1034,7 +1039,7 @@ module DTK::Client
       }
 
       response = post(rest_url("assembly/initiate_get_ps"),post_body)
-      raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
+      raise DtkValidationError, response.data(:errors) if response.data(:errors)
       return response unless response.ok?
 
       action_results_id = response.data(:action_results_id)
@@ -1122,10 +1127,10 @@ module DTK::Client
             }
 
             response = post rest_url("assembly/initiate_get_log"), post_body
-            raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
+            raise DtkValidationError, response.data(:errors) if response.data(:errors)
 
             unless response.ok?
-              raise DTK::Client::DtkError, "Error while getting log from server, there was no successful response."
+              raise DtkError, "Error while getting log from server, there was no successful response."
             end
 
             action_results_id = response.data(:action_results_id)
@@ -1142,7 +1147,7 @@ module DTK::Client
               # server has found an error
               unless response.data(:results).nil?
                 if response.data(:results)['error']
-                  raise DTK::Client::DtkError, response.data(:results)['error']
+                  raise DtkError, response.data(:results)['error']
                 end
               end
 
@@ -1156,7 +1161,7 @@ module DTK::Client
               response = response.data(:results).first[1]
 
               unless response["error"].nil?
-                raise DTK::Client::DtkError, response["error"]
+                raise DtkError, response["error"]
               end
 
               # removing invalid chars from log
@@ -1203,7 +1208,7 @@ module DTK::Client
         t2.join()
       rescue Interrupt
         t2.exit()
-      rescue DTK::Client::DtkError => e
+      rescue DtkError => e
         t2.exit()
         raise e
       end
@@ -1230,10 +1235,10 @@ module DTK::Client
         }
 
         response = post rest_url("assembly/initiate_grep"), post_body
-        raise DTK::Client::DtkValidationError, response.data(:errors) if response.data(:errors)
+        raise DtkValidationError, response.data(:errors) if response.data(:errors)
 
         unless response.ok?
-          raise DTK::Client::DtkError, "Error while getting log from server. Message: #{response['errors'][0]['message'].nil? ? 'There was no successful response.' : response['errors'].first['message']}"
+          raise DtkError, "Error while getting log from server. Message: #{response['errors'][0]['message'].nil? ? 'There was no successful response.' : response['errors'].first['message']}"
         end
 
         action_results_id = response.data(:action_results_id)
@@ -1250,7 +1255,7 @@ module DTK::Client
           # server has found an error
           unless response.data(:results).nil?
             if response.data(:results)['error']
-              raise DTK::Client::DtkError, response.data(:results)['error']
+              raise DtkError, response.data(:results)['error']
             end
           end
 
@@ -1259,14 +1264,14 @@ module DTK::Client
           sleep(1)
         end
 
-        raise DTK::Client::DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
+        raise DtkError, "Error while logging there was no successful response after 3 tries." unless response.data(:is_complete)
 
         console_width = ENV["COLUMNS"].to_i
 
         response.data(:results).each do |r|
-          raise DTK::Client::DtkError, r[1]["error"] if r[1]["error"]
+          raise DtkError, r[1]["error"] if r[1]["error"]
 
-          message_colorized = DTK::Client::OsUtil.colorize(r[0].inspect, :green)
+          message_colorized = OsUtil.colorize(r[0].inspect, :green)
 
           if r[1]["output"].empty?
             puts "NODE-ID #{message_colorized} - Log does not contain data that matches you pattern #{grep_pattern}!"
@@ -1280,7 +1285,7 @@ module DTK::Client
             puts r[1]["output"].gsub(/`/,'\'')
           end
         end
-      rescue DTK::Client::DtkError => e
+      rescue DtkError => e
         raise e
       end
     end
@@ -1294,7 +1299,7 @@ module DTK::Client
       # we expect action result ID
       response = post rest_url("assembly/start"), post_body
       return response unless response.ok?()
-      raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
+      raise DtkValidationError, response.data(:errors).first if response.data(:errors)
 
       task_id = response.data(:task_id)
       post rest_url("task/execute"), "task_id" => task_id
@@ -1308,7 +1313,7 @@ module DTK::Client
 
       response = post rest_url("assembly/stop"), post_body
       return response unless response.ok?()
-      raise DTK::Client::DtkValidationError, response.data(:errors).first if response.data(:errors)
+      raise DtkValidationError, response.data(:errors).first if response.data(:errors)
 
       response
     end
@@ -1373,7 +1378,7 @@ module DTK::Client
       rest_endpoint = "assembly/info_about"
 
       if context_params.is_last_command_eql_to?(:attribute)
-        raise DTK::Client::DtkError, "Not supported command for current context level." if attribute_id
+        raise DtkError, "Not supported command for current context level." if attribute_id
         about, data_type = get_type_and_raise_error_if_invalid(about, "attributes", ["attributes"])
       elsif context_params.is_last_command_eql_to?(:component)
         if component_id
@@ -1428,9 +1433,9 @@ module DTK::Client
       split_pattern = pattern.split('/')
       return if split_pattern.size == 2
       if options.node_attribute?
-        raise DTK::Client::DtkError, 'Please use -n option only with service instance node attributes (node_name/attribute_name)'
+        raise DtkError, 'Please use -n option only with service instance node attributes (node_name/attribute_name)'
       elsif options.component_attribute?
-        raise DTK::Client::DtkError, 'Please use -c option only with service instance component attributes (cmp_name/attribute_name)'
+        raise DtkError, 'Please use -c option only with service instance component attributes (cmp_name/attribute_name)'
       end
     end
   end
