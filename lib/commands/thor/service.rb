@@ -260,10 +260,12 @@ module DTK::Client
       Response::Ok.new()
     end
 
-
-    desc "SERVICE-NAME/ID exec SERVICE-LEVEL-ACTION [PARAMS]", "Execute a service level action"
+    desc "SERVICE-NAME/ID exec SERVICE-LEVEL-ACTION [PARAMS] [--stream-results]", "Execute a service level action"
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
     def exec(context_params)
-      converge_aux(context_params)
+      opts = {}
+      opts.merge!(:mode => :stream) if context_params.pure_cli_mode or options['stream-results']
+      converge_aux(context_params, opts)
     end
     # TODO: DEPRECATE: keeping around for backward compatibiity but will be deprecating execute-workflow
     desc "SERVICE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow.", :hide => true
@@ -276,17 +278,16 @@ module DTK::Client
       converge(context_params)
     end
 
-    desc "SERVICE-NAME/ID converge [-m COMMIT-MSG]", "Converge service instance."
+    desc "SERVICE-NAME/ID converge [-m COMMIT-MSG] [--stream-results]", "Converge service instance."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
     def converge(context_params)
-      opts = Hash.new
-      if context_params.pure_cli_mode
-        opts.merge!(:mode => :stream)
-      end
-      converge_aux(context_params,opts)
+      opts = {}
+      opts.merge!(:mode => :stream) if context_params.pure_cli_mode or options['stream-results']
+      converge_aux(context_params, opts)
     end
 
     desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]", "Converge the component or execute tha action on the component."

@@ -194,9 +194,12 @@ module DTK::Client
     #  clear_tasks_aux(context_params)
     #end
 
-    desc "WORKSPACE-NAME/ID exec SERVICE-LEVEL-ACTION [PARAMS]", "Execute a service level action"
+    desc "WORKSPACE-NAME/ID exec SERVICE-LEVEL-ACTION [PARAMS] [--stream-results]", "Execute a service level action"
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
     def exec(context_params)
-      converge_aux(context_params)
+      opts = {}
+      opts.merge!(:mode => :stream) if context_params.pure_cli_mode or options['stream-results']
+      converge_aux(context_params, opts)
     end
 
     # TODO: DEPRECATE: keeping around for backward compatibiity but will be deprecating execute-workflow
@@ -211,13 +214,16 @@ module DTK::Client
     end
 
 
-    desc "WORKSPACE-NAME/ID converge [-m COMMIT-MSG]", "Converge workspace instance."
+    desc "WORKSPACE-NAME/ID converge [-m COMMIT-MSG] [--stream-results]", "Converge workspace instance."
     method_option "commit_msg",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
     def converge(context_params)
-      converge_aux(context_params)
+      opts = {}
+      opts.merge!(:mode => :stream) if context_params.pure_cli_mode or options['stream-results']
+      converge_aux(context_params, opts)
     end
 
     desc "WORKSPACE-NAME/ID push-component-module-updates COMPONENT-MODULE-NAME [--force]", "Push changes made to a component module in the workspace to its base component module."
