@@ -541,8 +541,9 @@ module DTK::Client
 
     # REMOTE INTERACTION
 
-    desc "HIDE_FROM_BASE push-remote [REMOTE-NAME] [--force]", "Push local changes to remote git repository"
+    desc "HIDE_FROM_BASE push-remote [REMOTE-NAME] [--force] [--docs]", "Push local changes to remote git repository"
     method_option :force, :type => :boolean, :default => false
+    method_option :docs, :type => :boolean, :default => false, :aliases => '-d'
     def push_remote(context_params)
       push_remote_module_aux(context_params)
     end

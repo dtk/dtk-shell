@@ -214,7 +214,7 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
-    desc "TEST-MODULE-NAME/ID push", "Push changes from local copy of test module to server"
+    desc "TEST-MODULE-NAME/ID push [--force] [--docs]", "Push changes from local copy of test module to server"
     version_method_option
     method_option "message",:aliases => "-m" ,
       :type => :string,
@@ -222,6 +222,8 @@ module DTK::Client
       :desc => "Commit message"
     # hidden option for dev
     method_option 'force-parse', :aliases => '-f', :type => :boolean, :default => false
+    method_option :force, :type => :boolean, :default => false
+    method_option :docs, :type => :boolean, :default => false, :aliases => '-d'
     def push(context_params, internal_trigger=false)
       push_module_aux(context_params, internal_trigger)
     end

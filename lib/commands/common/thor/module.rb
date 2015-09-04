@@ -167,6 +167,7 @@ module DTK::Client
       git_import = opts[:git_import]
       opts.merge!(:update_from_includes => true, :force_parse => true) unless git_import
       opts.merge!(:force => options.force?)
+      opts.merge!(:generate_docs => options.docs?)
 
       reparse_aux(module_location)
       push_clone_changes_aux(module_type.to_sym, module_id, version, options['message'] || DEFAULT_COMMIT_MSG, internal_trigger, opts)

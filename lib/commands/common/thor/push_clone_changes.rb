@@ -40,6 +40,7 @@ module DTK::Client
       post_body.merge!(:current_branch_sha => opts[:current_branch_sha]) if opts[:current_branch_sha]
       post_body.merge!(:force => opts[:force]) if opts[:force]
       post_body.merge!(:task_action => opts[:task_action]) if opts[:task_action]
+      post_body.merge!(:generate_docs => true) if opts[:generate_docs]
 
       if opts[:set_parsed_false]
         post_body.merge!(:set_parsed_false => true)
@@ -62,8 +63,15 @@ module DTK::Client
         end
       end
 
+      has_code_been_pulled = false
+
       # check if server pushed anything that needs to be pulled
       dsl_updated_info = response.data(:dsl_updated_info)
+
+
+      # we need to pull latest code in case docs where generated
+      OsUtil.print("Pulling generated documentation on your local repository ...", :yellow) if opts[:generate_docs]
+
       if dsl_updated_info and !dsl_updated_info.empty?
         if msg = dsl_updated_info["msg"]
           DTK::Client::OsUtil.print(msg,:yellow)
@@ -72,8 +80,16 @@ module DTK::Client
         unless new_commit_sha and new_commit_sha == commit_sha
           opts_pull = opts.merge(:local_branch => branch,:namespace => module_namespace)
           resp = Helper(:git_repo).pull_changes(module_type, module_name, opts_pull)
+          has_code_been_pulled = true
           return resp unless resp.ok?
         end
+      end
+
+      # unless DSL was updated we pull latest code due to changes on documentation
+      if opts[:generate_docs] && !has_code_been_pulled
+        opts_pull = opts.merge(:local_branch => branch,:namespace => module_namespace)
+        resp = Helper(:git_repo).pull_changes(module_type, module_name, opts_pull)
+        return resp unless resp.ok?
       end
 
       if opts[:print_dependencies] || !internal_trigger

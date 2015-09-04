@@ -336,8 +336,6 @@ module DTK::Client
     # version_method_option
     desc "COMPONENT-MODULE-NAME/ID clone [-n]", "Locally clone component module and component files. Use -n to skip edit prompt"
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
-    # DEBUG SNIPPET >>> REMOVE <<<
-    # REMOVE TRIGGER!!!!
     def clone(context_params, internal_trigger=true)
       clone_module_aux(context_params, internal_trigger)
     end
@@ -349,19 +347,18 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
-#    desc "COMPONENT-MODULE-NAME/ID push [-v VERSION] [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
-#    desc "COMPONENT-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy of component module to server"
-    desc "COMPONENT-MODULE-NAME/ID push [--force]", "Push changes from local copy of component module to server"
-     version_method_option
-     method_option "message",:aliases => "-m" ,
-       :type => :string,
-       :banner => "COMMIT-MSG",
-       :desc => "Commit message"
-     # hidden option for dev
-     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-     def push(context_params, internal_trigger=false)
+    desc "COMPONENT-MODULE-NAME/ID push [--force] [--docs]", "Push changes from local copy of component module to server"
+    version_method_option
+    method_option "message",:aliases => "-m" ,
+      :type => :string,
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    # hidden option for dev
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    method_option :docs, :type => :boolean, :default => false, :aliases => '-d'
+    def push(context_params, internal_trigger=false)
       push_module_aux(context_params, internal_trigger)
-     end
+    end
 
 #    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to remote repository (dtkn)."
     desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of component module to remote repository (dtkn)."
