@@ -478,12 +478,13 @@ module DTK::Client
 =end
 
 #    desc "SERVICE-MODULE-NAME/ID push [-m COMMIT-MSG]", "Push changes from local copy to server (origin)."
-    desc "SERVICE-MODULE-NAME/ID push [--force]", "Push changes from local copy to server."
+    desc "SERVICE-MODULE-NAME/ID push [--force] [--docs]", "Push changes from local copy to server."
     method_option "message",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
       :desc => "Commit message"
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    method_option :docs, :type => :boolean, :default => false, :aliases => '-d'
     def push(context_params, internal_trigger=false)
       push_module_aux(context_params, internal_trigger)
     end
@@ -541,9 +542,8 @@ module DTK::Client
 
     # REMOTE INTERACTION
 
-    desc "HIDE_FROM_BASE push-remote [REMOTE-NAME] [--force] [--docs]", "Push local changes to remote git repository"
+    desc "HIDE_FROM_BASE push-remote [REMOTE-NAME] [--force]", "Push local changes to remote git repository"
     method_option :force, :type => :boolean, :default => false
-    method_option :docs, :type => :boolean, :default => false, :aliases => '-d'
     def push_remote(context_params)
       push_remote_module_aux(context_params)
     end
