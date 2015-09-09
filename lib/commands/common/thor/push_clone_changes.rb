@@ -50,11 +50,16 @@ module DTK::Client
       response = post(rest_url("#{module_type}/update_model_from_clone"), post_body)
       return response unless response.ok?
 
+      external_dependencies = response.data(:external_dependencies)
+      dsl_parse_error       = response.data(:dsl_parse_error)
+      dsl_updated_info      = response.data(:dsl_updated_info)
+      dsl_created_info      = response.data(:dsl_created_info)
+      component_module_refs = response.data(:component_module_refs)
+
       ret = Response::Ok.new()
-      external_dependencies = response.data('external_dependencies')
 
       # check if any errors
-      if dsl_parse_error = response.data(:dsl_parse_error)
+      if dsl_parse_error
         if parsed_external_dependencies = dsl_parse_error['external_dependencies']
           external_dependencies = parsed_external_dependencies
         elsif err_message = ServiceImporter.error_message(module_name, dsl_parse_error)
@@ -66,8 +71,6 @@ module DTK::Client
       has_code_been_pulled = false
 
       # check if server pushed anything that needs to be pulled
-      dsl_updated_info = response.data(:dsl_updated_info)
-
 
       # we need to pull latest code in case docs where generated
       OsUtil.print("Pulling generated documentation on your local repository ...", :yellow) if opts[:generate_docs]
@@ -105,7 +108,6 @@ module DTK::Client
       end
 
       # check if server sent any file that should be added
-      dsl_created_info = response.data(:dsl_created_info)
       if dsl_created_info and !dsl_created_info.empty?
         path = dsl_created_info["path"]
         content = dsl_created_info["content"]
@@ -116,22 +118,23 @@ module DTK::Client
         end
       end
 
-      service_component_refs = response.data['component_module_refs']
-      unless (service_component_refs||{}).empty?
-        print_using_dependencies(service_component_refs)
+      unless (component_module_refs||{}).empty?
+        print_using_dependencies(component_module_refs)
       end
 
       ret
     end
 
     private
+
     def print_using_dependencies(component_refs)
-      component_refs.each do |k, value|
-        namespace = value['namespace_info']
-        name      = value['module_name']
-        puts "Using component module '#{namespace}:#{name}'"
+      # TODO: This just prints out dircetly included modules
+      unless component_refs.empty?
+        puts 'Using component modules:'
+        component_refs.values.map { |r| "#{r['namespace_info']}:#{r['module_name']}" }.sort.each do |name|
+          puts "  #{name}"
+        end
       end
     end
-
   end
 end
