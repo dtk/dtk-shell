@@ -277,6 +277,7 @@ module DTK::Client
 
       assembly_name,service_module_id,service_module_name,version,repo_url,branch,branch_head_sha,edit_file = response.data(:assembly_name,:module_id,:full_module_name,:version,:repo_url,:workspace_branch,:branch_head_sha,:edit_file)
       edit_opts = {
+        :command => 'edit-workflow',
         :automatically_clone => true,
         :assembly_module => {
           :assembly_name => assembly_name,

@@ -7,12 +7,16 @@ module DTK::Client
   #
   module ServiceImporter
     def create_missing_clone_dirs()
-      ::DTK::Client::Configurator.create_missing_clone_dirs
+      Configurator.create_missing_clone_dirs
     end
 
-    def self.error_message(name, errors)
-      #TODO: it is contingent whether solution is to fix errors using 'edit' command
-      "Module '#{name}' has errors:\n  #{errors.to_s}\nYou can fix errors in the DSL by invoking the 'edit' command.\n"
+    def self.error_message(name, errors, opts = {})
+      prefix = ''
+      unless opts[:module_type] == :service_module
+        prefix = "Module '#{name}' has errors:\n  "
+      end
+      command = opts[:command] || 'edit'
+      "#{prefix}#{errors.to_s}\nYou can fix errors by invoking the '#{command}' command.\n"
     end
 
     ##
@@ -42,7 +46,7 @@ module DTK::Client
             if opts[:do_not_raise]
               OsUtil.print("#{response.error_message}", :red)
             else
-              raise DTK::Client::DtkError, response.error_message
+              raise DtkError, response.error_message
             end
           end
         end
@@ -114,7 +118,7 @@ module DTK::Client
 
         ignore_component_error = (new_context_params.get_forwarded_options() || {})[:ignore_component_error] && module_type.eql?('component_module')
         puts(response.data(:does_not_exist) ? response.data(:does_not_exist) : 'Done.')
-        raise DTK::Client::DtkError, response.error_message if !response.ok? && !ignore_component_error
+        raise DtkError, response.error_message if !response.ok? && !ignore_component_error
       end
 
       Response::Ok.new()
@@ -161,7 +165,7 @@ module DTK::Client
 
             begin
               response = ContextRouter.routeTask("component_module", "clone", new_context_params, @conn)
-            rescue DTK::Client::DtkValidationError => e
+            rescue DtkValidationError => e
               # ignoring this
             end
             # puts "Done."
@@ -192,7 +196,7 @@ module DTK::Client
   private
 
     def full_module_name(module_hash)
-      ::DTK::Client::ModuleUtil.join_name(module_hash['name'], module_hash['namespace'])
+      ModuleUtil.join_name(module_hash['name'], module_hash['namespace'])
     end
 
   end
