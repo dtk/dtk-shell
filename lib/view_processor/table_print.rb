@@ -112,7 +112,7 @@ module DTK
 
                   val = value_of(structured_element,'dtk_type')||''
                   # extract e.g. 3.1.1.1 from '3.1.1.1 action' etc.
-                  error_index = "[ #{val.scan( /\d+[,.]\d?[,.]?\d?[,.]?\d?[,.]?\d?/ ).first} ]"
+                  error_index = "[ #{val.scan( /\d+[,.]?\d?[,.]?\d?[,.]?\d?[,.]?\d?/ ).first} ]"
 
                   # original table takes that index
                   evaluated_element.send("#{k}=", error_index)
