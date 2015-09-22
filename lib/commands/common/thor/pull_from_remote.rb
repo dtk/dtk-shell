@@ -34,12 +34,9 @@ module DTK::Client
         unless rsa_pub_key
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
         end
-        # making :merge_if_no_conflict the default (when force not set)
-        merge_if_no_conflict = (opts[:force] ? nil : true)
         opts_perform_locally = remote_params.merge(
           :full_module_name => full_module_name, 
           :force => opts[:force], 
-          :merge_if_no_conflict => merge_if_no_conflict,
           :do_not_raise => opts[:do_not_raise], 
           :ignore_dependency_merge_conflict => opts[:ignore_dependency_merge_conflict]
         )

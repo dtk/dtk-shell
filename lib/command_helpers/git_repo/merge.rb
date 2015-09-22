@@ -1,41 +1,47 @@
 module DTK; module Client; class CommandHelper
   class GitRepo
     class Merge
+
       def initialize(repo, remote_branch_ref, opts = {})
-        @repo = repo
+        @repo              = repo
         @remote_branch_ref = remote_branch_ref
-        @local_branch = repo.local_branch_name
+        @local_branch      = repo.local_branch_name
+        
         # options
         @opts_commit_sha = opts[:commit_sha]
         @opts_force = opts[:force]
-        @opts_merge_if_no_conflict = opts[:merge_if_no_conflict]
         @opts_ignore_dependency_merge_conflict = opts[:ignore_dependency_merge_conflict]
         @opts_full_module_name = opts[:full_module_name]
+        @opts_command = opts[:command]
       end
       
       def self.merge(repo, remote_branch_ref, opts = {})
         new(repo, remote_branch_ref, opts).merge
       end
-      
+
       def merge
         if @opts_force
           merge_force()
+        elsif @opts_ignore_dependency_merge_conflict
+          # TODO: check if this is right
+          custom_message = "Unable to do fast-forward merge. You can go to '#{@opts_full_module_name}' and pull with --force option but all changes will be lost." 
+          response(:custom_message => :custom_message)
         else
           # check if merge needed
           merge_rel = merge_relationship()
           case merge_rel
-            when :equal 
-              response__no_diffs()
-            when :local_ahead, :branchpoint
-              merge_not_fast_forward(merge_rel)
-            when :local_behind
-              merge_simple()
-            else
-              raise Error.new("Unexpected merge_rel (#{merge_rel})")
+           when :equal 
+            response__no_diffs()
+           when :local_ahead, :branchpoint
+            merge_not_fast_forward(merge_rel)
+           when :local_behind
+            merge_simple()
+           else
+            raise Error.new("Unexpected merge_rel (#{merge_rel})")
           end
         end
       end
-      
+
       private
       
       def merge_force
@@ -46,31 +52,23 @@ module DTK; module Client; class CommandHelper
       end
       
       def merge_not_fast_forward(merge_rel)
-        if @opts_merge_if_no_conflict
-          if any_conflicts?
-            msg = 'Unable to do pull-dtkn merge without conflicts. Options are:'
-            msg << " a) command 'pull-dtkn --force', but all local changes will be lost or" 
-            msg << " b) use command 'edit' to get in linux shell and directly use git commands."
-            raise ErrorUsage.new(msg)
-          else
-            if merge_rel == :local_ahead
-              response__no_diffs(:custom_message => 'No op because local module is ahead')
-            else
-              merge_simple()
-            end
-          end
-        elsif @opts_force
-          merge_force()
-        elsif @opts_ignore_dependency_merge_conflict
-          custom_message = "Unable to do fast-forward merge. You can go to '#{@opts_full_module_name}' and pull with --force option but all changes will be lost." 
-          # TODO: should this instead by ErrorUsage.new like below
-          response(:custom_message => :custom_message)
+        if any_conflicts?
+          # TODO: server side is checking for conflicts when doing push-component-modules; so this may be only reached for pull dtkn
+
+          # msg = 'Unable to do pull-dtkn merge without conflicts. Options are:'
+          # msg << " a) command 'pull-dtkn --force', but all local changes will be lost or" 
+          # msg << " b) use command 'edit' to get in linux shell and directly use git commands."
+          err_msg = 'Unable to do fast-forward merge. You can use --force'
+          err_msg << " on #{@opts_command}" if @opts_command
+          err_msg <<  ', but all local changes will be lost on target that is being pushed to.'
+          raise ErrorUsage.new(err_msg)
+        elsif  merge_rel == :local_ahead
+          response__no_diffs(:custom_message => 'No op because local module is ahead')
         else
-          # this will only be reached if opts_merge_if_no_conflict is false 
-          raise ErrorUsage.new('Unable to do fast-forward merge. You can use --force on pull-dtkn, but all local changes will be lost.')
+          merge_simple()
         end
       end
-      
+
       def merge_simple
         # see if any diffs between fetched remote and local branch
         # this has be done after commit
@@ -134,6 +132,7 @@ module DTK; module Client; class CommandHelper
           nil
         end
       end
+
     end
   end
 end; end; end
