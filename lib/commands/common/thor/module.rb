@@ -351,7 +351,7 @@ module DTK::Client
         response = pull_from_remote_aux(module_type.to_sym, module_id, opts)
         return response unless response.ok?
 
-        push_clone_changes_aux(module_type.to_sym, module_id, version, nil, true) if File.directory?(module_location)
+        push_clone_changes_aux(module_type.to_sym, module_id, version, nil, true, {:update_from_includes => true}) if File.directory?(module_location)
         response.skip_render = true
         response
       else
