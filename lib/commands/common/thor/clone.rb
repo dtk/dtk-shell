@@ -11,9 +11,10 @@ module DTK::Client
 
     def clone_aux(module_type, module_id,version,internal_trigger=false,omit_output=false,opts={})
       module_name,module_namespace,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version,opts)
+      return not_ok_response if not_ok_response
+
       full_module_name = ModuleUtil.resolve_name(module_name, module_namespace)
 
-      return not_ok_response if not_ok_response
       # TODO: should we use instead Helper(:git_repo).create_clone_from_optional_branch
       response = Helper(:git_repo).create_clone_with_branch(module_type,module_name,repo_url,branch,version,module_namespace,opts)
 
