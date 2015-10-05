@@ -9,8 +9,8 @@ module DTK::Client
     #                   This will change behaviour of method
     # module_type: will be :component_module or :service_module
 
-    def clone_aux(module_type, module_id,version,internal_trigger=false,omit_output=false,opts={})
-      module_name,module_namespace,repo_url,branch,not_ok_response = workspace_branch_info(module_type,module_id,version,opts)
+    def clone_aux(module_type, module_id, version, internal_trigger = false, omit_output = false, opts = {})
+      module_name, module_namespace, repo_url, branch, not_ok_response = workspace_branch_info(module_type, module_id, version, opts)
       return not_ok_response if not_ok_response
 
       full_module_name = ModuleUtil.resolve_name(module_name, module_namespace)
@@ -26,16 +26,10 @@ module DTK::Client
           if Console.confirmation_prompt("Would you like to edit module now?")
             context_params_for_module = create_context_for_module(full_module_name, module_type)
             return edit(context_params_for_module)
-            # if module_type.to_s.eql?("service_module")
-            #   context_params_for_module = create_context_for_module(module_name, :"service-module")
-            # elsif module_type.to_s.eql?("component_module")
-            #   context_params_for_module = create_context_for_module(module_name, :"component-module")
-            # elsif module_type.to_s.eql?("test_module")
-            #   context_params_for_module = create_context_for_module(module_name, :"test-module")
-            # end
           end
         end
       end
+
       response
     end
 
