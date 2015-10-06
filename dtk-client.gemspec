@@ -20,7 +20,7 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.name          = "dtk-client"
   gem.require_paths = ["lib"]
-  gem.version       = "#{DtkClient::VERSION}.#{ARGV[3]}".chomp(".")
+  gem.version       = DtkClient::VERSION
 
   gem.add_dependency 'mime-types','~> 1.25'
   gem.add_dependency 'bundler','>= 1.2.4'
