@@ -733,6 +733,7 @@ module DTK::Client
       resp = Helper(:git_repo).create_new_version(module_type, branch, name, namespace, version, repo_url)
 
       post_body = get_workspace_branch_info_post_body(module_type, module_id, version)
+<<<<<<< dc3e09a92c12fdf49c6c47d8434eb322ba78d690
       create_response = post(rest_url("#{module_type}/create_new_version"), post_body)
 
       unless create_response.ok?
@@ -752,6 +753,9 @@ module DTK::Client
       if component_module_refs = create_response.data(:component_module_refs)
         print_using_dependencies(component_module_refs)
       end
+=======
+      post(rest_url("#{module_type}/create_new_version"), post_body)
+>>>>>>> Create new version
 
       Response::Ok.new()
     end
