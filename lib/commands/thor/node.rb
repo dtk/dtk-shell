@@ -7,6 +7,7 @@ module DTK::Client
   class Node < CommandBaseThor
 
     include AssemblyWorkspaceMixin
+    include NodeMixin
 
     no_tasks do
       include TaskStatusMixin
@@ -116,7 +117,7 @@ module DTK::Client
         end
       end
 
-      response = get_node_info(context_params)
+      response = get_node_info_for_ssh_login(context_params)
       return response unless response.ok?
 
       unless public_dns = response.data(:public_dns)
