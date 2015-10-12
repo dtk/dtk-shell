@@ -569,6 +569,11 @@ module DTK::Client
       fork_aux(context_params)
     end
 
+    desc "SERVICE-MODULE-NAME/ID create-new-version VERSION", "Create new service module version"
+    def create_new_version(context_params)
+      create_new_version_aux(context_params)
+    end
+
     #
     # DEVELOPMENT MODE METHODS
     #
