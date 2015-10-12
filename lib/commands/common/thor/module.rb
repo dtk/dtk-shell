@@ -396,7 +396,7 @@ module DTK::Client
       thor_options     = context_params.get_forwarded_options() || options
       module_id        = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
       module_name      = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
-      version          = thor_options["version"] || options.version
+      version          = thor_options["version"]
       internal_trigger = true if thor_options['skip_edit']
 
       module_location = OsUtil.module_location(module_type, module_name, version)
@@ -634,6 +634,30 @@ module DTK::Client
         FileUtils.rm_rf("#{response['data']['module_directory']}")
         return create_response
       end
+
+      Response::Ok.new()
+    end
+
+    def create_new_version_aux(context_params)
+      module_type = get_module_type(context_params)
+      module_id, version = context_params.retrieve_arguments([REQ_MODULE_ID, :option_1!], method_argument_names)
+
+      module_name = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
+      namespace, name = get_namespace_and_name(module_name,':')
+
+      module_location = OsUtil.module_location(module_type, module_name, nil)
+      unless File.directory?(module_location)
+        if Console.confirmation_prompt("Module '#{module_name}' has not been cloned. Would you like to clone module now"+'?')
+          response = clone_aux(module_type.to_sym, module_id, nil, true)
+          return response unless response.ok?
+        end
+      end
+
+      m_name, m_namespace, repo_url, branch, not_ok_response = workspace_branch_info(module_type, module_id, nil)
+      resp = Helper(:git_repo).create_new_version(module_type, branch, name, namespace, version, repo_url)
+
+      post_body = get_workspace_branch_info_post_body(module_type, module_id, version)
+      post(rest_url("#{module_type}/create_new_version"), post_body)
 
       Response::Ok.new()
     end
