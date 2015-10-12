@@ -225,6 +225,35 @@ module DTK; module Client; class CommandHelper
       end
     end
 
+    def create_new_version(type, src_branch, module_name, src_namespace, version, repo_url)
+      full_name_src  = ModuleUtil.join_name(module_name, src_namespace)
+      full_name_dest = "#{full_name_src}-v#{version}"
+
+      local_src_dir  = local_repo_dir(type, full_name_src)
+      local_dest_dir = local_repo_dir(type, full_name_dest)
+      branch         = "#{src_branch}-v#{version}"
+
+      Response.wrap_helper_actions() do
+        if File.directory?(local_src_dir) && !(Dir["#{local_src_dir}/*"].empty?)
+          raise ErrorUsage.new("Directory (#{local_dest_dir}) already exist with content.",:log_error=>false) if File.directory?(local_dest_dir) && !(Dir["#{local_dest_dir}/*"].empty?)
+          FileUtils.cp_r(local_src_dir, local_dest_dir)
+        else
+          raise ErrorUsage.new("The content for module (#{full_name_src}) should be put in directory (#{local_src_dir})",:log_error=>false)
+        end
+
+        repo_dir = local_dest_dir
+        remote_branch = local_branch = branch
+        repo = create(repo_dir, branch, :no_initial_commit => true)
+        repo.add_remote(remote(),repo_url)
+        repo.checkout(branch, { :new_branch => true })
+        repo.push_with_remote(remote(), remote_branch)
+
+        repo.delete_branch(src_branch)
+      end
+
+      {"module_directory" => local_dest_dir, 'version' => version, 'branch' => branch}
+    end
+
     def rename_and_initialize_clone_and_push(type, module_name, new_module_name, branch, repo_url, local_repo_dir, version = nil)
       # check to see if the new dir has proper naming e.g. (~/dtk/component_modules/dtk::java)
       unless local_repo_dir.match(/\/#{new_module_name.gsub(ModuleUtil::NAMESPACE_SEPERATOR,'/')}$/)
