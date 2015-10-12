@@ -332,8 +332,7 @@ module DTK::Client
     #                   This will change behaviour of method in such way that edit will not be
     #                   triggered after it.
     #
-    desc "COMPONENT-MODULE-NAME/ID clone [-v VERSION] [-n]", "Locally clone component module and component files. Use -n to skip edit prompt"
-    version_method_option
+    desc "COMPONENT-MODULE-NAME/ID clone [-n]", "Locally clone component module and component files. Use -n to skip edit prompt"
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
     def clone(context_params, internal_trigger=true)
       clone_module_aux(context_params, internal_trigger)
@@ -413,6 +412,11 @@ module DTK::Client
     desc "COMPONENT-MODULE-NAME/ID fork NAMESPACE", "Fork component module to new namespace"
     def fork(context_params)
       fork_aux(context_params)
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID create-new-version VERSION", "Create new component module version"
+    def create_new_version(context_params)
+      create_new_version_aux(context_params)
     end
 
     #
