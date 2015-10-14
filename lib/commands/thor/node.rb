@@ -1,4 +1,5 @@
 dtk_require_from_base('task_status')
+dtk_require_common_commands('thor/node')
 dtk_require_common_commands('thor/set_required_attributes')
 dtk_require_common_commands('thor/assembly_workspace')
 
@@ -6,6 +7,7 @@ module DTK::Client
   class Node < CommandBaseThor
 
     include AssemblyWorkspaceMixin
+    include NodeMixin
 
     no_tasks do
       include TaskStatusMixin
@@ -95,7 +97,7 @@ module DTK::Client
        post rest_url("node/info"), post_body
     end
 
-    desc "NODE-NAME/ID ssh REMOTE-USER [-i PATH-TO-PEM]","SSH into node, optional parameters are path to indentity file."
+    desc "NODE-NAME/ID ssh [LINUX-LOGIN-USER] [-i PATH-TO-PEM]","SSH into node."
     method_option "--identity-file",:aliases => '-i',:type => :string, :desc => "Identity-File used for connection, if not provided default is used", :banner => "IDENTITY-FILE"
     def ssh(context_params)
       if OsUtil.is_windows?
@@ -103,11 +105,11 @@ module DTK::Client
         return
       end
 
-      node_id, remote_user = context_params.retrieve_arguments([:node_id!,:option_1!],method_argument_names)
+      node_id, login_user = context_params.retrieve_arguments([:node_id!,:option_1],method_argument_names)
 
       if identity_file_location = options['identity-file']
         unless File.exists?(identity_file_location)
-          raise ::DTK::Client::DtkError, "Not able to find identity file, '#{identity_file_location}'"
+          raise DtkError, "Not able to find identity file, '#{identity_file_location}'"
         end
       elsif default_identity_file = OsUtil.dtk_identity_file_location()
         if File.exists?(default_identity_file)
@@ -115,42 +117,35 @@ module DTK::Client
         end
       end
 
-      context_params.forward_options({ :json_return => true })
-      # TODO: should call something taht just returns info about nodes, rather than info_aux
-      #       also info that comes back should indicate whether a node group and if so error message is that
-      #       ssh cannot be called on node group
-      response = info_aux(context_params)
-      if response.ok?
-        node_info = {}
-        response.data['nodes'].each do |node|
-          properties = node['node_properties']
-          node_info = properties if node_id == properties['node_id']
-        end
-        public_dns = node_info ? node_info['ec2_public_address'] : nil
+      response = get_node_info_for_ssh_login(node_id, context_params)
+      return response unless response.ok?
 
-        raise ::DTK::Client::DtkError, "Not able to resolve instance address, has instance been stopped?" unless public_dns
+      unless public_dns = response.data(:public_dns)
+        raise DtkError, "Not able to resolve instance address, has instance been stopped?"
+      end
+      
+      unless login_user ||= response.data(:default_login_user)
+        raise DtkError, "Retry command with a specfic login user (a default login user could not be computed)"
+      end
 
-        connection_string = "#{remote_user}@#{public_dns}"
+      connection_string = "#{login_user}@#{public_dns}"
 
-
-        ssh_command = nil
-
+      ssh_command = 
         if identity_file_location
           # provided PEM key
-          ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{identity_file_location} #{connection_string}"
-        elsif SSHUtil.ssh_reachable?(remote_user, public_dns)
+          "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -i #{identity_file_location} #{connection_string}"
+        elsif SSHUtil.ssh_reachable?(login_user, public_dns)
           # it has PUB key access
-          ssh_command = "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" #{connection_string}"
+          "ssh -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" #{connection_string}"
         end
 
-        raise ::DTK::Client::DtkError, "No public key access or PEM provided, please grant access or provide valid PEM key" if ssh_command.nil?
-
-        OsUtil.print("You are entering SSH terminal (#{connection_string}) ...", :yellow)
-        Kernel.system(ssh_command)
-        OsUtil.print("You are leaving SSH terminal, and returning to DTK Shell ...", :yellow)
-      else
-        response
+      unless ssh_command
+        raise DtkError, "No public key access or PEM provided, please grant access or provide valid PEM key" 
       end
+      
+      OsUtil.print("You are entering SSH terminal (#{connection_string}) ...", :yellow)
+      Kernel.system(ssh_command)
+      OsUtil.print("You are leaving SSH terminal, and returning to DTK Shell ...", :yellow)
     end
 
     desc "NODE-NAME/ID list-components","List components that are on the node instance."
@@ -267,7 +262,7 @@ module DTK::Client
       if response.data and response.data.size > 0
         #TODO: may not directly print here; isntead use a lower level fn
         error_message = "The following violations were found; they must be corrected before the node can be converged"
-        DTK::Client::OsUtil.print(error_message, :red)
+        OsUtil.print(error_message, :red)
         return response.render_table(:violation)
       end
 
@@ -310,7 +305,7 @@ module DTK::Client
       }
       unless options.force?
         # Ask user if really want to delete and destroy, if not then return to dtk-shell without deleting
-        return unless Console.confirmation_prompt("Are you sure you want to destroy and delete node '#{node_id}'?")
+        return unless Console.confirmation_prompt("Are you sure you want to destroy and delete node '#{node_id}'"+"?")
       end
 
       response = post rest_url("node/destroy_and_delete"), post_body
@@ -460,7 +455,7 @@ module DTK::Client
         end
 
         if response.data(:result).nil?
-          raise DTK::Client::DtkError, "Server seems to be taking too long to start node(s)."
+          raise DtkError, "Server seems to be taking too long to start node(s)."
         end
 
         task_id = response.data(:result)['task_id']
@@ -478,7 +473,7 @@ module DTK::Client
       def get_assembly_and_node_id(context_params)
         response = info(context_params)
         unless response.ok?
-          raise DTK::Client::DtkError, "Unable to retrive node information, please try again."
+          raise DtkError, "Unable to retrive node information, please try again."
         end
 
         return response.data(:assembly_id), response.data(:id)
