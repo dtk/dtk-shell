@@ -244,11 +244,11 @@ module DTK; module Client; class CommandHelper
         repo_dir = local_dest_dir
         remote_branch = local_branch = branch
         repo = create(repo_dir, branch, :no_initial_commit => true)
-        repo.add_remote(remote(),repo_url)
+        repo.add_remote(remote(branch), repo_url)
         repo.checkout(branch, { :new_branch => true })
         repo.push_with_remote(remote(), remote_branch)
-
         repo.delete_branch(src_branch)
+        repo.fetch()
       end
 
       {"module_directory" => local_dest_dir, 'version' => version, 'branch' => branch}
