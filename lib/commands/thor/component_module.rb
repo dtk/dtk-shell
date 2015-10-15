@@ -75,13 +75,14 @@ module DTK::Client
       set_attribute_module_aux(context_params)
     end
 
-    desc "list [--remote] [--diff] [-n NAMESPACE]", "List loaded or remote component modules. Use --diff to compare loaded and remote component modules."
+    desc "list [--remote] [--diff] [-n NAMESPACE] [--with-versions]", "List loaded or remote component modules. Use --diff to compare loaded and remote component modules."
     method_option :remote, :type => :boolean, :default => false
     method_option :diff, :type => :boolean, :default => false
     method_option :namespace, :aliases => "-n" ,
       :type => :string,
       :banner => "NAMESPACE",
       :desc => "List modules only in specific namespace."
+    method_option :with_versions, :type => :boolean, :default => false, :aliases => "with-versions"
     def list(context_params)
       return module_info_about(context_params, :components, :component) if context_params.is_there_command?(:"component")
 
@@ -91,12 +92,19 @@ module DTK::Client
 
       post_body        = (remote ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
       post_body[:diff] = options.diff? ? options.diff : {}
+
+      post_body[:detail_to_include] << 'versions' if options.with_versions?
       post_body.merge!(:module_namespace => options.namespace) if options.namespace
 
       response = post rest_url("component_module/#{action}"), post_body
 
       return response unless response.ok?
-      response.render_table()
+
+      if options.with_versions?
+        response.render_table(:module_with_versions, true)
+      else
+        response.render_table()
+      end
     end
 
     desc "COMPONENT-MODULE-NAME/ID list-components", "List all components for given component module."
@@ -112,6 +120,14 @@ module DTK::Client
     desc "COMPONENT-MODULE-NAME/ID list-instances", "List all instances for given component module."
     def list_instances(context_params)
       module_info_about(context_params, :instances, :component_instances)
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID list-versions","List all versions associated with this component module."
+    def list_versions(context_params)
+      response = list_versions_aux(context_params)
+      return response unless response.ok?
+
+      response.render_table(:list_versions, true)
     end
 
     desc "import [NAMESPACE:]COMPONENT-MODULE-NAME", "Create new component module from local clone"
