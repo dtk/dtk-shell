@@ -109,13 +109,14 @@ module DTK::Client
       list(context_params)
     end
 
-    desc "list [--remote] [--diff] [-n NAMESPACE]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
+    desc "list [--remote] [--diff] [-n NAMESPACE] [--with-versions]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
     method_option :remote, :type => :boolean, :default => false
     method_option :diff, :type => :boolean, :default => false
     method_option :namespace, :aliases => "-n" ,
       :type => :string,
       :banner => "NAMESPACE",
       :desc => "List modules only in specific namespace."
+    method_option :with_versions, :type => :boolean, :default => false, :aliases => "with-versions"
     def list(context_params)
       service_module_id, about, service_module_name = context_params.retrieve_arguments([:service_module_id, :option_1, :option_2],method_argument_names)
       datatype = nil
@@ -134,6 +135,7 @@ module DTK::Client
         post_body = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
         post_body[:diff] = options.diff? ? options.diff : {}
         post_body.merge!(:module_namespace => options.namespace) if options.namespace
+        post_body[:detail_to_include] << 'versions' if options.with_versions?
 
         response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
@@ -157,7 +159,13 @@ module DTK::Client
         response = post rest_url("service_module/#{action}"), { :service_module_id => service_module_id }
       end
 
-      response.render_table(data_type) unless response.nil?
+      unless response.nil?
+        if options.with_versions?
+          response.render_table(:module_with_versions, true)
+        else
+          response.render_table(data_type)
+        end
+      end
 
       response
     end
@@ -167,18 +175,13 @@ module DTK::Client
       list_instances_aux(context_params)
     end
 
-    # desc "SERVICE-MODULE-NAME/ID list-versions","List all versions associated with this service module."
-    # def list_versions(context_params)
-    #   service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
-    #   post_body = {
-    #     :service_module_id => service_module_id,
-    #     :detail_to_include => ["remotes"],
-    #     :rsa_pub_key => SSHUtil.rsa_pub_key_content()
-    #   }
-    #   response = post rest_url("service_module/versions"), post_body
+    desc "SERVICE-MODULE-NAME/ID list-versions","List all versions associated with this service module."
+    def list_versions(context_params)
+      response = list_versions_aux(context_params)
+      return response unless response.ok?
 
-    #   response.render_table(:module_version)
-    # end
+      response.render_table(:list_versions, true)
+    end
 
     # version_method_option
     desc "install NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y]", "Install remote service module into local environment. -y will automatically clone component modules."
