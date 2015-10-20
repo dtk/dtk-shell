@@ -109,14 +109,14 @@ module DTK::Client
       list(context_params)
     end
 
-    desc "list [--remote] [--diff] [-n NAMESPACE] [--with-versions]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
+    desc "list [--remote] [--diff] [-n NAMESPACE]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
     method_option :remote, :type => :boolean, :default => false
     method_option :diff, :type => :boolean, :default => false
     method_option :namespace, :aliases => "-n" ,
       :type => :string,
       :banner => "NAMESPACE",
       :desc => "List modules only in specific namespace."
-    method_option :with_versions, :type => :boolean, :default => false, :aliases => "with-versions"
+    # method_option :with_versions, :type => :boolean, :default => false, :aliases => "with-versions"
     def list(context_params)
       service_module_id, about, service_module_name = context_params.retrieve_arguments([:service_module_id, :option_1, :option_2],method_argument_names)
       datatype = nil
