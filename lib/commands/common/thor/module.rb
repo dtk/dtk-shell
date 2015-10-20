@@ -314,6 +314,7 @@ module DTK::Client
         :remote_component_name => input_remote_name,
         :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
+      post_body.merge!(:version => options.version) if options.version?
 
       response = post rest_url("#{module_type}/export"), post_body
       return response unless response.ok?

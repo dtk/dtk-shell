@@ -252,7 +252,7 @@ module DTK::Client
     #   post rest_url("service_module/export"), post_body
     # end
 
-    desc "SERVICE-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-SERVICE-MODULE-NAME]","Publish service module to remote repository"
+    desc "SERVICE-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-SERVICE-MODULE-NAME]  [-v VERSION]","Publish service module to remote repository"
     def publish(context_params)
       publish_module_aux(context_params)
     end
