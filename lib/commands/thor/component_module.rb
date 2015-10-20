@@ -75,14 +75,14 @@ module DTK::Client
       set_attribute_module_aux(context_params)
     end
 
-    desc "list [--remote] [--diff] [-n NAMESPACE] [--with-versions]", "List loaded or remote component modules. Use --diff to compare loaded and remote component modules."
+    desc "list [--remote] [--diff] [-n NAMESPACE]", "List loaded or remote component modules. Use --diff to compare loaded and remote component modules."
     method_option :remote, :type => :boolean, :default => false
     method_option :diff, :type => :boolean, :default => false
     method_option :namespace, :aliases => "-n" ,
       :type => :string,
       :banner => "NAMESPACE",
       :desc => "List modules only in specific namespace."
-    method_option :with_versions, :type => :boolean, :default => false, :aliases => "with-versions"
+    # method_option :with_versions, :type => :boolean, :default => false, :aliases => "with-versions"
     def list(context_params)
       return module_info_about(context_params, :components, :component) if context_params.is_there_command?(:"component")
 
