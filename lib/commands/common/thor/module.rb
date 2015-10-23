@@ -320,10 +320,9 @@ module DTK::Client
       check_response = post rest_url("#{module_type}/check_remote_exist"), post_body
       return check_response unless check_response.ok?
 
-      # if remote module exist and user call 'publish' command without params then do push;
-      # if remote does not exist or user send namespace/name try publish
+      # if remote module exist and user call 'publish' we do push-dtkn else we publish it as new module
       response_data = check_response['data']
-      if response_data["remote_exist"] && input_remote_name.nil?
+      if response_data["remote_exist"] # && input_remote_name.nil?
         raise DtkValidationError, "You are not allowed to update specific version of #{module_type} module!" if response_data['frozen']
         push_dtkn_module_aux(context_params, true)
       else
