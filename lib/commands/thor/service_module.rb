@@ -252,7 +252,9 @@ module DTK::Client
     #   post rest_url("service_module/export"), post_body
     # end
 
-    desc "SERVICE-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-SERVICE-MODULE-NAME]  [-v VERSION]","Publish service module to remote repository"
+    desc "SERVICE-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-SERVICE-MODULE-NAME]  [-v VERSION] [--force]","Publish service module to remote repository"
+    version_method_option
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def publish(context_params)
       publish_module_aux(context_params)
     end
@@ -493,19 +495,19 @@ module DTK::Client
     end
 
 #    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of service module to remote repository (dtkn)."
-    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of service module to remote repository (dtkn)."
-    method_option "message",:aliases => "-m" ,
-      :type => :string,
-      :banner => "COMMIT-MSG",
-      :desc => "Commit message"
-    method_option "namespace",:aliases => "-n",
-        :type => :string,
-        :banner => "NAMESPACE",
-        :desc => "Remote namespace"
-    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-    def push_dtkn(context_params, internal_trigger=false)
-      push_dtkn_module_aux(context_params, internal_trigger)
-    end
+    # desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of service module to remote repository (dtkn)."
+    # method_option "message",:aliases => "-m" ,
+    #   :type => :string,
+    #   :banner => "COMMIT-MSG",
+    #   :desc => "Commit message"
+    # method_option "namespace",:aliases => "-n",
+    #     :type => :string,
+    #     :banner => "NAMESPACE",
+    #     :desc => "Remote namespace"
+    # method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    # def push_dtkn(context_params, internal_trigger=false)
+    #   push_dtkn_module_aux(context_params, internal_trigger)
+    # end
 
     desc "SERVICE-MODULE-NAME/ID list-diffs", "List diffs between module on server and remote repo"
     method_option :remote, :type => :boolean, :default => false

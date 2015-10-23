@@ -275,8 +275,9 @@ module DTK::Client
     #   return response
     # end
 
-    desc "COMPONENT-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME] [-v VERSION]", "Publish component module to remote repository."
+    desc "COMPONENT-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME] [-v VERSION] [--force]", "Publish component module to remote repository."
     version_method_option
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def publish(context_params)
       publish_module_aux(context_params)
     end
@@ -376,21 +377,21 @@ module DTK::Client
     end
 
 #    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to remote repository (dtkn)."
-    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of component module to remote repository (dtkn)."
-    method_option "message",:aliases => "-m" ,
-      :type => :string,
-      :banner => "COMMIT-MSG",
-      :desc => "Commit message"
-    method_option "namespace",:aliases => "-n",
-        :type => :string,
-        :banner => "NAMESPACE",
-        :desc => "Remote namespace"
-    #hidden option for dev
-    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-    def push_dtkn(context_params, internal_trigger=false)
-      push_dtkn_module_aux(context_params, internal_trigger)
-    end
-    PushCatalogs = ["origin", "dtkn"]
+    # desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of component module to remote repository (dtkn)."
+    # method_option "message",:aliases => "-m" ,
+    #   :type => :string,
+    #   :banner => "COMMIT-MSG",
+    #   :desc => "Commit message"
+    # method_option "namespace",:aliases => "-n",
+    #     :type => :string,
+    #     :banner => "NAMESPACE",
+    #     :desc => "Remote namespace"
+    # #hidden option for dev
+    # method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    # def push_dtkn(context_params, internal_trigger=false)
+    #   push_dtkn_module_aux(context_params, internal_trigger)
+    # end
+    # PushCatalogs = ["origin", "dtkn"]
 
 
 #    desc "COMPONENT-MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"

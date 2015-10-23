@@ -307,7 +307,7 @@ module DTK::Client
 
     def publish_module_aux(context_params)
       module_type  = get_module_type(context_params)
-      module_id, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, :option_1], method_argument_names)
+      module_id, module_name, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME, :option_1], method_argument_names)
 
       post_body = {
         "#{module_type}_id".to_sym => module_id,
@@ -322,8 +322,12 @@ module DTK::Client
 
       # if remote module exist and user call 'publish' we do push-dtkn else we publish it as new module
       response_data = check_response['data']
-      if response_data["remote_exist"] # && input_remote_name.nil?
-        raise DtkValidationError, "You are not allowed to update specific version of #{module_type} module!" if response_data['frozen']
+      if response_data["remote_exist"]
+        raise DtkValidationError, "You are not allowed to update #{module_type} versions!" if response_data['frozen']
+
+        # if do publish namespace2/module from namespace1/module, forward namespace as option to be used in push_dtkn_module_aux
+        forward_namespace?(module_name, input_remote_name, context_params)
+
         push_dtkn_module_aux(context_params, true)
       else
         response = post rest_url("#{module_type}/export"), post_body
@@ -501,7 +505,8 @@ module DTK::Client
 
       if catalog.to_s.eql?("dtkn")
         module_refs_content = RemoteDependencyUtil.module_ref_content(module_location)
-        remote_module_info  = get_remote_module_info_aux(module_type.to_sym, module_id, options["namespace"], version, module_refs_content, local_namespace)
+        options_namespace = options["namespace"]||context_params.get_forwarded_thor_option('namespace')
+        remote_module_info  = get_remote_module_info_aux(module_type.to_sym, module_id, options_namespace, version, module_refs_content, local_namespace)
         return remote_module_info unless remote_module_info.ok?
 
         unless File.directory?(module_location)
@@ -686,6 +691,13 @@ module DTK::Client
     end
 
     def print_ambiguous(ambiguous)
+    end
+
+    def forward_namespace?(module_name, input_remote_name, context_params)
+      return unless input_remote_name
+      local_namespace, local_name   = get_namespace_and_name(module_name,':')
+      remote_namespace, remote_name = get_namespace_and_name(input_remote_name,'/')
+      context_params.forward_options('namespace' => remote_namespace) unless local_namespace.eql?(remote_namespace)
     end
 
   end
