@@ -33,9 +33,11 @@ module DTK
           if dependency_warnings && !dependency_warnings.empty?
             no_permissions = dependency_warnings.select { |warning| warning['error_type'].eql?('no_permission') }
 
-            errors << "\n\nYou do not have (R) permissions for modules:\n\n"
-            no_permissions.each { |np| errors << "  - #{np['module_namespace']}:#{np['module_name']} (owner: #{np['module_owner']})\n" }
-            errors << "\nPlease contact owner(s) to change permissions for those modules."
+            unless no_permissions.empty?
+              errors << "\n\nYou do not have (R) permissions for modules:\n\n"
+              no_permissions.each { |np| errors << "  - #{np['module_namespace']}:#{np['module_name']} (owner: #{np['module_owner']})\n" }
+              errors << "\nPlease contact owner(s) to change permissions for those modules."
+            end
           end
 
           raise DtkError, errors unless errors.empty?
