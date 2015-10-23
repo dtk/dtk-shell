@@ -155,7 +155,7 @@ module DTK::Client
             formated_name = m['formated_name']
             # print "Cloning component module '#{formated_name}' from server ... "
             thor_options = {}
-            thor_options["version"] = m['version']
+            thor_options["version"] = m['version'] unless m['version'].eql?('base')
             thor_options["skip_edit"] = true
             thor_options["omit_output"] = true
             thor_options.merge!(:module_type => 'component-module')
@@ -189,7 +189,7 @@ module DTK::Client
     #
     # Returns: String
     def add_version?(display_name, version)
-      version = nil if 'CURRENT'.eql?(version)
+      version = nil if 'CURRENT'.eql?(version) || 'base'.eql?(version)
       (version ? "#{display_name}-#{version.strip}" : "#{display_name}")
     end
 
