@@ -316,13 +316,25 @@ module DTK::Client
       }
       post_body.merge!(:version => options.version) if options.version?
 
-      response = post rest_url("#{module_type}/export"), post_body
-      return response unless response.ok?
+      # check if module exist on repo manager and use it to decide if need to push or publish
+      check_response = post rest_url("#{module_type}/check_remote_exist"), post_body
+      return check_response unless check_response.ok?
 
-      full_module_name = "#{response.data['remote_repo_namespace']}/#{response.data['remote_repo_name']}"
+      # if remote module exist and user call 'publish' command without params then do push;
+      # if remote does not exist or user send namespace/name try publish
+      response_data = check_response['data']
+      if response_data["remote_exist"] && input_remote_name.nil?
+        raise DtkValidationError, "You are not allowed to update specific version of #{module_type} module!" if response_data['frozen']
+        push_dtkn_module_aux(context_params, true)
+      else
+        response = post rest_url("#{module_type}/export"), post_body
+        return response unless response.ok?
 
-      DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published to '#{full_module_name}'!")
-      Response::Ok.new()
+        full_module_name = "#{response.data['remote_repo_namespace']}/#{response.data['remote_repo_name']}"
+
+        DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published to '#{full_module_name}'!")
+        Response::Ok.new()
+      end
     end
 
     def pull_dtkn_aux(context_params)
