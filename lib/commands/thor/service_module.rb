@@ -299,7 +299,7 @@ module DTK::Client
     # end
 
     # desc "SERVICE-MODULE-NAME/ID pull-from-dtkn [-n NAMESPACE] [-v VERSION]", "Update local service module from remote repository."
-    desc "SERVICE-MODULE-NAME/ID pull-dtkn [-n NAMESPACE] [--force]", "Update local service module from remote repository."
+    desc "SERVICE-MODULE-NAME/ID update [-n NAMESPACE] [--force]", "Update local service module from remote repository."
     method_option :namespace,:aliases => '-n',
       :type   => :string,
       :banner => "NAMESPACE",
@@ -308,8 +308,8 @@ module DTK::Client
       :type    => :boolean,
       :desc   => "Force pull",
       :default => false
-    def pull_dtkn(context_params)
-      pull_dtkn_aux(context_params)
+    def update(context_params)
+      update_aux(context_params)
     end
 
     desc "SERVICE-MODULE-NAME/ID chmod PERMISSION-SELECTOR", "Update remote permissions e.g. ug+rw , user and group get RW permissions"
