@@ -341,7 +341,7 @@ module DTK::Client
       end
     end
 
-    def pull_dtkn_aux(context_params)
+    def update_aux(context_params)
       module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID,REQ_MODULE_NAME,:option_1],method_argument_names)
 
       catalog      = 'dtkn'

@@ -93,13 +93,17 @@ module DTK::Client
       modules_to_import.each do |m_module|
         module_name = full_module_name(m_module)
         module_type = m_module['type']
+        module_version = m_module['version']
 
         # we check if there is module_url if so we install from git
         module_url  = m_module['module_url']
 
+        # add version to display name if exist
+        module_display_name = module_version ? "#{module_name} (#{module_version})" : module_name
+
         # descriptive message
         importing  = module_url ? "Importing" : "Installing"
-        import_msg = "#{importing} #{module_type.gsub('_', ' ')} '#{module_name}'"
+        import_msg = "#{importing} #{module_type.gsub('_', ' ')} '#{module_display_name}'"
         import_msg += " from git source #{module_url}" if module_url
         print "#{import_msg} ... "
 
@@ -111,7 +115,7 @@ module DTK::Client
         else
           # import from Repo Manager
           new_context_params = ::DTK::Shell::ContextParams.new([module_name])
-          new_context_params.override_method_argument!('option_2', m_module['version'])
+          new_context_params.override_method_argument!('option_2', module_version)
           new_context_params.forward_options(:skip_cloning => false, :skip_auto_install => true, :module_type => module_type).merge!(opts)
           response = ContextRouter.routeTask(module_type, 'install', new_context_params, @conn)
         end
