@@ -518,9 +518,10 @@ module DTK::Client
 
     # desc "delete SERVICE-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     # version_method_option
-    desc "delete SERVICE-MODULE-NAME [-y] [-p]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete SERVICE-MODULE-NAME [-y] [-p] [-v VERSION]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
+    version_method_option
     def delete(context_params)
       response = delete_module_aux(context_params)
       @@invalidate_map << :service_module if response && response.ok?

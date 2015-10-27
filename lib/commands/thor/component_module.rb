@@ -60,9 +60,10 @@ module DTK::Client
       return :component_module, "component_module/list", nil
     end
 
-    desc "delete COMPONENT-MODULE-NAME [-y] [-p]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete COMPONENT-MODULE-NAME [-y] [-p] [-v VERSION]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
+    version_method_option
     def delete(context_params,method_opts={})
       response = delete_module_aux(context_params, method_opts)
       @@invalidate_map << :component_module if response && response.ok?
