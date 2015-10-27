@@ -227,7 +227,7 @@ module DTK; module Client; class CommandHelper
 
     def create_new_version(type, src_branch, module_name, src_namespace, version, repo_url)
       full_name_src  = ModuleUtil.join_name(module_name, src_namespace)
-      full_name_dest = "#{full_name_src}-v#{version}"
+      full_name_dest = "#{full_name_src}-#{version}"
 
       local_src_dir  = local_repo_dir(type, full_name_src)
       local_dest_dir = local_repo_dir(type, full_name_dest)

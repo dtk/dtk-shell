@@ -686,7 +686,12 @@ module DTK::Client
       resp = Helper(:git_repo).create_new_version(module_type, branch, name, namespace, version, repo_url)
 
       post_body = get_workspace_branch_info_post_body(module_type, module_id, version)
-      post(rest_url("#{module_type}/create_new_version"), post_body)
+      create_response = post(rest_url("#{module_type}/create_new_version"), post_body)
+
+      unless create_response.ok?
+        FileUtils.rm_rf("#{resp['module_directory']}")
+        return create_response
+      end
 
       Response::Ok.new()
     end
