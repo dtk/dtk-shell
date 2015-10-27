@@ -345,7 +345,7 @@ module DTK::Client
       module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID,REQ_MODULE_NAME,:option_1],method_argument_names)
 
       catalog      = 'dtkn'
-      version      = options.version
+      version      = options.version||context_params.get_forwarded_options()[:version]
       module_type  = get_module_type(context_params)
       skip_recursive_pull = context_params.get_forwarded_options()[:skip_recursive_pull]
       ignore_dependency_merge_conflict = context_params.get_forwarded_options()[:skip_recursive_pull]

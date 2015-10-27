@@ -25,12 +25,30 @@ module DTK::Client
     def trigger_module_auto_pull(required_modules, opts = {})
       return if required_modules.empty?
 
+      # options[:force] means this command is triggered from trigger_module_auto_import method bellow
+      unless opts[:force]
+        update_none = RemoteDependencyUtil.check_for_frozen_modules(required_modules)
+
+        if update_none
+          print "All dependent modules are frozen and will not be updated!\n"
+          print "Resuming pull ... "
+          return Response::Ok.new()
+        end
+      end
+
       if opts[:force] || Console.confirmation_prompt("Do you want to update in addition to this module its dependent modules from the catalog?")
         required_modules.each do |r_module|
           module_name = full_module_name(r_module)
           module_type = r_module['type']
+          version     = r_module['version']
+          full_name   = (version && !version.eql?('master')) ? "#{module_name}(#{version})" : module_name
 
-          print "Pulling #{module_type.gsub('_',' ')} content for '#{module_name}' ... "
+          if r_module['frozen']
+            print "Not allowed to update frozen #{module_type.gsub('_', ' ')} '#{module_name}' version '#{version}' \n"
+            next
+          end
+
+          print "Pulling #{module_type.gsub('_',' ')} content for '#{full_name}' ... "
 
           new_context_params = DTK::Shell::ContextParams.new
           new_context_params.add_context_to_params(module_type, module_type)
@@ -38,9 +56,10 @@ module DTK::Client
 
           forwarded_opts = { :skip_recursive_pull => true, :ignore_dependency_merge_conflict => true }
           forwarded_opts.merge!(:do_not_raise => true) if opts[:do_not_raise]
+          forwarded_opts.merge!(:version => version) if version && !version.eql?('master')
           new_context_params.forward_options(forwarded_opts)
 
-          response = ContextRouter.routeTask(module_type, "pull_dtkn", new_context_params, @conn)
+          response = ContextRouter.routeTask(module_type, "update", new_context_params, @conn)
 
           unless response.ok?
             if opts[:do_not_raise]
@@ -61,7 +80,7 @@ module DTK::Client
     def trigger_module_auto_import(modules_to_import, required_modules, opts = {})
       puts 'Auto-installing missing module(s)'
       update_all  = false
-      update_none = false
+      update_none = RemoteDependencyUtil.check_for_frozen_modules(required_modules)
 
       # Print out or update installed modules from catalog
       required_modules.each do |r_module|

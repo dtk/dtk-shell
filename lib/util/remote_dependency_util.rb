@@ -43,6 +43,14 @@ module DTK
           raise DtkError, errors unless errors.empty?
         end
 
+        # check if all dependent modules are frozen; if they are don't display prompt for update
+        def check_for_frozen_modules(required_modules)
+          return true if required_modules.nil? || required_modules.empty?
+
+          modules_to_update = required_modules.select{ |md| (md['frozen'].nil? || md['frozen'] == false)}
+          return modules_to_update.empty?
+        end
+
         def module_ref_content(location)
           abs_location = File.join(location, MODULE_REF_FILE)
           File.exists?(abs_location) ? File.read(abs_location) : nil
