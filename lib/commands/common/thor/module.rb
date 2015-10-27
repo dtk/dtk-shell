@@ -101,7 +101,9 @@ module DTK::Client
       module_type = get_module_type(context_params)
 
       unless (options.force? || method_opts[:force_delete])
-        is_go = Console.confirmation_prompt("Are you sure you want to delete module '#{module_name}'"+"?")
+        msg = "Are you sure you want to delete module '#{module_name}'"
+        msg += " version '#{version}'" if version
+        is_go = Console.confirmation_prompt("#{msg}"+"?")
         return nil unless is_go
       end
 
@@ -129,7 +131,7 @@ module DTK::Client
 
       unless method_opts[:no_error_msg]
         msg = "Module '#{module_name}' "
-        if version then msg << "version #{version} has been deleted"
+        if version then msg << "version '#{version}' has been deleted"
         else msg << "has been deleted"; end
         OsUtil.print(msg, :yellow)
       end
