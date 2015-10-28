@@ -84,17 +84,19 @@ module DTK::Client
 
       # Print out or update installed modules from catalog
       required_modules.each do |r_module|
-        module_name = full_module_name(r_module)
-        module_type = r_module['type']
+        module_name         = full_module_name(r_module)
+        module_type         = r_module['type']
+        version             = r_module['version']
+        full_name           = (version && !version.eql?('master')) ? "#{module_name}(#{version})" : module_name
 
-        print "Using #{module_type.gsub('_', ' ')} '#{module_name}'\n"
+        print "Using #{module_type.gsub('_', ' ')} '#{full_name}'\n"
         next if update_none || opts[:update_none]
 
         if update_all
           trigger_module_auto_pull([r_module], :force => true, :do_not_raise => true)
         else
           options = required_modules.size > 1 ? %w(all none) : []
-          update  = Console.confirmation_prompt_additional_options("Do you want to update dependent #{module_type.gsub('_', ' ')} '#{module_name}' from the catalog?", options)
+          update  = Console.confirmation_prompt_additional_options("Do you want to update dependent #{module_type.gsub('_', ' ')} '#{full_name}' from the catalog?", options)
           next unless update
 
           if update.to_s.eql?('all')
@@ -112,17 +114,15 @@ module DTK::Client
       modules_to_import.each do |m_module|
         module_name = full_module_name(m_module)
         module_type = m_module['type']
-        module_version = m_module['version']
+        version     = m_module['version']
+        full_name   = (version && !version.eql?('master')) ? "#{module_name}(#{version})" : module_name
 
         # we check if there is module_url if so we install from git
         module_url  = m_module['module_url']
 
-        # add version to display name if exist
-        module_display_name = module_version ? "#{module_name} (#{module_version})" : module_name
-
         # descriptive message
         importing  = module_url ? "Importing" : "Installing"
-        import_msg = "#{importing} #{module_type.gsub('_', ' ')} '#{module_display_name}'"
+        import_msg = "#{importing} #{module_type.gsub('_', ' ')} '#{full_name}'"
         import_msg += " from git source #{module_url}" if module_url
         print "#{import_msg} ... "
 
