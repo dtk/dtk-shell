@@ -700,6 +700,10 @@ module DTK::Client
         return create_response
       end
 
+      if external_dependencies = create_response.data(:external_dependencies)
+        print_dependencies(external_dependencies)
+      end
+
       Response::Ok.new()
     end
 
@@ -711,6 +715,17 @@ module DTK::Client
       local_namespace, local_name   = get_namespace_and_name(module_name,':')
       remote_namespace, remote_name = get_namespace_and_name(input_remote_name,'/')
       context_params.forward_options('namespace' => remote_namespace) unless local_namespace.eql?(remote_namespace)
+    end
+
+    def print_dependencies(dependencies)
+      ambiguous        = dependencies["ambiguous"]||[]
+      amb_sorted       = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
+      inconsistent     = dependencies["inconsistent"]||[]
+      possibly_missing = dependencies["possibly_missing"]||[]
+
+      OsUtil.print("There are inconsistent module dependencies mentioned in dtk.model.yaml: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
+      OsUtil.print("There are missing module dependencies mentioned in dtk.model.yaml: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
+      OsUtil.print("There are ambiguous module dependencies mentioned in dtk.model.yaml: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
     end
 
   end
