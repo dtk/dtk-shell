@@ -210,6 +210,7 @@ module DTK::Client
       create_missing_clone_dirs()
       resolve_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
+      version ||= options.version
       # in case of auto-import via service import, we skip cloning to speed up a process
       skip_cloning = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
       do_not_raise = context_params.get_forwarded_options()[:do_not_raise] if context_params.get_forwarded_options()
