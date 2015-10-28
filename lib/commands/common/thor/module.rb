@@ -290,12 +290,16 @@ module DTK::Client
     def delete_from_catalog_aux(context_params)
       module_type        = get_module_type(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
+      version = options.version
 
       # remote_module_name can be namespace:name or namespace/name
       remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name, ':')
 
       unless options.force? || options.confirmed?
-        return unless Console.confirmation_prompt("Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace + '/'}#{remote_module_name}' and all items contained in it" + '?')
+        msg = "Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace + '/'}#{remote_module_name}'"
+        msg += " version '#{version}'" if version
+        msg += " and all items contained in it"
+        return unless Console.confirmation_prompt(msg + '?')
       end
 
       post_body = {
@@ -304,6 +308,7 @@ module DTK::Client
         :remote_module_namespace => remote_namespace,
         :force_delete            => options.force?
       }
+      # post_body.merge!(:version => version) if version
 
       post rest_url("#{module_type}/delete_remote"), post_body
     end
