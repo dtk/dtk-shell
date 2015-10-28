@@ -188,11 +188,12 @@ module DTK::Client
     # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     # if multiple items and failire; stops on first failure
 #    desc "install [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-r DTK-REPO-MANAGER]","Install remote component module into local environment"
-    desc "install NAMESPACE/REMOTE-COMPONENT-MODULE-NAME","Install remote component module into local environment"
+    desc "install NAMESPACE/REMOTE-COMPONENT-MODULE-NAME [-v VERSION]","Install remote component module into local environment"
     method_option "repo-manager",:aliases => "-r" ,
       :type => :string,
       :banner => "REPO-MANAGER",
       :desc => "DTK Repo Manager from which to resolve requested module."
+      version_method_option
     def install(context_params)
       response = install_module_aux(context_params)
       if response && response.ok?
