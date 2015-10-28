@@ -120,9 +120,6 @@ module DTK::Client
         # we check if there is module_url if so we install from git
         module_url  = m_module['module_url']
 
-        # add version to display name if exist
-        module_display_name = module_version ? "#{module_name} (#{module_version})" : module_name
-
         # descriptive message
         importing  = module_url ? "Importing" : "Installing"
         import_msg = "#{importing} #{module_type.gsub('_', ' ')} '#{full_name}'"
