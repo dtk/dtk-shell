@@ -420,7 +420,7 @@ module DTK::Client
       thor_options     = context_params.get_forwarded_options() || options
       module_id        = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
       module_name      = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
-      version          = thor_options["version"]
+      version          = thor_options["version"]||options.version
       internal_trigger = true if thor_options['skip_edit']
 
       module_location = OsUtil.module_location(module_type, module_name, version)

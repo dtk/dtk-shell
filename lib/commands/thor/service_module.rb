@@ -359,8 +359,9 @@ module DTK::Client
     #
     # desc "SERVICE-MODULE-NAME/ID clone [-v VERSION] [-n]", "Locally clone the service module files. Use -n to skip edit prompt"
     # version_method_option
-    desc "SERVICE-MODULE-NAME/ID clone [-n]", "Locally clone the service module files. Use -n to skip edit prompt"
+    desc "SERVICE-MODULE-NAME/ID clone [-n] [-v VERSION]", "Locally clone the service module files. Use -n to skip edit prompt"
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
+    version_method_option
     def clone(context_params, internal_trigger=false)
       clone_module_aux(context_params, internal_trigger)
     end
