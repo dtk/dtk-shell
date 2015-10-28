@@ -184,10 +184,11 @@ module DTK::Client
     end
 
     # version_method_option
-    desc "install NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y]", "Install remote service module into local environment. -y will automatically clone component modules."
+    desc "install NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y] [-v VERSION]", "Install remote service module into local environment. -y will automatically clone component modules."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     # method_option :ignore, :aliases => '-i', :type => :boolean, :default => false
     method_option :update_none, :type => :boolean, :default => false
+    version_method_option
     def install(context_params)
       response = install_module_aux(context_params)
       @@invalidate_map << :service_module if response && response.ok?
