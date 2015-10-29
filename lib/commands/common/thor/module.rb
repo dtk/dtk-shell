@@ -309,7 +309,7 @@ module DTK::Client
         :remote_module_namespace => remote_namespace,
         :force_delete            => options.force?
       }
-      # post_body.merge!(:version => version) if version
+      post_body.merge!(:version => version) if version
 
       post rest_url("#{module_type}/delete_remote"), post_body
     end
