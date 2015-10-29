@@ -134,7 +134,7 @@ module DTK::Client
         else
           # import from Repo Manager
           new_context_params = ::DTK::Shell::ContextParams.new([module_name])
-          new_context_params.override_method_argument!('option_2', module_version)
+          new_context_params.override_method_argument!('option_2', version) if version && !version.eql?('master')
           new_context_params.forward_options(:skip_cloning => false, :skip_auto_install => true, :module_type => module_type).merge!(opts)
           response = ContextRouter.routeTask(module_type, 'install', new_context_params, @conn)
         end
