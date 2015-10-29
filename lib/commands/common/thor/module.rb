@@ -206,7 +206,7 @@ module DTK::Client
       CommonModule::Import.new(self, context_params).from_file()
     end
 
-    def install_module_aux(context_params)
+    def install_module_aux(context_params, internal_trigger = false)
       create_missing_clone_dirs()
       resolve_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
@@ -239,7 +239,13 @@ module DTK::Client
       post_body.merge!(:ignore_component_error => ignore_component_error) if ignore_component_error
       post_body.merge!(:additional_message => additional_message) if additional_message
       post_body.merge!(:skip_auto_install => skip_ainstall) if skip_ainstall
-      post_body.merge!(:version => version) if version
+      post_body.merge!(:version => version) if version && !internal_trigger
+
+      if version && !internal_trigger
+        master_response = post rest_url("#{module_type}/check_master_branch_exist"), post_body
+        return master_response unless master_response.ok?
+        install_module_aux(context_params, true) if master_response.data && master_response.data.empty?
+      end
 
       response = post rest_url("#{module_type}/import"), post_body
 
