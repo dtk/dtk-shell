@@ -531,10 +531,10 @@ module DTK::Client
       response
     end
 
-    desc "delete-from-catalog NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y] [--force]", "Delete the service module from the DTK Network catalog"
+    desc "delete-from-catalog NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y] [--force] [-v VERSION]", "Delete the service module from the DTK Network catalog"
     method_option :confirmed, :aliases => '-y', :type => :boolean, :default => false
     method_option :force, :type => :boolean, :default => false
-    # version_method_option
+    version_method_option
     def delete_from_catalog(context_params)
       delete_from_catalog_aux(context_params)
     end
