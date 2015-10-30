@@ -585,6 +585,18 @@ module DTK::Client
       response = post rest_url("#{module_type}/list_versions"), post_body
     end
 
+    def list_remote_versions_aux(context_params)
+      module_type  = get_module_type(context_params)
+      module_id = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
+
+      post_body = {
+        "#{module_type}_id".to_sym => module_id,
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
+      }
+
+      response = post rest_url("#{module_type}/list_remote_versions"), post_body
+    end
+
     def delete_assembly_aux(context_params)
       module_type = get_module_type(context_params)
 

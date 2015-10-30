@@ -127,7 +127,13 @@ module DTK::Client
     def list_versions(context_params)
       response = list_versions_aux(context_params)
       return response unless response.ok?
+      response.render_table(:list_versions, true)
+    end
 
+    desc "COMPONENT-MODULE-NAME/ID list-remote-versions","List all remote versions associated with this component module."
+    def list_remote_versions(context_params)
+      response = list_remote_versions_aux(context_params)
+      return response unless response.ok?
       response.render_table(:list_versions, true)
     end
 
