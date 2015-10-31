@@ -291,7 +291,7 @@ module DTK::Client
       publish_module_aux(context_params)
     end
 
-    desc "COMPONENT-MODULE-NAME/ID update [-n NAMESPACE] [--force] [--v VERSION]", "Update local component module from remote repository."
+    desc "COMPONENT-MODULE-NAME/ID update [-n NAMESPACE] [--force]", "Update local component module from remote repository."
     method_option :namespace,:aliases => '-n',
       :type   => :string,
       :banner => "NAMESPACE",
@@ -300,7 +300,6 @@ module DTK::Client
       :type    => :boolean,
       :desc   => "Force pull",
       :default => false
-    version_method_option
     def update(context_params)
       update_aux(context_params)
     end
