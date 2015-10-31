@@ -305,7 +305,6 @@ module DTK::Client
     #   push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
     # end
 
-    # desc "SERVICE-MODULE-NAME/ID pull-from-dtkn [-n NAMESPACE] [-v VERSION]", "Update local service module from remote repository."
     desc "SERVICE-MODULE-NAME/ID update [-n NAMESPACE] [--force]", "Update local service module from remote repository."
     method_option :namespace,:aliases => '-n',
       :type   => :string,
