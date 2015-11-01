@@ -76,9 +76,9 @@ module DTK::Client
       set_attribute_module_aux(context_params)
     end
 
-    desc "list [--remote] [--diff] [-n NAMESPACE]", "List loaded or remote component modules. Use --diff to compare loaded and remote component modules."
+    desc "list [--remote] [--diffs] [-n NAMESPACE]", "List loaded or remote component modules. Use --diff to compare loaded and remote component modules."
     method_option :remote, :type => :boolean, :default => false
-    method_option :diff, :type => :boolean, :default => false
+    method_option :diffs, :type => :boolean, :default => false, :aliases => "--diff"
     method_option :namespace, :aliases => "-n" ,
       :type => :string,
       :banner => "NAMESPACE",
@@ -92,7 +92,7 @@ module DTK::Client
       action           = (remote ? "list_remote" : "list")
 
       post_body        = (remote ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
-      post_body[:diff] = options.diff? ? options.diff : {}
+      post_body[:diff] = options.diffs? ? options.diffs : {}
 
       post_body[:detail_to_include] << 'versions'# if options.with_versions?
       post_body.merge!(:module_namespace => options.namespace) if options.namespace
