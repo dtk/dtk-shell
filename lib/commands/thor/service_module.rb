@@ -109,9 +109,9 @@ module DTK::Client
       list(context_params)
     end
 
-    desc "list [--remote] [--diff] [-n NAMESPACE]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
+    desc "list [--remote] [--diffs] [-n NAMESPACE]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
     method_option :remote, :type => :boolean, :default => false
-    method_option :diff, :type => :boolean, :default => false
+    method_option :diffs, :type => :boolean, :default => false, :aliases => "--diff"
     method_option :namespace, :aliases => "-n" ,
       :type => :string,
       :banner => "NAMESPACE",
@@ -133,7 +133,7 @@ module DTK::Client
       if (context_params.last_entity_name == :"service-module") and about.nil?
         action    = options.remote? ? "list_remote" : "list"
         post_body = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
-        post_body[:diff] = options.diff? ? options.diff : {}
+        post_body[:diff] = options.diffs? ? options.diffs : {}
         post_body.merge!(:module_namespace => options.namespace) if options.namespace
         post_body[:detail_to_include] << 'versions'# if options.with_versions?
 
