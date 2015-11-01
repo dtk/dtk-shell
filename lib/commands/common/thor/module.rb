@@ -210,7 +210,10 @@ module DTK::Client
       create_missing_clone_dirs()
       resolve_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
+
       version ||= options.version
+      check_version_format(version) if version && !version.eql?('master')
+
       # in case of auto-import via service import, we skip cloning to speed up a process
       skip_cloning = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
       do_not_raise = context_params.get_forwarded_options()[:do_not_raise] if context_params.get_forwarded_options()
@@ -745,6 +748,12 @@ module DTK::Client
       OsUtil.print("There are inconsistent module dependencies mentioned in dtk.model.yaml: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
       OsUtil.print("There are missing module dependencies mentioned in dtk.model.yaml: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
       OsUtil.print("There are ambiguous module dependencies mentioned in dtk.model.yaml: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
+    end
+
+    def check_version_format(version)
+      unless version.match(/\A\d{1,2}\.\d{1,2}\.\d{1,2}\Z/)
+        raise DtkValidationError, "Version has an illegal value '#{version}', format needed: '##.##.##'"
+      end
     end
 
   end
