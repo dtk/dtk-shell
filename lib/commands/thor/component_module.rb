@@ -94,7 +94,12 @@ module DTK::Client
       post_body        = (remote ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
       post_body[:diff] = options.diffs? ? options.diffs : {}
 
-      post_body[:detail_to_include] << 'versions'# if options.with_versions?
+      if post_body[:detail_to_include]
+        post_body[:detail_to_include] << 'versions' # if options.with_versions?
+      else
+        post_body[:detail_to_include]
+      end
+
       post_body.merge!(:module_namespace => options.namespace) if options.namespace
 
       response = post rest_url("component_module/#{action}"), post_body
