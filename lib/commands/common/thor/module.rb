@@ -210,9 +210,13 @@ module DTK::Client
       create_missing_clone_dirs()
       resolve_direct_access(::DTK::Client::Configurator.check_direct_access)
       remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
+      add_version = false
 
       version ||= options.version
-      check_version_format(version) if version && !version.eql?('master')
+      if version && !version.eql?('master')
+        check_version_format(version)
+        add_version = true
+      end
 
       # in case of auto-import via service import, we skip cloning to speed up a process
       skip_cloning = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
@@ -271,7 +275,8 @@ module DTK::Client
         continue = trigger_module_auto_import(missing_components, required_components, module_opts)
         return unless continue
 
-        print "Resuming DTK Network import for #{module_type} '#{remote_module_name}' ..."
+        print_remote_name = add_version ? "#{remote_module_name}(#{version})" : remote_module_name
+        print "Resuming DTK Network import for #{module_type} '#{print_remote_name}' ..."
         # repeat import call for service
         post_body.merge!(opts)
         response = post rest_url("#{module_type}/import"), post_body
