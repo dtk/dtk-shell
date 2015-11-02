@@ -379,7 +379,6 @@ module DTK::Client
     end
 
     desc "COMPONENT-MODULE-NAME/ID push [--force] [--docs]", "Push changes from local copy of component module to server"
-    version_method_option
     method_option "message",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
