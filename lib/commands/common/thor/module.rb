@@ -307,6 +307,8 @@ module DTK::Client
       remote_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
       version = options.version
 
+      check_version_format(version) if version
+
       # remote_module_name can be namespace:name or namespace/name
       remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name, ':')
 
