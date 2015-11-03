@@ -110,10 +110,11 @@ module DTK::Client
       post_body = {
        "#{module_type}_id".to_sym => module_id
       }
-      action = (version ? "delete_version" : "delete")
+      # action = (version ? "delete_version" : "delete")
       post_body[:version] = version if version
 
-      response = post(rest_url("#{module_type}/#{action}"), post_body)
+      # response = post(rest_url("#{module_type}/#{action}"), post_body)
+      response = post(rest_url("#{module_type}/delete"), post_body)
       return response unless response.ok?
 
       response =
@@ -729,8 +730,17 @@ module DTK::Client
         return create_response
       end
 
+      if error = create_response.data(:dsl_parse_error)
+        dsl_parsed_message = ServiceImporter.error_message(module_name, error)
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red)
+      end
+
       if external_dependencies = create_response.data(:external_dependencies)
         print_dependencies(external_dependencies)
+      end
+
+      if component_module_refs = create_response.data(:component_module_refs)
+        print_using_dependencies(component_module_refs)
       end
 
       Response::Ok.new()
@@ -755,6 +765,15 @@ module DTK::Client
       OsUtil.print("There are inconsistent module dependencies mentioned in dtk.model.yaml: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
       OsUtil.print("There are missing module dependencies mentioned in dtk.model.yaml: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
       OsUtil.print("There are ambiguous module dependencies mentioned in dtk.model.yaml: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
+    end
+
+    def print_using_dependencies(component_refs)
+      unless component_refs.empty?
+        puts 'Using component modules:'
+        component_refs.values.map { |r| "#{r['namespace_info']}:#{r['module_name']}" }.sort.each do |name|
+          puts "  #{name}"
+        end
+      end
     end
 
     def check_version_format(version)
