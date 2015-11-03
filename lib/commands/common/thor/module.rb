@@ -111,7 +111,17 @@ module DTK::Client
        "#{module_type}_id".to_sym => module_id
       }
       # action = (version ? "delete_version" : "delete")
-      post_body[:version] = version if version
+      opts = {:module_name => module_name}
+
+      if version
+        if version.eql?('all')
+          post_body.merge!(:delete_all_versions => true)
+          opts.merge!(:delete_all_versions => true)
+        else
+          post_body.merge!(:version => version)
+          opts.merge!(:version => version)
+        end
+      end
 
       # response = post(rest_url("#{module_type}/#{action}"), post_body)
       response = post(rest_url("#{module_type}/delete"), post_body)
@@ -119,10 +129,6 @@ module DTK::Client
 
       response =
         if options.purge? || method_opts[:purge]
-          opts = {:module_name => module_name}
-          if version then opts.merge!(:version => version)
-          else opts.merge!(:delete_all_versions => true)
-          end
           purge_clone_aux(module_type.to_sym, opts)
         else
           Helper(:git_repo).unlink_local_clone?(module_type.to_sym, module_name, version)
@@ -770,7 +776,14 @@ module DTK::Client
     def print_using_dependencies(component_refs)
       unless component_refs.empty?
         puts 'Using component modules:'
-        component_refs.values.map { |r| "#{r['namespace_info']}:#{r['module_name']}" }.sort.each do |name|
+        names = []
+        component_refs.values.each do |cmp_ref|
+          version = cmp_ref['version_info']
+          name    = "#{cmp_ref['namespace_info']}:#{cmp_ref['module_name']}"
+          name << "(#{version})" if version
+          names << name
+        end
+        names.sort.each do |name|
           puts "  #{name}"
         end
       end
