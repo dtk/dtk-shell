@@ -137,10 +137,14 @@ module DTK::Client
       return response unless response.ok?
 
       unless method_opts[:no_error_msg]
-        msg = "Module '#{module_name}' "
-        if version then msg << "version '#{version}' has been deleted"
-        else msg << "has been deleted"; end
-        OsUtil.print(msg, :yellow)
+        if version && version.eql?('all')
+          OsUtil.print("All versions of ‘#{module_name}’ module have been deleted", :yellow)
+        else
+          msg = "Module '#{module_name}' "
+          if version then msg << "version '#{version}' has been deleted"
+          else msg << "has been deleted"; end
+          OsUtil.print(msg, :yellow)
+        end
       end
 
       Response::Ok.new()
