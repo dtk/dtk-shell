@@ -76,7 +76,7 @@ module DTK::Client
           ],
           :assembly => [
             ["info","info","# Info for given assembly in current service module."],
-            ["stage", "stage [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [--settings SETTINGS-NAME1[,..]]", "# Stage assembly in target."],
+            ["stage", "stage [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE]", "# Stage assembly in target."],
             # ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
             # ["deploy","deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
             ["deploy","deploy [INSTANCE-NAME] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],

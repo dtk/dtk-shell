@@ -184,7 +184,7 @@ module DTK::Client
       response
     end
 
-    desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [--settings SETTINGS-NAME1[,..]]", "Stage assembly in target."
+    desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE]", "Stage assembly in target."
     method_option "in-target",:aliases => "-t" ,
       :type => :string,
       :banner => "TARGET-NAME/ID",
