@@ -97,7 +97,8 @@ module DTK::Client
       module_info_aux(context_params)
     end
 
-    desc "SERVICE-MODULE-NAME/ID list-assemblies","List assemblies associated with service module."
+    desc "SERVICE-MODULE-NAME/ID list-assemblies [-v VERSION]","List assemblies associated with service module."
+    version_method_option
     method_option :remote, :type => :boolean, :default => false
     def list_assemblies(context_params)
       context_params.method_arguments = ["assembly"]
@@ -150,12 +151,14 @@ module DTK::Client
         # TODO: this is temp; will shortly support this
         raise DTK::Client::DtkValidationError.new("Not supported '--remote' option when listing service module assemblies, component templates or modules", true) if options.remote?
         raise DTK::Client::DtkValidationError.new("Not supported type '#{about}' for list for current context level. Possible type options: 'assembly'", true) unless(about == "assembly" || about == "modules")
-
+        post_body = { :service_module_id => service_module_id }
         if about
           case about
           when "assembly"
-            data_type        = :assembly_template_description
-            action           = "list_assemblies"
+            version   = options.version
+            data_type = :assembly_template_description
+            action    = "list_assemblies"
+            post_body.merge!(:version => version) if version
           when "modules"
             data_type        = options.remote? ? :component_remote : :component_module
             action           = "list_component_modules"
@@ -163,7 +166,7 @@ module DTK::Client
             raise_validation_error_method_usage('list')
           end
         end
-        response = post rest_url("service_module/#{action}"), { :service_module_id => service_module_id }
+        response = post rest_url("service_module/#{action}"), post_body
       end
 
       unless response.nil?
