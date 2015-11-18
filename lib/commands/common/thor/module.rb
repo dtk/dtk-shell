@@ -127,6 +127,12 @@ module DTK::Client
       response = post(rest_url("#{module_type}/delete"), post_body)
       return response unless response.ok?
 
+      # if we do not provide version, server will calculate the latest version which we can use here
+      unless version
+        version = response.data(:version)
+        opts.merge!(:version => version)
+      end
+
       response =
         if options.purge? || method_opts[:purge]
           purge_clone_aux(module_type.to_sym, opts)
@@ -350,11 +356,21 @@ module DTK::Client
         :remote_component_name => input_remote_name,
         :rsa_pub_key => SSHUtil.rsa_pub_key_content()
       }
-      post_body.merge!(:version => options.version) if options.version?
+      if options.version?
+        post_body.merge!(:version => options.version)
+      else
+        post_body.merge!(:use_latest => true)
+      end
 
       # check if module exist on repo manager and use it to decide if need to push or publish
       check_response = post rest_url("#{module_type}/check_remote_exist"), post_body
       return check_response unless check_response.ok?
+
+      unless options.version?
+        version = check_response.data(:version)
+        context_params.forward_options('version' => version)
+        post_body.merge!(:version => version)
+      end
 
       # if remote module exist and user call 'publish' we do push-dtkn else we publish it as new module
       response_data = check_response['data']
@@ -450,10 +466,6 @@ module DTK::Client
       module_name      = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
       version          = thor_options["version"]||options.version
       internal_trigger = true if thor_options['skip_edit']
-
-      module_location = OsUtil.module_location(module_type, module_name, version)
-
-      raise DTK::Client::DtkValidationError, "#{module_type.gsub('_',' ').capitalize} '#{module_name}#{version && "-#{version}"}' already cloned!" if File.directory?(module_location)
       clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'])
     end
 
@@ -530,7 +542,7 @@ module DTK::Client
     def push_dtkn_module_aux(context_params, internal_trigger=false)
       module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME],method_argument_names)
       catalog     = 'dtkn'
-      version     = options["version"]
+      version     = options["version"]||context_params.get_forwarded_thor_option('version')
       module_type = get_module_type(context_params)
 
       raise DtkValidationError, "You have to provide valid catalog to push changes to! Valid catalogs: #{PushCatalogs}" unless catalog

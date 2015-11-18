@@ -10,8 +10,11 @@ module DTK::Client
     # module_type: will be :component_module or :service_module
 
     def clone_aux(module_type, module_id, version, internal_trigger = false, omit_output = false, opts = {})
-      module_name, module_namespace, repo_url, branch, not_ok_response = workspace_branch_info(module_type, module_id, version, opts)
+      module_name, module_namespace, repo_url, branch, not_ok_response, version = workspace_branch_info(module_type, module_id, version, opts.merge!(:use_latest => true))
       return not_ok_response if not_ok_response
+
+      module_location = OsUtil.module_location(module_type, "#{module_namespace}:#{module_name}", version)
+      raise DTK::Client::DtkValidationError, "#{module_type.to_s.gsub('_',' ').capitalize} '#{module_name}#{version && "-#{version}"}' already cloned!" if File.directory?(module_location)
 
       full_module_name = ModuleUtil.resolve_name(module_name, module_namespace)
 
