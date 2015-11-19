@@ -147,8 +147,8 @@ module DTK::Client
           OsUtil.print("All versions of '#{module_name}' module have been deleted", :yellow)
         else
           msg = "Module '#{module_name}' "
-          if version then msg << "version '#{version}' has been deleted"
-          else msg << "has been deleted"; end
+          if version then msg << "version '#{version}' has been deleted successfully."
+          else msg << "has been deleted successfully."; end
           OsUtil.print(msg, :yellow)
         end
       end
@@ -344,7 +344,16 @@ module DTK::Client
       }
       post_body.merge!(:version => version) if version
 
-      post rest_url("#{module_type}/delete_remote"), post_body
+      response = post rest_url("#{module_type}/delete_remote"), post_body
+      return response unless response.ok?
+
+      full_module_name, version = response.data(:module_full_name, :version)
+      msg = "Module '#{full_module_name}' "
+      msg << "version '#{version}'" if version
+      msg << " has been deleted successfully."
+      OsUtil.print(msg, :yellow)
+
+      Response::Ok.new()
     end
 
     def publish_module_aux(context_params)
