@@ -349,7 +349,7 @@ module DTK::Client
 
       full_module_name, version = response.data(:module_full_name, :version)
       msg = "Module '#{full_module_name}' "
-      msg << "version '#{version}'" if version
+      msg << "version '#{version}'" if version && !version.eql?('master')
       msg << " has been deleted successfully."
       OsUtil.print(msg, :yellow)
 
