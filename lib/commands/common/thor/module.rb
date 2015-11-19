@@ -459,14 +459,14 @@ module DTK::Client
       response
     end
 
-    def clone_module_aux(context_params, internal_trigger=false)
+    def clone_module_aux(context_params, internal_trigger = false)
       module_type      = get_module_type(context_params)
       thor_options     = context_params.get_forwarded_options() || options
       module_id        = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
       module_name      = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
       version          = thor_options["version"]||options.version
       internal_trigger = true if thor_options['skip_edit']
-      clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'])
+      clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'], :use_latest => true)
     end
 
     def edit_module_aux(context_params)

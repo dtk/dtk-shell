@@ -10,8 +10,17 @@ module DTK::Client
     # module_type: will be :component_module or :service_module
 
     def clone_aux(module_type, module_id, version, internal_trigger = false, omit_output = false, opts = {})
-      module_name, module_namespace, repo_url, branch, not_ok_response, version = workspace_branch_info(module_type, module_id, version, opts.merge!(:use_latest => true))
+      # if version = base do not clone latest, just base
+      if version && version.eql?('base')
+        version = nil
+        opts[:use_latest] = false
+      end
+
+      module_name, module_namespace, repo_url, branch, not_ok_response, version = workspace_branch_info(module_type, module_id, version, opts)
       return not_ok_response if not_ok_response
+
+      # clone base version first if not cloned already
+      clone_base_aux(module_type, module_id, "#{module_namespace}:#{module_name}") if opts[:use_latest] && version
 
       module_location = OsUtil.module_location(module_type, "#{module_namespace}:#{module_name}", version)
       raise DTK::Client::DtkValidationError, "#{module_type.to_s.gsub('_',' ').capitalize} '#{module_name}#{version && "-#{version}"}' already cloned!" if File.directory?(module_location)
@@ -22,9 +31,11 @@ module DTK::Client
       response = Helper(:git_repo).create_clone_with_branch(module_type,module_name,repo_url,branch,version,module_namespace,opts)
 
       if response.ok?
-        puts "Module '#{full_module_name}' has been successfully cloned!" unless omit_output
+        print_name = "Module '#{full_module_name}'"
+        print_name << " version '#{version}'" if version
+        puts "#{print_name} has been successfully cloned!" unless omit_output
         # when puppet forge import, print successfully imported instead of cloned
-        DTK::Client::OsUtil.print("Module '#{full_module_name}' has been successfully imported!", :yellow) if omit_output && opts[:print_imported]
+        DTK::Client::OsUtil.print("#{print_name} has been successfully imported!", :yellow) if omit_output && opts[:print_imported]
         unless internal_trigger
           if Console.confirmation_prompt("Would you like to edit module now?")
             context_params_for_module = create_context_for_module(full_module_name, module_type)
@@ -34,6 +45,14 @@ module DTK::Client
       end
 
       response
+    end
+
+    # clone base module version
+    def clone_base_aux(module_type, module_id, full_module_name)
+      base_module_location = OsUtil.module_location(module_type, full_module_name, nil)
+      unless File.directory?(base_module_location)
+        clone_aux(module_type, module_id, nil, true)
+      end
     end
 
     def create_context_for_module(full_module_name, module_type)
