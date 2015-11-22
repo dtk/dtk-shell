@@ -226,33 +226,30 @@ module DTK::Client
     def install_module_aux(context_params, internal_trigger = false)
       create_missing_clone_dirs()
       resolve_direct_access(::DTK::Client::Configurator.check_direct_access)
-      remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
-      add_version = false
 
-      version ||= options.version
-      if version && !version.eql?('master')
+      remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
+      forwarded_version           = context_params.get_forwarded_options()['version']
+      add_version                 = false
+
+      version ||= forwarded_version || options.version
+      version = nil if version.eql?('master')
+      if version
         check_version_format(version)
         add_version = true
       end
 
       # in case of auto-import via service import, we skip cloning to speed up a process
-      skip_cloning = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
-      do_not_raise = context_params.get_forwarded_options()[:do_not_raise] if context_params.get_forwarded_options()
+      skip_cloning  = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
+      do_not_raise  = context_params.get_forwarded_options()[:do_not_raise] if context_params.get_forwarded_options()
       skip_ainstall = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:skip_auto_install] : false
-      module_type  = get_module_type(context_params)
+      skip_base     = context_params.get_forwarded_options()['skip_base']
+      module_type   = get_module_type(context_params)
 
       # ignore_component_error = context_params.get_forwarded_options()[:ignore_component_error]||options.ignore? if context_params.get_forwarded_options()
       ignore_component_error = context_params.get_forwarded_options().empty? ? options.ignore? : context_params.get_forwarded_options()[:ignore_component_error]
       additional_message     = context_params.get_forwarded_options()[:additional_message] if context_params.get_forwarded_options()
 
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name, ':')
-
-      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, :namespace => remote_namespace, :version => version)
-        message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed."
-        # message += '. To ignore this conflict and use existing component module please use -i switch (install REMOTE-SERVICE-NAME -i).' if additional_message
-
-        raise DtkError, message unless ignore_component_error
-      end
 
       post_body = {
         :remote_module_name => remote_module_name.sub(':', '/'),
@@ -263,12 +260,24 @@ module DTK::Client
       post_body.merge!(:ignore_component_error => ignore_component_error) if ignore_component_error
       post_body.merge!(:additional_message => additional_message) if additional_message
       post_body.merge!(:skip_auto_install => skip_ainstall) if skip_ainstall
-      post_body.merge!(:version => version) if version && !internal_trigger
 
-      if version && !internal_trigger
-        master_response = post rest_url("#{module_type}/check_master_branch_exist"), post_body
+      # we need to install base module version if not installed
+      unless skip_base
+        master_response = install_base_version_aux?(context_params, post_body, module_type)
         return master_response unless master_response.ok?
-        install_module_aux(context_params, true) if master_response.data && master_response.data.empty?
+
+        latest_version = master_response.data(:latest_version)
+
+        unless version
+          version = latest_version.eql?('master') ? nil : latest_version
+        end
+      end
+
+      post_body.merge!(:version => version) if version
+
+      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, :namespace => remote_namespace, :version => version)
+        message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed."
+        raise DtkError, message unless ignore_component_error
       end
 
       response = post rest_url("#{module_type}/import"), post_body
@@ -317,6 +326,25 @@ module DTK::Client
 
       resolve_missing_components(module_id, module_name, namespace, options.force?) if module_type.to_s.eql?('service_module')
       response
+    end
+
+    def install_base_version_aux?(context_params, post_body, module_type)
+      master_response = post rest_url("#{module_type}/prepare_for_install_module"), post_body
+      return master_response unless master_response.ok?
+
+      head_installed = master_response.data(:head_installed)
+      latest_version = master_response.data(:latest_version)
+
+      if !head_installed && !latest_version.eql?('master')
+        remote_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
+        new_context_params = DTK::Shell::ContextParams.new
+        new_context_params.add_context_to_params(module_type, module_type)
+        new_context_params.method_arguments = [remote_module_name]
+        new_context_params.forward_options('skip_base' => true, 'version' => 'master')
+        install_module_aux(new_context_params)
+      end
+
+      master_response
     end
 
     def delete_from_catalog_aux(context_params)
