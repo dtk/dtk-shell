@@ -296,7 +296,7 @@ module DTK::Client
       publish_module_aux(context_params)
     end
 
-    desc "COMPONENT-MODULE-NAME/ID update [-n NAMESPACE] [--force]", "Update local component module from remote repository."
+    desc "COMPONENT-MODULE-NAME/ID pull-dtkn [-n NAMESPACE] [--force]", "Update local component module from remote repository."
     method_option :namespace,:aliases => '-n',
       :type   => :string,
       :banner => "NAMESPACE",
@@ -305,8 +305,8 @@ module DTK::Client
       :type    => :boolean,
       :desc   => "Force pull",
       :default => false
-    def update(context_params)
-      update_aux(context_params)
+    def pull_dtkn(context_params)
+      pull_dtkn_aux(context_params)
     end
 
 =begin
@@ -390,22 +390,22 @@ module DTK::Client
       push_module_aux(context_params, internal_trigger)
     end
 
-#    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to remote repository (dtkn)."
-    # desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of component module to remote repository (dtkn)."
-    # method_option "message",:aliases => "-m" ,
-    #   :type => :string,
-    #   :banner => "COMMIT-MSG",
-    #   :desc => "Commit message"
-    # method_option "namespace",:aliases => "-n",
-    #     :type => :string,
-    #     :banner => "NAMESPACE",
-    #     :desc => "Remote namespace"
-    # #hidden option for dev
-    # method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-    # def push_dtkn(context_params, internal_trigger=false)
-    #   push_dtkn_module_aux(context_params, internal_trigger)
-    # end
-    # PushCatalogs = ["origin", "dtkn"]
+    # desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to remote repository (dtkn)."
+    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of component module to remote repository (dtkn)."
+    method_option "message",:aliases => "-m" ,
+      :type => :string,
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    method_option "namespace",:aliases => "-n",
+        :type => :string,
+        :banner => "NAMESPACE",
+        :desc => "Remote namespace"
+    #hidden option for dev
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    def push_dtkn(context_params, internal_trigger=false)
+      push_dtkn_module_aux(context_params, internal_trigger)
+    end
+    PushCatalogs = ["origin", "dtkn"]
 
 
 #    desc "COMPONENT-MODULE-NAME/ID list-diffs [-v VERSION] [--remote]", "List diffs"

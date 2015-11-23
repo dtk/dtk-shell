@@ -385,51 +385,97 @@ module DTK::Client
     end
 
     def publish_module_aux(context_params)
-      module_type  = get_module_type(context_params)
-      module_id, module_name, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME, :option_1], method_argument_names)
+      module_type = get_module_type(context_params)
+      module_id, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, :option_1], method_argument_names)
+
+      raise DtkValidationError, "You have to provide version you want to publish!" unless options.version
+
+      skip_base         = context_params.get_forwarded_options()['skip_base']
+      forwarded_version = context_params.get_forwarded_options()['version']
+
+      version = forwarded_version||options.version
+      version = nil if version.eql?('master')
 
       post_body = {
         "#{module_type}_id".to_sym => module_id,
         :remote_component_name => input_remote_name,
-        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content(),
       }
-      if options.version?
-        post_body.merge!(:version => options.version)
-      else
-        post_body.merge!(:use_latest => true)
+
+      unless skip_base
+        check_response = post rest_url("#{module_type}/check_remote_exist"), post_body
+        return check_response unless check_response.ok?
+
+        remote_exist = check_response.data(:remote_exist)
+        unless remote_exist
+          context_params.forward_options('skip_base' => true, 'version' => 'master')
+          publish_module_aux(context_params)
+        end
+
+        context_params.method_arguments << version
+        context_params.forward_options('do_not_raise_if_exist' => true)
+        create_response = create_new_version_aux(context_params)
+        return create_response unless create_response.ok?
       end
 
-      # check if module exist on repo manager and use it to decide if need to push or publish
-      check_response = post rest_url("#{module_type}/check_remote_exist"), post_body
-      return check_response unless check_response.ok?
+      post_body.merge!(:version => version) if version
+      response = post rest_url("#{module_type}/export"), post_body
+      return response unless response.ok?
 
-      unless options.version?
-        version = check_response.data(:version)
-        context_params.forward_options('version' => version)
-        post_body.merge!(:version => version)
-      end
-
-      # if remote module exist and user call 'publish' we do push-dtkn else we publish it as new module
-      response_data = check_response['data']
-      if response_data["remote_exist"]
-        raise DtkValidationError, "You are not allowed to update #{module_type} versions!" if response_data['frozen']
-
-        # if do publish namespace2/module from namespace1/module, forward namespace as option to be used in push_dtkn_module_aux
-        forward_namespace?(module_name, input_remote_name, context_params)
-
-        push_dtkn_module_aux(context_params, true)
-      else
-        response = post rest_url("#{module_type}/export"), post_body
-        return response unless response.ok?
-
+      unless skip_base
         full_module_name = "#{response.data['remote_repo_namespace']}/#{response.data['remote_repo_name']}"
-
-        DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published to '#{full_module_name}'!")
-        Response::Ok.new()
+        DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published to '#{full_module_name}' version '#{version}'!")
       end
+
+      Response::Ok.new()
     end
 
-    def update_aux(context_params)
+    # def publish_module_aux(context_params)
+    #   module_type  = get_module_type(context_params)
+    #   module_id, module_name, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME, :option_1], method_argument_names)
+
+    #   post_body = {
+    #     "#{module_type}_id".to_sym => module_id,
+    #     :remote_component_name => input_remote_name,
+    #     :rsa_pub_key => SSHUtil.rsa_pub_key_content()
+    #   }
+    #   if options.version?
+    #     post_body.merge!(:version => options.version)
+    #   else
+    #     post_body.merge!(:use_latest => true)
+    #   end
+
+    #   # check if module exist on repo manager and use it to decide if need to push or publish
+    #   check_response = post rest_url("#{module_type}/check_remote_exist"), post_body
+    #   return check_response unless check_response.ok?
+
+    #   unless options.version?
+    #     version = check_response.data(:version)
+    #     context_params.forward_options('version' => version)
+    #     post_body.merge!(:version => version)
+    #   end
+
+    #   # if remote module exist and user call 'publish' we do push-dtkn else we publish it as new module
+    #   response_data = check_response['data']
+    #   if response_data["remote_exist"]
+    #     raise DtkValidationError, "You are not allowed to update #{module_type} versions!" if response_data['frozen']
+
+    #     # if do publish namespace2/module from namespace1/module, forward namespace as option to be used in push_dtkn_module_aux
+    #     forward_namespace?(module_name, input_remote_name, context_params)
+
+    #     push_dtkn_module_aux(context_params, true)
+    #   else
+    #     response = post rest_url("#{module_type}/export"), post_body
+    #     return response unless response.ok?
+
+    #     full_module_name = "#{response.data['remote_repo_namespace']}/#{response.data['remote_repo_name']}"
+
+    #     DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published to '#{full_module_name}'!")
+    #     Response::Ok.new()
+    #   end
+    # end
+
+    def pull_dtkn_aux(context_params)
       module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID,REQ_MODULE_NAME,:option_1],method_argument_names)
 
       catalog      = 'dtkn'
@@ -767,8 +813,9 @@ module DTK::Client
       module_type = get_module_type(context_params)
       module_id, version = context_params.retrieve_arguments([REQ_MODULE_ID, :option_1!], method_argument_names)
 
-      module_name = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
-      namespace, name = get_namespace_and_name(module_name,':')
+      module_name           = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
+      namespace, name       = get_namespace_and_name(module_name,':')
+      do_not_raise_if_exist = context_params.get_forwarded_options()['do_not_raise_if_exist']
 
       module_location = OsUtil.module_location(module_type, module_name, nil)
       unless File.directory?(module_location)
@@ -778,15 +825,21 @@ module DTK::Client
         end
       end
 
+      opts = {:do_not_raise_if_exist => do_not_raise_if_exist} if do_not_raise_if_exist
       m_name, m_namespace, repo_url, branch, not_ok_response = workspace_branch_info(module_type, module_id, nil)
-      resp = Helper(:git_repo).create_new_version(module_type, branch, name, namespace, version, repo_url)
+      resp = Helper(:git_repo).create_new_version(module_type, branch, name, namespace, version, repo_url, opts||{})
 
       post_body = get_workspace_branch_info_post_body(module_type, module_id, version)
+      post_body.merge!(:do_not_raise_if_exist => do_not_raise_if_exist) if do_not_raise_if_exist
       create_response = post(rest_url("#{module_type}/create_new_version"), post_body)
 
       unless create_response.ok?
-        FileUtils.rm_rf("#{resp['module_directory']}")
+        FileUtils.rm_rf("#{resp['module_directory']}") unless resp['exist_already']
         return create_response
+      end
+
+      if version_exist = create_response.data(:version_exist)
+        return create_response if do_not_raise_if_exist
       end
 
       if error = create_response.data(:dsl_parse_error)

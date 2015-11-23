@@ -316,7 +316,7 @@ module DTK::Client
     #   push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
     # end
 
-    desc "SERVICE-MODULE-NAME/ID update [-n NAMESPACE] [--force]", "Update local service module from remote repository."
+    desc "SERVICE-MODULE-NAME/ID pull-dtkn [-n NAMESPACE] [--force]", "Update local service module from remote repository."
     method_option :namespace,:aliases => '-n',
       :type   => :string,
       :banner => "NAMESPACE",
@@ -325,8 +325,8 @@ module DTK::Client
       :type    => :boolean,
       :desc   => "Force pull",
       :default => false
-    def update(context_params)
-      update_aux(context_params)
+    def pull_dtkn(context_params)
+      pull_dtkn_aux(context_params)
     end
 
     desc "SERVICE-MODULE-NAME/ID chmod PERMISSION-SELECTOR", "Update remote permissions e.g. ug+rw , user and group get RW permissions"
@@ -575,19 +575,19 @@ module DTK::Client
     end
 
 #    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of service module to remote repository (dtkn)."
-    # desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of service module to remote repository (dtkn)."
-    # method_option "message",:aliases => "-m" ,
-    #   :type => :string,
-    #   :banner => "COMMIT-MSG",
-    #   :desc => "Commit message"
-    # method_option "namespace",:aliases => "-n",
-    #     :type => :string,
-    #     :banner => "NAMESPACE",
-    #     :desc => "Remote namespace"
-    # method_option :force, :type => :boolean, :default => false, :aliases => '-f'
-    # def push_dtkn(context_params, internal_trigger=false)
-    #   push_dtkn_module_aux(context_params, internal_trigger)
-    # end
+    desc "SERVICE-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of service module to remote repository (dtkn)."
+    method_option "message",:aliases => "-m" ,
+      :type => :string,
+      :banner => "COMMIT-MSG",
+      :desc => "Commit message"
+    method_option "namespace",:aliases => "-n",
+        :type => :string,
+        :banner => "NAMESPACE",
+        :desc => "Remote namespace"
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
+    def push_dtkn(context_params, internal_trigger=false)
+      push_dtkn_module_aux(context_params, internal_trigger)
+    end
 
     desc "SERVICE-MODULE-NAME/ID list-diffs", "List diffs between module on server and remote repo"
     method_option :remote, :type => :boolean, :default => false
