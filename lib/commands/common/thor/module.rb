@@ -263,7 +263,7 @@ module DTK::Client
 
       # we need to install base module version if not installed
       unless skip_base
-        master_response = install_base_version_aux?(context_params, post_body, module_type)
+        master_response = install_base_version_aux?(context_params, post_body, module_type, version)
         return master_response unless master_response.ok?
 
         latest_version = master_response.data(:latest_version)
@@ -335,15 +335,20 @@ module DTK::Client
       response
     end
 
-    def install_base_version_aux?(context_params, post_body, module_type)
+    def install_base_version_aux?(context_params, post_body, module_type, version)
       master_response = post rest_url("#{module_type}/prepare_for_install_module"), post_body
       return master_response unless master_response.ok?
 
-      head_installed = master_response.data(:head_installed)
-      latest_version = master_response.data(:latest_version)
+      head_installed     = master_response.data(:head_installed)
+      latest_version     = master_response.data(:latest_version)
+      remote_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
+
+      if version
+        versions = master_response.data(:versions)
+        raise DtkError, "Module '#{remote_module_name}' version '#{version}' does not exist on repo manager!" unless versions.include?(version)
+      end
 
       if !head_installed && !latest_version.eql?('master')
-        remote_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
         new_context_params = DTK::Shell::ContextParams.new
         new_context_params.add_context_to_params(module_type, module_type)
         new_context_params.method_arguments = [remote_module_name]
