@@ -273,7 +273,10 @@ module DTK::Client
         end
       end
 
-      post_body.merge!(:version => version) if version
+      if version
+        add_version = true
+        post_body.merge!(:version => version)
+      end
 
       if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, :namespace => remote_namespace, :version => version)
         message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed."
@@ -282,13 +285,16 @@ module DTK::Client
 
       response = post rest_url("#{module_type}/import"), post_body
 
-      # print permission warnings and then check for other warnings
-      are_there_warnings = RemoteDependencyUtil.check_permission_warnings(response)
-      are_there_warnings ||= RemoteDependencyUtil.print_dependency_warnings(response, nil, :ignore_permission_warnings => true)
+      # when silently installing base version we don't want to print anything
+      unless skip_base
+        # print permission warnings and then check for other warnings
+        are_there_warnings = RemoteDependencyUtil.check_permission_warnings(response)
+        are_there_warnings ||= RemoteDependencyUtil.print_dependency_warnings(response, nil, :ignore_permission_warnings => true)
 
-      # prompt to see if user is ready to continue with warnings/errors
-      if are_there_warnings
-        return false unless Console.confirmation_prompt('Do you still want to proceed with import' + '?')
+        # prompt to see if user is ready to continue with warnings/errors
+        if are_there_warnings
+          return false unless Console.confirmation_prompt('Do you still want to proceed with import' + '?')
+        end
       end
 
       # case when we need to import additional components
@@ -297,18 +303,19 @@ module DTK::Client
         opts = { :do_not_raise => true }
         module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message => true)
         module_opts.merge!(:update_none => true) if options.update_none?
+        module_opts.merge!(:hide_output => true) if skip_base
 
         continue = trigger_module_auto_import(missing_components, required_components, module_opts)
         return unless continue
 
         print_remote_name = add_version ? "#{remote_module_name}(#{version})" : remote_module_name
-        print "Resuming DTK Network import for #{module_type} '#{print_remote_name}' ..."
+        print "Resuming DTK Network import for #{module_type} '#{print_remote_name}' ..." unless skip_base
         # repeat import call for service
         post_body.merge!(opts)
         response = post rest_url("#{module_type}/import"), post_body
 
         # we set skip cloning since it is already done by import
-        puts ' Done'
+        puts ' Done' unless skip_base
       end
 
       return response if !response.ok? || response.data(:does_not_exist)

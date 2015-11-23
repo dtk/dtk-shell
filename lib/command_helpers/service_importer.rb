@@ -24,14 +24,15 @@ module DTK::Client
     #
     def trigger_module_auto_pull(required_modules, opts = {})
       return if required_modules.empty?
+      hide_output = opts[:hide_output]
 
       # options[:force] means this command is triggered from trigger_module_auto_import method bellow
       unless opts[:force]
         update_none = RemoteDependencyUtil.check_for_frozen_modules(required_modules)
 
         if update_none
-          print "All dependent modules are frozen and will not be updated!\n"
-          print "Resuming pull ... "
+          print "All dependent modules are frozen and will not be updated!\n" unless hide_output
+          print "Resuming pull ... " unless hide_output
           return Response::Ok.new()
         end
       end
@@ -44,11 +45,11 @@ module DTK::Client
           full_name   = (version && !version.eql?('master')) ? "#{module_name}(#{version})" : module_name
 
           if r_module['frozen']
-            print "Not allowed to update frozen #{module_type.gsub('_', ' ')} '#{module_name}' version '#{version}' \n"
+            print "Not allowed to update frozen #{module_type.gsub('_', ' ')} '#{module_name}' version '#{version}' \n" unless hide_output
             next
           end
 
-          print "Pulling #{module_type.gsub('_',' ')} content for '#{full_name}' ... "
+          print "Pulling #{module_type.gsub('_',' ')} content for '#{full_name}' ... " unless hide_output
 
           new_context_params = DTK::Shell::ContextParams.new
           new_context_params.add_context_to_params(module_type, module_type)
@@ -78,7 +79,9 @@ module DTK::Client
     # Method will trigger import for each missing module component
     #
     def trigger_module_auto_import(modules_to_import, required_modules, opts = {})
-      puts 'Auto-installing missing module(s)'
+      hide_output = opts[:hide_output]
+
+      puts 'Auto-installing missing module(s)' unless hide_output
       update_all  = false
       update_none = RemoteDependencyUtil.check_for_frozen_modules(required_modules)
 
@@ -89,23 +92,26 @@ module DTK::Client
         version             = r_module['version']
         full_name           = (version && !version.eql?('master')) ? "#{module_name}(#{version})" : module_name
 
-        print "Using #{module_type.gsub('_', ' ')} '#{full_name}'\n"
+        print "Using #{module_type.gsub('_', ' ')} '#{full_name}'\n" unless hide_output
         next if update_none || opts[:update_none]
 
+        pull_opts = {:force => true, :do_not_raise => true}
+        pull_opts.merge!(:hide_output => hide_output) if hide_output
+
         if update_all
-          trigger_module_auto_pull([r_module], :force => true, :do_not_raise => true)
+          trigger_module_auto_pull([r_module], pull_opts)
         else
           options = required_modules.size > 1 ? %w(all none) : []
-          update  = Console.confirmation_prompt_additional_options("Do you want to update dependent #{module_type.gsub('_', ' ')} '#{full_name}' from the catalog?", options)
+          update  = Console.confirmation_prompt_additional_options("Do you want to update dependent #{module_type.gsub('_', ' ')} '#{full_name}' from the catalog?", options) unless hide_output
           next unless update
 
           if update.to_s.eql?('all')
             update_all = true
-            trigger_module_auto_pull([r_module], :force => true, :do_not_raise => true)
+            trigger_module_auto_pull([r_module], pull_opts)
           elsif update.to_s.eql?('none')
             update_none = true
           else
-            trigger_module_auto_pull([r_module], :force => true, :do_not_raise => true)
+            trigger_module_auto_pull([r_module], pull_opts)
           end
         end
       end
@@ -124,7 +130,7 @@ module DTK::Client
         importing  = module_url ? "Importing" : "Installing"
         import_msg = "#{importing} #{module_type.gsub('_', ' ')} '#{full_name}'"
         import_msg += " from git source #{module_url}" if module_url
-        print "#{import_msg} ... "
+        print "#{import_msg} ... " unless hide_output
 
         if module_url
           # import from Git source
@@ -140,7 +146,7 @@ module DTK::Client
         end
 
         ignore_component_error = (new_context_params.get_forwarded_options() || {})[:ignore_component_error] && module_type.eql?('component_module')
-        puts(response.data(:does_not_exist) ? response.data(:does_not_exist) : 'Done.')
+        puts(response.data(:does_not_exist) ? response.data(:does_not_exist) : 'Done.') unless hide_output
         raise DtkError, response.error_message if !response.ok? && !ignore_component_error
       end
 
