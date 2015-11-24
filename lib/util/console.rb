@@ -76,6 +76,33 @@ module DTK::Client
         end
       end
 
+      # multiple choice
+      # e.g.
+      # Select version to delete:
+      # 1. base
+      # 2. 0.0.1
+      # 3. 0.0.2
+      # 4. all
+      # > 2
+      def confirmation_prompt_multiple_choice(message, opts_array)
+        indexes = opts_array.map{ |opt| "#{opts_array.index(opt)+1}" }
+
+        trap("INT", "SIG_IGN")
+
+        message << "\n"
+        opts_array.each {|opt| message << "#{opts_array.index(opt)+1}. #{opt}\n" }
+        message << "> "
+
+        while line = Readline.readline("#{message}", true)
+          if indexes.include?(line)
+            trap("INT",false)
+            return opts_array[line.to_i-1]
+          elsif line.eql?('exit')
+            return nil
+          end
+        end
+      end
+
       # Loading output used to display waiting status
       def wait_animation(message, time_seconds)
         print message

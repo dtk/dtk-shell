@@ -107,11 +107,24 @@ module DTK::Client
         return nil unless is_go
       end
 
-      post_body = {
-       "#{module_type}_id".to_sym => module_id
-      }
-      # action = (version ? "delete_version" : "delete")
-      opts = {:module_name => module_name}
+      post_body = { "#{module_type}_id".to_sym => module_id }
+      opts = { :module_name => module_name }
+
+      unless version
+        post_body.merge!(:include_base => true)
+
+        versions_response = post rest_url("#{module_type}/list_versions"), post_body
+        return versions_response unless versions_response.ok?
+
+        versions = versions_response.data.first['versions']
+        if versions.size > 2
+          versions << "all"
+          ret_version = Console.confirmation_prompt_multiple_choice("\nSelect version to delete:", versions)
+          return unless ret_version
+          raise DtkError, "You are not allowed to delete 'base' version while other versions exist!" if ret_version.eql?('base')
+          version = ret_version
+        end
+      end
 
       if version
         if version.eql?('all')
@@ -123,7 +136,6 @@ module DTK::Client
         end
       end
 
-      # response = post(rest_url("#{module_type}/#{action}"), post_body)
       response = post(rest_url("#{module_type}/delete"), post_body)
       return response unless response.ok?
 
@@ -144,7 +156,7 @@ module DTK::Client
 
       unless method_opts[:no_error_msg]
         if version && version.eql?('all')
-          OsUtil.print("All versions of '#{module_name}' module have been deleted", :yellow)
+          OsUtil.print("All versions of '#{module_name}' module have been deleted.", :yellow)
         else
           msg = "Module '#{module_name}' "
           if version then msg << "version '#{version}' has been deleted successfully."
@@ -704,11 +716,11 @@ module DTK::Client
 
     def list_versions_aux(context_params)
       module_type  = get_module_type(context_params)
-      module_id = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
+      module_id    = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
+      include_base = context_params.get_forwarded_options()['include_base']
 
-      post_body = {
-        "#{module_type}_id".to_sym => module_id,
-      }
+      post_body = { "#{module_type}_id".to_sym => module_id }
+      post_body.merge!(:include_base => include_base) if include_base
 
       response = post rest_url("#{module_type}/list_versions"), post_body
     end
