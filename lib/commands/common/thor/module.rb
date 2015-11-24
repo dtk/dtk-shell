@@ -374,12 +374,33 @@ module DTK::Client
     def delete_from_catalog_aux(context_params)
       module_type        = get_module_type(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
-      version = options.version
-
-      check_version_format(version) if version
+      version            = options.version
+      rsa_pub_key        = SSHUtil.rsa_pub_key_content()
 
       # remote_module_name can be namespace:name or namespace/name
       remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name, ':')
+
+      if version
+        check_version_format(version)
+      else
+        list_post_body = {
+          "#{module_type}_id".to_sym => "#{remote_namespace}:#{remote_module_name}",
+          :rsa_pub_key => rsa_pub_key,
+          :include_base => true
+        }
+
+        versions_response = post rest_url("#{module_type}/list_remote_versions"), list_post_body
+        return versions_response unless versions_response.ok?
+
+        versions = versions_response.data.first['versions']
+        if versions.size > 2
+          versions << "all"
+          ret_version = Console.confirmation_prompt_multiple_choice("\nSelect version to delete:", versions)
+          return unless ret_version
+          raise DtkError, "You are not allowed to delete 'base' version while other versions exist!" if ret_version.eql?('base')
+          version = ret_version
+        end
+      end
 
       unless options.force? || options.confirmed?
         msg = "Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace + '/'}#{remote_module_name}'"
@@ -389,7 +410,7 @@ module DTK::Client
       end
 
       post_body = {
-        :rsa_pub_key             => SSHUtil.rsa_pub_key_content(),
+        :rsa_pub_key             => rsa_pub_key,
         :remote_module_name      => remote_module_name,
         :remote_module_namespace => remote_namespace,
         :force_delete            => options.force?
