@@ -431,7 +431,7 @@ module DTK::Client
 
     def publish_module_aux(context_params)
       module_type = get_module_type(context_params)
-      module_id, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, :option_1], method_argument_names)
+      module_id, module_name, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME, :option_1!], method_argument_names)
 
       raise DtkValidationError, "You have to provide version you want to publish!" unless options.version
 
@@ -440,6 +440,8 @@ module DTK::Client
 
       version = forwarded_version||options.version
       version = nil if version.eql?('master')
+
+      forward_namespace?(module_name, input_remote_name, context_params)
 
       post_body = {
         "#{module_type}_id".to_sym => module_id,
@@ -457,9 +459,8 @@ module DTK::Client
           publish_module_aux(context_params)
         end
 
-        context_params.method_arguments << version
-        context_params.forward_options('do_not_raise_if_exist' => true)
-        create_response = create_new_version_aux(context_params)
+        context_params.forward_options('do_not_raise_if_exist' => true, 'version' => version)
+        create_response = create_new_version_aux(context_params, true)
         return create_response unless create_response.ok?
       end
 
@@ -854,9 +855,11 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    def create_new_version_aux(context_params)
+    def create_new_version_aux(context_params, internal_trigger = false)
       module_type = get_module_type(context_params)
       module_id, version = context_params.retrieve_arguments([REQ_MODULE_ID, :option_1!], method_argument_names)
+
+      version = (context_params.get_forwarded_options()['version'] || options.version) if internal_trigger
 
       module_name           = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
       namespace, name       = get_namespace_and_name(module_name,':')
