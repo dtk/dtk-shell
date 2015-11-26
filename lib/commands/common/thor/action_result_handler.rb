@@ -20,6 +20,11 @@ module DTK
         nil
       end
 
+      def print_simple_results(action_results_id, number_of_retries=8)
+        response = action_results(action_results_id, number_of_retries)
+        pp response
+      end
+
       def action_results(action_results_id, number_of_retries=8)
         action_body = {
           :action_results_id => action_results_id,
@@ -46,7 +51,7 @@ module DTK
         response
 
       end
-      
+
     end
   end
 end
