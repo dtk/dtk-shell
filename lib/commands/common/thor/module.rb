@@ -283,6 +283,8 @@ module DTK::Client
         unless version
           version = latest_version.eql?('master') ? nil : latest_version
         end
+
+        post_body.merge!(:hard_reset_on_pull_version => true) if version
       end
 
       if version
