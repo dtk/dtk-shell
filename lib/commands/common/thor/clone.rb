@@ -23,7 +23,7 @@ module DTK::Client
       clone_base_aux(module_type, module_id, "#{module_namespace}:#{module_name}") if opts[:use_latest] && version
 
       module_location = OsUtil.module_location(module_type, "#{module_namespace}:#{module_name}", version)
-      raise DTK::Client::DtkValidationError, "#{module_type.to_s.gsub('_',' ').capitalize} '#{module_name}#{version && "-#{version}"}' already cloned!" if File.directory?(module_location)
+      raise DTK::Client::DtkValidationError, "#{module_type.to_s.gsub('_',' ').capitalize} '#{module_name}#{version && "-#{version}"}' already cloned!" if File.directory?(module_location) && !opts[:skip_if_exist_check]
 
       full_module_name = ModuleUtil.resolve_name(module_name, module_namespace)
 

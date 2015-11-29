@@ -223,6 +223,7 @@ module DTK::Client
         :automatically_clone => true,
         :pull_if_needed => false,
         :service_instance_module => true,
+        :skip_if_exist_check => true,
         :assembly_module => {
           :assembly_name => assembly_name,
           :version => version
