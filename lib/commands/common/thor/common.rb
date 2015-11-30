@@ -14,6 +14,9 @@ module DTK::Client
         end
       end
 
+      # if 'base' returned as version set to nil; 'base' = 'master' = nil
+      version = nil if version == 'base'
+
       post_body = get_workspace_branch_info_post_body(module_type, module_id, version, opts)
       response = post(rest_url("#{module_type}/get_workspace_branch_info"),post_body)
       unless response.ok?

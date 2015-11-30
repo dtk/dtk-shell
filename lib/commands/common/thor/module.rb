@@ -458,7 +458,8 @@ module DTK::Client
         remote_exist = check_response.data(:remote_exist)
         unless remote_exist
           context_params.forward_options('skip_base' => true, 'version' => 'master')
-          publish_module_aux(context_params)
+          resp = publish_module_aux(context_params)
+          return resp unless resp.ok?
         end
 
         context_params.forward_options('do_not_raise_if_exist' => true, 'version' => version)
