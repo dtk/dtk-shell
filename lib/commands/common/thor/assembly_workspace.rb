@@ -376,7 +376,8 @@ module DTK::Client
         :remote_branch => base_module_branch,
         :commit_sha    => branch_head_sha,
         :current_branch_sha => current_branch_sha,
-        :full_module_name => module_name
+        :full_module_name => module_name,
+        :skip_if_exist_check => true
       }
       opts = {:local_branch => local_branch, :namespace => namespace}
 
