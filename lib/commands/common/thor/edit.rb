@@ -95,7 +95,9 @@ module DTK::Client
 
         internal_trigger=true
         reparse_aux(module_location)
-        opts.merge!(:force_parse => true, :update_from_includes => true, :print_dependencies => true)
+
+        # use_impl_id - if edit-component-module which has version use impl_id from assembly--<assembly_name> version of component instance
+        opts.merge!(:force_parse => true, :update_from_includes => true, :print_dependencies => true, :use_impl_id => true)
         response = push_clone_changes_aux(module_type,module_id,version,commit_msg,internal_trigger,opts)
 
         # if error return

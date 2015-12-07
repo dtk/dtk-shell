@@ -41,6 +41,7 @@ module DTK::Client
       post_body.merge!(:force => opts[:force]) if opts[:force]
       post_body.merge!(:task_action => opts[:task_action]) if opts[:task_action]
       post_body.merge!(:generate_docs => true) if opts[:generate_docs]
+      post_body.merge!(:use_impl_id => opts[:use_impl_id]) if opts[:use_impl_id]
 
       if opts[:set_parsed_false]
         post_body.merge!(:set_parsed_false => true)
