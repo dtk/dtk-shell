@@ -20,7 +20,7 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.name          = "dtk-client"
   gem.require_paths = ["lib"]
-  gem.version       = "#{DtkClient::VERSION}.#{ARGV[3]}".chomp(".")
+  gem.version       = DtkClient::VERSION
 
   gem.add_dependency 'mime-types','~> 1.25'
   gem.add_dependency 'bundler','>= 1.2.4'
@@ -30,7 +30,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'thor','~> 0.15.4'
   gem.add_dependency 'erubis','~> 2.7.0'
   gem.add_dependency 'dtk-common-core','0.7.3'
-  gem.add_dependency 'git','1.2.8'
+  gem.add_dependency 'git','1.2.9'
   gem.add_dependency 'colorize','~> 0.5.8'
   gem.add_dependency 'highline', '1.6.16'
   gem.add_dependency 'awesome_print', '1.1.0'

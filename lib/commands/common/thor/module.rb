@@ -101,25 +101,52 @@ module DTK::Client
       module_type = get_module_type(context_params)
 
       unless (options.force? || method_opts[:force_delete])
-        is_go = Console.confirmation_prompt("Are you sure you want to delete module '#{module_name}'"+"?")
+        msg = "Are you sure you want to delete module '#{module_name}'"
+        msg += " version '#{version}'" if version
+        is_go = Console.confirmation_prompt("#{msg}"+"?")
         return nil unless is_go
       end
 
-      post_body = {
-       "#{module_type}_id".to_sym => module_id
-      }
-      action = (version ? "delete_version" : "delete")
-      post_body[:version] = version if version
+      post_body = { "#{module_type}_id".to_sym => module_id }
+      opts = { :module_name => module_name }
 
-      response = post(rest_url("#{module_type}/#{action}"), post_body)
+      unless version
+        post_body.merge!(:include_base => true)
+
+        versions_response = post rest_url("#{module_type}/list_versions"), post_body
+        return versions_response unless versions_response.ok?
+
+        versions = versions_response.data.first['versions']
+        if versions.size > 2
+          versions << "all"
+          ret_version = Console.confirmation_prompt_multiple_choice("\nSelect version to delete:", versions)
+          return unless ret_version
+          raise DtkError, "You are not allowed to delete 'base' version while other versions exist!" if ret_version.eql?('base')
+          version = ret_version
+        end
+      end
+
+      if version
+        if version.eql?('all')
+          post_body.merge!(:delete_all_versions => true)
+          opts.merge!(:delete_all_versions => true)
+        else
+          post_body.merge!(:version => version)
+          opts.merge!(:version => version)
+        end
+      end
+
+      response = post(rest_url("#{module_type}/delete"), post_body)
       return response unless response.ok?
+
+      # if we do not provide version, server will calculate the latest version which we can use here
+      unless version
+        version = response.data(:version)
+        opts.merge!(:version => version)
+      end
 
       response =
         if options.purge? || method_opts[:purge]
-          opts = {:module_name => module_name}
-          if version then opts.merge!(:version => version)
-          else opts.merge!(:delete_all_versions => true)
-          end
           purge_clone_aux(module_type.to_sym, opts)
         else
           Helper(:git_repo).unlink_local_clone?(module_type.to_sym, module_name, version)
@@ -128,10 +155,14 @@ module DTK::Client
       return response unless response.ok?
 
       unless method_opts[:no_error_msg]
-        msg = "Module '#{module_name}' "
-        if version then msg << "version #{version} has been deleted"
-        else msg << "has been deleted"; end
-        OsUtil.print(msg, :yellow)
+        if version && version.eql?('all')
+          OsUtil.print("All versions of '#{module_name}' module have been deleted.", :yellow)
+        else
+          msg = "Module '#{module_name}' "
+          if version then msg << "version '#{version}' has been deleted successfully."
+          else msg << "has been deleted successfully."; end
+          OsUtil.print(msg, :yellow)
+        end
       end
 
       Response::Ok.new()
@@ -204,28 +235,33 @@ module DTK::Client
       CommonModule::Import.new(self, context_params).from_file()
     end
 
-    def install_module_aux(context_params)
+    def install_module_aux(context_params, internal_trigger = false)
       create_missing_clone_dirs()
       resolve_direct_access(::DTK::Client::Configurator.check_direct_access)
+
       remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
+      forwarded_version           = context_params.get_forwarded_options()['version']
+      add_version                 = false
+
+      version ||= forwarded_version || options.version
+      version = nil if version.eql?('master')
+      if version
+        check_version_format(version)
+        add_version = true
+      end
+
       # in case of auto-import via service import, we skip cloning to speed up a process
-      skip_cloning = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
-      do_not_raise = context_params.get_forwarded_options()[:do_not_raise] if context_params.get_forwarded_options()
+      skip_cloning  = context_params.get_forwarded_options()['skip_cloning'] if context_params.get_forwarded_options()
+      do_not_raise  = context_params.get_forwarded_options()[:do_not_raise] if context_params.get_forwarded_options()
       skip_ainstall = context_params.get_forwarded_options() ? context_params.get_forwarded_options()[:skip_auto_install] : false
-      module_type  = get_module_type(context_params)
+      skip_base     = context_params.get_forwarded_options()['skip_base']
+      module_type   = get_module_type(context_params)
 
       # ignore_component_error = context_params.get_forwarded_options()[:ignore_component_error]||options.ignore? if context_params.get_forwarded_options()
       ignore_component_error = context_params.get_forwarded_options().empty? ? options.ignore? : context_params.get_forwarded_options()[:ignore_component_error]
       additional_message     = context_params.get_forwarded_options()[:additional_message] if context_params.get_forwarded_options()
 
       remote_namespace, local_module_name = get_namespace_and_name(remote_module_name, ':')
-
-      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, :namespace => remote_namespace, :version => version)
-        message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed."
-        # message += '. To ignore this conflict and use existing component module please use -i switch (install REMOTE-SERVICE-NAME -i).' if additional_message
-
-        raise DtkError, message unless ignore_component_error
-      end
 
       post_body = {
         :remote_module_name => remote_module_name.sub(':', '/'),
@@ -237,15 +273,42 @@ module DTK::Client
       post_body.merge!(:additional_message => additional_message) if additional_message
       post_body.merge!(:skip_auto_install => skip_ainstall) if skip_ainstall
 
+      # we need to install base module version if not installed
+      unless skip_base
+        master_response = install_base_version_aux?(context_params, post_body, module_type, version)
+        return master_response unless master_response.ok?
+
+        latest_version = master_response.data(:latest_version)
+
+        unless version
+          version = latest_version.eql?('master') ? nil : latest_version
+        end
+
+        post_body.merge!(:hard_reset_on_pull_version => true) if version
+      end
+
+      if version
+        add_version = true
+        post_body.merge!(:version => version)
+      end
+
+      if clone_dir = Helper(:git_repo).local_clone_dir_exists?(module_type.to_sym, local_module_name, :namespace => remote_namespace, :version => version)
+        message = "Module's directory (#{clone_dir}) exists on client. To install this needs to be renamed or removed."
+        raise DtkError, message unless ignore_component_error
+      end
+
       response = post rest_url("#{module_type}/import"), post_body
 
-      # print permission warnings and then check for other warnings
-      are_there_warnings = RemoteDependencyUtil.check_permission_warnings(response)
-      are_there_warnings ||= RemoteDependencyUtil.print_dependency_warnings(response, nil, :ignore_permission_warnings => true)
+      # when silently installing base version we don't want to print anything
+      unless skip_base
+        # print permission warnings and then check for other warnings
+        are_there_warnings = RemoteDependencyUtil.check_permission_warnings(response)
+        are_there_warnings ||= RemoteDependencyUtil.print_dependency_warnings(response, nil, :ignore_permission_warnings => true)
 
-      # prompt to see if user is ready to continue with warnings/errors
-      if are_there_warnings
-        return false unless Console.confirmation_prompt('Do you still want to proceed with import' + '?')
+        # prompt to see if user is ready to continue with warnings/errors
+        if are_there_warnings
+          return false unless Console.confirmation_prompt('Do you still want to proceed with import' + '?')
+        end
       end
 
       # case when we need to import additional components
@@ -254,17 +317,19 @@ module DTK::Client
         opts = { :do_not_raise => true }
         module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message => true)
         module_opts.merge!(:update_none => true) if options.update_none?
+        module_opts.merge!(:hide_output => true) if skip_base
 
         continue = trigger_module_auto_import(missing_components, required_components, module_opts)
         return unless continue
 
-        print "Resuming DTK Network import for #{module_type} '#{remote_module_name}' ..."
+        print_remote_name = add_version ? "#{remote_module_name}(#{version})" : remote_module_name
+        print "Resuming DTK Network import for #{module_type} '#{print_remote_name}' ..." unless skip_base
         # repeat import call for service
         post_body.merge!(opts)
         response = post rest_url("#{module_type}/import"), post_body
 
         # we set skip cloning since it is already done by import
-        puts ' Done'
+        puts ' Done' unless skip_base
       end
 
       return response if !response.ok? || response.data(:does_not_exist)
@@ -284,51 +349,186 @@ module DTK::Client
       response
     end
 
+    def install_base_version_aux?(context_params, post_body, module_type, version)
+      master_response = post rest_url("#{module_type}/prepare_for_install_module"), post_body
+      return master_response unless master_response.ok?
+
+      head_installed     = master_response.data(:head_installed)
+      latest_version     = master_response.data(:latest_version)
+      remote_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
+
+      if version
+        versions = master_response.data(:versions)
+        raise DtkError, "Module '#{remote_module_name}' version '#{version}' does not exist on repo manager!" unless versions.include?(version)
+      end
+
+      if !head_installed && !latest_version.eql?('master')
+        new_context_params = DTK::Shell::ContextParams.new
+        new_context_params.add_context_to_params(module_type, module_type)
+        new_context_params.method_arguments = [remote_module_name]
+        new_context_params.forward_options('skip_base' => true, 'version' => 'master')
+        install_module_aux(new_context_params)
+      end
+
+      master_response
+    end
+
     def delete_from_catalog_aux(context_params)
       module_type        = get_module_type(context_params)
       remote_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
+      version            = options.version
+      rsa_pub_key        = SSHUtil.rsa_pub_key_content()
 
       # remote_module_name can be namespace:name or namespace/name
       remote_namespace, remote_module_name = get_namespace_and_name(remote_module_name, ':')
 
+      if version
+        check_version_format(version)
+      else
+        list_post_body = {
+          "#{module_type}_id".to_sym => "#{remote_namespace}:#{remote_module_name}",
+          :rsa_pub_key => rsa_pub_key,
+          :include_base => true
+        }
+
+        versions_response = post rest_url("#{module_type}/list_remote_versions"), list_post_body
+        return versions_response unless versions_response.ok?
+
+        versions = versions_response.data.first['versions']
+        if versions.size > 2
+          versions << "all"
+          ret_version = Console.confirmation_prompt_multiple_choice("\nSelect version to delete:", versions)
+          return unless ret_version
+          raise DtkError, "You are not allowed to delete 'base' version while other versions exist!" if ret_version.eql?('base')
+          version = ret_version
+        end
+      end
+
       unless options.force? || options.confirmed?
-        return unless Console.confirmation_prompt("Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace + '/'}#{remote_module_name}' and all items contained in it" + '?')
+        msg = "Are you sure you want to delete remote #{module_type} '#{remote_namespace.nil? ? '' : remote_namespace + '/'}#{remote_module_name}'"
+        msg += " version '#{version}'" if version
+        msg += " and all items contained in it"
+        return unless Console.confirmation_prompt(msg + '?')
       end
 
       post_body = {
-        :rsa_pub_key             => SSHUtil.rsa_pub_key_content(),
+        :rsa_pub_key             => rsa_pub_key,
         :remote_module_name      => remote_module_name,
         :remote_module_namespace => remote_namespace,
         :force_delete            => options.force?
       }
+      post_body.merge!(:version => version) if version
 
-      post rest_url("#{module_type}/delete_remote"), post_body
+      response = post rest_url("#{module_type}/delete_remote"), post_body
+      return response unless response.ok?
+
+      full_module_name, version = response.data(:module_full_name, :version)
+      msg = "Module '#{full_module_name}' "
+      msg << "version '#{version}'" if version && !version.eql?('master')
+      msg << " has been deleted successfully."
+      OsUtil.print(msg, :yellow)
+
+      Response::Ok.new()
     end
 
     def publish_module_aux(context_params)
-      module_type  = get_module_type(context_params)
-      module_id, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, :option_1], method_argument_names)
+      module_type = get_module_type(context_params)
+      module_id, module_name, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME, :option_1!], method_argument_names)
+
+      raise DtkValidationError, "You have to provide version you want to publish!" unless options.version
+
+      skip_base         = context_params.get_forwarded_options()['skip_base']
+      forwarded_version = context_params.get_forwarded_options()['version']
+
+      version = forwarded_version||options.version
+      version = nil if version.eql?('master')
+
+      forward_namespace?(module_name, input_remote_name, context_params)
 
       post_body = {
         "#{module_type}_id".to_sym => module_id,
         :remote_component_name => input_remote_name,
-        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content(),
       }
 
+      unless skip_base
+        check_response = post rest_url("#{module_type}/check_remote_exist"), post_body
+        return check_response unless check_response.ok?
+
+        remote_exist = check_response.data(:remote_exist)
+        unless remote_exist
+          context_params.forward_options('skip_base' => true, 'version' => 'master')
+          resp = publish_module_aux(context_params)
+          return resp unless resp.ok?
+        end
+
+        context_params.forward_options('do_not_raise_if_exist' => true, 'version' => version)
+        create_response = create_new_version_aux(context_params, true)
+        return create_response unless create_response.ok?
+      end
+
+      post_body.merge!(:version => version) if version
       response = post rest_url("#{module_type}/export"), post_body
       return response unless response.ok?
 
-      full_module_name = "#{response.data['remote_repo_namespace']}/#{response.data['remote_repo_name']}"
+      unless skip_base
+        full_module_name = "#{response.data['remote_repo_namespace']}/#{response.data['remote_repo_name']}"
+        DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published to '#{full_module_name}' version '#{version}'!")
+      end
 
-      DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published to '#{full_module_name}'!")
       Response::Ok.new()
     end
+
+    # def publish_module_aux(context_params)
+    #   module_type  = get_module_type(context_params)
+    #   module_id, module_name, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME, :option_1], method_argument_names)
+
+    #   post_body = {
+    #     "#{module_type}_id".to_sym => module_id,
+    #     :remote_component_name => input_remote_name,
+    #     :rsa_pub_key => SSHUtil.rsa_pub_key_content()
+    #   }
+    #   if options.version?
+    #     post_body.merge!(:version => options.version)
+    #   else
+    #     post_body.merge!(:use_latest => true)
+    #   end
+
+    #   # check if module exist on repo manager and use it to decide if need to push or publish
+    #   check_response = post rest_url("#{module_type}/check_remote_exist"), post_body
+    #   return check_response unless check_response.ok?
+
+    #   unless options.version?
+    #     version = check_response.data(:version)
+    #     context_params.forward_options('version' => version)
+    #     post_body.merge!(:version => version)
+    #   end
+
+    #   # if remote module exist and user call 'publish' we do push-dtkn else we publish it as new module
+    #   response_data = check_response['data']
+    #   if response_data["remote_exist"]
+    #     raise DtkValidationError, "You are not allowed to update #{module_type} versions!" if response_data['frozen']
+
+    #     # if do publish namespace2/module from namespace1/module, forward namespace as option to be used in push_dtkn_module_aux
+    #     forward_namespace?(module_name, input_remote_name, context_params)
+
+    #     push_dtkn_module_aux(context_params, true)
+    #   else
+    #     response = post rest_url("#{module_type}/export"), post_body
+    #     return response unless response.ok?
+
+    #     full_module_name = "#{response.data['remote_repo_namespace']}/#{response.data['remote_repo_name']}"
+
+    #     DTK::Client::RemoteDependencyUtil.print_dependency_warnings(response, "Module has been successfully published to '#{full_module_name}'!")
+    #     Response::Ok.new()
+    #   end
+    # end
 
     def pull_dtkn_aux(context_params)
       module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID,REQ_MODULE_NAME,:option_1],method_argument_names)
 
       catalog      = 'dtkn'
-      version      = options.version
+      version      = options.version||context_params.get_forwarded_options()[:version]
       module_type  = get_module_type(context_params)
       skip_recursive_pull = context_params.get_forwarded_options()[:skip_recursive_pull]
       ignore_dependency_merge_conflict = context_params.get_forwarded_options()[:skip_recursive_pull]
@@ -351,7 +551,7 @@ module DTK::Client
         response = pull_from_remote_aux(module_type.to_sym, module_id, opts)
         return response unless response.ok?
 
-        push_clone_changes_aux(module_type.to_sym, module_id, version, nil, true) if File.directory?(module_location)
+        push_clone_changes_aux(module_type.to_sym, module_id, version, nil, true, {:update_from_includes => true}) if File.directory?(module_location)
         response.skip_render = true
         response
       else
@@ -391,18 +591,14 @@ module DTK::Client
       response
     end
 
-    def clone_module_aux(context_params, internal_trigger=false)
+    def clone_module_aux(context_params, internal_trigger = false)
       module_type      = get_module_type(context_params)
       thor_options     = context_params.get_forwarded_options() || options
       module_id        = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
       module_name      = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
-      version          = thor_options["version"]
+      version          = thor_options["version"]||options.version
       internal_trigger = true if thor_options['skip_edit']
-
-      module_location = OsUtil.module_location(module_type, module_name, version)
-
-      raise DTK::Client::DtkValidationError, "#{module_type.gsub('_',' ').capitalize} '#{module_name}#{version && "-#{version}"}' already cloned!" if File.directory?(module_location)
-      clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'])
+      clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'], :use_latest => true)
     end
 
     def edit_module_aux(context_params)
@@ -478,7 +674,7 @@ module DTK::Client
     def push_dtkn_module_aux(context_params, internal_trigger=false)
       module_id, module_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME],method_argument_names)
       catalog     = 'dtkn'
-      version     = options["version"]
+      version     = options["version"]||context_params.get_forwarded_thor_option('version')
       module_type = get_module_type(context_params)
 
       raise DtkValidationError, "You have to provide valid catalog to push changes to! Valid catalogs: #{PushCatalogs}" unless catalog
@@ -489,7 +685,8 @@ module DTK::Client
 
       if catalog.to_s.eql?("dtkn")
         module_refs_content = RemoteDependencyUtil.module_ref_content(module_location)
-        remote_module_info  = get_remote_module_info_aux(module_type.to_sym, module_id, options["namespace"], version, module_refs_content, local_namespace)
+        options_namespace = options["namespace"]||context_params.get_forwarded_thor_option('namespace')
+        remote_module_info  = get_remote_module_info_aux(module_type.to_sym, module_id, options_namespace, version, module_refs_content, local_namespace)
         return remote_module_info unless remote_module_info.ok?
 
         unless File.directory?(module_location)
@@ -540,6 +737,29 @@ module DTK::Client
       module_type = get_module_type(context_params)
       module_id   = context_params.retrieve_arguments([REQ_MODULE_ID],method_argument_names)
       list_remote_diffs_aux(module_type.to_sym, module_id)
+    end
+
+    def list_versions_aux(context_params)
+      module_type  = get_module_type(context_params)
+      module_id    = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
+      include_base = context_params.get_forwarded_options()['include_base']
+
+      post_body = { "#{module_type}_id".to_sym => module_id }
+      post_body.merge!(:include_base => include_base) if include_base
+
+      response = post rest_url("#{module_type}/list_versions"), post_body
+    end
+
+    def list_remote_versions_aux(context_params)
+      module_type  = get_module_type(context_params)
+      module_id = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
+
+      post_body = {
+        "#{module_type}_id".to_sym => module_id,
+        :rsa_pub_key => SSHUtil.rsa_pub_key_content()
+      }
+
+      response = post rest_url("#{module_type}/list_remote_versions"), post_body
     end
 
     def delete_assembly_aux(context_params)
@@ -638,7 +858,98 @@ module DTK::Client
       Response::Ok.new()
     end
 
+    def create_new_version_aux(context_params, internal_trigger = false)
+      module_type = get_module_type(context_params)
+      module_id, version = context_params.retrieve_arguments([REQ_MODULE_ID, :option_1!], method_argument_names)
+
+      version = (context_params.get_forwarded_options()['version'] || options.version) if internal_trigger
+
+      module_name           = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
+      namespace, name       = get_namespace_and_name(module_name,':')
+      do_not_raise_if_exist = context_params.get_forwarded_options()['do_not_raise_if_exist']
+
+      module_location = OsUtil.module_location(module_type, module_name, nil)
+      unless File.directory?(module_location)
+        if Console.confirmation_prompt("Module '#{module_name}' has not been cloned. Would you like to clone module now"+'?')
+          response = clone_aux(module_type.to_sym, module_id, nil, true)
+          return response unless response.ok?
+        end
+      end
+
+      opts = {:do_not_raise_if_exist => do_not_raise_if_exist} if do_not_raise_if_exist
+      m_name, m_namespace, repo_url, branch, not_ok_response = workspace_branch_info(module_type, module_id, nil)
+      resp = Helper(:git_repo).create_new_version(module_type, branch, name, namespace, version, repo_url, opts||{})
+
+      post_body = get_workspace_branch_info_post_body(module_type, module_id, version)
+      post_body.merge!(:do_not_raise_if_exist => do_not_raise_if_exist) if do_not_raise_if_exist
+      create_response = post(rest_url("#{module_type}/create_new_version"), post_body)
+
+      unless create_response.ok?
+        FileUtils.rm_rf("#{resp['module_directory']}") unless resp['exist_already']
+        return create_response
+      end
+
+      if version_exist = create_response.data(:version_exist)
+        return create_response if do_not_raise_if_exist
+      end
+
+      if error = create_response.data(:dsl_parse_error)
+        dsl_parsed_message = ServiceImporter.error_message(module_name, error)
+        DTK::Client::OsUtil.print(dsl_parsed_message, :red)
+      end
+
+      if external_dependencies = create_response.data(:external_dependencies)
+        print_dependencies(external_dependencies)
+      end
+
+      if component_module_refs = create_response.data(:component_module_refs)
+        print_using_dependencies(component_module_refs)
+      end
+
+      Response::Ok.new()
+    end
+
     def print_ambiguous(ambiguous)
+    end
+
+    def forward_namespace?(module_name, input_remote_name, context_params)
+      return unless input_remote_name
+      local_namespace, local_name   = get_namespace_and_name(module_name,':')
+      remote_namespace, remote_name = get_namespace_and_name(input_remote_name,'/')
+      context_params.forward_options('namespace' => remote_namespace) unless local_namespace.eql?(remote_namespace)
+    end
+
+    def print_dependencies(dependencies)
+      ambiguous        = dependencies["ambiguous"]||[]
+      amb_sorted       = ambiguous.map { |k,v| "#{k.split('/').last} (#{v.join(', ')})" }
+      inconsistent     = dependencies["inconsistent"]||[]
+      possibly_missing = dependencies["possibly_missing"]||[]
+
+      OsUtil.print("There are inconsistent module dependencies mentioned in dtk.model.yaml: #{inconsistent.join(', ')}", :red) unless inconsistent.empty?
+      OsUtil.print("There are missing module dependencies mentioned in dtk.model.yaml: #{possibly_missing.join(', ')}", :yellow) unless possibly_missing.empty?
+      OsUtil.print("There are ambiguous module dependencies mentioned in dtk.model.yaml: '#{amb_sorted.join(', ')}'. One of the namespaces should be selected by editing the module_refs file", :yellow) if ambiguous && !ambiguous.empty?
+    end
+
+    def print_using_dependencies(component_refs)
+      unless component_refs.empty?
+        puts 'Using component modules:'
+        names = []
+        component_refs.values.each do |cmp_ref|
+          version = cmp_ref['version_info']
+          name    = "#{cmp_ref['namespace_info']}:#{cmp_ref['module_name']}"
+          name << "(#{version})" if version
+          names << name
+        end
+        names.sort.each do |name|
+          puts "  #{name}"
+        end
+      end
+    end
+
+    def check_version_format(version)
+      unless version.match(/\A\d{1,2}\.\d{1,2}\.\d{1,2}\Z/)
+        raise DtkValidationError, "Version has an illegal value '#{version}', format needed: '##.##.##'"
+      end
     end
 
   end

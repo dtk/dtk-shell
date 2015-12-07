@@ -1,26 +1,32 @@
 module DTK::Client
   module CommonMixin
    private
-    # returns module_name,module_namespace,repo_url,branch,not_ok_response( only if error)
+    # returns module_name, module_namespace, repo_url, branch, not_ok_response( only if error)
     def workspace_branch_info(module_type, module_id, version, opts={})
       # shortcut if have info about workspace branch already
       if info = opts[:workspace_branch_info]
         name_or_full_module_name = info[:module_name]
-        module_namespace,module_name = ModuleUtil.full_module_name_parts?(name_or_full_module_name)
+        module_namespace, module_name = ModuleUtil.full_module_name_parts?(name_or_full_module_name)
         module_namespace ||= info[:module_namespace]
-        ret = [module_name,module_namespace,info[:repo_url],info[:branch]]
+        ret = [module_name, module_namespace, info[:repo_url], info[:branch]]
         unless  ret.find{|r|r.nil?}
           return ret
         end
       end
 
-      post_body = get_workspace_branch_info_post_body(module_type,module_id,version,opts)
+      # if 'base' returned as version set to nil; 'base' = 'master' = nil
+      version = nil if version == 'base'
+
+      post_body = get_workspace_branch_info_post_body(module_type, module_id, version, opts)
       response = post(rest_url("#{module_type}/get_workspace_branch_info"),post_body)
       unless response.ok?
-        [nil,nil,nil,nil,response]
+        ret = [nil, nil, nil, nil, response, nil]
       else
-        response.data(:module_name,:module_namespace,:repo_url,:workspace_branch)
+        m_name, m_namespace, repo_url, w_branch, version = response.data(:module_name, :module_namespace, :repo_url, :workspace_branch, :version)
+        ret = [m_name, m_namespace, repo_url, w_branch, nil]
+        ret << version if opts[:use_latest]
       end
+      ret
     end
 
     def get_workspace_branch_info_post_body(module_type, module_id, version_explicit, opts={})
@@ -34,6 +40,9 @@ module DTK::Client
       end
       if assembly_module
         post_body.merge!(:assembly_module => true,:assembly_name => assembly_module[:assembly_name])
+      end
+      if use_latest = opts[:use_latest]
+        post_body.merge!(:use_latest => use_latest)
       end
       post_body
     end

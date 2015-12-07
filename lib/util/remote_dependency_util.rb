@@ -33,12 +33,22 @@ module DTK
           if dependency_warnings && !dependency_warnings.empty?
             no_permissions = dependency_warnings.select { |warning| warning['error_type'].eql?('no_permission') }
 
-            errors << "\n\nYou do not have (R) permissions for modules:\n\n"
-            no_permissions.each { |np| errors << "  - #{np['module_namespace']}:#{np['module_name']} (owner: #{np['module_owner']})\n" }
-            errors << "\nPlease contact owner(s) to change permissions for those modules."
+            unless no_permissions.empty?
+              errors << "\n\nYou do not have (R) permissions for modules:\n\n"
+              no_permissions.each { |np| errors << "  - #{np['module_namespace']}:#{np['module_name']} (owner: #{np['module_owner']})\n" }
+              errors << "\nPlease contact owner(s) to change permissions for those modules."
+            end
           end
 
           raise DtkError, errors unless errors.empty?
+        end
+
+        # check if all dependent modules are frozen; if they are don't display prompt for update
+        def check_for_frozen_modules(required_modules)
+          return true if required_modules.nil? || required_modules.empty?
+
+          modules_to_update = required_modules.select{ |md| (md['frozen'].nil? || md['frozen'] == false)}
+          return modules_to_update.empty?
         end
 
         def module_ref_content(location)

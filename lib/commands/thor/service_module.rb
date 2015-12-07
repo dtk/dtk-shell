@@ -8,6 +8,7 @@ dtk_require_from_base('command_helpers/service_importer')
 dtk_require_common_commands('thor/common')
 dtk_require_common_commands('thor/module')
 dtk_require_common_commands('thor/poller')
+dtk_require_common_commands('thor/assembly_template')
 
 module DTK::Client
   class ServiceModule < CommandBaseThor
@@ -19,6 +20,7 @@ module DTK::Client
       include ServiceImporter
       include ModuleMixin
       include Poller
+      include AssemblyTemplateMixin
 
       def get_service_module_name(service_module_id)
         get_name_from_id_helper(service_module_id)
@@ -76,7 +78,7 @@ module DTK::Client
           ],
           :assembly => [
             ["info","info","# Info for given assembly in current service module."],
-            ["stage", "stage [INSTANCE-NAME] [-t TARGET-NAME/ID]", "# Stage assembly in target."],
+            # ["stage", "stage [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION]", "# Stage assembly in target."],
             # ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
             # ["deploy","deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
             ["deploy","deploy [INSTANCE-NAME] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
@@ -95,7 +97,8 @@ module DTK::Client
       module_info_aux(context_params)
     end
 
-    desc "SERVICE-MODULE-NAME/ID list-assemblies","List assemblies associated with service module."
+    desc "SERVICE-MODULE-NAME/ID list-assemblies [-v VERSION]","List assemblies associated with service module."
+    version_method_option
     method_option :remote, :type => :boolean, :default => false
     def list_assemblies(context_params)
       context_params.method_arguments = ["assembly"]
@@ -109,13 +112,14 @@ module DTK::Client
       list(context_params)
     end
 
-    desc "list [--remote] [--diff] [-n NAMESPACE]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
+    desc "list [--remote] [--diffs] [-n NAMESPACE]","List service modules (local/remote). Use --diff to compare loaded and remote modules."
     method_option :remote, :type => :boolean, :default => false
-    method_option :diff, :type => :boolean, :default => false
+    method_option :diffs, :type => :boolean, :default => false, :aliases => "--diff"
     method_option :namespace, :aliases => "-n" ,
       :type => :string,
       :banner => "NAMESPACE",
       :desc => "List modules only in specific namespace."
+    # method_option :with_versions, :type => :boolean, :default => false, :aliases => "with-versions"
     def list(context_params)
       service_module_id, about, service_module_name = context_params.retrieve_arguments([:service_module_id, :option_1, :option_2],method_argument_names)
       datatype = nil
@@ -132,8 +136,14 @@ module DTK::Client
       if (context_params.last_entity_name == :"service-module") and about.nil?
         action    = options.remote? ? "list_remote" : "list"
         post_body = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
-        post_body[:diff] = options.diff? ? options.diff : {}
+        post_body[:diff] = options.diffs? ? options.diffs : {}
         post_body.merge!(:module_namespace => options.namespace) if options.namespace
+
+        if post_body[:detail_to_include]
+          post_body[:detail_to_include] << 'versions' # if options.with_versions?
+        else
+          post_body[:detail_to_include]
+        end
 
         response = post rest_url("service_module/#{action}"), post_body
       # If user is on service identifier level, list task can't have '--remote' option.
@@ -141,12 +151,14 @@ module DTK::Client
         # TODO: this is temp; will shortly support this
         raise DTK::Client::DtkValidationError.new("Not supported '--remote' option when listing service module assemblies, component templates or modules", true) if options.remote?
         raise DTK::Client::DtkValidationError.new("Not supported type '#{about}' for list for current context level. Possible type options: 'assembly'", true) unless(about == "assembly" || about == "modules")
-
+        post_body = { :service_module_id => service_module_id }
         if about
           case about
           when "assembly"
-            data_type        = :assembly_template_description
-            action           = "list_assemblies"
+            version   = options.version
+            data_type = :assembly_template_description
+            action    = "list_assemblies"
+            post_body.merge!(:version => version) if version
           when "modules"
             data_type        = options.remote? ? :component_remote : :component_module
             action           = "list_component_modules"
@@ -154,10 +166,16 @@ module DTK::Client
             raise_validation_error_method_usage('list')
           end
         end
-        response = post rest_url("service_module/#{action}"), { :service_module_id => service_module_id }
+        response = post rest_url("service_module/#{action}"), post_body
       end
 
-      response.render_table(data_type) unless response.nil?
+      unless response.nil?
+        if options.with_versions?
+          response.render_table(:module_with_versions, true)
+        else
+          response.render_table(data_type)
+        end
+      end
 
       response
     end
@@ -167,24 +185,26 @@ module DTK::Client
       list_instances_aux(context_params)
     end
 
-    # desc "SERVICE-MODULE-NAME/ID list-versions","List all versions associated with this service module."
-    # def list_versions(context_params)
-    #   service_module_id = context_params.retrieve_arguments([:service_module_id!],method_argument_names)
-    #   post_body = {
-    #     :service_module_id => service_module_id,
-    #     :detail_to_include => ["remotes"],
-    #     :rsa_pub_key => SSHUtil.rsa_pub_key_content()
-    #   }
-    #   response = post rest_url("service_module/versions"), post_body
+    desc "SERVICE-MODULE-NAME/ID list-versions","List all versions associated with this service module."
+    def list_versions(context_params)
+      response = list_versions_aux(context_params)
+      return response unless response.ok?
+      response.render_table(:list_versions, true)
+    end
 
-    #   response.render_table(:module_version)
-    # end
+    desc "SERVICE-MODULE-NAME/ID list-remote-versions","List all remote versions associated with this service module."
+    def list_remote_versions(context_params)
+      response = list_remote_versions_aux(context_params)
+      return response unless response.ok?
+      response.render_table(:list_versions, true)
+    end
 
     # version_method_option
-    desc "install NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y]", "Install remote service module into local environment. -y will automatically clone component modules."
+    desc "install NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y] [-v VERSION]", "Install remote service module into local environment. -y will automatically clone component modules."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     # method_option :ignore, :aliases => '-i', :type => :boolean, :default => false
     method_option :update_none, :type => :boolean, :default => false
+    version_method_option
     def install(context_params)
       response = install_module_aux(context_params)
       @@invalidate_map << :service_module if response && response.ok?
@@ -249,7 +269,9 @@ module DTK::Client
     #   post rest_url("service_module/export"), post_body
     # end
 
-    desc "SERVICE-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-SERVICE-MODULE-NAME]","Publish service module to remote repository"
+    desc "SERVICE-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-SERVICE-MODULE-NAME]  [-v VERSION] [--force]","Publish service module to remote repository"
+    version_method_option
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def publish(context_params)
       publish_module_aux(context_params)
     end
@@ -293,7 +315,6 @@ module DTK::Client
     #   push_to_remote_aux(:service_module, service_module_id, service_module_name, options["namespace"], options["version"])
     # end
 
-    # desc "SERVICE-MODULE-NAME/ID pull-from-dtkn [-n NAMESPACE] [-v VERSION]", "Update local service module from remote repository."
     desc "SERVICE-MODULE-NAME/ID pull-dtkn [-n NAMESPACE] [--force]", "Update local service module from remote repository."
     method_option :namespace,:aliases => '-n',
       :type   => :string,
@@ -354,8 +375,9 @@ module DTK::Client
     #
     # desc "SERVICE-MODULE-NAME/ID clone [-v VERSION] [-n]", "Locally clone the service module files. Use -n to skip edit prompt"
     # version_method_option
-    desc "SERVICE-MODULE-NAME/ID clone [-n]", "Locally clone the service module files. Use -n to skip edit prompt"
+    desc "SERVICE-MODULE-NAME/ID clone [-n] [-v VERSION]", "Locally clone the service module files. Use -n to skip edit prompt"
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
+    version_method_option
     def clone(context_params, internal_trigger=false)
       clone_module_aux(context_params, internal_trigger)
     end
@@ -418,6 +440,68 @@ module DTK::Client
       DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{repo_obj.repo_dir}",:yellow) unless namespace
 
       response
+    end
+
+    desc "SERVICE-MODULE-NAME/ID stage ASSEMBLY-NAME [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION]", "Stage assembly in target."
+    method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
+    method_option :settings, :type => :string, :aliases => '-s'
+    method_option :node_size, :type => :string, :aliases => "--node-size"
+    method_option :os_type, :type => :string, :aliases => "--os-type"
+    version_method_option
+    #hidden option
+    method_option "instance-bindings", :type => :string
+    def stage(context_params)
+      service_module_id, service_module_name, assembly_template_name, name = context_params.retrieve_arguments([:service_module_id!, :service_module_name!, :option_1!, :option_2], method_argument_names)
+      post_body = {
+        :assembly_id => assembly_template_name
+      }
+
+      # special case when we need service module id
+      context_params.pure_cli_mode = true
+      post_body[:service_module_id] = service_module_id if context_params.pure_cli_mode
+
+      # using this to make sure cache will be invalidated after new assembly is created from other commands e.g.
+      # 'assembly-create', 'install' etc.
+      @@invalidate_map << :assembly
+
+      if assembly_template_name.to_s =~ /^[0-9]+$/
+        assembly_template_name = get_assembly_name(assembly_template_id)
+      else
+        namespace, module_name = get_namespace_and_name(service_module_name, ':')
+        assembly_template_name = "#{module_name}/#{assembly_template_name}"
+      end
+      assembly_template_name.gsub!(/(::)|(\/)/,'-') if assembly_template_name
+
+      in_target         = options["in-target"]
+      instance_bindings = options["instance-bindings"]
+      settings          = parse_service_settings(options["settings"])
+      node_size         = options.node_size
+      os_type           = options.os_type
+      version           = options.version
+      assembly_list     = Assembly.assembly_list()
+
+      if name
+        raise DTK::Client::DtkValidationError, "Unable to stage service with name '#{name}'. Service with specified name exists already!" if assembly_list.include?(name)
+      else
+        name = get_assembly_stage_name(assembly_list, assembly_template_name)
+      end
+
+      post_body.merge!(:target_id => in_target) if in_target
+      post_body.merge!(:name => name) if name
+      post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
+      post_body.merge!(:settings_json_form => JSON.generate(settings)) if settings
+      post_body.merge!(:node_size => node_size) if node_size
+      post_body.merge!(:os_type => os_type) if os_type
+      post_body.merge!(:version => version) if version
+      post_body.merge!(:service_module_name => service_module_name) if service_module_name
+
+      response = post rest_url("assembly/stage"), post_body
+      return response unless response.ok?
+      # when changing context send request for getting latest assemblies instead of getting from cache
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      return response
     end
 
 
@@ -513,9 +597,10 @@ module DTK::Client
 
     # desc "delete SERVICE-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     # version_method_option
-    desc "delete SERVICE-MODULE-NAME [-y] [-p]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete SERVICE-MODULE-NAME [-y] [-p] [-v VERSION]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
+    version_method_option
     def delete(context_params)
       response = delete_module_aux(context_params)
       @@invalidate_map << :service_module if response && response.ok?
@@ -523,9 +608,10 @@ module DTK::Client
       response
     end
 
-    desc "delete-from-catalog NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y] [--force]", "Delete the service module from the DTK Network catalog"
+    desc "delete-from-catalog NAMESPACE/REMOTE-SERVICE-MODULE-NAME [-y] [--force] [-v VERSION]", "Delete the service module from the DTK Network catalog"
     method_option :confirmed, :aliases => '-y', :type => :boolean, :default => false
     method_option :force, :type => :boolean, :default => false
+    version_method_option
     def delete_from_catalog(context_params)
       delete_from_catalog_aux(context_params)
     end
@@ -567,6 +653,11 @@ module DTK::Client
     desc "SERVICE-MODULE-NAME/ID fork NAMESPACE", "Fork service module to new namespace"
     def fork(context_params)
       fork_aux(context_params)
+    end
+
+    desc "SERVICE-MODULE-NAME/ID create-new-version VERSION", "Create new service module version"
+    def create_new_version(context_params)
+      create_new_version_aux(context_params)
     end
 
     #

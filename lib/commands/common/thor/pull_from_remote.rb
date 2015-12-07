@@ -18,19 +18,21 @@ module DTK::Client
       response = post(rest_url("#{module_type}/get_remote_module_info"),post_body)
       return response unless response.ok?
 
-      module_name,full_module_name = response.data(:module_name,:full_module_name)
+      module_name,full_module_name, frozen = response.data(:module_name, :full_module_name, :frozen)
+      raise DtkError, "You are not allowed to update frozen #{module_type} versions!" if frozen
+
       remote_params = response.data_hash_form(:remote_repo_url,:remote_repo,:remote_branch)
       remote_params.merge!(:version => version) if version
 
       # check and import component module dependencies before importing service itself
       unless opts[:skip_recursive_pull]
-        import_module_component_dependencies(module_type, module_id,remote_namespace)
+        import_module_component_dependencies(module_type, module_id, remote_namespace)
       end
 
       # check whether a local module exists to determine whether pull from local clone or try to pull from server
       # TODO: probably remove OsUtil.print("Pulling changes from remote: #{remote_params[:remote_repo]} @ #{remote_params[:remote_repo_url]}")
 
-      if Helper(:git_repo).local_clone_dir_exists?(module_type,module_name,:full_module_name=>full_module_name,:version=>version)
+      if Helper(:git_repo).local_clone_dir_exists?(module_type, module_name, :full_module_name => full_module_name, :version => version)
         unless rsa_pub_key
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
         end

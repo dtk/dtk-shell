@@ -22,10 +22,6 @@ module DTK; module Client; class CommandHelper
       def merge
         if @opts_force
           merge_force()
-        elsif @opts_ignore_dependency_merge_conflict
-          # TODO: check if this is right
-          custom_message = "Unable to do fast-forward merge. You can go to '#{@opts_full_module_name}' and pull with --force option but all changes will be lost." 
-          response(:custom_message => :custom_message)
         else
           # check if merge needed
           merge_rel = merge_relationship()
@@ -53,15 +49,17 @@ module DTK; module Client; class CommandHelper
       
       def merge_not_fast_forward(merge_rel)
         if any_conflicts?
-          # TODO: server side is checking for conflicts when doing push-component-modules; so this may be only reached for pull dtkn
-
-          # msg = 'Unable to do pull-dtkn merge without conflicts. Options are:'
-          # msg << " a) command 'pull-dtkn --force', but all local changes will be lost or" 
-          # msg << " b) use command 'edit' to get in linux shell and directly use git commands."
-          err_msg = 'Unable to do fast-forward merge. You can use --force'
-          err_msg << " on #{@opts_command}" if @opts_command
-          err_msg <<  ', but all local changes will be lost on target that is being pushed to.'
-          raise ErrorUsage.new(err_msg)
+          # @opts_ignore_dependency_merge_conflict means called indirectly
+          if @opts_ignore_dependency_merge_conflict
+            # TODO: hard-wired that dependency is a component module in message: 'component-module/..
+            custom_message = "Unable to do fast-forward merge. You can go to 'component-module/#{@opts_full_module_name}' and pull with --force option but all local changes will be lost." 
+            response(compute_diffs, :custom_message => custom_message)
+          else
+            err_msg = 'Unable to do fast-forward merge. You can use --force'
+            err_msg << " on #{@opts_command}" if @opts_command
+            err_msg <<  ', but all local changes will be lost on target that is being pushed to.'
+            raise ErrorUsage.new(err_msg)
+          end
         elsif  merge_rel == :local_ahead
           response__no_diffs(:custom_message => 'No op because local module is ahead')
         else

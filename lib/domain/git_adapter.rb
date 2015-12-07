@@ -187,6 +187,14 @@ module DTK
         end
       end
 
+      def delete_branch(branch, opts = {})
+        @git_repo.branch(branch).delete
+      end
+
+      def checkout(branch, opts = {})
+        @git_repo.checkout(branch, opts)
+      end
+
       def push(remote_branch_ref, opts={})
         remote, remote_branch = remote_branch_ref.split('/')
         push_with_remote(remote, remote_branch, opts)

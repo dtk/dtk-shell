@@ -60,9 +60,10 @@ module DTK::Client
       return :component_module, "component_module/list", nil
     end
 
-    desc "delete COMPONENT-MODULE-NAME [-y] [-p]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete COMPONENT-MODULE-NAME [-y] [-p] [-v VERSION]", "Delete component module and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
+    version_method_option
     def delete(context_params,method_opts={})
       response = delete_module_aux(context_params, method_opts)
       @@invalidate_map << :component_module if response && response.ok?
@@ -75,13 +76,14 @@ module DTK::Client
       set_attribute_module_aux(context_params)
     end
 
-    desc "list [--remote] [--diff] [-n NAMESPACE]", "List loaded or remote component modules. Use --diff to compare loaded and remote component modules."
+    desc "list [--remote] [--diffs] [-n NAMESPACE]", "List loaded or remote component modules. Use --diff to compare loaded and remote component modules."
     method_option :remote, :type => :boolean, :default => false
-    method_option :diff, :type => :boolean, :default => false
+    method_option :diffs, :type => :boolean, :default => false, :aliases => "--diff"
     method_option :namespace, :aliases => "-n" ,
       :type => :string,
       :banner => "NAMESPACE",
       :desc => "List modules only in specific namespace."
+    # method_option :with_versions, :type => :boolean, :default => false, :aliases => "with-versions"
     def list(context_params)
       return module_info_about(context_params, :components, :component) if context_params.is_there_command?(:"component")
 
@@ -90,13 +92,25 @@ module DTK::Client
       action           = (remote ? "list_remote" : "list")
 
       post_body        = (remote ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
-      post_body[:diff] = options.diff? ? options.diff : {}
+      post_body[:diff] = options.diffs? ? options.diffs : {}
+
+      if post_body[:detail_to_include]
+        post_body[:detail_to_include] << 'versions' # if options.with_versions?
+      else
+        post_body[:detail_to_include]
+      end
+
       post_body.merge!(:module_namespace => options.namespace) if options.namespace
 
       response = post rest_url("component_module/#{action}"), post_body
 
       return response unless response.ok?
-      response.render_table()
+
+      if options.with_versions?
+        response.render_table(:module_with_versions, true)
+      else
+        response.render_table()
+      end
     end
 
     desc "COMPONENT-MODULE-NAME/ID list-components", "List all components for given component module."
@@ -112,6 +126,20 @@ module DTK::Client
     desc "COMPONENT-MODULE-NAME/ID list-instances", "List all instances for given component module."
     def list_instances(context_params)
       module_info_about(context_params, :instances, :component_instances)
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID list-versions","List all versions associated with this component module."
+    def list_versions(context_params)
+      response = list_versions_aux(context_params)
+      return response unless response.ok?
+      response.render_table(:list_versions, true)
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID list-remote-versions","List all remote versions associated with this component module."
+    def list_remote_versions(context_params)
+      response = list_remote_versions_aux(context_params)
+      return response unless response.ok?
+      response.render_table(:list_versions, true)
     end
 
     desc "import [NAMESPACE:]COMPONENT-MODULE-NAME", "Create new component module from local clone"
@@ -171,11 +199,12 @@ module DTK::Client
     # TODO: put in doc REMOTE-MODULE havs namespace and optionally version information; e.g. r8/hdp or r8/hdp/v1.1
     # if multiple items and failire; stops on first failure
 #    desc "install [NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME [-r DTK-REPO-MANAGER]","Install remote component module into local environment"
-    desc "install NAMESPACE/REMOTE-COMPONENT-MODULE-NAME","Install remote component module into local environment"
+    desc "install NAMESPACE/REMOTE-COMPONENT-MODULE-NAME [-v VERSION]","Install remote component module into local environment"
     method_option "repo-manager",:aliases => "-r" ,
       :type => :string,
       :banner => "REPO-MANAGER",
       :desc => "DTK Repo Manager from which to resolve requested module."
+      version_method_option
     def install(context_params)
       response = install_module_aux(context_params)
       if response && response.ok?
@@ -236,9 +265,10 @@ module DTK::Client
     end
 =end
 
-    desc "delete-from-catalog NAMESPACE/REMOTE-COMPONENT-MODULE-NAME [-y] [--force]", "Delete the component module from the DTK Network catalog"
+    desc "delete-from-catalog NAMESPACE/REMOTE-COMPONENT-MODULE-NAME [-y] [--force] [-v VERSION]", "Delete the component module from the DTK Network catalog"
     method_option :confirmed, :aliases => '-y', :type => :boolean, :default => false
     method_option :force, :type => :boolean, :default => false
+    version_method_option
     def delete_from_catalog(context_params)
       delete_from_catalog_aux(context_params)
     end
@@ -259,7 +289,9 @@ module DTK::Client
     #   return response
     # end
 
-    desc "COMPONENT-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME]", "Publish component module to remote repository."
+    desc "COMPONENT-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME] [-v VERSION] [--force]", "Publish component module to remote repository."
+    version_method_option
+    method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def publish(context_params)
       publish_module_aux(context_params)
     end
@@ -332,10 +364,9 @@ module DTK::Client
     #                   This will change behaviour of method in such way that edit will not be
     #                   triggered after it.
     #
-    #desc "COMPONENT-MODULE-NAME/ID clone [-v VERSION] [-n]", "Locally clone component module and component files. Use -n to skip edit prompt"
-    # version_method_option
-    desc "COMPONENT-MODULE-NAME/ID clone [-n]", "Locally clone component module and component files. Use -n to skip edit prompt"
+    desc "COMPONENT-MODULE-NAME/ID clone [-n] [-v VERSION]", "Locally clone component module and component files. Use -n to skip edit prompt"
     method_option :skip_edit, :aliases => '-n', :type => :boolean, :default => false
+    version_method_option
     def clone(context_params, internal_trigger=true)
       clone_module_aux(context_params, internal_trigger)
     end
@@ -348,7 +379,6 @@ module DTK::Client
     end
 
     desc "COMPONENT-MODULE-NAME/ID push [--force] [--docs]", "Push changes from local copy of component module to server"
-    version_method_option
     method_option "message",:aliases => "-m" ,
       :type => :string,
       :banner => "COMMIT-MSG",
@@ -360,7 +390,7 @@ module DTK::Client
       push_module_aux(context_params, internal_trigger)
     end
 
-#    desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to remote repository (dtkn)."
+    # desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [-m COMMIT-MSG]", "Push changes from local copy of component module to remote repository (dtkn)."
     desc "COMPONENT-MODULE-NAME/ID push-dtkn [-n NAMESPACE] [--force]", "Push changes from local copy of component module to remote repository (dtkn)."
     method_option "message",:aliases => "-m" ,
       :type => :string,
@@ -414,6 +444,11 @@ module DTK::Client
     desc "COMPONENT-MODULE-NAME/ID fork NAMESPACE", "Fork component module to new namespace"
     def fork(context_params)
       fork_aux(context_params)
+    end
+
+    desc "COMPONENT-MODULE-NAME/ID create-new-version VERSION", "Create new component module version"
+    def create_new_version(context_params)
+      create_new_version_aux(context_params)
     end
 
     #
