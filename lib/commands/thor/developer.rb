@@ -42,14 +42,14 @@ module DTK::Client
     end
 
     # run-agent haris1 dev_manager inject_agent "{ 'action_agent_branch': 'master', 'action_agent_url': 'git@github.com:rich-reactor8/dtk-action-agent.git' }"
-    desc "run-agent SERVICE-NAME AGENT-NAME PARAMS", "Updates DTK Action Agent to provided branch, example: dev_manager inject_agent \"{ 'action_agent_branch': 'master', 'action_agent_url': 'url' }\""
+    desc "run-agent SERVICE-NAME AGENT-NAME AGENT-METHOD PARAMS", "Updates DTK Action Agent to provided branch, example: dev_manager inject_agent \"{ 'action_agent_branch': 'master', 'action_agent_url': 'url' }\""
     def run_agent(context_params)
-      service_name, agent_name, action_params = context_params.retrieve_arguments([:option_1!, :option_2!, :option_3!], method_argument_names)
+      service_name, agent_name, agent_method, action_params = context_params.retrieve_arguments([:option_1!, :option_2!, :option_3!], method_argument_names)
 
       action_params ||= "{}"
       action_params.gsub!("'",'"')
 
-      response = post_file rest_url("developer/run_agent"), { :service_name => service_name, :agent_name => agent_name, :agent_method => 'foo', :agent_params => action_params }
+      response = post_file rest_url("developer/run_agent"), { :service_name => service_name, :agent_name => agent_name, :agent_method => agent_method, :agent_params => action_params }
       return response unless response.ok?
 
       action_results_id = response.data(:action_results_id)
