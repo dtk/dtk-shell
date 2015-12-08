@@ -68,12 +68,16 @@ module DTK::Client
     def self.extended_context()
       {
         :context => {
-          :add_component => "component_template",
           :create_node => "node_template",
           :create_node_group => "node_template",
           :add_component_dependency => "component_template"
         },
         :command => {
+          :add_component => {
+            :endpoint => "component_template",
+            :url => "component/list",
+            :opts => {:subtype=>"template", :ignore => "test_module", :hide_assembly_cmps => "true"}
+          },
           :edit_component_module => {
             :endpoint => "assembly",
             :url => "assembly/info_about",
