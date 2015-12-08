@@ -60,7 +60,7 @@ module DTK::Client
           forwarded_opts.merge!(:version => version) if version && !version.eql?('master')
           new_context_params.forward_options(forwarded_opts)
 
-          response = ContextRouter.routeTask(module_type, "update", new_context_params, @conn)
+          response = ContextRouter.routeTask(module_type, "pull_dtkn", new_context_params, @conn)
 
           unless response.ok?
             if opts[:do_not_raise]
