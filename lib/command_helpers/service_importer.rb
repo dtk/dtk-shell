@@ -117,7 +117,7 @@ module DTK::Client
       end
 
       # Trigger import/install for missing modules
-      modules_to_import.each do |m_module|
+      modules_to_import.uniq.each do |m_module|
         module_name = full_module_name(m_module)
         module_type = m_module['type']
         version     = m_module['version']
