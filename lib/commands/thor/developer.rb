@@ -44,7 +44,7 @@ module DTK::Client
     # run-agent haris1 dev_manager inject_agent "{ 'action_agent_branch': 'master', 'action_agent_url': 'git@github.com:rich-reactor8/dtk-action-agent.git' }"
     desc "run-agent SERVICE-NAME AGENT-NAME AGENT-METHOD PARAMS", "Updates DTK Action Agent to provided branch, example: dev_manager inject_agent \"{ 'action_agent_branch': 'master', 'action_agent_url': 'url' }\""
     def run_agent(context_params)
-      service_name, agent_name, agent_method, action_params = context_params.retrieve_arguments([:option_1!, :option_2!, :option_3!], method_argument_names)
+      service_name, agent_name, agent_method, action_params = context_params.retrieve_arguments([:option_1!, :option_2!, :option_3!, :option_4!], method_argument_names)
 
       action_params ||= "{}"
       action_params.gsub!("'",'"')
