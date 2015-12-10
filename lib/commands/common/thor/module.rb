@@ -390,11 +390,14 @@ module DTK::Client
           :rsa_pub_key => rsa_pub_key,
           :include_base => true
         }
-
-        versions_response = post rest_url("#{module_type}/list_remote_versions"), list_post_body
+        # versions_response = post rest_url("#{module_type}/list_remote_versions"), list_post_body
+        versions_response = post rest_url("#{module_type}/list_remote"), list_post_body
         return versions_response unless versions_response.ok?
 
-        versions = versions_response.data.first['versions']
+        selected_module = versions_response.data.find{ |vr| vr['display_name'].eql?("#{remote_namespace}/#{remote_module_name}") }
+        raise DtkError, "Module '#{remote_namespace}/#{remote_module_name}'' does not exist on repo manager!" unless selected_module
+
+        versions = selected_module['versions']
         if versions.size > 2
           versions << "all"
           ret_version = Console.confirmation_prompt_multiple_choice("\nSelect version to delete:", versions)
