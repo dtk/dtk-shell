@@ -1346,6 +1346,10 @@ module DTK::Client
               detail_to_include = [:component_dependencies]
             end
           when "attributes"
+            node_id      = options.node unless node_id
+            component_id = options.component unless component_id
+            attribute_id = options.attribute unless attribute_id
+
             data_type = (options.links? ? :workspace_attribute_w_link : :workspace_attribute)
             edit_attr_format = context_params.get_forwarded_options()[:format] if context_params.get_forwarded_options()
             if tags = options.tags
@@ -1371,10 +1375,11 @@ module DTK::Client
       end
 
       post_body = {
-        :assembly_id => assembly_or_workspace_id,
-        :node_id => node_id,
+        :assembly_id  => assembly_or_workspace_id,
+        :node_id      => node_id,
         :component_id => component_id,
-        :subtype     => 'instance',
+        :attribute_id => attribute_id,
+        :subtype      => 'instance',
       }.merge(post_options)
 
       post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include

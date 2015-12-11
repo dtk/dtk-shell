@@ -354,7 +354,10 @@ module DTK::Client
       edit_or_create_workflow_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID edit-attributes", "Edit service's attributes."
+    desc "SERVICE-NAME/ID edit-attributes [-n NODE] [-c COMPONENT] [-a ATTRIBUTE]", "Edit service's attributes."
+    method_option :node, :aliases => '-n'
+    method_option :component, :aliases => '-c'
+    method_option :attribute, :aliases => '-a'
     def edit_attributes(context_params)
       edit_attributes_aux(context_params)
     end
@@ -421,10 +424,13 @@ TODO: will put in dot release and will rename to 'extend'
       list_components_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID list-attributes [-f FORMAT] [-t TAG,..] [--links]","List attributes associated with service."
+    desc "SERVICE-NAME/ID list-attributes [-f FORMAT] [-t TAG,..] [--links] [-n NODE] [-c COMPONENT] [-a ATTRIBUTE]","List attributes associated with service."
     method_option :format, :aliases => '-f'
     method_option :tags, :aliases => '-t'
     method_option :links, :type => :boolean, :default => false, :aliases => '-l'
+    method_option :node, :aliases => '-n'
+    method_option :component, :aliases => '-c'
+    method_option :attribute, :aliases => '-a'
     def list_attributes(context_params)
       list_attributes_aux(context_params)
     end
