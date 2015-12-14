@@ -426,7 +426,10 @@ module DTK::Client
       edit_or_create_workflow_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID edit-attributes", "Edit workspace's attributes."
+    desc "WORKSPACE-NAME/ID edit-attributes [-n NODE] [-c COMPONENT] [-a ATTRIBUTE]", "Edit workspace's attributes."
+    method_option :node, :aliases => '-n'
+    method_option :component, :aliases => '-c'
+    method_option :attribute, :aliases => '-a'
     def edit_attributes(context_params)
       edit_attributes_aux(context_params)
     end
@@ -496,10 +499,13 @@ module DTK::Client
       end
     end
 
-    desc "WORKSPACE-NAME/ID list-attributes [-f FORMAT] [-t TAG,..] [--links]","List attributes associated with workspace."
+    desc "WORKSPACE-NAME/ID list-attributes [-f FORMAT] [-t TAG,..] [--links] [-n NODE] [-c COMPONENT] [-a ATTRIBUTE]","List attributes associated with workspace."
     method_option :format, :aliases => '-f'
     method_option :tags, :aliases => '-t'
     method_option :links, :type => :boolean, :default => false, :aliases => '-l'
+    method_option :node, :aliases => '-n'
+    method_option :component, :aliases => '-c'
+    method_option :attribute, :aliases => '-a'
     def list_attributes(context_params)
       list_attributes_aux(context_params)
     end
