@@ -38,9 +38,13 @@ module DTK::Client
     def self.extended_context()
       {
         :context => {
-          :add_component => "component_template"
         },
         :command => {
+          :add_component => {
+            :endpoint => "component_template",
+            :url => "component/list",
+            :opts => {:subtype=>"template", :ignore => "test_module", :hide_assembly_cmps => "true"}
+          },
           :delete_component => {
             :endpoint => "assembly",
             :url => "assembly/info_about",
