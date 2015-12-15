@@ -1446,5 +1446,33 @@ module DTK::Client
         raise DtkError, 'Please use -c option only with service instance component attributes (cmp_name/attribute_name)'
       end
     end
+
+    def stage_aux(context_params)
+      instance_name, assembly_template_name = context_params.retrieve_arguments([:option_1!, :option_2!], method_argument_names)
+
+      service_module_name, assembly, assembly_name = assembly_template_name.split('/')
+      raise DtkValidationError, "Service module name is ill-formed! Should contain <namespace>:<name>" unless service_module_name =~ /(^[^:]+):([^:]+$)/
+      raise DtkValidationError, "ASSEMBLY-NAME parameter is ill-formed! Should contain <service_namespace>:<service_name>/assembly/<assembly_name>" unless (assembly && assembly.eql?('assembly') && assembly_name)
+
+      new_context_params = DTK::Shell::ContextParams.new
+      new_context_params.add_context_to_params(:service_module, :service_module)
+      new_context_params.add_context_name_to_params(:service_module, :service_module, service_module_name)
+      new_context_params.method_arguments = [assembly_name]
+      new_context_params.method_arguments << instance_name if instance_name
+
+      fwd_opts  = {}
+      in_target = options["in-target"]
+      node_size = options.node_size
+      os_type   = options.os_type
+      version   = options.version
+
+      fwd_opts.merge!(:in_target => in_target) if in_target
+      fwd_opts.merge!(:node_size => node_size) if node_size
+      fwd_opts.merge!(:os_type => os_type) if os_type
+      fwd_opts.merge!(:version => version) if version
+      new_context_params.forward_options(fwd_opts)
+
+      response = ContextRouter.routeTask(:service_module, "stage", new_context_params, @conn)
+    end
   end
 end

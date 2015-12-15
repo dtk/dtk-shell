@@ -472,12 +472,13 @@ module DTK::Client
       end
       assembly_template_name.gsub!(/(::)|(\/)/,'-') if assembly_template_name
 
-      in_target         = options["in-target"]
+      fwd_options       = context_params.get_forwarded_options()
+      in_target         = fwd_options[:in_target]||options["in-target"]
       instance_bindings = options["instance-bindings"]
       settings          = parse_service_settings(options["settings"])
-      node_size         = options.node_size
-      os_type           = options.os_type
-      version           = options.version
+      node_size         = fwd_options[:node_size]||options.node_size
+      os_type           = fwd_options[:os_type]||options.os_type
+      version           = fwd_options[:version]||options.version
       assembly_list     = Assembly.assembly_list()
 
       if name
