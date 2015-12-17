@@ -900,7 +900,8 @@ module DTK::Client
 
       if node_id.nil? && !(component_id.to_s =~ /^[0-9]+$/)
         if component_id.to_s.include?('/')
-          node_id, component_id = component_id.split('/')
+          cmp_match = component_id.match(/(\w+)\/(.*)/)
+          node_id, component_id = cmp_match[1], cmp_match[2]
           node_name = node_id
         else
           # TODO: update server so dont have to pass in 'assembly_wide'
