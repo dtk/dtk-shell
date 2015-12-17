@@ -436,9 +436,14 @@ module DTK::Client
 
     def publish_module_aux(context_params)
       module_type = get_module_type(context_params)
-      module_id, module_name, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME, :option_1!], method_argument_names)
+      module_id, module_name, input_remote_name = context_params.retrieve_arguments([REQ_MODULE_ID, REQ_MODULE_NAME, :option_1], method_argument_names)
 
       raise DtkValidationError, "You have to provide version you want to publish!" unless options.version
+
+      unless input_remote_name
+        input_remote_name = module_name.gsub(":","/")
+        context_params.method_arguments << input_remote_name
+      end
 
       skip_base         = context_params.get_forwarded_options()['skip_base']
       forwarded_version = context_params.get_forwarded_options()['version']

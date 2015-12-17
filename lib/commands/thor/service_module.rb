@@ -286,7 +286,7 @@ module DTK::Client
     #   post rest_url("service_module/export"), post_body
     # end
 
-    desc "SERVICE-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-SERVICE-MODULE-NAME]  [-v VERSION] [--force]","Publish service module to remote repository"
+    desc "SERVICE-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-SERVICE-MODULE-NAME]  -v VERSION [--force]","Publish service module to remote repository"
     version_method_option
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def publish(context_params)

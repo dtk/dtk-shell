@@ -289,7 +289,7 @@ module DTK::Client
     #   return response
     # end
 
-    desc "COMPONENT-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME] [-v VERSION] [--force]", "Publish component module to remote repository."
+    desc "COMPONENT-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-COMPONENT-MODULE-NAME] -v VERSION [--force]", "Publish component module to remote repository."
     version_method_option
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def publish(context_params)
