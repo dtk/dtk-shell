@@ -107,8 +107,7 @@ module DTK::Client
 
     desc "list-ssh-keys", "Show list of key pairs that your account profile has saved"
     def list_ssh_keys(context_params)
-      username  = parse_key_value_file(::DTK::Client::Configurator::CRED_FILE)[:username]
-      post_body = {:username => username}
+      post_body = {:username => ::DTK::Client::Configurator.client_username }
 
       response = post rest_url("account/list_ssh_keys"), post_body
       response.render_table(:account_ssh_keys)

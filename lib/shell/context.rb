@@ -184,7 +184,7 @@ module DTK
           extended_context = command_clazz.respond_to?(:extended_context) ? command_clazz.extended_context() : {}
 
           unless extended_context.empty?
-            extended_context = extended_context[:context]
+            extended_context = extended_context[:context] || {}
             # extended_context.reject!{|k,v| k.to_s!=line_buffer}
             # extended_context.select!{|k,v| k.to_s.eql?(line_buffer_first) || k.to_s.eql?(line_buffer_last)}
             extended_context.select!{|k,v| line_buffer.include?(k.to_s)} if extended_context.respond_to?(:select!)
