@@ -185,8 +185,6 @@ module DTK
 
           unless extended_context.empty?
             extended_context = extended_context[:context]
-            # extended_context.reject!{|k,v| k.to_s!=line_buffer}
-            # extended_context.select!{|k,v| k.to_s.eql?(line_buffer_first) || k.to_s.eql?(line_buffer_last)}
             extended_context.select!{|k,v| line_buffer.include?(k.to_s)} if extended_context.respond_to?(:select!)
 
             if (extended_context[line_buffer_last] && !line_buffer_first.eql?(line_buffer_last))
@@ -196,7 +194,18 @@ module DTK
             else
               new_context = extended_context[line_buffer_first.to_sym] unless line_buffer_first.nil? || line_buffer_first.empty?
             end
-            active_context_copy.push_new_context(new_context, new_context) unless new_context.nil?
+
+            unless new_context.nil?
+              if new_context.is_a?(String)
+                active_context_copy.push_new_context(new_context, new_context)
+              elsif new_context.is_a?(Hash)
+                context_candidates = load_extended_context_commands(new_context, active_context_copy)
+                results_filter = (readline_input.match(/\/$/) && invalid_context.empty?) ? "" : readline_input.split("/").last
+                results_filter ||= ""
+                context_candidates = context_candidates.grep( /^#{Regexp.escape(results_filter)}/ )
+                return context_candidates
+              end
+            end
           end
         end
 
@@ -673,7 +682,7 @@ module DTK
         end
 
         if extended_context_commands
-            context_candidates = load_extended_context_commands(extended_context_commands, active_context_copy)
+          context_candidates = load_extended_context_commands(extended_context_commands, active_context_copy)
         else
           # If command does not end with '/' check if there are more than one result candidate for current context
           if !readline_input.empty? && !readline_input.match(/\/$/) && invalid_context.empty? && !active_context_copy.empty?
@@ -794,15 +803,17 @@ module DTK
       end
 
       def load_extended_context_commands(extended_context_commands, active_context_copy)
-        candidates = []
-        entity_name = active_context_copy.last_context
-        parent_entity = active_context_copy.context_list[1]
+        candidates        = []
+        entity_name       = active_context_copy.last_context
+        parent_entity     = active_context_copy.context_list[1]
+        response_ruby_obj = nil
+
+        field    = extended_context_commands[:field]||'display_name'
+        endpoint = extended_context_commands[:endpoint]
+        url      = extended_context_commands[:url]
+        opts     = extended_context_commands[:opts]||{}
 
         if entity_name.is_identifier?
-          endpoint = extended_context_commands[:endpoint]
-          url = extended_context_commands[:url]
-          opts = extended_context_commands[:opts]||{}
-
           if (parent_entity && parent_entity.is_identifier? && (parent_entity != entity_name))
             parent_id_label = "#{endpoint}_id".to_sym
             parent_id = parent_entity.identifier
@@ -814,13 +825,14 @@ module DTK
           id = entity_name.identifier
           opts[id_label] = id
 
-          # response_ruby_obj = DTK::Client::CommandBaseThor.get_cached_response(endpoint.to_sym, url, opts)
-          # when extended context autocomplete always send new request
           response_ruby_obj = post rest_url(url), opts
-          return [] if(response_ruby_obj.nil? || !response_ruby_obj.ok?)
+        else
+          response_ruby_obj = post rest_url(url), opts
+        end
 
+        if response_ruby_obj && response_ruby_obj.ok?
           response_ruby_obj.data.each do |d|
-            candidates << d["display_name"]
+            candidates << d[field]
           end
         end
 

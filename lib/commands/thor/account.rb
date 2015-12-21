@@ -26,6 +26,20 @@ module DTK::Client
       end
     end
 
+    def self.extended_context()
+      {
+        :context => {
+          :delete_ssh_key => {
+            :field => "username",
+            :url => "account/list_ssh_keys",
+            :opts => { :username => "#{::DTK::Client::Configurator.client_username}" }
+          }
+        },
+        :command => {
+        }
+      }
+    end
+
     def self.internal_add_user_access(url, post_body, component_name)
       response = post(rest_url(url),post_body)
       key_exists_already = (response.error_message||'').include?(KEY_EXISTS_ALREADY_CONTENT)
@@ -109,7 +123,6 @@ module DTK::Client
     def list_ssh_keys(context_params)
       username  = parse_key_value_file(::DTK::Client::Configurator::CRED_FILE)[:username]
       post_body = {:username => username}
-
       response = post rest_url("account/list_ssh_keys"), post_body
       response.render_table(:account_ssh_keys)
     end
