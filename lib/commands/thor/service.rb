@@ -795,6 +795,16 @@ TODO: will put in dot release and will rename to 'extend'
       stage_aux(context_params)
     end
 
+    desc "SERVICE-NAME/ID share-instance USERNAME", "Share service instance with specified user"
+    method_option :group, :type => :string, :aliases => "-g"
+    def share_instance(context_params)
+      share_instance_aux(context_params)
+    end
+
+    desc "SERVICE-NAME/ID unshare-instance USERNAME", "Unshare service instance with specified user"
+    def unshare_instance(context_params)
+      unshare_instance_aux(context_params)
+    end
   end
 end
 

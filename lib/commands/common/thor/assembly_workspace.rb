@@ -1475,5 +1475,25 @@ module DTK::Client
 
       response = ContextRouter.routeTask(:service_module, "stage", new_context_params, @conn)
     end
+
+    def share_instance_aux(context_params)
+      assembly_or_workspace_id, user = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :option_1!],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :user        => user
+      }
+      post rest_url("assembly/share_instance"), post_body
+    end
+
+    def unshare_instance_aux(context_params)
+      assembly_or_workspace_id, user = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :option_1!],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_or_workspace_id,
+        :user        => user
+      }
+      post rest_url("assembly/unshare_instance"), post_body
+    end
   end
 end
