@@ -805,6 +805,11 @@ TODO: will put in dot release and will rename to 'extend'
     def unshare_instance(context_params)
       unshare_instance_aux(context_params)
     end
+
+    desc "list-shared", "List shared service instances"
+    def list_shared(context_params)
+      list_shared_aux(context_params)
+    end
   end
 end
 

@@ -1495,5 +1495,10 @@ module DTK::Client
       }
       post rest_url("assembly/unshare_instance"), post_body
     end
+
+    def list_shared_aux(context_params)
+      response = post rest_url("assembly/list_shared_service_instances")
+      response.render_table(:assembly_shared)
+    end
   end
 end
