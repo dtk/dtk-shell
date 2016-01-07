@@ -1449,11 +1449,16 @@ module DTK::Client
     end
 
     def stage_aux(context_params)
-      instance_name, assembly_template_name = context_params.retrieve_arguments([:option_1!, :option_2!], method_argument_names)
+      assembly_template_name, instance_name = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
 
       service_module_name, assembly, assembly_name = assembly_template_name.split('/')
       raise DtkValidationError, "Service module name is ill-formed! Should contain <namespace>:<name>" unless service_module_name =~ /(^[^:]+):([^:]+$)/
-      raise DtkValidationError, "ASSEMBLY-NAME parameter is ill-formed! Should contain <service_namespace>:<service_name>/assembly/<assembly_name>" unless (assembly && assembly.eql?('assembly') && assembly_name)
+
+      unless assembly_name
+        assembly_name = assembly
+        assembly = nil
+      end
+      raise DtkValidationError, "ASSEMBLY-NAME parameter is ill-formed! Should contain <namespace>:<service_name>/assembly/<assembly_name> or <namespace>:<service_name>/<assembly_name>" if assembly && !assembly.eql?('assembly')
 
       new_context_params = DTK::Shell::ContextParams.new
       new_context_params.add_context_to_params(:service_module, :service_module)
