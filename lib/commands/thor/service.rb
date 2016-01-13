@@ -264,13 +264,24 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "SERVICE-NAME/ID exec SERVICE-LEVEL-ACTION [PARAMS] [--stream-results]", "Execute a service level action"
-    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
+    desc "SERVICE-NAME/ID exec ACTION [ACTION-PARAMS]", "Execute action asynchronously"
     def exec(context_params)
-      opts = {}
-      opts.merge!(:mode => :stream) if context_params.pure_cli_mode or options['stream-results']
-      converge_aux(context_params, opts)
+      exec_aux(context_params)
     end
+
+    desc "SERVICE-NAME/ID exec-sync ACTION [ACTION-PARAMS]", "Execute action synchronously"
+    def exec_sync(context_params)
+      exec_sync_aux(context_params)
+    end
+
+    # desc "SERVICE-NAME/ID exec SERVICE-LEVEL-ACTION [PARAMS] [--stream-results]", "Execute a service level action", :hide => true
+    # method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
+    # def exec(context_params)
+    #   opts = {}
+    #   opts.merge!(:mode => :stream) if context_params.pure_cli_mode or options['stream-results']
+    #   converge_aux(context_params, opts)
+    # end
+
     # TODO: DEPRECATE: keeping around for backward compatibiity but will be deprecating execute-workflow
     desc "SERVICE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow.", :hide => true
     method_option "commit_msg",:aliases => "-m" ,
@@ -294,7 +305,7 @@ module DTK::Client
       converge_aux(context_params, opts)
     end
 
-    desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]", "Converge the component or execute tha action on the component."
+    desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]", "Converge the component or execute tha action on the component.", :hide => true
     def execute_action(context_params)
       execute_ad_hoc_action_aux(context_params)
     end
