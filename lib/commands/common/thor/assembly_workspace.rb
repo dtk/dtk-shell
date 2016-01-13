@@ -128,6 +128,17 @@ module DTK::Client
       response.render_table()
     end
 
+    def list_actions_aux(context_params)
+      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
+
+      post_body = {
+        :assembly_id  => assembly_or_workspace_id
+      }
+
+      response = post rest_url("assembly/list_actions"), post_body
+      response.render_table('service_actions')
+    end
+
    # desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]"
     def execute_ad_hoc_action_aux(context_params)
       assembly_or_workspace_id,component_id,method_name,action_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2,:option_3],method_argument_names)
@@ -450,7 +461,7 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    def workflow_info_aux(context_params)
+    def action_info_aux(context_params)
       assembly_or_workspace_id,workflow_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
