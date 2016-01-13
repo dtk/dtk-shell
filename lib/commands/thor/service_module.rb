@@ -44,6 +44,18 @@ module DTK::Client
       end
     end
 
+    def self.extended_context()
+      {
+        :command => {
+          :stage => {
+            :endpoint => "service_module",
+            :url => "service_module/list_assemblies",
+            :opts => {}
+          }
+        }
+      }
+    end
+
     def self.valid_children()
       [:assembly, :remotes]
     end
