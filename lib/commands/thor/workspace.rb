@@ -213,15 +213,15 @@ module DTK::Client
     # end
 
     # TODO: DEPRECATE: keeping around for backward compatibiity but will be deprecating execute-workflow
-    desc "WORKSPACE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow.", :hide => true
-    method_option "commit_msg",:aliases => "-m",
-      :type => :string,
-      :banner => "COMMIT-MSG",
-      :desc => "Commit message"
-    def execute_workflow(context_params)
-      OsUtil.print_deprecate_message("Command 'execute-workflow' will be deprecated; use 'exec' instead")
-      converge_aux(context_params)
-    end
+    # desc "WORKSPACE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow.", :hide => true
+    # method_option "commit_msg",:aliases => "-m",
+    #   :type => :string,
+    #   :banner => "COMMIT-MSG",
+    #   :desc => "Commit message"
+    # def execute_workflow(context_params)
+    #   OsUtil.print_deprecate_message("Command 'execute-workflow' will be deprecated; use 'exec' instead")
+    #   converge_aux(context_params)
+    # end
 
 
     desc "WORKSPACE-NAME/ID converge [-m COMMIT-MSG] [--stream-results]", "Converge workspace instance."
@@ -431,8 +431,8 @@ module DTK::Client
       edit_or_create_workflow_aux(context_params,:create => true,:create_from => options.from)
     end
 
-    desc "WORKSPACE-NAME/ID edit-workflow [WORKFLOW-NAME]", "Edit a workflow in the workspace."
-    def edit_workflow(context_params)
+    desc "WORKSPACE-NAME/ID edit-action [WORKSPACE-LEVEL-ACTION]", "Edit a workflow in the workspace."
+    def edit_action(context_params)
       edit_or_create_workflow_aux(context_params)
     end
 
@@ -546,15 +546,21 @@ module DTK::Client
       list_tasks_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID workflow-info [WORKFLOW-NAME]", "Get the contents of a workflow associated with the workspace."
-    def workflow_info(context_params)
-      workflow_info_aux(context_params)
+    desc "WORKSPACE-NAME/ID action-info [WORKSPACE-LEVEL-ACTION]", "Get the contents of action associated with the workspace."
+    def action_info(context_params)
+      action_info_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-workflows", "List the workflows associated with the workspace."
-    def list_workflows(context_params)
-      workflow_list_aux(context_params)
+    desc "WORKSPACE-NAME/ID list-actions", "List the actions defined on components in the workspace."
+    # method_option :summary, :aliases => '-s', :type => :boolean, :default => false
+    def list_actions(context_params)
+      list_actions_aux(context_params)
     end
+
+    # desc "WORKSPACE-NAME/ID list-workflows", "List the workflows associated with the workspace.", :hide => true
+    # def list_workflows(context_params)
+    #   workflow_list_aux(context_params)
+    # end
 
     desc "WORKSPACE-NAME/ID list-violations", "Finds violations in the workspace that will prevent a converge operation."
     def list_violations(context_params)

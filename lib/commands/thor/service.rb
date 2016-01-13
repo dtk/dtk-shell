@@ -283,15 +283,15 @@ module DTK::Client
     # end
 
     # TODO: DEPRECATE: keeping around for backward compatibiity but will be deprecating execute-workflow
-    desc "SERVICE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow.", :hide => true
-    method_option "commit_msg",:aliases => "-m" ,
-      :type => :string,
-      :banner => "COMMIT-MSG",
-      :desc => "Commit message"
-    def execute_workflow(context_params)
-      OsUtil.print_deprecate_message("Command 'execute-workflow' will be deprecated; use 'exec' instead")
-      converge(context_params)
-    end
+    # desc "SERVICE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow.", :hide => true
+    # method_option "commit_msg",:aliases => "-m" ,
+    #   :type => :string,
+    #   :banner => "COMMIT-MSG",
+    #   :desc => "Commit message"
+    # def execute_workflow(context_params)
+    #   OsUtil.print_deprecate_message("Command 'execute-workflow' will be deprecated; use 'exec' instead")
+    #   converge(context_params)
+    # end
 
     desc "SERVICE-NAME/ID converge [-m COMMIT-MSG] [--stream-results]", "Converge service instance."
     method_option "commit_msg",:aliases => "-m" ,
@@ -305,15 +305,15 @@ module DTK::Client
       converge_aux(context_params, opts)
     end
 
-    desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]", "Converge the component or execute tha action on the component.", :hide => true
-    def execute_action(context_params)
-      execute_ad_hoc_action_aux(context_params)
-    end
+    # desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]", "Converge the component or execute tha action on the component.", :hide => true
+    # def execute_action(context_params)
+    #   execute_ad_hoc_action_aux(context_params)
+    # end
 
-    desc "SERVICE-NAME/ID list-actions [--summary]", "List the actions defined on components in the service instance."
-    method_option :summary, :aliases => '-s', :type => :boolean, :default => false
+    desc "SERVICE-NAME/ID list-actions", "List the actions defined on components in the service instance."
+    # method_option :summary, :aliases => '-s', :type => :boolean, :default => false
     def list_actions(context_params)
-      list_ad_hoc_actions_aux(context_params)
+      list_actions_aux(context_params)
     end
 
     desc "SERVICE-NAME/ID push-assembly-updates [NAMESPACE:SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push changes made to this service instance to the designated assembly; default is parent assembly."
@@ -360,8 +360,8 @@ module DTK::Client
       edit_or_create_workflow_aux(context_params,:create => true,:create_from => options.from)
     end
 
-    desc "SERVICE-NAME/ID edit-workflow [WORKFLOW-NAME]", "Edit a workflow in the service instance."
-    def edit_workflow(context_params)
+    desc "SERVICE-NAME/ID edit-action [SERVICE-LEVEL-ACTION]", "Edit action in the service instance."
+    def edit_action(context_params)
       edit_or_create_workflow_aux(context_params)
     end
 
@@ -466,15 +466,15 @@ TODO: will put in dot release and will rename to 'extend'
       print_includes_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID workflow-info [WORKFLOW-NAME]", "Get the contents of a workflow associated with the service."
-    def workflow_info(context_params)
-      workflow_info_aux(context_params)
+    desc "SERVICE-NAME/ID action-info [SERVICE-LEVEL-ACTION]", "Get the contents of action associated with the service."
+    def action_info(context_params)
+      action_info_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID list-workflows", "List the workflows associated with the service."
-    def list_workflows(context_params)
-      workflow_list_aux(context_params)
-    end
+    # desc "SERVICE-NAME/ID list-workflows", "List the workflows associated with the service.", :hide => true
+    # def list_workflows(context_params)
+    #   workflow_list_aux(context_params)
+    # end
 
     desc "list","List services."
     def list(context_params)
