@@ -429,11 +429,11 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID create-workflow WORKFLOW-NAME [--from BASE-WORKFLOW-NAME]", "Create a new workflow in the workspace."
-    method_option :from, :type => :string
-    def create_workflow(context_params)
-      edit_or_create_workflow_aux(context_params,:create => true,:create_from => options.from)
-    end
+    # desc "WORKSPACE-NAME/ID create-workflow WORKFLOW-NAME [--from BASE-WORKFLOW-NAME]", "Create a new workflow in the workspace."
+    # method_option :from, :type => :string
+    # def create_workflow(context_params)
+    #   edit_or_create_workflow_aux(context_params,:create => true,:create_from => options.from)
+    # end
 
     desc "WORKSPACE-NAME/ID edit-action [WORKSPACE-LEVEL-ACTION]", "Edit a workflow in the workspace."
     def edit_action(context_params)
