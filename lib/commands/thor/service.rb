@@ -107,13 +107,17 @@ module DTK::Client
           },
           :exec => {
             :endpoint => "assembly",
-            :url => "assembly/task_action_list"
+            :url => "assembly/list_actions"
           },
-          # TODO: DEPRECATE execute_workflow 
-          :execute_workflow => {
+          :exec_sync => {
             :endpoint => "assembly",
-            :url => "assembly/task_action_list"
+            :url => "assembly/list_actions"
           }
+          # TODO: DEPRECATE execute_workflow
+          # :execute_workflow => {
+          #   :endpoint => "assembly",
+          #   :url => "assembly/task_action_list"
+          # }
         }
       }
     end
