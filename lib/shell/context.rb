@@ -825,9 +825,11 @@ module DTK
           id = entity_name.identifier
           opts[id_label] = id
 
-          response_ruby_obj = post rest_url(url), opts
+          response_ruby_obj = DTK::Client::CommandBaseThor.get_cached_response(endpoint, url, opts)
+          # response_ruby_obj = post rest_url(url), opts
         else
-          response_ruby_obj = post rest_url(url), opts
+          response_ruby_obj = DTK::Client::CommandBaseThor.get_cached_response(endpoint, url, opts)
+          # response_ruby_obj = post rest_url(url), opts
         end
 
         if response_ruby_obj && response_ruby_obj.ok?
