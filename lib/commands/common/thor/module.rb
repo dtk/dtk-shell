@@ -87,18 +87,20 @@ module DTK::Client
       end
     end
 
-    def delete_module_aux(context_params, method_opts={})
+    def delete_module_aux(context_params, method_opts = {})
       module_location, modules_path = nil, nil
       module_id = context_params.retrieve_arguments([:option_1!], method_argument_names)
 
       delete_module_sub_aux(context_params, module_id, method_opts)
     end
 
-    def delete_module_sub_aux(context_params, module_id, method_opts={})
-      # ModuleUtil.check_format!(module_id)
-      version = options.version
+    def delete_module_sub_aux(context_params, module_id, method_opts = {})
+      version     = options.version
       module_name = get_name_from_id_helper(module_id)
       module_type = get_module_type(context_params)
+
+      # delete all versions
+      version = 'all' if method_opts[:delete_all]
 
       unless (options.force? || method_opts[:force_delete])
         msg = "Are you sure you want to delete module '#{module_name}'"
@@ -111,18 +113,20 @@ module DTK::Client
       opts = { :module_name => module_name }
 
       unless version
-        post_body.merge!(:include_base => true)
+        # post_body.merge!(:include_base => true)
 
         versions_response = post rest_url("#{module_type}/list_versions"), post_body
         return versions_response unless versions_response.ok?
 
         versions = versions_response.data.first['versions']
-        if versions.size > 2
-          versions << "all"
+        if versions.size > 0
+          versions << "all" unless versions.size == 1
           ret_version = Console.confirmation_prompt_multiple_choice("\nSelect version to delete:", versions)
           return unless ret_version
           raise DtkError, "You are not allowed to delete 'base' version while other versions exist!" if ret_version.eql?('base')
           version = ret_version
+        else
+          raise DtkError, "There are no versions created for #{module_type} '#{module_name}'!"
         end
       end
 
