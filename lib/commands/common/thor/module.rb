@@ -246,6 +246,7 @@ module DTK::Client
       remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
       forwarded_version           = context_params.get_forwarded_options()['version']
       add_version                 = false
+      master_only                 = (options.version? && options.version.eql?('master'))
 
       version ||= forwarded_version || options.version
       version = nil if version.eql?('master')
@@ -280,7 +281,8 @@ module DTK::Client
       # we need to install base module version if not installed
       unless skip_base
         master_response = install_base_version_aux?(context_params, post_body, module_type, version)
-        return master_response unless master_response.ok?
+        # return master_response unless master_response.ok?
+        return master_response if !master_response.ok? || master_only
 
         latest_version = master_response.data(:latest_version)
 
@@ -321,7 +323,7 @@ module DTK::Client
         opts = { :do_not_raise => true }
         module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message => true)
         module_opts.merge!(:update_none => true) if options.update_none?
-        module_opts.merge!(:hide_output => true) if skip_base
+        module_opts.merge!(:hide_output => true) if skip_base && !master_only
 
         continue = trigger_module_auto_import(missing_components, required_components, module_opts)
         return unless continue
@@ -366,14 +368,16 @@ module DTK::Client
         raise DtkError, "Module '#{remote_module_name}' version '#{version}' does not exist on repo manager!" unless versions.include?(version)
       end
 
+      base_response = nil
       if !head_installed && !latest_version.eql?('master')
         new_context_params = DTK::Shell::ContextParams.new
         new_context_params.add_context_to_params(module_type, module_type)
         new_context_params.method_arguments = [remote_module_name]
         new_context_params.forward_options('skip_base' => true, 'version' => 'master')
-        install_module_aux(new_context_params)
+        base_response = install_module_aux(new_context_params)
       end
 
+      return base_response if base_response && (options.version? && options.version.eql?('master'))
       master_response
     end
 
