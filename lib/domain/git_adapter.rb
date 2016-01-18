@@ -69,7 +69,8 @@ module DTK
 
           files_modified = difference.stats[:files] ? difference.stats[:files].keys.collect { |file| { :path => file }} : []
           {
-            :files_modified => files_modified
+            :files_modified => files_modified,
+            :are_there_changes => !files_modified.empty?
           }
         else
           raise Error.new("Error finding branches: local branch '#{local_branch}' (found: #{!branch_local_obj.nil?}), remote branch '#{remote_reference}' (found: #{!branch_remote_obj.nil?})")
