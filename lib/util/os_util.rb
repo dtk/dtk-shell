@@ -126,11 +126,11 @@ module DTK
           end
         end
 
-        def module_version_locations(module_type,module_name,version=nil,opts={})
-          base_path, namespace, name = module_location_parts(module_type,module_name,version,opts) #.first
+        def module_version_locations(module_type, module_name, version = nil, opts={})
+          base_path, namespace, name = module_location_parts(module_type, module_name, version, opts) #.first
           namespace_path = "#{base_path}/#{namespace}"
           module_versions = Dir.entries(namespace_path).select{|a| a.match(/^#{name}-\d{1,2}.\d{1,2}.\d{1,2}$/)}
-          module_versions.map{ |version|"#{namespace_path}/#{version}" }
+          module_versions.map{ |version| "#{namespace_path}/#{version}" }
         end
 
         def module_clone_location(module_type)
