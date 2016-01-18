@@ -100,7 +100,7 @@ module DTK::Client
       module_type = get_module_type(context_params)
 
       # delete all versions
-      version = 'all' if method_opts[:delete_all]
+      version = 'delete_all' if method_opts[:delete_all]
 
       unless (options.force? || method_opts[:force_delete])
         msg = "Are you sure you want to delete module '#{module_name}'"
@@ -132,9 +132,15 @@ module DTK::Client
 
       if version
         if version.eql?('all')
+          # delete only versions (not base)
+          post_body.merge!(:all_except_base => true)
+          opts.merge!(:all_except_base => true)
+        elsif version.eql?('delete_all')
+          # this means delete entire module (including all versions + base)
           post_body.merge!(:delete_all_versions => true)
           opts.merge!(:delete_all_versions => true)
         else
+          # delete specific version only
           post_body.merge!(:version => version)
           opts.merge!(:version => version)
         end
@@ -160,6 +166,8 @@ module DTK::Client
 
       unless method_opts[:no_error_msg]
         if version && version.eql?('all')
+          OsUtil.print("All versions (except base) of '#{module_name}' module have been deleted.", :yellow)
+        elsif version && version.eql?('delete_all')
           OsUtil.print("All versions of '#{module_name}' module have been deleted.", :yellow)
         else
           msg = "Module '#{module_name}' "
