@@ -128,6 +128,17 @@ module DTK::Client
       response.render_table()
     end
 
+    def list_actions_aux(context_params)
+      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
+
+      post_body = {
+        :assembly_id  => assembly_or_workspace_id
+      }
+
+      response = post rest_url("assembly/list_actions"), post_body
+      response.render_table('service_actions')
+    end
+
    # desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]"
     def execute_ad_hoc_action_aux(context_params)
       assembly_or_workspace_id,component_id,method_name,action_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2,:option_3],method_argument_names)
@@ -146,6 +157,57 @@ module DTK::Client
 
       task_status_stream(assembly_or_workspace_id, :ignore_stage_level_info => true)
       nil
+    end
+
+    def exec_aux(context_params, opts = {})
+      assembly_or_workspace_id, task_action, task_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :option_1, :option_2], method_argument_names)
+
+      task_params = parse_params?(task_params_string)
+
+      post_body = PostBody.new(
+        :assembly_id  => assembly_or_workspace_id,
+        :commit_msg?  => options.commit_msg,
+        :task_action? => task_action,
+        :task_params? => task_params
+      )
+      response = post rest_url("assembly/exec"), post_body
+      return response unless response.ok?
+
+      response_data = response.data
+
+      if violations = response_data['violations']
+        OsUtil.print("The following violations were found; they must be corrected before workspace can be converged", :red)
+        resp = DTK::Client::Response.new(:assembly, { "status" => 'ok', "data" => violations })
+        return opts[:internal_trigger] ? { :violations => resp } : resp.render_table(:violation)
+      end
+
+      if confirmation_message = response_data["confirmation_message"]
+        return unless Console.confirmation_prompt("Workspace service is stopped, do you want to start it"+'?')
+
+        response = post rest_url("assembly/exec"), post_body.merge!(:start_assembly => true, :skip_violations => true)
+        return response unless response.ok?
+
+        response_data = response.data
+      end
+
+      if message = response_data["message"]
+        OsUtil.print(message, :yellow)
+      end
+
+      return Response::Ok.new()
+    end
+
+    def exec_sync_aux(context_params)
+      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID], method_argument_names)
+
+      response = exec_aux(context_params, {:internal_trigger => true})
+      return response if (response.is_a?(Response) && !response.ok?) || response.nil?
+
+      if violations_response = response[:violations]
+        return violations_response.render_table(:violation)
+      end
+
+      task_status_stream(assembly_or_workspace_id)
     end
 
     def converge_aux(context_params,opts={})
@@ -399,7 +461,7 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    def workflow_info_aux(context_params)
+    def action_info_aux(context_params)
       assembly_or_workspace_id,workflow_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
