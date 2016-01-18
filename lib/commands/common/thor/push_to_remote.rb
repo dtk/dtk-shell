@@ -5,14 +5,16 @@ dtk_require("../../../domain/git_adapter")
 module DTK::Client
   module PushToRemoteMixin
 
+    NO_PUSH_CHANGES_MSG = "There are no changes to push"
+
     def push_to_git_remote_aux(full_module_name, module_type, version, opts, force = false)
       opts.merge!(:force => force)
 
       response = Helper(:git_repo).push_changes(module_type, full_module_name, version, opts)
 
       return response unless response.ok?
-      if response.data(:diffs).empty?
-        raise DtkError, "No changes to push"
+      if response.data(:diffs) && !response.data(:diffs)[:are_there_changes]
+        raise DtkError, NO_PUSH_CHANGES_MSG
       end
 
       Response::Ok.new()
@@ -40,8 +42,8 @@ module DTK::Client
         response = Helper(:git_repo).push_changes(module_type, full_module_name, version, opts)
         return response unless response.ok?
 
-        if response.data(:diffs).empty?
-          raise DtkError, "No changes to push"
+        if response.data(:diffs) && !response.data(:diffs)[:are_there_changes]
+          raise DtkError, NO_PUSH_CHANGES_MSG
         end
 
         Response::Ok.new()
@@ -64,8 +66,8 @@ module DTK::Client
       }
       response = Helper(:git_repo).push_changes(module_type, full_module_name, version, opts)
       return response unless response.ok?
-      if response.data(:diffs).empty?
-        raise DtkError, "No changes to push"
+      if response.data(:diffs) && !response.data(:diffs)[:are_there_changes]
+        raise DtkError, NO_PUSH_CHANGES_MSG
       end
 
       Response::Ok.new()

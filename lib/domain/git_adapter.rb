@@ -92,10 +92,12 @@ module DTK
       end
 
       def local_summary()
+
         {
           :files_added => (untracked() + added()).collect { |file| { :path => file }},
           :files_modified => changed().collect { |file| { :path => file }},
-          :files_deleted => deleted().collect { |file| { :path => file }}
+          :files_deleted => deleted().collect { |file| { :path => file }},
+          :are_there_changes => something_changed?
         }
       end
 
@@ -353,6 +355,10 @@ module DTK
 
       def added
         status.is_a?(Hash) ? status.added().keys : status.added().collect { |file| file.first }
+      end
+
+      def something_changed?
+        ![changed, untracked, deleted, added].flatten.empty?
       end
 
       def status

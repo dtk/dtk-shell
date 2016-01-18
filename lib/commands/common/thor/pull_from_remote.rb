@@ -37,9 +37,9 @@ module DTK::Client
           raise DtkError,"No File found at (#{path_to_key}). Path is wrong or it is necessary to generate the public rsa key (e.g., run ssh-keygen -t rsa)"
         end
         opts_perform_locally = remote_params.merge(
-          :full_module_name => full_module_name, 
-          :force => opts[:force], 
-          :do_not_raise => opts[:do_not_raise], 
+          :full_module_name => full_module_name,
+          :force => opts[:force],
+          :do_not_raise => opts[:do_not_raise],
           :ignore_dependency_merge_conflict => opts[:ignore_dependency_merge_conflict]
         )
         PullFromRemote.perform_locally(self,module_type,module_id,module_name,opts_perform_locally)
@@ -102,9 +102,9 @@ module DTK::Client
         if custom_message = response.data[:custom_message]
           puts custom_message
         elsif (response.data[:diffs].nil? || response.data[:diffs].empty?)
-          puts "No changes to pull from remote." unless response['errors']
+          puts "No changes to pull from remote.".colorize(:yellow) unless response['errors']
         else
-          puts "Changes pulled from remote"
+          puts "Changes pulled from remote".colorize(:green)
         end
 
         response
