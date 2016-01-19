@@ -555,8 +555,8 @@ module DTK::Client
       action_info_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-actions", "List the actions defined on components in the workspace."
-    # method_option :summary, :aliases => '-s', :type => :boolean, :default => false
+    desc "WORKSPACE-NAME/ID list-actions [--type TYPE]", "List the actions defined on components in the workspace."
+    method_option :type, :aliases => '-t'
     def list_actions(context_params)
       list_actions_aux(context_params)
     end

@@ -131,9 +131,8 @@ module DTK::Client
     def list_actions_aux(context_params)
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
 
-      post_body = {
-        :assembly_id  => assembly_or_workspace_id
-      }
+      post_body = { :assembly_id  => assembly_or_workspace_id }
+      post_body.merge!(:type => options.type) if options.type?
 
       response = post rest_url("assembly/list_actions"), post_body
       response.render_table('service_actions')
