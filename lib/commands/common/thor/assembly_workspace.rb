@@ -163,7 +163,7 @@ module DTK::Client
       assembly_or_workspace_id, task_action, task_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :option_1, :option_2], method_argument_names)
 
       # support 'converge' task action as synonym for 'create'
-      task_action = 'create' if task_action || task_action.eql?('converge')
+      task_action = 'create' if task_action && task_action.eql?('converge')
 
       # parse params and return format { 'p_name1' => 'p_value1' , 'p_name2' => 'p_value2' }
       task_params = parse_params?(task_params_string)||{}
