@@ -198,12 +198,12 @@ module DTK::Client
     #  clear_tasks_aux(context_params)
     #end
 
-    desc "WORKSPACE-NAME/ID exec ACTION [ACTION-PARAMS]", "Execute action asynchronously"
+    desc "WORKSPACE-NAME/ID exec [NODE/NODE-GROUP/]ACTION [ACTION-PARAMS]", "Execute action asynchronously"
     def exec(context_params)
       exec_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID exec-sync ACTION [ACTION-PARAMS]", "Execute action synchronously"
+    desc "WORKSPACE-NAME/ID exec-sync [NODE/NODE-GROUP/]ACTION [ACTION-PARAMS]", "Execute action synchronously"
     def exec_sync(context_params)
       exec_sync_aux(context_params)
     end

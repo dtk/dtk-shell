@@ -268,12 +268,12 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "SERVICE-NAME/ID exec ACTION [ACTION-PARAMS]", "Execute action asynchronously"
+    desc "SERVICE-NAME/ID exec [NODE/NODE-GROUP/]ACTION [ACTION-PARAMS]", "Execute action asynchronously"
     def exec(context_params)
       exec_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID exec-sync ACTION [ACTION-PARAMS]", "Execute action synchronously"
+    desc "SERVICE-NAME/ID exec-sync [NODE/NODE-GROUP/]ACTION [ACTION-PARAMS]", "Execute action synchronously"
     def exec_sync(context_params)
       exec_sync_aux(context_params)
     end
