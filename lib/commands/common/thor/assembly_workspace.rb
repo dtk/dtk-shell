@@ -128,6 +128,16 @@ module DTK::Client
       response.render_table()
     end
 
+    def list_actions_aux(context_params)
+      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
+
+      post_body = { :assembly_id  => assembly_or_workspace_id }
+      post_body.merge!(:type => options.type) if options.type?
+
+      response = post rest_url("assembly/list_actions"), post_body
+      response.render_table('service_actions')
+    end
+
    # desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]"
     def execute_ad_hoc_action_aux(context_params)
       assembly_or_workspace_id,component_id,method_name,action_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2,:option_3],method_argument_names)
@@ -146,6 +156,68 @@ module DTK::Client
 
       task_status_stream(assembly_or_workspace_id, :ignore_stage_level_info => true)
       nil
+    end
+
+    def exec_aux(context_params, opts = {})
+      assembly_or_workspace_id, task_action, task_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :option_1!, :option_2], method_argument_names)
+
+      # support 'converge' task action as synonym for 'create'
+      task_action = 'create' if task_action && task_action.eql?('converge')
+
+      # parse params and return format { 'p_name1' => 'p_value1' , 'p_name2' => 'p_value2' }
+      task_params = parse_params?(task_params_string)||{}
+
+      # match if sent node/component
+      if task_action_match = task_action.match(/(^[\w\-\:]*)\/(.*)/)
+        node, task_action = $1, $2
+        task_params.merge!("node" => node)
+      end
+
+      post_body = PostBody.new(
+        :assembly_id  => assembly_or_workspace_id,
+        :commit_msg?  => options.commit_msg,
+        :task_action? => task_action,
+        :task_params? => task_params
+      )
+      response = post rest_url("assembly/exec"), post_body
+      return response unless response.ok?
+
+      response_data = response.data
+
+      if violations = response_data['violations']
+        OsUtil.print("The following violations were found; they must be corrected before workspace can be converged", :red)
+        resp = DTK::Client::Response.new(:assembly, { "status" => 'ok', "data" => violations })
+        return opts[:internal_trigger] ? { :violations => resp } : resp.render_table(:violation)
+      end
+
+      if confirmation_message = response_data["confirmation_message"]
+        return unless Console.confirmation_prompt("Workspace service is stopped, do you want to start it"+'?')
+
+        response = post rest_url("assembly/exec"), post_body.merge!(:start_assembly => true, :skip_violations => true)
+        return response unless response.ok?
+
+        response_data = response.data
+      end
+
+      if message = response_data["message"]
+        OsUtil.print(message, :yellow)
+        return
+      end
+
+      return Response::Ok.new()
+    end
+
+    def exec_sync_aux(context_params)
+      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID], method_argument_names)
+
+      response = exec_aux(context_params, {:internal_trigger => true})
+      return response if (response.is_a?(Response) && !response.ok?) || response.nil?
+
+      if violations_response = response[:violations]
+        return violations_response.render_table(:violation)
+      end
+
+      task_status_stream(assembly_or_workspace_id)
     end
 
     def converge_aux(context_params,opts={})
@@ -399,7 +471,7 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    def workflow_info_aux(context_params)
+    def action_info_aux(context_params)
       assembly_or_workspace_id,workflow_name = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1],method_argument_names)
       post_body = {
         :assembly_id => assembly_or_workspace_id,
@@ -1346,6 +1418,10 @@ module DTK::Client
               detail_to_include = [:component_dependencies]
             end
           when "attributes"
+            node_id      = options.node unless node_id
+            component_id = options.component unless component_id
+            attribute_id = options.attribute unless attribute_id
+
             data_type = (options.links? ? :workspace_attribute_w_link : :workspace_attribute)
             edit_attr_format = context_params.get_forwarded_options()[:format] if context_params.get_forwarded_options()
             if tags = options.tags
@@ -1371,10 +1447,11 @@ module DTK::Client
       end
 
       post_body = {
-        :assembly_id => assembly_or_workspace_id,
-        :node_id => node_id,
+        :assembly_id  => assembly_or_workspace_id,
+        :node_id      => node_id,
         :component_id => component_id,
-        :subtype     => 'instance',
+        :attribute_id => attribute_id,
+        :subtype      => 'instance',
       }.merge(post_options)
 
       post_body.merge!(:detail_to_include => detail_to_include) if detail_to_include
@@ -1440,6 +1517,34 @@ module DTK::Client
       elsif options.component_attribute?
         raise DtkError, 'Please use -c option only with service instance component attributes (cmp_name/attribute_name)'
       end
+    end
+
+    def stage_aux(context_params)
+      instance_name, assembly_template_name = context_params.retrieve_arguments([:option_1!, :option_2!], method_argument_names)
+
+      service_module_name, assembly, assembly_name = assembly_template_name.split('/')
+      raise DtkValidationError, "Service module name is ill-formed! Should contain <namespace>:<name>" unless service_module_name =~ /(^[^:]+):([^:]+$)/
+      raise DtkValidationError, "ASSEMBLY-NAME parameter is ill-formed! Should contain <service_namespace>:<service_name>/assembly/<assembly_name>" unless (assembly && assembly.eql?('assembly') && assembly_name)
+
+      new_context_params = DTK::Shell::ContextParams.new
+      new_context_params.add_context_to_params(:service_module, :service_module)
+      new_context_params.add_context_name_to_params(:service_module, :service_module, service_module_name)
+      new_context_params.method_arguments = [assembly_name]
+      new_context_params.method_arguments << instance_name if instance_name
+
+      fwd_opts  = {}
+      in_target = options["in-target"]
+      node_size = options.node_size
+      os_type   = options.os_type
+      version   = options.version
+
+      fwd_opts.merge!(:in_target => in_target) if in_target
+      fwd_opts.merge!(:node_size => node_size) if node_size
+      fwd_opts.merge!(:os_type => os_type) if os_type
+      fwd_opts.merge!(:version => version) if version
+      new_context_params.forward_options(fwd_opts)
+
+      response = ContextRouter.routeTask(:service_module, "stage", new_context_params, @conn)
     end
   end
 end

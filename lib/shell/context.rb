@@ -814,9 +814,7 @@ module DTK
           id = entity_name.identifier
           opts[id_label] = id
 
-          # response_ruby_obj = DTK::Client::CommandBaseThor.get_cached_response(endpoint.to_sym, url, opts)
-          # when extended context autocomplete always send new request
-          response_ruby_obj = post rest_url(url), opts
+          response_ruby_obj = DTK::Client::CommandBaseThor.get_cached_response(endpoint.to_sym, url, opts)
           return [] if(response_ruby_obj.nil? || !response_ruby_obj.ok?)
 
           response_ruby_obj.data.each do |d|

@@ -87,18 +87,20 @@ module DTK::Client
       end
     end
 
-    def delete_module_aux(context_params, method_opts={})
+    def delete_module_aux(context_params, method_opts = {})
       module_location, modules_path = nil, nil
       module_id = context_params.retrieve_arguments([:option_1!], method_argument_names)
 
       delete_module_sub_aux(context_params, module_id, method_opts)
     end
 
-    def delete_module_sub_aux(context_params, module_id, method_opts={})
-      # ModuleUtil.check_format!(module_id)
-      version = options.version
+    def delete_module_sub_aux(context_params, module_id, method_opts = {})
+      version     = options.version
       module_name = get_name_from_id_helper(module_id)
       module_type = get_module_type(context_params)
+
+      # delete all versions
+      version = 'delete_all' if method_opts[:delete_all]
 
       unless (options.force? || method_opts[:force_delete])
         msg = "Are you sure you want to delete module '#{module_name}'"
@@ -111,26 +113,34 @@ module DTK::Client
       opts = { :module_name => module_name }
 
       unless version
-        post_body.merge!(:include_base => true)
+        # post_body.merge!(:include_base => true)
 
         versions_response = post rest_url("#{module_type}/list_versions"), post_body
         return versions_response unless versions_response.ok?
 
         versions = versions_response.data.first['versions']
-        if versions.size > 2
-          versions << "all"
+        if versions.size > 0
+          versions << "all" unless versions.size == 1
           ret_version = Console.confirmation_prompt_multiple_choice("\nSelect version to delete:", versions)
           return unless ret_version
           raise DtkError, "You are not allowed to delete 'base' version while other versions exist!" if ret_version.eql?('base')
           version = ret_version
+        else
+          raise DtkError, "There are no versions created for #{module_type} '#{module_name}'!"
         end
       end
 
       if version
         if version.eql?('all')
+          # delete only versions (not base)
+          post_body.merge!(:all_except_base => true)
+          opts.merge!(:all_except_base => true)
+        elsif version.eql?('delete_all')
+          # this means delete entire module (including all versions + base)
           post_body.merge!(:delete_all_versions => true)
           opts.merge!(:delete_all_versions => true)
         else
+          # delete specific version only
           post_body.merge!(:version => version)
           opts.merge!(:version => version)
         end
@@ -156,6 +166,8 @@ module DTK::Client
 
       unless method_opts[:no_error_msg]
         if version && version.eql?('all')
+          OsUtil.print("All versions (except base) of '#{module_name}' module have been deleted.", :yellow)
+        elsif version && version.eql?('delete_all')
           OsUtil.print("All versions of '#{module_name}' module have been deleted.", :yellow)
         else
           msg = "Module '#{module_name}' "
@@ -242,6 +254,7 @@ module DTK::Client
       remote_module_name, version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
       forwarded_version           = context_params.get_forwarded_options()['version']
       add_version                 = false
+      master_only                 = (options.version? && options.version.eql?('master'))
 
       version ||= forwarded_version || options.version
       version = nil if version.eql?('master')
@@ -276,7 +289,8 @@ module DTK::Client
       # we need to install base module version if not installed
       unless skip_base
         master_response = install_base_version_aux?(context_params, post_body, module_type, version)
-        return master_response unless master_response.ok?
+        # return master_response unless master_response.ok?
+        return master_response if !master_response.ok? || master_only
 
         latest_version = master_response.data(:latest_version)
 
@@ -317,7 +331,7 @@ module DTK::Client
         opts = { :do_not_raise => true }
         module_opts = ignore_component_error ? opts.merge(:ignore_component_error => true) : opts.merge(:additional_message => true)
         module_opts.merge!(:update_none => true) if options.update_none?
-        module_opts.merge!(:hide_output => true) if skip_base
+        module_opts.merge!(:hide_output => true) if skip_base && !master_only
 
         continue = trigger_module_auto_import(missing_components, required_components, module_opts)
         return unless continue
@@ -362,14 +376,16 @@ module DTK::Client
         raise DtkError, "Module '#{remote_module_name}' version '#{version}' does not exist on repo manager!" unless versions.include?(version)
       end
 
+      base_response = nil
       if !head_installed && !latest_version.eql?('master')
         new_context_params = DTK::Shell::ContextParams.new
         new_context_params.add_context_to_params(module_type, module_type)
         new_context_params.method_arguments = [remote_module_name]
         new_context_params.forward_options('skip_base' => true, 'version' => 'master')
-        install_module_aux(new_context_params)
+        base_response = install_module_aux(new_context_params)
       end
 
+      return base_response if base_response && (options.version? && options.version.eql?('master'))
       master_response
     end
 

@@ -101,19 +101,23 @@ module DTK::Client
             :url => "assembly/info_about",
             :opts => {:subtype=>"instance", :about=>"modules"}
           },
-          :workflow_info => {
+          :action_info => {
             :endpoint => "assembly",
             :url => "assembly/task_action_list"
           },
           :exec => {
             :endpoint => "assembly",
-            :url => "assembly/task_action_list"
+            :url => "assembly/list_actions"
           },
-          # TODO: DEPRECATE execute_workflow 
-          :execute_workflow => {
+          :exec_sync => {
             :endpoint => "assembly",
-            :url => "assembly/task_action_list"
+            :url => "assembly/list_actions"
           }
+          # TODO: DEPRECATE execute_workflow
+          # :execute_workflow => {
+          #   :endpoint => "assembly",
+          #   :url => "assembly/task_action_list"
+          # }
         }
       }
     end
@@ -264,23 +268,34 @@ module DTK::Client
       Response::Ok.new()
     end
 
-    desc "SERVICE-NAME/ID exec SERVICE-LEVEL-ACTION [PARAMS] [--stream-results]", "Execute a service level action"
-    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
+    desc "SERVICE-NAME/ID exec [NODE/NODE-GROUP/]ACTION [ACTION-PARAMS]", "Execute action asynchronously"
     def exec(context_params)
-      opts = {}
-      opts.merge!(:mode => :stream) if context_params.pure_cli_mode or options['stream-results']
-      converge_aux(context_params, opts)
+      exec_aux(context_params)
     end
+
+    desc "SERVICE-NAME/ID exec-sync [NODE/NODE-GROUP/]ACTION [ACTION-PARAMS]", "Execute action synchronously"
+    def exec_sync(context_params)
+      exec_sync_aux(context_params)
+    end
+
+    # desc "SERVICE-NAME/ID exec SERVICE-LEVEL-ACTION [PARAMS] [--stream-results]", "Execute a service level action", :hide => true
+    # method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
+    # def exec(context_params)
+    #   opts = {}
+    #   opts.merge!(:mode => :stream) if context_params.pure_cli_mode or options['stream-results']
+    #   converge_aux(context_params, opts)
+    # end
+
     # TODO: DEPRECATE: keeping around for backward compatibiity but will be deprecating execute-workflow
-    desc "SERVICE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow.", :hide => true
-    method_option "commit_msg",:aliases => "-m" ,
-      :type => :string,
-      :banner => "COMMIT-MSG",
-      :desc => "Commit message"
-    def execute_workflow(context_params)
-      OsUtil.print_deprecate_message("Command 'execute-workflow' will be deprecated; use 'exec' instead")
-      converge(context_params)
-    end
+    # desc "SERVICE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow.", :hide => true
+    # method_option "commit_msg",:aliases => "-m" ,
+    #   :type => :string,
+    #   :banner => "COMMIT-MSG",
+    #   :desc => "Commit message"
+    # def execute_workflow(context_params)
+    #   OsUtil.print_deprecate_message("Command 'execute-workflow' will be deprecated; use 'exec' instead")
+    #   converge(context_params)
+    # end
 
     desc "SERVICE-NAME/ID converge [-m COMMIT-MSG] [--stream-results]", "Converge service instance."
     method_option "commit_msg",:aliases => "-m" ,
@@ -294,15 +309,15 @@ module DTK::Client
       converge_aux(context_params, opts)
     end
 
-    desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]", "Converge the component or execute tha action on the component."
-    def execute_action(context_params)
-      execute_ad_hoc_action_aux(context_params)
-    end
+    # desc "SERVICE-NAME/ID execute-action COMPONENT-INSTANCE [ACTION-NAME [ACTION-PARAMS]]", "Converge the component or execute tha action on the component.", :hide => true
+    # def execute_action(context_params)
+    #   execute_ad_hoc_action_aux(context_params)
+    # end
 
-    desc "SERVICE-NAME/ID list-actions [--summary]", "List the actions defined on components in the service instance."
-    method_option :summary, :aliases => '-s', :type => :boolean, :default => false
+    desc "SERVICE-NAME/ID list-actions [--type TYPE]", "List the actions defined on components in the service instance."
+    method_option :type, :aliases => '-t'
     def list_actions(context_params)
-      list_ad_hoc_actions_aux(context_params)
+      list_actions_aux(context_params)
     end
 
     desc "SERVICE-NAME/ID push-assembly-updates [NAMESPACE:SERVICE-MODULE-NAME/ASSEMBLY-NAME]", "Push changes made to this service instance to the designated assembly; default is parent assembly."
@@ -343,18 +358,21 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID create-workflow WORKFLOW-NAME [--from BASE-WORKFLOW-NAME]", "Create a new workflow in the service instance."
-    method_option :from, :type => :string
-    def create_workflow(context_params)
-      edit_or_create_workflow_aux(context_params,:create => true,:create_from => options.from)
-    end
+    # desc "SERVICE-NAME/ID create-workflow WORKFLOW-NAME [--from BASE-WORKFLOW-NAME]", "Create a new workflow in the service instance."
+    # method_option :from, :type => :string
+    # def create_workflow(context_params)
+    #   edit_or_create_workflow_aux(context_params,:create => true,:create_from => options.from)
+    # end
 
-    desc "SERVICE-NAME/ID edit-workflow [WORKFLOW-NAME]", "Edit a workflow in the service instance."
-    def edit_workflow(context_params)
+    desc "SERVICE-NAME/ID edit-action [SERVICE-LEVEL-ACTION]", "Edit action in the service instance."
+    def edit_action(context_params)
       edit_or_create_workflow_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID edit-attributes", "Edit service's attributes."
+    desc "SERVICE-NAME/ID edit-attributes [-n NODE] [-c COMPONENT] [-a ATTRIBUTE]", "Edit service's attributes."
+    method_option :node, :aliases => '-n'
+    method_option :component, :aliases => '-c'
+    method_option :attribute, :aliases => '-a'
     def edit_attributes(context_params)
       edit_attributes_aux(context_params)
     end
@@ -421,10 +439,13 @@ TODO: will put in dot release and will rename to 'extend'
       list_components_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID list-attributes [-f FORMAT] [-t TAG,..] [--links]","List attributes associated with service."
+    desc "SERVICE-NAME/ID list-attributes [-f FORMAT] [-t TAG,..] [--links] [-n NODE] [-c COMPONENT] [-a ATTRIBUTE]","List attributes associated with service."
     method_option :format, :aliases => '-f'
     method_option :tags, :aliases => '-t'
     method_option :links, :type => :boolean, :default => false, :aliases => '-l'
+    method_option :node, :aliases => '-n'
+    method_option :component, :aliases => '-c'
+    method_option :attribute, :aliases => '-a'
     def list_attributes(context_params)
       list_attributes_aux(context_params)
     end
@@ -449,15 +470,15 @@ TODO: will put in dot release and will rename to 'extend'
       print_includes_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID workflow-info [WORKFLOW-NAME]", "Get the contents of a workflow associated with the service."
-    def workflow_info(context_params)
-      workflow_info_aux(context_params)
+    desc "SERVICE-NAME/ID action-info [SERVICE-LEVEL-ACTION]", "Get the contents of action associated with the service."
+    def action_info(context_params)
+      action_info_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID list-workflows", "List the workflows associated with the service."
-    def list_workflows(context_params)
-      workflow_list_aux(context_params)
-    end
+    # desc "SERVICE-NAME/ID list-workflows", "List the workflows associated with the service."
+    # def list_workflows(context_params)
+    #   workflow_list_aux(context_params)
+    # end
 
     desc "list","List services."
     def list(context_params)
@@ -777,7 +798,17 @@ TODO: will put in dot release and will rename to 'extend'
       grep_aux(context_params)
     end
 
-
+    desc "stage INSTANCE-NAME ASSEMBLY-TEMPLATE [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION]", "Stage assembly in target."
+    method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
+    method_option :node_size, :type => :string, :aliases => "--node-size"
+    method_option :os_type, :type => :string, :aliases => "--os-type"
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    method_option :settings, :type => :string, :aliases => '-s'
+    def stage(context_params)
+      stage_aux(context_params)
+    end
   end
 end
 

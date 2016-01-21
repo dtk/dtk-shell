@@ -4,10 +4,12 @@ module DTK::Client
       module_name = opts[:module_name]
       version = opts[:version]
       opts_module_loc = (opts[:assembly_module] ? {:assembly_module => opts[:assembly_module]} : Hash.new)
-      module_location = OsUtil.module_location(module_type,module_name,version,opts_module_loc)
+      module_location = OsUtil.module_location(module_type, module_name, version, opts_module_loc)
       dirs_to_delete = [module_location]
       if opts[:delete_all_versions]
-        dirs_to_delete += OsUtil.module_version_locations(module_type,module_name,version,opts)
+        dirs_to_delete += OsUtil.module_version_locations(module_type, module_name, version, opts)
+      elsif opts[:all_except_base]
+        dirs_to_delete = OsUtil.module_version_locations(module_type, module_name, version, opts)
       end
       response = Response::Ok.new()
       pwd = Dir.getwd()

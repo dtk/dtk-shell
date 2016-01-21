@@ -39,13 +39,13 @@ module DTK::Client
       def confirmation_prompt_simple(message, add_options=true)
         # used to disable skip with ctrl+c
         trap("INT", "SIG_IGN")
-        message += " (y/n)" if add_options
+        message += " (Y/n)" if add_options
 
         while line = Readline.readline("#{message}: ", true)
-          if (line.eql?("yes") || line.eql?("y") || line.empty?)
+          if (line.downcase.eql?("yes") || line.downcase.eql?("y") || line.empty?)
             trap("INT",false)
             return true
-          elsif (line.eql?("no") || line.eql?("n"))
+          elsif (line.downcase.eql?("no") || line.downcase.eql?("n"))
             trap("INT",false)
             return false
           end

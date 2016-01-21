@@ -27,6 +27,21 @@ module DTK::Client
       end
     end
 
+    def self.extended_context()
+      {
+        :context => {
+        },
+        :command => {
+          :stage => {
+            :endpoint => "service_module",
+            :url => "service_module/list_assemblies",
+            :opts => {}
+          }
+        }
+      }
+    end
+
+
     def self.valid_children()
       [:assembly, :remotes]
     end
@@ -473,11 +488,16 @@ module DTK::Client
       assembly_template_name.gsub!(/(::)|(\/)/,'-') if assembly_template_name
 
       in_target         = options["in-target"]
+      fwd_options       = context_params.get_forwarded_options()
+      in_target         = fwd_options[:in_target]||options["in-target"]
       instance_bindings = options["instance-bindings"]
       settings          = parse_service_settings(options["settings"])
       node_size         = options.node_size
       os_type           = options.os_type
       version           = options.version
+      node_size         = fwd_options[:node_size]||options.node_size
+      os_type           = fwd_options[:os_type]||options.os_type
+      version           = fwd_options[:version]||options.version
       assembly_list     = Assembly.assembly_list()
 
       if name
@@ -595,14 +615,22 @@ module DTK::Client
       # list_diffs_module_aux(context_params)
     end
 
-    # desc "delete SERVICE-MODULE-NAME [-v VERSION] [-y] [-p]", "Delete service module or service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
-    # version_method_option
-    desc "delete SERVICE-MODULE-NAME [-y] [-p] [-v VERSION]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    desc "delete-version SERVICE-MODULE-NAME [-y] [-p] [-v VERSION]", "Delete service module version and all items contained in it. Optional parameter [-p] is to delete local directory."
     method_option :force, :aliases => '-y', :type => :boolean, :default => false
     method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     version_method_option
+    def delete_version(context_params, method_opts = {})
+      response = delete_module_aux(context_params, method_opts)
+      @@invalidate_map << :service_module if response && response.ok?
+
+      response
+    end
+
+    desc "delete SERVICE-MODULE-NAME [-y] [-p]", "Delete service module and all items contained in it. Optional parameter [-p] is to delete local directory."
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    method_option :purge, :aliases => '-p', :type => :boolean, :default => false
     def delete(context_params)
-      response = delete_module_aux(context_params)
+      response = delete_module_aux(context_params, :delete_all => true)
       @@invalidate_map << :service_module if response && response.ok?
 
       response

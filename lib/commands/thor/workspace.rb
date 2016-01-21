@@ -78,19 +78,23 @@ module DTK::Client
             :url => "assembly/info_about",
             :opts => {:subtype=>"instance", :about=>"modules"}
           },
-          :workflow_info => {
+          :action_info => {
             :endpoint => "assembly",
             :url => "assembly/task_action_list"
           },
           :exec => {
             :endpoint => "assembly",
-            :url => "assembly/task_action_list"
+            :url => "assembly/list_actions"
           },
-          # TODO: DEPRECATE execute_workflow
-          :execute_workflow => {
+          :exec_sync => {
             :endpoint => "assembly",
-            :url => "assembly/task_action_list"
+            :url => "assembly/list_actions"
           }
+          # TODO: DEPRECATE execute_workflow
+          # :execute_workflow => {
+          #   :endpoint => "assembly",
+          #   :url => "assembly/task_action_list"
+          # }
         }
       }
     end
@@ -194,24 +198,34 @@ module DTK::Client
     #  clear_tasks_aux(context_params)
     #end
 
-    desc "WORKSPACE-NAME/ID exec SERVICE-LEVEL-ACTION [PARAMS] [--stream-results]", "Execute a service level action"
-    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
+    desc "WORKSPACE-NAME/ID exec [NODE/NODE-GROUP/]ACTION [ACTION-PARAMS]", "Execute action asynchronously"
     def exec(context_params)
-      opts = {}
-      opts.merge!(:mode => :stream) if context_params.pure_cli_mode or options['stream-results']
-      converge_aux(context_params, opts)
+      exec_aux(context_params)
     end
 
-    # TODO: DEPRECATE: keeping around for backward compatibiity but will be deprecating execute-workflow
-    desc "WORKSPACE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow.", :hide => true
-    method_option "commit_msg",:aliases => "-m",
-      :type => :string,
-      :banner => "COMMIT-MSG",
-      :desc => "Commit message"
-    def execute_workflow(context_params)
-      OsUtil.print_deprecate_message("Command 'execute-workflow' will be deprecated; use 'exec' instead")
-      converge_aux(context_params)
+    desc "WORKSPACE-NAME/ID exec-sync [NODE/NODE-GROUP/]ACTION [ACTION-PARAMS]", "Execute action synchronously"
+    def exec_sync(context_params)
+      exec_sync_aux(context_params)
     end
+
+    # desc "WORKSPACE-NAME/ID exec SERVICE-LEVEL-ACTION [PARAMS] [--stream-results]", "Execute a service level action"
+    # method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
+    # def exec(context_params)
+    #   opts = {}
+    #   opts.merge!(:mode => :stream) if context_params.pure_cli_mode or options['stream-results']
+    #   converge_aux(context_params, opts)
+    # end
+
+    # # TODO: DEPRECATE: keeping around for backward compatibiity but will be deprecating execute-workflow
+    # desc "WORKSPACE-NAME/ID execute-workflow WORKFLOW-ACTION [WORKFLOW-PARAMS] [-m COMMIT-MSG]", "Execute workflow.", :hide => true
+    # method_option "commit_msg",:aliases => "-m",
+    #   :type => :string,
+    #   :banner => "COMMIT-MSG",
+    #   :desc => "Commit message"
+    # def execute_workflow(context_params)
+    #   OsUtil.print_deprecate_message("Command 'execute-workflow' will be deprecated; use 'exec' instead")
+    #   converge_aux(context_params)
+    # end
 
 
     desc "WORKSPACE-NAME/ID converge [-m COMMIT-MSG] [--stream-results]", "Converge workspace instance."
@@ -415,18 +429,21 @@ module DTK::Client
       edit_module_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID create-workflow WORKFLOW-NAME [--from BASE-WORKFLOW-NAME]", "Create a new workflow in the workspace."
-    method_option :from, :type => :string
-    def create_workflow(context_params)
-      edit_or_create_workflow_aux(context_params,:create => true,:create_from => options.from)
-    end
+    # desc "WORKSPACE-NAME/ID create-workflow WORKFLOW-NAME [--from BASE-WORKFLOW-NAME]", "Create a new workflow in the workspace."
+    # method_option :from, :type => :string
+    # def create_workflow(context_params)
+    #   edit_or_create_workflow_aux(context_params,:create => true,:create_from => options.from)
+    # end
 
-    desc "WORKSPACE-NAME/ID edit-workflow [WORKFLOW-NAME]", "Edit a workflow in the workspace."
-    def edit_workflow(context_params)
+    desc "WORKSPACE-NAME/ID edit-action [WORKSPACE-LEVEL-ACTION]", "Edit a workflow in the workspace."
+    def edit_action(context_params)
       edit_or_create_workflow_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID edit-attributes", "Edit workspace's attributes."
+    desc "WORKSPACE-NAME/ID edit-attributes [-n NODE] [-c COMPONENT] [-a ATTRIBUTE]", "Edit workspace's attributes."
+    method_option :node, :aliases => '-n'
+    method_option :component, :aliases => '-c'
+    method_option :attribute, :aliases => '-a'
     def edit_attributes(context_params)
       edit_attributes_aux(context_params)
     end
@@ -496,10 +513,13 @@ module DTK::Client
       end
     end
 
-    desc "WORKSPACE-NAME/ID list-attributes [-f FORMAT] [-t TAG,..] [--links]","List attributes associated with workspace."
+    desc "WORKSPACE-NAME/ID list-attributes [-f FORMAT] [-t TAG,..] [--links] [-n NODE] [-c COMPONENT] [-a ATTRIBUTE]","List attributes associated with workspace."
     method_option :format, :aliases => '-f'
     method_option :tags, :aliases => '-t'
     method_option :links, :type => :boolean, :default => false, :aliases => '-l'
+    method_option :node, :aliases => '-n'
+    method_option :component, :aliases => '-c'
+    method_option :attribute, :aliases => '-a'
     def list_attributes(context_params)
       list_attributes_aux(context_params)
     end
@@ -530,14 +550,15 @@ module DTK::Client
       list_tasks_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID workflow-info [WORKFLOW-NAME]", "Get the contents of a workflow associated with the workspace."
-    def workflow_info(context_params)
-      workflow_info_aux(context_params)
+    desc "WORKSPACE-NAME/ID action-info [WORKSPACE-LEVEL-ACTION]", "Get the contents of action associated with the workspace."
+    def action_info(context_params)
+      action_info_aux(context_params)
     end
 
-    desc "WORKSPACE-NAME/ID list-workflows", "List the workflows associated with the workspace."
-    def list_workflows(context_params)
-      workflow_list_aux(context_params)
+    desc "WORKSPACE-NAME/ID list-actions [--type TYPE]", "List the actions defined on components in the workspace."
+    method_option :type, :aliases => '-t'
+    def list_actions(context_params)
+      list_actions_aux(context_params)
     end
 
     desc "WORKSPACE-NAME/ID list-violations", "Finds violations in the workspace that will prevent a converge operation."
@@ -614,12 +635,21 @@ module DTK::Client
       task_status_aw_aux(context_params)
     end
 
-
-
-
     desc "WORKSPACE-NAME/ID task-action-detail", "Get the task info of the running or last running workspace task."
     def task_action_detail(context_params)
       task_action_detail_aw_aux(context_params)
+    end
+
+    desc "stage INSTANCE-NAME ASSEMBLY-TEMPLATE [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION]", "Stage assembly in target."
+    method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
+    method_option :node_size, :type => :string, :aliases => "--node-size"
+    method_option :os_type, :type => :string, :aliases => "--os-type"
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    method_option :settings, :type => :string, :aliases => '-s'
+    def stage(context_params)
+      stage_aux(context_params)
     end
   end
 end

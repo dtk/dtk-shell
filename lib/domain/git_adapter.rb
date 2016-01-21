@@ -69,7 +69,8 @@ module DTK
 
           files_modified = difference.stats[:files] ? difference.stats[:files].keys.collect { |file| { :path => file }} : []
           {
-            :files_modified => files_modified
+            :files_modified => files_modified,
+            :are_there_changes => !files_modified.empty?
           }
         else
           raise Error.new("Error finding branches: local branch '#{local_branch}' (found: #{!branch_local_obj.nil?}), remote branch '#{remote_reference}' (found: #{!branch_remote_obj.nil?})")
@@ -92,10 +93,12 @@ module DTK
       end
 
       def local_summary()
+
         {
           :files_added => (untracked() + added()).collect { |file| { :path => file }},
           :files_modified => changed().collect { |file| { :path => file }},
-          :files_deleted => deleted().collect { |file| { :path => file }}
+          :files_deleted => deleted().collect { |file| { :path => file }},
+          :are_there_changes => something_changed?
         }
       end
 
@@ -353,6 +356,10 @@ module DTK
 
       def added
         status.is_a?(Hash) ? status.added().keys : status.added().collect { |file| file.first }
+      end
+
+      def something_changed?
+        ![changed, untracked, deleted, added].flatten.empty?
       end
 
       def status
