@@ -25,6 +25,23 @@ module DTK::Client
       def get_service_module_name(service_module_id)
         get_name_from_id_helper(service_module_id)
       end
+
+      def get_name_and_version_from_assembly_template(assembly_template_name)
+        name    = assembly_template_name
+        version = nil
+
+        if assembly_template_name.match(/(.*)(\-v\d{1,2}\.\d{1,2}\.\d{1,2}\Z)/)
+          name, version = [$1,$2]
+        end
+
+        if version
+          version.gsub!('-v','')
+        else
+          version = 'base'
+        end
+
+        return name, version
+      end
     end
 
     def self.extended_context()
@@ -284,7 +301,7 @@ module DTK::Client
     #   post rest_url("service_module/export"), post_body
     # end
 
-    desc "SERVICE-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-SERVICE-MODULE-NAME]  [-v VERSION] [--force]","Publish service module to remote repository"
+    desc "SERVICE-MODULE-NAME/ID publish [[NAMESPACE/]REMOTE-SERVICE-MODULE-NAME] -v VERSION [--force]","Publish service module to remote repository"
     version_method_option
     method_option :force, :type => :boolean, :default => false, :aliases => '-f'
     def publish(context_params)
@@ -479,14 +496,6 @@ module DTK::Client
       # 'assembly-create', 'install' etc.
       @@invalidate_map << :assembly
 
-      if assembly_template_name.to_s =~ /^[0-9]+$/
-        assembly_template_name = get_assembly_name(assembly_template_id)
-      else
-        namespace, module_name = get_namespace_and_name(service_module_name, ':')
-        assembly_template_name = "#{module_name}/#{assembly_template_name}"
-      end
-      assembly_template_name.gsub!(/(::)|(\/)/,'-') if assembly_template_name
-
       in_target         = options["in-target"]
       fwd_options       = context_params.get_forwarded_options()
       in_target         = fwd_options[:in_target]||options["in-target"]
@@ -499,6 +508,15 @@ module DTK::Client
       os_type           = fwd_options[:os_type]||options.os_type
       version           = fwd_options[:version]||options.version
       assembly_list     = Assembly.assembly_list()
+
+      if assembly_template_name.to_s =~ /^[0-9]+$/
+        assembly_template_name = DTK::Client::Assembly.get_assembly_template_name_for_service(assembly_template_name, service_module_name)
+        assembly_template_name, version = get_name_and_version_from_assembly_template(assembly_template_name)
+      else
+        namespace, module_name = get_namespace_and_name(service_module_name, ':')
+        assembly_template_name = "#{module_name}/#{assembly_template_name}"
+      end
+      assembly_template_name.gsub!(/(::)|(\/)/,'-') if assembly_template_name
 
       if name
         raise DTK::Client::DtkValidationError, "Unable to stage service with name '#{name}'. Service with specified name exists already!" if assembly_list.include?(name)

@@ -51,7 +51,7 @@ module DTK::Client
         end
       end
 
-      raise DTK::Client::DtkError, "Illegal name (#{assembly_template_name}) for assembly." if assembly_template_name.nil?
+      raise DTK::Client::DtkError, "Illegal name or id (#{assembly_template_id}) for assembly." if assembly_template_name.nil?
       return assembly_template_name
     end
 

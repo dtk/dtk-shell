@@ -798,7 +798,7 @@ TODO: will put in dot release and will rename to 'extend'
       grep_aux(context_params)
     end
 
-    desc "stage INSTANCE-NAME ASSEMBLY-TEMPLATE [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION]", "Stage assembly in target."
+    desc "stage ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION]", "Stage assembly in target."
     method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
     method_option :node_size, :type => :string, :aliases => "--node-size"
     method_option :os_type, :type => :string, :aliases => "--os-type"

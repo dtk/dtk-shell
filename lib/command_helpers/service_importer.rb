@@ -38,7 +38,7 @@ module DTK::Client
       end
 
       if opts[:force] || Console.confirmation_prompt("Do you want to update in addition to this module its dependent modules from the catalog?")
-        required_modules.each do |r_module|
+        required_modules.uniq.each do |r_module|
           module_name = full_module_name(r_module)
           module_type = r_module['type']
           version     = r_module['version']
@@ -86,7 +86,7 @@ module DTK::Client
       update_none = RemoteDependencyUtil.check_for_frozen_modules(required_modules)
 
       # Print out or update installed modules from catalog
-      required_modules.each do |r_module|
+      required_modules.uniq.each do |r_module|
         module_name         = full_module_name(r_module)
         module_type         = r_module['type']
         version             = r_module['version']
