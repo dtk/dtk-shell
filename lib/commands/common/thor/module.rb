@@ -617,7 +617,8 @@ module DTK::Client
 
     def clone_module_aux(context_params, internal_trigger = false)
       module_type      = get_module_type(context_params)
-      thor_options     = context_params.get_forwarded_options() || options
+      forward_options  = context_params.get_forwarded_options()
+      thor_options     = forward_options.empty? ? options : forward_options
       module_id        = context_params.retrieve_arguments([REQ_MODULE_ID], method_argument_names)
       module_name      = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
       version          = thor_options["version"]||options.version
