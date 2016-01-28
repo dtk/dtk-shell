@@ -44,10 +44,8 @@ module DTK::Client
           version     = r_module['version']
           full_name   = (version && !version.eql?('master')) ? "#{module_name}(#{version})" : module_name
 
-          if r_module['frozen']
-            print "Not allowed to update frozen #{module_type.gsub('_', ' ')} '#{module_name}' version '#{version}' \n" unless hide_output
-            next
-          end
+          # No op for frozen modules
+          next if r_module['frozen']
 
           print "Pulling #{module_type.gsub('_',' ')} content for '#{full_name}' ... " unless hide_output
 
