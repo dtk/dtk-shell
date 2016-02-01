@@ -34,16 +34,29 @@ module DTK
         begin
           wizard_dsl.each do |meta_input|
             input_name = meta_input.keys.first
-            display_name = input_name.to_s.gsub(/_/,' ')
+            display_name = input_name.to_s.gsub(/_/,' ').capitalize
             metadata = meta_input.values.first
+
+            # default values
+            output = display_name
+            validation = metadata[:validation]
+            is_password = false
+            is_required = metadata[:requried]
+
             case metadata[:type]
               when nil
-                output = recursion_call ? "#{display_name.capitalize}: " : "Enter value for '#{display_name}': "
-                validation = nil
+              when :email
+                validation = /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i
               when :question
-                output = "#{metadata[:question]} (#{metadata[:options].join('|')}): "
-                validation =
-                metadata[:options]
+                output = "#{metadata[:question]}"
+                validation = metadata[:validation]
+              when :password
+                is_password = true
+                is_required = true
+              when :repeat_password
+                is_password = true
+                is_required = true
+                validation  = /#{results[:password]}/
               when :selection
                 options = ""
                 display_field = metadata[:display_field]
@@ -65,7 +78,7 @@ module DTK
                 next
             end
 
-            input = resolve_input(output,validation,!metadata[:optional],recursion_call)
+            input = text_input(output, is_required, validation, is_password)
 
             if metadata[:required_options] && !metadata[:required_options].include?(input)
               # case where we have to give explicit permission, if answer is not affirmative
@@ -89,34 +102,21 @@ module DTK
         end
       end
 
-
-      def self.resolve_input(output, validation, is_required, is_recursion_call=false)
-        tab_prefix = is_recursion_call ? "\t" : ""
-
-        # there was a bug within windows that does not support multiline input in readline method
-        # following is the fix
-        prompt_input =  " #{tab_prefix}#{output}"
-        if output.match(/\n/)
-          puts prompt_input
-          prompt_input = ">> "
-        end
-
-        # while line = Readline.readline(prompt_input, true)
-        #using 'ask' from highline gem to be able to hide input for key and secret
-        while line = ask("#{prompt_input}") { |q| q.echo = false }
-          if is_required && line.empty?
-            puts INVALID_INPUT
+      def self.text_input(output, is_required = false, validation_regex = nil, is_password = false)
+        while line = ask("#{output}: ") { |q| q.echo = !is_password }
+          if is_required && line.strip.empty?
+            puts Client::OsUtil.colorize("Field '#{output}' is required field. ", :red)
             next
           end
 
-          if !validation || validation.find { |val| line.eql?(val.to_s) }
-            return line
+          if validation_regex && !validation_regex.match(line)
+            puts Client::OsUtil.colorize("Input is not valid, please enter it again. ", :red)
+            next
           end
 
-          puts INVALID_INPUT
+          return line
         end
       end
-
 
 
       # takes hash maps with description of missing params and

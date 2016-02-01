@@ -43,7 +43,7 @@ module DTK::Client
         end
 
         puts "How should we resolve these dependencies: "
-        input = ::DTK::Shell::InteractiveWizard.resolve_input("(A)ll / (M)ain Module / (N)one ", ['M','A','N'], true)
+        input = ::DTK::Shell::InteractiveWizard.text_input("(A)ll / (M)ain Module / (N)one ", true, /M|A|N/i)
         if 'N'.eql?(input)
           return nil
         else
