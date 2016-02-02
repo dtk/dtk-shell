@@ -30,7 +30,7 @@ module DTK::Client
       {
         :context => {
           :delete_ssh_key => {
-            :field => "username",
+            :field => "display_name",
             :url => "account/list_ssh_keys",
             :opts => { :username => "#{::DTK::Client::Configurator.client_username}" }
           }
