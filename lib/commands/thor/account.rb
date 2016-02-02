@@ -211,6 +211,8 @@ module DTK::Client
           response = post rest_url("account/set_catalog_credentials"), { :username => body_params[:username], :password => body_params[:password], :validate => true }
           OsUtil.print("Catalog user '#{body_params[:username]}' is currently active user!", :green)
         end
+      else
+        return response
       end
 
       nil
