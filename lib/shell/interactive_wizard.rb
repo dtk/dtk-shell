@@ -56,7 +56,7 @@ module DTK
               when :repeat_password
                 is_password = true
                 is_required = true
-                validation  = /#^{results[:password]}$/
+                validation  = /^#{results[:password]}$/
               when :selection
                 options = ""
                 display_field = metadata[:display_field]
