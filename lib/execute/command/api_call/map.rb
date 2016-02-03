@@ -11,6 +11,8 @@ class DTK::Client::Execute
           Command::RestCall::Post.new(:path => path(),:body => translate_to_rest_body(api_params,opts))
         elsif Rest::Get.matches?(type())
           Command::RestCall::Get.new(:path => "#{path()}/#{api_params['_id'.to_sym]}")
+        elsif Rest::Delete.matches?(type())
+          Command::RestCall::Delete.new(:path => "#{path()}/#{api_params['_id'.to_sym]}")
         else
           raise "Type in following map is not defined not defined: #{self.inspect}"
         end

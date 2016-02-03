@@ -18,7 +18,13 @@ class DTK::Client::Execute
         '_info'.to_sym  => Map.new(
           :type => Rest::Get,                             
           :path => "#{RoutePrefix}/services"
-         )
+         ),
+
+         :delete => Map.new(
+          :type => Rest::Delete,                             
+          :path => "#{RoutePrefix}/services"
+         ),
+
       }
 
       module CustomMapping

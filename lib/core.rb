@@ -347,6 +347,14 @@ module DTK
         check_and_wrap_response(command_class, Proc.new { json_parse_if_needed(post_raw(url,body,{:content_type => 'avro/binary'})) })
       end
 
+      def delete(command_class,url)
+        ap "DELETE #{url}" if VERBOSE_MODE_ON
+
+        check_and_wrap_response(command_class, Proc.new { json_parse_if_needed(delete_raw(url)) })
+      end
+
+
+
       # method will repeat request in case session has expired
       def check_and_wrap_response(command_class, rest_method_func)
         response = rest_method_func.call
@@ -460,8 +468,13 @@ module DTK
       def get_raw(url)
         RestClientWrapper.get_raw(url, {}, DefaultRestOpts.merge(:cookies => @cookies))
       end
+
       def post_raw(url,body,params={})
         RestClientWrapper.post_raw(url, body, DefaultRestOpts.merge(:cookies => @cookies).merge(params))
+      end
+
+      def delete_raw(url)
+        RestClientWrapper.delete_raw(url, {}, DefaultRestOpts.merge(:cookies => @cookies))
       end
 
       def json_parse_if_needed(item)

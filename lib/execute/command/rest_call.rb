@@ -18,6 +18,9 @@ class DTK::Client::Execute
 
       class Get < self
       end
+
+      class Delete < self
+      end
     end
   end
 end

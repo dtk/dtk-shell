@@ -12,17 +12,21 @@ class DTK::Client::Execute::Script
       service_module_name = 'bigtop:ignite'
       assembly_name = 'cluster'
       result = nil
-=begin
       ExecuteContext(:print_results => true) do
         result = call_v1 'services/create',
           service_module_name: service_module_name,
           assembly_name: assembly_name
       end
-=end
+
+      service_id = result.first['id']
+
       ExecuteContext(:print_results => true) do
-        result = get_call_v1 'services/_info',id: 2147783388
+        get_call_v1 'services/_info',id: service_id
       end
-pp result
+
+      ExecuteContext(:print_results => true) do
+        delete_call_v1 'services',id: service_id
+      end
     end
   end
 end

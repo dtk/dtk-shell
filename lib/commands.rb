@@ -9,8 +9,13 @@ module DTK
       def get(url)
         get_connection.get(self.class,url)
       end
+
       def post(url,body=nil)
         get_connection.post(self.class,url,body)
+      end
+
+      def delete(url)
+        get_connection.delete(self.class,url)
       end
 
       def post_file(url,body=nil)

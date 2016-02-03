@@ -55,6 +55,11 @@ class DTK::Client::Execute
         call(object_type__method,internal_form_params, api_handler: Command::APICall::V1)
       end
 
+      def delete_call_v1(object_type,params={})
+        internal_form_params = (params[:id] ? {'_id'.to_sym => params[:id]} : {})
+        call("#{object_type}/delete",internal_form_params, api_handler: Command::APICall::V1)
+      end
+
       def post_rest_call(path,body={})
         command = Command::RestCall::Post.new(:path => path, :body => body, :last_result => @last_result)
         result = CommandProcessor.execute(command)
