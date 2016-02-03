@@ -1,13 +1,15 @@
 class DTK::Client::Execute
   class Script < self
     dtk_require('script/add_tenant')
+    dtk_require('script/ignite_cluster')
     def self.execute()
       script_class().execute_script()
     end
   
    private
-    Scripts = {
+    Scripts = {      
       'add-tenant' => AddTenant,
+      'ignite-cluster' => IgniteCluster,
     }
 
     def self.script_class()

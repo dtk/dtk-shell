@@ -11,15 +11,19 @@ class DTK::Client::Execute
       end
       dtk_require('api_call/translation_term')
       dtk_require('api_call/map')
+      dtk_require('api_call/v1')
       dtk_require('api_call/service')
 
 
-       # calss block where on one or more commands that achieve the api
+       # calls block where on one or more commands that achieve the api
       def raw_executable_commands(&block)
         method = required(:method).to_sym
-        case required(:object_type).to_sym
+        object_type = required(:object_type).to_sym
+        case object_type
          when :service
            Service.raw_executable_commands(method,&block)
+         when :services
+           V1::Services.raw_executable_commands(method,&block)
          else
           raise ErrorUsage.new("The object_type '#{object_type}' is not supported")
         end

@@ -15,6 +15,9 @@ class DTK::Client::Execute
           @body = optional?(:body)||{}
         end
       end
+
+      class Get < self
+      end
     end
   end
 end

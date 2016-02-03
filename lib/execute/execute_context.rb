@@ -32,9 +32,10 @@ class DTK::Client::Execute
         @result_store = ResultStore.new()
       end
 
-      def call(object_type__method,params={})
+      def call(object_type__method,params={},opts={})
         object_type, method = split_object_type__method(object_type__method)
-        api_command = Command::APICall.new(:object_type => object_type, :method => method, :params => params)
+        api_handler = opts[:api_handler] || Command::APICall
+        api_command = api_handler.new(:object_type => object_type, :method => method, :params => params)
         result = nil
         api_command.raw_executable_commands() do |raw_command|
           last_result = @result_store.get_last_result?()
@@ -44,7 +45,16 @@ class DTK::Client::Execute
         end
         [result, api_command]
       end
-      
+
+      def call_v1(object_type__method,params={})
+        call(object_type__method,params, api_handler: Command::APICall::V1)
+      end
+
+      def get_call_v1(object_type__method,params={})
+        internal_form_params = (params[:id] ? {'_id'.to_sym => params[:id]} : {})
+        call(object_type__method,internal_form_params, api_handler: Command::APICall::V1)
+      end
+
       def post_rest_call(path,body={})
         command = Command::RestCall::Post.new(:path => path, :body => body, :last_result => @last_result)
         result = CommandProcessor.execute(command)

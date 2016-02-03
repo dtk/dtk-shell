@@ -15,6 +15,8 @@ class DTK::Client::Execute; class CommandProcessor
     def self.raw_execute(rest_command)
       if rest_command.kind_of?(Command::RestCall::Post)
         post(rest_url(rest_command.path),rest_command.body)
+      elsif rest_command.kind_of?(Command::RestCall::Get)
+        get(rest_url(rest_command.path))
       else
         raise ErrorUsage.new("Unexpected Rest Command type: #{rest_command.class}")
       end      

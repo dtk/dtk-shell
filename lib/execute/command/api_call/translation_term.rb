@@ -43,6 +43,10 @@ class DTK::Client::Execute
     class Rest < TranslationTerm::Operation
       class Post < self
       end
+      class Get < self
+      end
+      class Delete < self
+      end
     end
 
     class Required < TranslationTerm::Param
