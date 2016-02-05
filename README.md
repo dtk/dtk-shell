@@ -1,78 +1,96 @@
-DTK Client installation
+DTK Client
 ==============================
 
-To install DTK Client, follow these steps
 
-- Ruby installation is required (verions 1.8.7 and newer are supported)
-- Git is required for all features to work ([install instructions](http://git-scm.com/book/en/Getting-Started-Installing-Git))
-- Install the dtk-client gem:  
+#### Description
+
+
+DTK Client is a Ruby based CLI interface for communication with the DTK Server.
+It's main purpose is to provide an easy to use interface for importing modules, browsing modules repository and deploying assemblies and topologies.
+
+---
+#### Sytstem requirements
+
+- Ruby 1.9.3 
+- Unix OS
+
+---
+#### Installation 
+
+For DTK Client to work, following steps have to be done:
+
+- Git User set up
+- RSA Keys Generated
+
+To install DTK Client gem, execute:
+ 
 `gem install dtk-client`
 
-- Type <tt>dtk</tt> or <tt>dtk-shell</tt> to start using the client  
-On the first run, Client will present you with a wizard to enter your server and authentication info.
+---
+#### Initial setup
 
-DEVELOPMENT SETUP - DTK Client
-==============================
+There are two ways for DTK Client to run
 
-Pre-requisites
-----------------------
+- via an interactive shell (<tt>dtk-shell</tt>)
+- by executing DTK Client commands (ie. <tt>dtk service list</tt>)
 
-- Make sure you are using Ruby 1.8.7 , use following command to check ruby version <tt>ruby -v</tt>
-
-Git setup
-----------------------
-
-- Make sure that you have clone dtk-common in same folder, use: 
+If it is the first time that the DTK Client is being used (by either of the ways), following prompts will appear: 
 
 ```
-git clone git@github.com:rich-reactor8/dtk-common.git dtk-common 
-```
+Please enter the DTK server address (example: instance.dtk.io)
+Server address:
 
-Make sure that in same folder you have cloned dtk-common project. Also that project is under the same name.
-
-Gem Setup
-----------------------
-
-- Make sure that you have bundler gem, check with <tt>gem list bundler</tt>
-- If you don't have it install bundler gem <tt>gem install bundler</tt>
-- Run bundle from dtk-client folder <tt>bundle install</tt>
-
-Path Setup
-----------------------
-
-- Add dtk-client to PATH e.g.
+Please enter your DTK login details
+Username:
+Password:
 
 ```
-export PATH=$PATH:/home/user/dtk-client/bin
-```
+After entering the correct data, following message will appear:
+ 
+`SSH key 'dtk-client' added successfully!`
 
-Development configuration setup
-----------------------
+This means that the DTK Server has successfully registered DTK Client and the client is ready for use. 
 
-- Copy `default.conf` from `lib/config`
-- Rename copied file to `local.conf` and place it in `lib/config`
-- Set configuration at will, local configuration is git ignored
+---
+#### DTK Client configuration
 
-NOTE: There is client configuration which can be found in `~/dtk/client.conf`. Local configuration takes presedence over any other configuration.
+All of the DTK Configuration, installed component and service modules as well as client logs are located in `~/dtk`.
 
-Configuration Setup
-----------------------
-
-- Create file <tt>~dtkconfig</tt> in you dtk dir (~/dtk) e.g. home/foo-user/dtk/connection.conf
-  there you will define user credentials e.g.
+DTK Client configuration options, such as development option, verbose calls to DTK Server, log options and Client user credentials, can be configured in `~/dtk/client.conf`:
 
 ```
-username=abh
-password=r8server
-server_host=ec2-54-247-191-95.eu-west-1.compute.amazonaws.com
+debug_task_frequency=5            # assembly - frequency between requests (seconds)
+auto_commit_changes=false         # autocommit for modules
+verbose_rest_calls=false          # logging of REST calls
+
+module_location=component_modules
+service_location=service_modules
+test_module_location=test_modules
+backups_location=backups
+
+
+server_port=80
+secure_connection_server_port=443
 secure_connection=true
+server_host=instance.dtk.io
 ```
-Run Tests
-----------------------
-
-- From dtk-client project root run <tt>rspec</tt>, this will run all unit tests
 
 
-License
-----------------------
-DTK Client is released under the GPLv3 license. Please see LICENSE for more details.
+User credentials are located in `~/dtk/.connection`
+
+Component and Service modules that are installed, or modules that are imported are located in `~/dtk/component_modules` and `~/dtk/service_modules/`
+
+---
+
+## Advanced features
+#### DTK Repoman
+
+DTK Repoman is a Git based repository for publishing and installing component modules and service modules. DTK Repoman has it's own users, known as catalog users. The inital setup should register the DTK Client to the Public Catalog users. 
+
+Successfully registered DTK Client on DTK Repoman enables execution of commands such as:
+
+`dtk service-module list --remote` - lists service moduels on remote visible to the catalog user
+
+`dtk component-module install namespace/component-module-name` - install component module 
+
+Switching from public user to a commercial user can be done with `dtk account set-catalog-credentials`. This will initate a prompt for catalog username and password
