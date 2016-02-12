@@ -94,3 +94,19 @@ Successfully registered DTK Client on DTK Repoman enables execution of commands 
 `dtk component-module install namespace/component-module-name` - install component module 
 
 Switching from public user to a commercial user can be done with `dtk account set-catalog-credentials`. This will initate a prompt for catalog username and password
+
+## License
+
+dtk-client is copyright (C) 2010-2016 dtk contributors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this work except in compliance with the License.
+You may obtain a copy of the License in the [LICENSE](LICENSE) file, or at:
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
