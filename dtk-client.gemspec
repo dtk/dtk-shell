@@ -29,7 +29,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'hirb','~> 0.7.0'
   gem.add_dependency 'thor','~> 0.15.4'
   gem.add_dependency 'erubis','~> 2.7.0'
-  gem.add_dependency 'dtk-common-core','0.7.3'
+  gem.add_dependency 'dtk-common-core',''
   gem.add_dependency 'git','1.2.9'
   gem.add_dependency 'colorize','~> 0.5.8'
   gem.add_dependency 'highline', '1.6.16'
