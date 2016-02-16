@@ -110,4 +110,4 @@ class DtkLogger
   def no_log_permissions(dir)
     puts "[WARNING] User (#{DTK::Common::Aux.running_process_user()}) does not have permissions to create a log file in log directory (#{dir})"
   end
-end
+end

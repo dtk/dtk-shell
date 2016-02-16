@@ -101,4 +101,4 @@ def determine_common_folder
   end
 
   return nil
-end
+end
