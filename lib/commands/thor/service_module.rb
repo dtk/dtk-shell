@@ -488,11 +488,12 @@ module DTK::Client
       response
     end
 
-    desc "SERVICE-MODULE-NAME/ID stage ASSEMBLY-NAME [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION]", "Stage assembly in target."
+    desc "SERVICE-MODULE-NAME/ID stage ASSEMBLY-NAME [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly in target."
     method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :node_size, :type => :string, :aliases => "--node-size"
     method_option :os_type, :type => :string, :aliases => "--os-type"
+    method_option :auto_complete, :type => :boolean, :default => false
     version_method_option
     #hidden option
     method_option "instance-bindings", :type => :string
@@ -517,6 +518,7 @@ module DTK::Client
       node_size         = fwd_options[:node_size]||options.node_size
       os_type           = fwd_options[:os_type]||options.os_type
       version           = fwd_options[:version]||options.version
+      auto_complete     = fwd_options[:auto_complete]||options.auto_complete
       assembly_list     = Assembly.assembly_list()
 
       if assembly_template_name.to_s =~ /^[0-9]+$/
@@ -542,6 +544,7 @@ module DTK::Client
       post_body.merge!(:os_type => os_type) if os_type
       post_body.merge!(:version => version) if version
       post_body.merge!(:service_module_name => service_module_name) if service_module_name
+      post_body.merge!(:auto_complete_links => auto_complete) if auto_complete
 
       response = post rest_url("assembly/stage"), post_body
       return response unless response.ok?
