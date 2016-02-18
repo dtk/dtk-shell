@@ -324,7 +324,8 @@ module DTK::Client
 
     #only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
-    desc "WORKSPACE-NAME/ID add-component COMPONENT", "Add a component to a workspace."
+    desc "WORKSPACE-NAME/ID add-component COMPONENT [--auto-complete]", "Add a component to a workspace. Use --auto-complete to link components automatically"
+    method_option :auto_complete, :type => :boolean, :default => false
     def add_component(context_params)
       response = create_component_aux(context_params)
       return response unless response.ok?
