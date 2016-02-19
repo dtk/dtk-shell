@@ -59,6 +59,60 @@ module DTK::Client
 
         return name, version
       end
+
+      def stage_aux(context_params)
+        service_module_id, service_module_name, assembly_template_name, name = context_params.retrieve_arguments([:service_module_id!, :service_module_name!, :option_1!, :option_2], method_argument_names)
+        post_body = {
+          :assembly_id => assembly_template_name
+        }
+
+        # special case when we need service module id
+        context_params.pure_cli_mode = true
+        post_body[:service_module_id] = service_module_id if context_params.pure_cli_mode
+
+        # using this to make sure cache will be invalidated after new assembly is created from other commands e.g.
+        # 'assembly-create', 'install' etc.
+        @@invalidate_map << :assembly
+
+        fwd_options       = context_params.get_forwarded_options()
+        in_target         = fwd_options[:in_target]||options["in-target"]
+        instance_bindings = options["instance-bindings"]
+        settings          = parse_service_settings(options["settings"])
+        node_size         = fwd_options[:node_size]||options.node_size
+        os_type           = fwd_options[:os_type]||options.os_type
+        version           = fwd_options[:version]||options.version
+        auto_complete     = fwd_options[:auto_complete]||options.auto_complete
+        parent_service    = fwd_options[:parent_service]||options.parent_service
+        assembly_list     = Assembly.assembly_list()
+
+        if assembly_template_name.to_s =~ /^[0-9]+$/
+          assembly_template_name = DTK::Client::Assembly.get_assembly_template_name_for_service(assembly_template_name, service_module_name)
+          assembly_template_name, version = get_name_and_version_from_assembly_template(assembly_template_name)
+        else
+          namespace, module_name = get_namespace_and_name(service_module_name, ':')
+          assembly_template_name = "#{module_name}/#{assembly_template_name}"
+        end
+        assembly_template_name.gsub!(/(::)|(\/)/,'-') if assembly_template_name
+
+        if name
+          raise DTK::Client::DtkValidationError, "Unable to stage service with name '#{name}'. Service with specified name exists already!" if assembly_list.include?(name)
+        else
+          name = get_assembly_stage_name(assembly_list, assembly_template_name)
+        end
+
+        post_body.merge!(:target_id => in_target) if in_target
+        post_body.merge!(:name => name) if name
+        post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
+        post_body.merge!(:settings_json_form => JSON.generate(settings)) if settings
+        post_body.merge!(:node_size => node_size) if node_size
+        post_body.merge!(:os_type => os_type) if os_type
+        post_body.merge!(:version => version) if version
+        post_body.merge!(:service_module_name => service_module_name) if service_module_name
+        post_body.merge!(:auto_complete_links => auto_complete) if auto_complete
+        post_body.merge!(:parent_service => parent_service) if parent_service
+
+        response = post rest_url("assembly/stage"), post_body
+      end
     end
 
     def self.extended_context()
@@ -488,7 +542,7 @@ module DTK::Client
       response
     end
 
-    desc "SERVICE-MODULE-NAME/ID stage ASSEMBLY-NAME [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly in target."
+    desc "SERVICE-MODULE-NAME/ID stage-target ASSEMBLY-NAME [INSTANCE-NAME] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly in target."
     method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :node_size, :type => :string, :aliases => "--node-size"
@@ -497,57 +551,31 @@ module DTK::Client
     version_method_option
     #hidden option
     method_option "instance-bindings", :type => :string
-    def stage(context_params)
-      service_module_id, service_module_name, assembly_template_name, name = context_params.retrieve_arguments([:service_module_id!, :service_module_name!, :option_1!, :option_2], method_argument_names)
-      post_body = {
-        :assembly_id => assembly_template_name
-      }
+    def stage_target(context_params)
+      response = stage_aux(context_params)
+      return response unless response.ok?
 
-      # special case when we need service module id
-      context_params.pure_cli_mode = true
-      post_body[:service_module_id] = service_module_id if context_params.pure_cli_mode
-
-      # using this to make sure cache will be invalidated after new assembly is created from other commands e.g.
-      # 'assembly-create', 'install' etc.
+      # when changing context send request for getting latest assemblies instead of getting from cache
+      @@invalidate_map << :service
       @@invalidate_map << :assembly
 
-      fwd_options       = context_params.get_forwarded_options()
-      in_target         = fwd_options[:in_target]||options["in-target"]
-      instance_bindings = options["instance-bindings"]
-      settings          = parse_service_settings(options["settings"])
-      node_size         = fwd_options[:node_size]||options.node_size
-      os_type           = fwd_options[:os_type]||options.os_type
-      version           = fwd_options[:version]||options.version
-      auto_complete     = fwd_options[:auto_complete]||options.auto_complete
-      assembly_list     = Assembly.assembly_list()
+      return response
+    end
 
-      if assembly_template_name.to_s =~ /^[0-9]+$/
-        assembly_template_name = DTK::Client::Assembly.get_assembly_template_name_for_service(assembly_template_name, service_module_name)
-        assembly_template_name, version = get_name_and_version_from_assembly_template(assembly_template_name)
-      else
-        namespace, module_name = get_namespace_and_name(service_module_name, ':')
-        assembly_template_name = "#{module_name}/#{assembly_template_name}"
-      end
-      assembly_template_name.gsub!(/(::)|(\/)/,'-') if assembly_template_name
-
-      if name
-        raise DTK::Client::DtkValidationError, "Unable to stage service with name '#{name}'. Service with specified name exists already!" if assembly_list.include?(name)
-      else
-        name = get_assembly_stage_name(assembly_list, assembly_template_name)
-      end
-
-      post_body.merge!(:target_id => in_target) if in_target
-      post_body.merge!(:name => name) if name
-      post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
-      post_body.merge!(:settings_json_form => JSON.generate(settings)) if settings
-      post_body.merge!(:node_size => node_size) if node_size
-      post_body.merge!(:os_type => os_type) if os_type
-      post_body.merge!(:version => version) if version
-      post_body.merge!(:service_module_name => service_module_name) if service_module_name
-      post_body.merge!(:auto_complete_links => auto_complete) if auto_complete
-
-      response = post rest_url("assembly/stage"), post_body
+    desc "SERVICE-MODULE-NAME/ID stage ASSEMBLY-NAME [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly in target."
+    method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
+    method_option :settings, :type => :string, :aliases => '-s'
+    method_option :node_size, :type => :string, :aliases => '--node-size'
+    method_option :os_type, :type => :string, :aliases => '--os-type'
+    method_option :auto_complete, :type => :boolean, :default => false
+    method_option :parent_service, :type => :string, :aliases => '-p'
+    version_method_option
+    #hidden option
+    method_option "instance-bindings", :type => :string
+    def stage(context_params)
+      response = stage_aux(context_params)
       return response unless response.ok?
+
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :service
       @@invalidate_map << :assembly
