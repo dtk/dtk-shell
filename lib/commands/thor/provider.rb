@@ -122,6 +122,22 @@ module DTK::Client
       response
     end
 
+    desc "create-provider PROVIDER-NAME", "Create generic provider that can support multiple IAAS types"
+    def create_provider(context_params)
+      provider_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+
+      post_body =  {
+        :provider_name => provider_name
+      }
+
+      response = post rest_url("target/create_provider"), post_body
+      @@invalidate_map << :provider
+
+      response
+    end
+
+
+
 =begin
 TODO: deprecated until this can be in sync with create-targets from target context where params depend on type
 
