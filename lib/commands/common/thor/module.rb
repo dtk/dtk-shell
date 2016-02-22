@@ -384,9 +384,9 @@ module DTK::Client
       master_response = post rest_url("#{module_type}/prepare_for_install_module"), post_body
       return master_response unless master_response.ok?
 
-      head_installed     = master_response.data(:head_installed)
-      latest_version     = master_response.data(:latest_version)
-      remote_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
+      head_installed = master_response.data(:head_installed)
+      latest_version = master_response.data(:latest_version)
+      remote_module_name, param_version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
 
       if version
         versions = master_response.data(:versions)
