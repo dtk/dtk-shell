@@ -900,7 +900,9 @@ module DTK::Client
       assembly_or_workspace_id, node_group_name, node_template_identifier = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!,:option_2!],method_argument_names)
       cardinality = options.cardinality
 
-      if cardinality && !cardinality.to_s.match(/^[0-9]+$/)
+      # default value for cardinality is 1 (if user does not specify otherwise)
+      # invalid values for cardinality are 0 and any string
+      if cardinality.eql?('0') || !cardinality.to_s.match(/^[0-9]+$/)
         fail DtkError.new("Invalid cardinality value '#{cardinality}'!")
       end
 
