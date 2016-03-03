@@ -898,6 +898,12 @@ module DTK::Client
 
     def create_node_group_aux(context_params)
       assembly_or_workspace_id, node_group_name, node_template_identifier = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!,:option_2!],method_argument_names)
+      cardinality = options.cardinality
+
+      if cardinality && !cardinality.match(/^[0-9]+$/)
+        fail DtkError.new("Invalid cardinality value '#{cardinality}'!")
+      end
+
       post_body = {
         :assembly_id              => assembly_or_workspace_id,
         :cardinality              => options.cardinality,
