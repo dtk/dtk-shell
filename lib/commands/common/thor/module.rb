@@ -640,7 +640,19 @@ module DTK::Client
       module_name      = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
       version          = thor_options["version"]||options.version
       internal_trigger = true if thor_options['skip_edit']
-      clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'], :use_latest => true)
+      response = clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'], :use_latest => true)
+
+      # if error message 'directory exist on client ...' returned print it here
+      if !response.ok? && response.is_a?(Response::Error::Usage)
+        if errors = response['errors']
+          if error_msg = errors.first['message']
+            OsUtil.print(errors.first['message'], :red)
+            return
+          end
+        end
+      end
+
+      response
     end
 
     def edit_module_aux(context_params)
