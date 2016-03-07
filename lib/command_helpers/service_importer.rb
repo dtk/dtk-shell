@@ -206,6 +206,7 @@ module DTK::Client
             thor_options["skip_edit"] = true
             thor_options["omit_output"] = true
             thor_options.merge!(:module_type => 'component-module')
+            thor_options.merge!(:service_importer => true)
             new_context_params = ::DTK::Shell::ContextParams.new
             new_context_params.forward_options(thor_options)
             new_context_params.add_context_to_params(formated_name, :"component-module", m['id'])

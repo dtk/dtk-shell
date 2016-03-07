@@ -643,7 +643,8 @@ module DTK::Client
       response = clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'], :use_latest => true)
 
       # if error message 'directory exist on client ...' returned print it here
-      if !response.ok? && response.is_a?(Response::Error::Usage)
+      # with forward_options[:service_importer] we know it is triggered from auto-importing dependencies so don't want to print
+      if !response.ok? && response.is_a?(Response::Error::Usage) && !forward_options[:service_importer]
         if errors = response['errors']
           if error_msg = errors.first['message']
             OsUtil.print(errors.first['message'], :red)
