@@ -367,7 +367,11 @@ module DTK
         end
 
         def actual_length( string_with_escapes )
-         string_with_escapes.to_s.gsub(/\e\[\d{1,2}m/, "").length
+          string_with_escapes.to_s.gsub(/\e\[\d{1,2}m/, "").length
+        end
+
+        def remove_html_tags(string_with_tags)
+          string_with_tags.gsub(/<\/?[^>]+>/, '')
         end
 
         private
