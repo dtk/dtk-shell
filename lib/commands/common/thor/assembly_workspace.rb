@@ -833,7 +833,7 @@ module DTK::Client
               raise DtkError, msg
             end
           elsif cardinality_prompt = r_data['cardinality_prompt']
-            return unless Console.confirmation_prompt("You are trying to lower node-group cardinality which will cause some node-group members to be deleted permanenlty. Are you sure"+'?')
+            return unless Console.confirmation_prompt("You are trying to lower node-group cardinality which will cause some node-group members to be deleted permanently. Are you sure"+'?')
             post_body.merge!(:cardinality_confirmed => true)
             response = post rest_url('assembly/set_attributes'), post_body
           end
