@@ -54,7 +54,7 @@ module DTK; module Client
         end
 
         # in case we could not parse error lets log error info
-        if errors_msg.empty?
+        if error_msg.empty?
           DtkLogger.instance.error("Error info could not be extracted from following response: " + response.to_s)
         end
 
