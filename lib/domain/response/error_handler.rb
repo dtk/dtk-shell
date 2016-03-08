@@ -37,7 +37,7 @@ module DTK; module Client
         end
 
         # special rare case
-        errors = errors["errors"] if errors["errors"]
+        errors = errors.first["errors"] if errors.is_a?(Array) && errors.first["errors"]
 
         error_msg       = ""
         error_internal  = nil
