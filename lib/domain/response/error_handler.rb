@@ -36,6 +36,9 @@ module DTK; module Client
           return (opts[:default_error_if_nil] && error_info_default())
         end
 
+        # special rare case
+        errors = errors["errors"] if errors["errors"]
+
         error_msg       = ""
         error_internal  = nil
         error_backtrace = nil
