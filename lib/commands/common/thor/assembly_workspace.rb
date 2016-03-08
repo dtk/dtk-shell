@@ -826,10 +826,16 @@ module DTK::Client
       return response unless response.ok?
 
       if r_data = response.data
-        if r_data.is_a?(Hash) && (ambiguous = r_data['ambiguous'])
-          unless ambiguous.empty?
-            msg = "It is ambiguous whether '#{ambiguous.join(', ')}' #{ambiguous.size == 1 ? 'is' : 'are'} node or component attribute(s). Run set-attribute again with one of options -c [--component-attribute] or -n [--node-attribute]."
-            raise DtkError, msg
+        if r_data.is_a?(Hash)
+          if ambiguous = r_data['ambiguous']
+            unless ambiguous.empty?
+              msg = "It is ambiguous whether '#{ambiguous.join(', ')}' #{ambiguous.size == 1 ? 'is' : 'are'} node or component attribute(s). Run set-attribute again with one of options -c [--component-attribute] or -n [--node-attribute]."
+              raise DtkError, msg
+            end
+          elsif cardinality_prompt = r_data['cardinality_prompt']
+            return unless Console.confirmation_prompt("You are trying to lower node-group cardinality which will cause some node-group members to be deleted permanently. Are you sure"+'?')
+            post_body.merge!(:cardinality_confirmed => true)
+            response = post rest_url('assembly/set_attributes'), post_body
           end
         end
       end
@@ -898,6 +904,14 @@ module DTK::Client
 
     def create_node_group_aux(context_params)
       assembly_or_workspace_id, node_group_name, node_template_identifier = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!,:option_2!],method_argument_names)
+      cardinality = options.cardinality
+
+      # default value for cardinality is 1 (if user does not specify otherwise)
+      # invalid values for cardinality are 0 and any string
+      if cardinality.eql?('0') || !cardinality.to_s.match(/^[0-9]+$/)
+        fail DtkError.new("Invalid cardinality value '#{cardinality}'!")
+      end
+
       post_body = {
         :assembly_id              => assembly_or_workspace_id,
         :cardinality              => options.cardinality,

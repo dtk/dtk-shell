@@ -190,13 +190,15 @@ TODO: deprecated until this can be in sync with create-targets from target conte
       response.render_table(:target)
     end
 
-    desc "delete-and-destroy PROVIDER-NAME","Deletes target provider, its targets, and their assemblies"
+    desc "delete-and-destroy PROVIDER-NAME [-y]","Deletes target provider, its targets, and their assemblies"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
       provider_id   = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
-      # require explicit acknowldegement since deletes all targtes under it
-      return unless Console.confirmation_prompt("Are you sure you want to delete provider '#{provider_id}' and all target and service instances under it" +'?')
-      
+      unless options.force?
+        return unless Console.confirmation_prompt("Are you sure you want to delete provider '#{provider_id}' and all target and service instances under it" +'?')
+      end
+
       post_body = {
         :target_id => provider_id,
         :type      => 'template'

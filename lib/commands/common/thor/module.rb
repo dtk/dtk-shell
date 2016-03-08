@@ -384,9 +384,9 @@ module DTK::Client
       master_response = post rest_url("#{module_type}/prepare_for_install_module"), post_body
       return master_response unless master_response.ok?
 
-      head_installed     = master_response.data(:head_installed)
-      latest_version     = master_response.data(:latest_version)
-      remote_module_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
+      head_installed = master_response.data(:head_installed)
+      latest_version = master_response.data(:latest_version)
+      remote_module_name, param_version = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
 
       if version
         versions = master_response.data(:versions)
@@ -640,7 +640,20 @@ module DTK::Client
       module_name      = context_params.retrieve_arguments(["#{module_type}_name".to_sym],method_argument_names)
       version          = thor_options["version"]||options.version
       internal_trigger = true if thor_options['skip_edit']
-      clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'], :use_latest => true)
+      response = clone_aux(module_type.to_sym, module_id, version, internal_trigger, thor_options['omit_output'], :use_latest => true)
+
+      # if error message 'directory exist on client ...' returned print it here
+      # with forward_options[:service_importer] we know it is triggered from auto-importing dependencies so don't want to print
+      if !response.ok? && response.is_a?(Response::Error::Usage) && !forward_options[:service_importer]
+        if errors = response['errors']
+          if error_msg = errors.first['message']
+            OsUtil.print(errors.first['message'], :red)
+            return
+          end
+        end
+      end
+
+      response
     end
 
     def edit_module_aux(context_params)

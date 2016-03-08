@@ -188,12 +188,14 @@ module DTK::Client
       end
     end
 
-    desc "delete-and-destroy TARGET-NAME","Deletes target or provider"
+    desc "delete-and-destroy TARGET-NAME [-y]","Deletes target or provider"
+    method_option :force, :aliases => '-y', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
       target_id  = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
-      # No -y options since risk is too great
-      return unless Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all services/nodes that belong to this target will be deleted as well)'"+'?')
+      unless options.force?
+        return unless Console.confirmation_prompt("Are you sure you want to delete target '#{target_id}' (all services/nodes that belong to this target will be deleted as well)'"+'?')
+      end
 
       post_body = {
         :target_id => target_id,
