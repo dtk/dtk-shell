@@ -49,7 +49,7 @@ module DTK; module Client
         errors.each do |err|
           error_msg       +=  err["message"] unless err["message"].nil?
           error_msg       +=  err["error"]   unless err["error"].nil?
-          error_msg       +=  OsUtil.remove_html_tags(err["original_exception"]) unless err["original_exception"].nil?
+          error_msg       +=  OsUtil.remove_html_tags(err["original_exception"].to_s) unless err["original_exception"].nil?
           error_on_server = true unless err["on_client"]
           error_code      = err["code"]||(err["errors"] && err["errors"].first["code"])
           error_internal  ||= (err["internal"] or error_code == "not_found") #"not_found" code is at Ramaze level; so error_internal not set
