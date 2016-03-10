@@ -622,6 +622,8 @@ module DTK::Client
       @@invalidate_map << :assembly_node
       @@invalidate_map << :service
       @@invalidate_map << :service_node
+      @@invalidate_map << :workspace
+      @@invalidate_map << :workspace_node
 
       response
     end
