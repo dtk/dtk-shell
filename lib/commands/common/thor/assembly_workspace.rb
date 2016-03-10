@@ -832,10 +832,6 @@ module DTK::Client
               msg = "It is ambiguous whether '#{ambiguous.join(', ')}' #{ambiguous.size == 1 ? 'is' : 'are'} node or component attribute(s). Run set-attribute again with one of options -c [--component-attribute] or -n [--node-attribute]."
               raise DtkError, msg
             end
-          elsif cardinality_prompt = r_data['cardinality_prompt']
-            return unless Console.confirmation_prompt("You are trying to lower node-group cardinality which will cause some node-group members to be deleted permanently. Are you sure"+'?')
-            post_body.merge!(:cardinality_confirmed => true)
-            response = post rest_url('assembly/set_attributes'), post_body
           end
         end
       end
