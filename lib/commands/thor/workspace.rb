@@ -615,7 +615,15 @@ module DTK::Client
     method_option :component_attribute, :aliases => '-c', :type => :boolean, :default => false
     method_option :node_attribute, :aliases => '-n', :type => :boolean, :default => false
     def set_attribute(context_params)
-      set_attribute_aux(context_params)
+      response = set_attribute_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+
+      response
     end
 
     desc "WORKSPACE-NAME/ID set-required-attributes", "Interactive dialog to set required attributes that are not currently set"
