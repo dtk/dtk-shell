@@ -462,7 +462,16 @@ module DTK::Client
     method_option :component, :aliases => '-c'
     method_option :attribute, :aliases => '-a'
     def edit_attributes(context_params)
-      edit_attributes_aux(context_params)
+      response = edit_attributes_aux(context_params)
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      @@invalidate_map << :workspace
+      @@invalidate_map << :workspace_node
+
+      response
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)

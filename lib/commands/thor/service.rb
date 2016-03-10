@@ -391,7 +391,14 @@ module DTK::Client
     method_option :component, :aliases => '-c'
     method_option :attribute, :aliases => '-a'
     def edit_attributes(context_params)
-      edit_attributes_aux(context_params)
+      response = edit_attributes_aux(context_params)
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+
+      response
     end
 
 =begin
