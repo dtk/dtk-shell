@@ -83,6 +83,7 @@ module DTK::Client
         version           = fwd_options[:version]||options.version
         auto_complete     = fwd_options[:auto_complete]||options.auto_complete
         parent_service    = fwd_options[:parent_service]||options.parent_service
+        is_target         = options.is_target?
         assembly_list     = Assembly.assembly_list()
 
         if assembly_template_name.to_s =~ /^[0-9]+$/
@@ -110,6 +111,7 @@ module DTK::Client
         post_body.merge!(:service_module_name => service_module_name) if service_module_name
         post_body.merge!(:auto_complete_links => auto_complete) if auto_complete
         post_body.merge!(:parent_service => parent_service) if parent_service
+        post_body.merge!(:is_target => is_target) if is_target
 
         response = post rest_url("assembly/stage"), post_body
       end
@@ -119,6 +121,11 @@ module DTK::Client
       {
         :command => {
           :stage => {
+            :endpoint => "service_module",
+            :url => "service_module/list_assemblies",
+            :opts => {}
+          },
+          :stage_target => {
             :endpoint => "service_module",
             :url => "service_module/list_assemblies",
             :opts => {}
@@ -543,14 +550,14 @@ module DTK::Client
     end
 
     desc "SERVICE-MODULE-NAME/ID stage-target ASSEMBLY-NAME [INSTANCE-NAME] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly in target."
-    method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :node_size, :type => :string, :aliases => "--node-size"
     method_option :os_type, :type => :string, :aliases => "--os-type"
     method_option :auto_complete, :type => :boolean, :default => false
     version_method_option
-    #hidden option
+    #hidden options
     method_option "instance-bindings", :type => :string
+    method_option :is_target, :type => :boolean, :default => true
     def stage_target(context_params)
       response = stage_aux(context_params)
       return response unless response.ok?
