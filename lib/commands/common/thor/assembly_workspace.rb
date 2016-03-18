@@ -1582,5 +1582,13 @@ module DTK::Client
 
       response = ContextRouter.routeTask(:service_module, "stage", new_context_params, @conn)
     end
+
+    def set_default_target_aux(context_params)
+      target_instance_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
+      post_body = {
+        :assembly_id => target_instance_name
+      }
+      post rest_url("assembly/set_default_target"), post_body
+    end
   end
 end

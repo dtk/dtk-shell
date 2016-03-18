@@ -844,5 +844,9 @@ TODO: will put in dot release and will rename to 'extend'
       stage_aux(context_params)
     end
 
+    desc "set-default-target INSTANCE-NAME/ID", "Set default target service instance."
+    def set_default_target(context_params)
+      set_default_target_aux(context_params)
+    end
   end
 end
