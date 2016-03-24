@@ -83,7 +83,7 @@ module DTK::Client
         version           = fwd_options[:version]||options.version
         auto_complete     = fwd_options[:auto_complete]||options.auto_complete
         parent_service    = fwd_options[:parent_service]||options.parent_service
-        is_target         = options.is_target?
+        is_target         = fwd_options[:is_target]||options.is_target?
         assembly_list     = Assembly.assembly_list()
 
         if assembly_template_name.to_s =~ /^[0-9]+$/
@@ -549,7 +549,7 @@ module DTK::Client
       response
     end
 
-    desc "SERVICE-MODULE-NAME/ID stage-target ASSEMBLY-NAME [INSTANCE-NAME] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly in target."
+    desc "SERVICE-MODULE-NAME/ID stage-target ASSEMBLY-NAME [INSTANCE-NAME] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly as target instance."
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :node_size, :type => :string, :aliases => "--node-size"
     method_option :os_type, :type => :string, :aliases => "--os-type"

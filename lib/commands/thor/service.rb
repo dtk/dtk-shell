@@ -831,15 +831,15 @@ TODO: will put in dot release and will rename to 'extend'
       grep_aux(context_params)
     end
 
-    desc "stage ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly in target."
+    desc "stage ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly in target."
     method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
-    method_option :node_size, :type => :string, :aliases => "--node-size"
-    method_option :os_type, :type => :string, :aliases => "--os-type"
+    method_option :node_size, :type => :string, :aliases => '--node-size'
+    method_option :os_type, :type => :string, :aliases => '--os-type'
     method_option :auto_complete, :type => :boolean, :default => false
+    method_option :parent_service, :type => :string, :aliases => '-p'
     version_method_option
-    #hidden options
+    #hidden option
     method_option "instance-bindings", :type => :string
-    method_option :settings, :type => :string, :aliases => '-s'
     def stage(context_params)
       stage_aux(context_params)
     end
@@ -847,6 +847,26 @@ TODO: will put in dot release and will rename to 'extend'
     desc "set-default-target INSTANCE-NAME/ID", "Set default target service instance."
     def set_default_target(context_params)
       set_default_target_aux(context_params)
+    end
+
+    desc "stage-target ASSEMBLY-TEMPLATE [INSTANCE-NAME] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly as target instance."
+    method_option :settings, :type => :string, :aliases => '-s'
+    method_option :node_size, :type => :string, :aliases => "--node-size"
+    method_option :os_type, :type => :string, :aliases => "--os-type"
+    method_option :auto_complete, :type => :boolean, :default => false
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    method_option :is_target, :type => :boolean, :default => true
+    def stage_target(context_params)
+      response = stage_aux(context_params)
+      return response unless response.ok?
+
+      # when changing context send request for getting latest assemblies instead of getting from cache
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      return response
     end
   end
 end

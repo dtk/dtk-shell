@@ -1566,18 +1566,22 @@ module DTK::Client
       new_context_params.method_arguments = [assembly_name]
       new_context_params.method_arguments << instance_name if instance_name
 
-      fwd_opts      = {}
-      in_target     = options["in-target"]
-      node_size     = options.node_size
-      os_type       = options.os_type
-      version       = options.version
-      auto_complete = options.auto_complete
+      fwd_opts       = {}
+      in_target      = options["in-target"]
+      node_size      = options.node_size
+      os_type        = options.os_type
+      version        = options.version
+      auto_complete  = options.auto_complete
+      is_target      = options.is_target?
+      parent_service = options.parent_service
 
       fwd_opts.merge!(:in_target => in_target) if in_target
       fwd_opts.merge!(:node_size => node_size) if node_size
       fwd_opts.merge!(:os_type => os_type) if os_type
       fwd_opts.merge!(:version => version) if version
       fwd_opts.merge!(:auto_complete => auto_complete) if auto_complete
+      fwd_opts.merge!(:is_target => is_target) if is_target
+      fwd_opts.merge!(:parent_service => parent_service) if parent_service
       new_context_params.forward_options(fwd_opts)
 
       response = ContextRouter.routeTask(:service_module, "stage", new_context_params, @conn)
