@@ -17,7 +17,7 @@
 #
 module DTK::Client
   module SetRequiredParamsMixin
-    def set_required_attributes_aux(id,type,subtype=nil)
+    def set_required_attributes_aux(id, type, subtype = nil, additional_message = nil)
       id_field = "#{type}_id".to_sym
       post_body = {
         id_field => id,
@@ -32,7 +32,7 @@ module DTK::Client
         response.set_data('Message' => "No parameters to set.")
         response
       else
-        param_bindings = DTK::Shell::InteractiveWizard.resolve_missing_params(missing_params)
+        param_bindings = DTK::Shell::InteractiveWizard.resolve_missing_params(missing_params, additional_message)
         post_body = {
           id_field => id,
           :av_pairs_hash => param_bindings.inject(Hash.new){|h,r|h.merge(r[:id] => r[:value])}

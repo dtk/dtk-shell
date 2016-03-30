@@ -84,6 +84,7 @@ module DTK::Client
         auto_complete     = fwd_options[:auto_complete]||options.auto_complete
         parent_service    = fwd_options[:parent_service]||options.parent_service
         is_target         = fwd_options[:is_target]||options.is_target?
+        do_not_encode     = fwd_options[:do_not_encode]
         assembly_list     = Assembly.assembly_list()
 
         if assembly_template_name.to_s =~ /^[0-9]+$/
@@ -112,8 +113,32 @@ module DTK::Client
         post_body.merge!(:auto_complete_links => auto_complete) if auto_complete
         post_body.merge!(:parent_service => parent_service) if parent_service
         post_body.merge!(:is_target => is_target) if is_target
+        post_body.merge!(:do_not_encode => do_not_encode) if do_not_encode
 
         response = post rest_url("assembly/stage"), post_body
+      end
+
+      def deploy_target_aux(context_params)
+        context_params.forward_options(:do_not_encode => true)
+        stage_response = stage_aux(context_params)
+        return stage_response unless stage_response.ok?
+
+        if service_instance = stage_response.data['new_service_instance']
+          instance_name = service_instance['name']
+
+          DTK::Client::OsUtil.print("Target service instance '#{instance_name}' has been created!",:yellow)
+
+          new_context_params = DTK::Shell::ContextParams.new
+          new_context_params.add_context_to_params("service", "service")
+          new_context_params.add_context_name_to_params("service", "service", instance_name)
+
+          response = ContextRouter.routeTask("service", "set_required_attributes_and_converge", new_context_params, @conn)
+          return response unless response.ok?
+
+          response
+        else
+          fail DtkError.new('Service instance is not staged properly, please try again!')
+        end
       end
     end
 
@@ -752,6 +777,25 @@ module DTK::Client
     desc "SERVICE-MODULE-NAME/ID create-new-version VERSION", "Create new service module version"
     def create_new_version(context_params)
       create_new_version_aux(context_params)
+    end
+
+    desc "SERVICE-MODULE-NAME/ID deploy-target ASSEMBLY-NAME [INSTANCE-NAME] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Deploy assembly as target instance."
+    method_option :settings, :type => :string, :aliases => '-s'
+    method_option :node_size, :type => :string, :aliases => "--node-size"
+    method_option :os_type, :type => :string, :aliases => "--os-type"
+    method_option :auto_complete, :type => :boolean, :default => true
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    method_option :is_target, :type => :boolean, :default => true
+    def deploy_target(context_params)
+      response = deploy_target_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      response
     end
 
     #

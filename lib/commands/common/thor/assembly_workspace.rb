@@ -237,7 +237,7 @@ module DTK::Client
       task_status_stream(assembly_or_workspace_id)
     end
 
-    def converge_aux(context_params,opts={})
+    def converge_aux(context_params, opts = {})
       assembly_or_workspace_id,task_action,task_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1,:option_2],method_argument_names)
 
       task_params = parse_params?(task_params_string)
@@ -248,7 +248,11 @@ module DTK::Client
       if response.data and response.data.size > 0
         error_message = "The following violations were found; they must be corrected before workspace can be converged"
         OsUtil.print(error_message, :red)
-        return response.render_table(:violation)
+        if opts[:are_there_violations]
+          return response.render_table(:violation), true
+        else
+          return response.render_table(:violation)
+        end
       end
 
       post_body = PostBody.new(
@@ -1593,6 +1597,23 @@ module DTK::Client
         :assembly_id => target_instance_name
       }
       post rest_url("assembly/set_default_target"), post_body
+    end
+
+    def set_required_attributes_converge_aux(context_params)
+      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID], method_argument_names)
+
+      message             = " You will have to converge target service instance manually!"
+      attributes_response = set_required_attributes_aux(assembly_or_workspace_id, :assembly, :instance, message)
+      return attributes_response if attributes_response.is_a?(Response) && !attributes_response.ok?
+
+      response, violations = converge_aux(context_params, { :are_there_violations => true })
+      return response unless response.ok?
+
+      unless violations
+        DTK::Client::OsUtil.print("Target service instance '' has been deployed successfully.", :green)
+      end
+
+      response
     end
   end
 end
