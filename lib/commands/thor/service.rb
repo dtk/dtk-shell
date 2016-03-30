@@ -711,7 +711,7 @@ TODO: will put in dot release and will rename to 'extend'
     # only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
     desc "SERVICE-NAME/ID add-component COMPONENT [--auto-complete]", "Add a component to the service. Use --auto-complete to link components automatically"
-    method_option :auto_complete, :type => :boolean, :default => false
+    method_option :auto_complete, :type => :boolean, :default => true
     def add_component(context_params)
       response = create_component_aux(context_params)
 
@@ -835,7 +835,7 @@ TODO: will put in dot release and will rename to 'extend'
     method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
     method_option :node_size, :type => :string, :aliases => '--node-size'
     method_option :os_type, :type => :string, :aliases => '--os-type'
-    method_option :auto_complete, :type => :boolean, :default => false
+    method_option :auto_complete, :type => :boolean, :default => true
     method_option :parent_service, :type => :string, :aliases => '-p'
     version_method_option
     #hidden option
@@ -853,7 +853,7 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :node_size, :type => :string, :aliases => "--node-size"
     method_option :os_type, :type => :string, :aliases => "--os-type"
-    method_option :auto_complete, :type => :boolean, :default => false
+    method_option :auto_complete, :type => :boolean, :default => true
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string

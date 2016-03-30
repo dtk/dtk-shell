@@ -553,7 +553,7 @@ module DTK::Client
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :node_size, :type => :string, :aliases => "--node-size"
     method_option :os_type, :type => :string, :aliases => "--os-type"
-    method_option :auto_complete, :type => :boolean, :default => false
+    method_option :auto_complete, :type => :boolean, :default => true
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string
@@ -574,7 +574,7 @@ module DTK::Client
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :node_size, :type => :string, :aliases => '--node-size'
     method_option :os_type, :type => :string, :aliases => '--os-type'
-    method_option :auto_complete, :type => :boolean, :default => false
+    method_option :auto_complete, :type => :boolean, :default => true
     method_option :parent_service, :type => :string, :aliases => '-p'
     version_method_option
     #hidden option
