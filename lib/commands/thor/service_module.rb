@@ -154,6 +154,11 @@ module DTK::Client
             :endpoint => "service_module",
             :url => "service_module/list_assemblies",
             :opts => {}
+          },
+          :deploy_target => {
+            :endpoint => "service_module",
+            :url => "service_module/list_assemblies",
+            :opts => {}
           }
         }
       }
