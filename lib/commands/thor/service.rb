@@ -871,10 +871,14 @@ TODO: will put in dot release and will rename to 'extend'
 
     desc "SERVICE-NAME/ID set-required-attributes-and-converge", "Interactive dialog to set required attributes that are not currently set", :hide => true
     def set_required_attributes_and_converge(context_params)
-      response = set_required_attributes_converge_aux(context_params)
+      response = set_required_attributes_converge_aux(context_params, opts = {})
 
       @@invalidate_map << :service
       @@invalidate_map << :assembly
+
+      if instance_name = opts[:instance_name]
+        MainContext.get_context.change_context([instance_name])
+      end
 
       response
     end

@@ -1599,7 +1599,7 @@ module DTK::Client
       post rest_url("assembly/set_default_target"), post_body
     end
 
-    def set_required_attributes_converge_aux(context_params)
+    def set_required_attributes_converge_aux(context_params, opts = {})
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID], method_argument_names)
 
       message             = " You will have to converge target service instance manually!"
@@ -1610,7 +1610,9 @@ module DTK::Client
       return response unless response.ok?
 
       unless violations
-        DTK::Client::OsUtil.print("Target service instance '' has been deployed successfully.", :green)
+        instance_name        = "/service/#{context_params.get_forwarded_options[:instance_name]}"
+        opts[:instance_name] = instance_name
+        DTK::Client::OsUtil.print("Target service instance '#{instance_name}' has been deployed successfully. Changing context to '#{instance_name}'.", :green)
       end
 
       response

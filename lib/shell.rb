@@ -39,6 +39,20 @@ ALIAS_COMMANDS = {
   'rm' => 'delete'
 }
 
+class MainContext
+  include Singleton
+
+  attr_accessor :context
+
+  def initialize
+    @context = DTK::Shell::Context.new
+  end
+
+  def self.get_context
+    MainContext.instance.context
+  end
+end
+
 # METHODS
 
 # support for alias commands (ls for list, cd for cc etc.)
@@ -74,7 +88,6 @@ def run_shell_command()
     puts e.backtrace if ::DTK::Configuration.get(:development_mode)
     retry
   rescue Interrupt => e
-    #system('stty', stty_save) # Restore
     retry
   rescue Exception => e
     client_internal_error = DTK::Client::DtkError::Client.label()
@@ -91,10 +104,11 @@ end
 
 def init_shell_context()
   begin
-    @context      = DTK::Shell::Context.new
+    # @context      = DTK::Shell::Context.new
     @shell_header = DTK::Shell::HeaderShell.new
+
     # loads root context
-    @context.load_context()
+    MainContext.get_context.load_context()
 
     @t1   = nil
     Readline.completion_append_character=''
@@ -124,7 +138,7 @@ def execute_shell_command(line, prompt)
       return prompt
     end
     # when using help on root this is needed
-    line = 'dtk help' if (line == 'help' && @context.root?)
+    line = 'dtk help' if (line == 'help' && MainContext.get_context.root?)
 
     args = Shellwords.split(line)
     cmd = args.shift
@@ -145,30 +159,30 @@ def execute_shell_command(line, prompt)
     if ('cc' == cmd)
       # in case there is no params we just reload command
       args << "/" if args.empty?
-      prompt = @context.change_context(args, cmd)
+      prompt = MainContext.get_context.change_context(args, cmd)
     elsif ('popc' == cmd)
-        @context.dirs.shift()
-        args << (@context.dirs.first.nil? ? '/' : @context.dirs.first)
-        prompt = @context.change_context(args, cmd)
+        MainContext.get_context.dirs.shift()
+        args << (MainContext.get_context.dirs.first.nil? ? '/' : MainContext.get_context.dirs.first)
+        prompt = MainContext.get_context.change_context(args, cmd)
     elsif ('pushc' == cmd)
       if args.empty?
-        args << (@context.dirs[1].nil? ? '/' : @context.dirs[1])
-        @context.dirs.unshift(args.first)
-        @context.dirs.uniq!
-        prompt = @context.change_context(args, cmd)
+        args << (MainContext.get_context.dirs[1].nil? ? '/' : MainContext.get_context.dirs[1])
+        MainContext.get_context.dirs.unshift(args.first)
+        MainContext.get_context.dirs.uniq!
+        prompt = MainContext.get_context.change_context(args, cmd)
       else
-        prompt = @context.change_context(args)
+        prompt = MainContext.get_context.change_context(args)
         # using regex to remove dtk: and > from path returned by change_context
         # e.g transform dtk:/assembly/node> to /assembly/node
         full_path = prompt.match(/[dtk:](\/.*)[>]/)[1]
-        @context.dirs.unshift(full_path)
+        MainContext.get_context.dirs.unshift(full_path)
       end
     elsif ('dirs' == cmd)
-      puts @context.dirs.inspect
+      puts MainContext.get_context.dirs.inspect
     else
 
       # get all next-context-candidates (e.g. for assembly get all assembly_names)
-      context_candidates = @context.get_ac_candidates_for_context(@context.active_context.last_context(), @context.active_context())
+      context_candidates = MainContext.get_context.get_ac_candidates_for_context(MainContext.get_context.active_context.last_context(), MainContext.get_context.active_context())
 
       # this part of the code is used for calling of nested commands from base context (dtk:/>assembly/assembly_id converge)
       # base_command is used to check if first command from n-level is valid e.g.
@@ -178,29 +192,29 @@ def execute_shell_command(line, prompt)
       revert_context = false
 
       if context_candidates.include?(base_command)
-        @context.change_context([cmd])
+        MainContext.get_context.change_context([cmd])
         cmd = args.shift
         revert_context = true
       end
 
       if cmd.nil?
-        prompt = @context.change_context(["-"]) if revert_context
+        prompt = MainContext.get_context.change_context(["-"]) if revert_context
         raise DTK::Client::DtkValidationError, "You have to provide command after context name. Usage: CONTEXT-TYPE/CONTEXT-NAME COMMAND [ARG1] .. [ARG2]."
       end
 
       # send monkey patch class information about context
-      Thor.set_context(@context)
+      Thor.set_context(MainContext.get_context)
 
       # we get command and hash params, will return Validation error if command is not valid
-      entity_name, method_name, context_params, thor_options, invalid_options = @context.get_command_parameters(cmd,args)
+      entity_name, method_name, context_params, thor_options, invalid_options = MainContext.get_context.get_command_parameters(cmd,args)
 
       # check if command is executed from parent context (e.g assembly_name list-nodes)
       if context_candidates.include?(method_name)
         context_params.add_context_to_params(method_name, entity_name, method_name)
         method_name = context_params.method_arguments.shift if context_params.method_arguments.size > 0
       else
-        unless @context.method_valid?(method_name)
-          prompt = @context.change_context(["-"]) if revert_context
+        unless MainContext.get_context.method_valid?(method_name)
+          prompt = MainContext.get_context.change_context(["-"]) if revert_context
           raise DTK::Client::DtkValidationError, "Method '#{method_name}' is not valid in current context."
         end
       end
@@ -209,19 +223,25 @@ def execute_shell_command(line, prompt)
       raise DTK::Client::DtkValidationError.new("Option '#{invalid_options.first||method_name}' is not valid for current command!", true) unless invalid_options.empty?
 
       # execute command via Thor
+      current_contex_path = MainContext.get_context.active_context.full_path
       top_level_execute(entity_name, method_name, context_params, thor_options, true)
 
       # when 'delete' or 'delete-and-destroy' command is executed reload cached tasks with latest commands
       unless (args.nil? || args.empty?)
-        @context.reload_cached_tasks(entity_name) if (method_name.include?('delete') || method_name.include?('import'))
+        MainContext.get_context.reload_cached_tasks(entity_name) if (method_name.include?('delete') || method_name.include?('import'))
       end
 
       # check execution status, prints status to sttout
       DTK::Shell::StatusMonitor.check_status()
 
+      # if we change context while executing command, change prompt as well
+      unless current_contex_path.eql?(MainContext.get_context.active_context.full_path)
+        prompt = "dtk:#{MainContext.get_context.active_context.full_path}>"
+      end
+
       # after nested command called from base context is executed successfully, return to context which command is executed from
       # this is the same as 'cd -' command is executed
-      prompt = @context.change_context(["-"]) if revert_context
+      prompt = MainContext.get_context.change_context(["-"]) if revert_context
     end
   rescue DTK::Client::DSLParsing => e
     DTK::Client::OsUtil.print(e.message, :red)

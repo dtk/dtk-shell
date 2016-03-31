@@ -126,11 +126,12 @@ module DTK::Client
         if service_instance = stage_response.data['new_service_instance']
           instance_name = service_instance['name']
 
-          DTK::Client::OsUtil.print("Target service instance '#{instance_name}' has been created!",:yellow)
+          DTK::Client::OsUtil.print("Target service instance '/service/#{instance_name}' has been created!",:yellow)
 
           new_context_params = DTK::Shell::ContextParams.new
           new_context_params.add_context_to_params("service", "service")
           new_context_params.add_context_name_to_params("service", "service", instance_name)
+          new_context_params.forward_options(:instance_name => instance_name)
 
           response = ContextRouter.routeTask("service", "set_required_attributes_and_converge", new_context_params, @conn)
           return response unless response.ok?
