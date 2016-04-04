@@ -908,9 +908,9 @@ TODO: will put in dot release and will rename to 'extend'
       @@invalidate_map << :service
       @@invalidate_map << :assembly
 
-      if instance_name = opts[:instance_name]
-        MainContext.get_context.change_context([instance_name])
-      end
+      # if instance_name = opts[:instance_name]
+      #   MainContext.get_context.change_context([instance_name])
+      # end
 
       response
     end

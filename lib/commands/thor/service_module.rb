@@ -138,7 +138,9 @@ module DTK::Client
           new_context_params.forward_options(:instance_name => instance_name)
 
           response = ContextRouter.routeTask("service", "set_required_attributes_and_converge", new_context_params, @conn)
-          return response unless response.ok?
+
+          # change context to newly created service instance
+          MainContext.get_context.change_context(["/service/#{instance_name}"])
 
           response
         else
