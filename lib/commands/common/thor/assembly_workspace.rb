@@ -1553,6 +1553,16 @@ module DTK::Client
     end
 
     def stage_aux(context_params)
+      new_context_params = get_deploy_or_stage_context(context_params, options)
+      ContextRouter.routeTask(:service_module, "stage", new_context_params, @conn)
+    end
+
+    def deploy_aux(context_params)
+      new_context_params = get_deploy_or_stage_context(context_params, options)
+      ContextRouter.routeTask(:service_module, "deploy", new_context_params, @conn)
+    end
+
+    def get_deploy_or_stage_context(context_params, options)
       assembly_template_name, instance_name = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
 
       service_module_name, assembly, assembly_name = assembly_template_name.split('/')
@@ -1570,25 +1580,27 @@ module DTK::Client
       new_context_params.method_arguments = [assembly_name]
       new_context_params.method_arguments << instance_name if instance_name
 
-      fwd_opts       = {}
-      in_target      = options["in-target"]
-      node_size      = options.node_size
-      os_type        = options.os_type
-      version        = options.version
-      auto_complete  = options.auto_complete
-      is_target      = options.is_target?
-      parent_service = options.parent_service
+      fwd_opts         = {}
+      in_target        = options["in-target"]
+      node_size        = options.node_size
+      os_type          = options.os_type
+      version          = options.version
+      no_auto_complete = options.no_auto_complete
+      is_target        = options.is_target?
+      parent_service   = options.parent_service
+      do_not_encode    = options.do_not_encode
 
       fwd_opts.merge!(:in_target => in_target) if in_target
       fwd_opts.merge!(:node_size => node_size) if node_size
       fwd_opts.merge!(:os_type => os_type) if os_type
       fwd_opts.merge!(:version => version) if version
-      fwd_opts.merge!(:auto_complete => auto_complete) if auto_complete
+      fwd_opts.merge!(:no_auto_complete => no_auto_complete) if no_auto_complete
       fwd_opts.merge!(:is_target => is_target) if is_target
       fwd_opts.merge!(:parent_service => parent_service) if parent_service
+      fwd_opts.merge!(:do_not_encode => do_not_encode) if do_not_encode
       new_context_params.forward_options(fwd_opts)
 
-      response = ContextRouter.routeTask(:service_module, "stage", new_context_params, @conn)
+      new_context_params
     end
 
     def set_default_target_aux(context_params)
@@ -1602,7 +1614,7 @@ module DTK::Client
     def set_required_attributes_converge_aux(context_params, opts = {})
       assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID], method_argument_names)
 
-      message             = " You will have to converge target service instance manually!"
+      message             = " You will have to converge service instance manually!"
       attributes_response = set_required_attributes_aux(assembly_or_workspace_id, :assembly, :instance, message)
       return attributes_response if attributes_response.is_a?(Response) && !attributes_response.ok?
 
@@ -1612,7 +1624,7 @@ module DTK::Client
       unless violations
         instance_name        = "/service/#{context_params.get_forwarded_options[:instance_name]}"
         opts[:instance_name] = instance_name
-        DTK::Client::OsUtil.print("Target service instance '#{instance_name}' has been deployed successfully. Changing context to '#{instance_name}'.", :green)
+        DTK::Client::OsUtil.print("Service instance '#{instance_name}' has been deployed successfully. Changing context to '#{instance_name}'.", :green)
       end
 
       response

@@ -831,11 +831,9 @@ TODO: will put in dot release and will rename to 'extend'
       grep_aux(context_params)
     end
 
-    desc "stage ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly in target."
+    desc "stage ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
     method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
-    method_option :node_size, :type => :string, :aliases => '--node-size'
-    method_option :os_type, :type => :string, :aliases => '--os-type'
-    method_option :auto_complete, :type => :boolean, :default => true
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
     method_option :parent_service, :type => :string, :aliases => '-p'
     version_method_option
     #hidden option
@@ -849,11 +847,11 @@ TODO: will put in dot release and will rename to 'extend'
       set_default_target_aux(context_params)
     end
 
-    desc "stage-target ASSEMBLY-TEMPLATE [INSTANCE-NAME] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION] [--auto-complete]", "Stage assembly as target instance."
+    desc "stage-target ASSEMBLY-TEMPLATE [INSTANCE-NAME] -p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
     method_option :settings, :type => :string, :aliases => '-s'
-    method_option :node_size, :type => :string, :aliases => "--node-size"
-    method_option :os_type, :type => :string, :aliases => "--os-type"
     method_option :auto_complete, :type => :boolean, :default => true
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option :parent_service, :type => :string, :aliases => '-p'
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string
@@ -867,6 +865,40 @@ TODO: will put in dot release and will rename to 'extend'
       @@invalidate_map << :assembly
 
       return response
+    end
+
+    desc "deploy-target ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-v VERSION] [--no-auto-complete]", "Deploy assembly as target instance."
+    method_option :settings, :type => :string, :aliases => '-s'
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    method_option :is_target, :type => :boolean, :default => true
+    def deploy_target(context_params)
+      response = deploy_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      response
+    end
+
+    desc "deploy ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Deploy assembly in target."
+    method_option :settings, :type => :string, :aliases => '-s'
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option :parent_service, :type => :string, :aliases => '-p'
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    def deploy(context_params)
+      response = deploy_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      response
     end
 
     desc "SERVICE-NAME/ID set-required-attributes-and-converge", "Interactive dialog to set required attributes that are not currently set", :hide => true

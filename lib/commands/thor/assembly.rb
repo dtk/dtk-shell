@@ -201,16 +201,25 @@ module DTK::Client
       response
     end
 
-    desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE]", "Stage assembly in target."
-    method_option "in-target",:aliases => "-t" ,
-      :type => :string,
-      :banner => "TARGET-NAME/ID",
-      :desc => "Target (id) to create assembly in"
-    #hidden option
-    method_option "instance-bindings", :type => :string
+    desc "ASSEMBLY-NAME/ID stage-target [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
     method_option :settings, :type => :string, :aliases => '-s'
-    method_option :node_size, :type => :string, :aliases => "--node-size"
-    method_option :os_type, :type => :string, :aliases => "--os-type"
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option :parent_service, :type => :string, :aliases => '-p'
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    method_option :is_target, :type => :boolean, :default => true
+    def stage_target(context_params)
+    end
+
+
+    desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
+    method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
+    method_option :settings, :type => :string, :aliases => '-s'
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option :parent_service, :type => :string, :aliases => '-p'
+    version_method_option
+    method_option "instance-bindings", :type => :string
     def stage(context_params)
       assembly_template_id, service_module_id, name = context_params.retrieve_arguments([:assembly_id!, :service_module_id, :option_1],method_argument_names)
       post_body = {
@@ -258,22 +267,22 @@ module DTK::Client
       return response
     end
 
-
-#    desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [--settings SETTINGS-NAME1[,..]]", "Stage assembly in target."
-#     version_method_option
-    desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [--settings SETTINGS-NAME1[,..]] [-m COMMIT-MSG]", "Stage and deploy assembly in target."
-    #hidden option
-    method_option "instance-bindings",
-      :type => :string
-#    method_option "in-target",:aliases => "-t" ,
-#      :type => :string,
-#      :banner => "TARGET-NAME/ID",
-#      :desc => "Target (id) to create assembly in"
-    method_option "commit_msg",:aliases => "-m" ,
-      :type => :string,
-      :banner => "COMMIT-MSG",
-      :desc => "Commit message"
+    desc "ASSEMBLY-NAME/ID deploy-target [INSTANCE-NAME] [-v VERSION] [--no-auto-complete]", "Deploy assembly as target instance."
     method_option :settings, :type => :string, :aliases => '-s'
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    method_option :is_target, :type => :boolean, :default => true
+    def deploy_target(context_params)
+    end
+
+    desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Deploy assembly in target."
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option :parent_service, :type => :string, :aliases => '-p'
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
     def deploy(context_params)
       context_params.forward_options(options)
       assembly_template_id, service_module_id, name = context_params.retrieve_arguments([:assembly_id!, :service_module_id, :option_1],method_argument_names)
