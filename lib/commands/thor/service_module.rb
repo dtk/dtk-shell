@@ -231,10 +231,10 @@ module DTK::Client
             # ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
             # ["deploy","deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
             # ["deploy","deploy [INSTANCE-NAME] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
-            ["stage-target","stage-target [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "# Stage assembly as target instance."],
-            ["stage","stage [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "# Stage assembly in target."],
+            ["stage-target","stage-target [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "# Stage assembly as target instance."],
+            ["stage","stage [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "# Stage assembly in target."],
             ["deploy-target","deploy-target [INSTANCE-NAME] [-v VERSION] [--no-auto-complete]", "# Deploy assembly as target instance."],
-            ["deploy","deploy [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "# Deploy assembly in target."],
+            ["deploy","deploy [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "# Deploy assembly in target."],
             ["list-nodes","list-nodes", "# List all nodes for given assembly."],
             ["list-components","list-components", "# List all components for given assembly."],
             ["list-settings","list-settings", "# List all settings for given assembly."]
@@ -595,10 +595,10 @@ module DTK::Client
       response
     end
 
-    desc "SERVICE-MODULE-NAME/ID stage-target ASSEMBLY-NAME [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
+    desc "SERVICE-MODULE-NAME/ID stage-target ASSEMBLY-NAME [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
-    method_option :parent_service, :type => :string, :aliases => '-p'
+    method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string
@@ -614,11 +614,11 @@ module DTK::Client
       return response
     end
 
-    desc "SERVICE-MODULE-NAME/ID stage ASSEMBLY-NAME [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
+    desc "SERVICE-MODULE-NAME/ID stage ASSEMBLY-NAME [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
     method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
-    method_option :parent_service, :type => :string, :aliases => '-p'
+    method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     #hidden option
     method_option "instance-bindings", :type => :string
@@ -814,10 +814,10 @@ module DTK::Client
       response
     end
 
-    desc "SERVICE-MODULE-NAME/ID deploy ASSEMBLY-NAME [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Deploy assembly in target."
+    desc "SERVICE-MODULE-NAME/ID deploy ASSEMBLY-NAME [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Deploy assembly in target."
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
-    method_option :parent_service, :type => :string, :aliases => '-p'
+    method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string

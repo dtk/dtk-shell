@@ -831,10 +831,10 @@ TODO: will put in dot release and will rename to 'extend'
       grep_aux(context_params)
     end
 
-    desc "stage ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
+    desc "stage ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
     method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
-    method_option :parent_service, :type => :string, :aliases => '-p'
+    method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     #hidden option
     method_option "instance-bindings", :type => :string
@@ -847,11 +847,11 @@ TODO: will put in dot release and will rename to 'extend'
       set_default_target_aux(context_params)
     end
 
-    desc "stage-target ASSEMBLY-TEMPLATE [INSTANCE-NAME] -p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
+    desc "stage-target ASSEMBLY-TEMPLATE [INSTANCE-NAME] -t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :auto_complete, :type => :boolean, :default => true
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
-    method_option :parent_service, :type => :string, :aliases => '-p'
+    method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string
@@ -884,10 +884,10 @@ TODO: will put in dot release and will rename to 'extend'
       response
     end
 
-    desc "deploy ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Deploy assembly in target."
+    desc "deploy ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Deploy assembly in target."
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
-    method_option :parent_service, :type => :string, :aliases => '-p'
+    method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string

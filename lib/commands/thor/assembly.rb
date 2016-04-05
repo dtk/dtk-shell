@@ -201,10 +201,10 @@ module DTK::Client
       response
     end
 
-    desc "ASSEMBLY-NAME/ID stage-target [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
+    desc "ASSEMBLY-NAME/ID stage-target [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
-    method_option :parent_service, :type => :string, :aliases => '-p'
+    method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string
@@ -213,11 +213,11 @@ module DTK::Client
     end
 
 
-    desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
+    desc "ASSEMBLY-NAME/ID stage [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
     method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
-    method_option :parent_service, :type => :string, :aliases => '-p'
+    method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     method_option "instance-bindings", :type => :string
     def stage(context_params)
@@ -277,9 +277,9 @@ module DTK::Client
     def deploy_target(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [-p PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Deploy assembly in target."
+    desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Deploy assembly in target."
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
-    method_option :parent_service, :type => :string, :aliases => '-p'
+    method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string
