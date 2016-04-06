@@ -1624,7 +1624,7 @@ module DTK::Client
       unless violations
         instance_name        = "/service/#{context_params.get_forwarded_options[:instance_name]}"
         opts[:instance_name] = instance_name
-        DTK::Client::OsUtil.print("Service instance '#{instance_name}' has been deployed successfully. Changing context to '#{instance_name}'.", :green)
+        DTK::Client::OsUtil.print("Service instance '#{instance_name}' deployment has been started. Changing context to '#{instance_name}'.", :green)
       end
 
       response
