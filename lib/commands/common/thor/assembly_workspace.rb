@@ -1589,6 +1589,7 @@ module DTK::Client
       is_target        = options.is_target?
       parent_service   = options.parent_service
       do_not_encode    = options.do_not_encode
+      stream_results   = options['stream-results']
 
       fwd_opts.merge!(:in_target => in_target) if in_target
       fwd_opts.merge!(:node_size => node_size) if node_size
@@ -1598,6 +1599,7 @@ module DTK::Client
       fwd_opts.merge!(:is_target => is_target) if is_target
       fwd_opts.merge!(:parent_service => parent_service) if parent_service
       fwd_opts.merge!(:do_not_encode => do_not_encode) if do_not_encode
+      fwd_opts.merge!('stream-results' => stream_results) if stream_results
       new_context_params.forward_options(fwd_opts)
 
       new_context_params
@@ -1621,7 +1623,10 @@ module DTK::Client
       response, violations = converge_aux(context_params, { :are_there_violations => true })
       return response unless response.ok?
 
-      unless violations
+      if violations
+        forwarded_options = context_params.get_forwarded_options()
+        context_params.forward_options(forwarded_options.merge!(:violations => true))
+      else
         instance_name        = "/service/#{context_params.get_forwarded_options[:instance_name]}"
         opts[:instance_name] = instance_name
         DTK::Client::OsUtil.print("Service instance '#{instance_name}' deployment has been started. Changing context to '#{instance_name}'.", :green)

@@ -267,17 +267,19 @@ module DTK::Client
       return response
     end
 
-    desc "ASSEMBLY-NAME/ID deploy-target [INSTANCE-NAME] [-v VERSION] [--no-auto-complete]", "Deploy assembly as target instance."
-    method_option :settings, :type => :string, :aliases => '-s'
+    desc "ASSEMBLY-NAME/ID deploy-target [INSTANCE-NAME] [-v VERSION] [--no-auto-complete] [--stream-results]", "Deploy assembly as target instance."
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string
     method_option :is_target, :type => :boolean, :default => true
+    # method_option :settings, :type => :string, :aliases => '-s'
     def deploy_target(context_params)
     end
 
-    desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Deploy assembly in target."
+    desc "ASSEMBLY-NAME/ID deploy [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete] [--stream-results]", "Deploy assembly in target."
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
     method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option

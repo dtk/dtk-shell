@@ -22,6 +22,7 @@ dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
 dtk_require_from_base("commands/thor/assembly")
 dtk_require_from_base('command_helpers/service_importer')
+dtk_require_from_base('task_status')
 dtk_require_common_commands('thor/common')
 dtk_require_common_commands('thor/module')
 dtk_require_common_commands('thor/poller')
@@ -38,6 +39,7 @@ module DTK::Client
       include ModuleMixin
       include Poller
       include AssemblyTemplateMixin
+      include TaskStatusMixin
 
       def get_service_module_name(service_module_id)
         get_name_from_id_helper(service_module_id)
@@ -141,6 +143,13 @@ module DTK::Client
 
           # change context to newly created service instance
           MainContext.get_context.change_context(["/service/#{instance_name}"])
+
+          return response unless response.ok?
+
+          if forwarded_options['stream-results'] || options['stream-results']
+            forwarded_options = new_context_params.get_forwarded_options()
+            task_status_stream(instance_name) unless forwarded_options[:violations]
+          end
 
           response
         else
@@ -797,13 +806,14 @@ module DTK::Client
       create_new_version_aux(context_params)
     end
 
-    desc "SERVICE-MODULE-NAME/ID deploy-target ASSEMBLY-NAME [INSTANCE-NAME] [-v VERSION] [--no-auto-complete]", "Deploy assembly as target instance."
-    method_option :settings, :type => :string, :aliases => '-s'
+    desc "SERVICE-MODULE-NAME/ID deploy-target ASSEMBLY-NAME [INSTANCE-NAME] [-v VERSION] [--no-auto-complete] [--stream-results]", "Deploy assembly as target instance."
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string
     method_option :is_target, :type => :boolean, :default => true
+    # method_option :settings, :type => :string, :aliases => '-s'
     def deploy_target(context_params)
       response = deploy_aux(context_params)
       return response unless response.ok?
@@ -814,13 +824,14 @@ module DTK::Client
       response
     end
 
-    desc "SERVICE-MODULE-NAME/ID deploy ASSEMBLY-NAME [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Deploy assembly in target."
-    method_option :settings, :type => :string, :aliases => '-s'
+    desc "SERVICE-MODULE-NAME/ID deploy ASSEMBLY-NAME [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete] [--stream-results]", "Deploy assembly in target."
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
     method_option :parent_service, :type => :string, :aliases => '-t'
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string
+    # method_option :settings, :type => :string, :aliases => '-s'
     def deploy(context_params)
       response = deploy_aux(context_params)
       return response unless response.ok?
