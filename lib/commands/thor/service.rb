@@ -905,7 +905,19 @@ TODO: will put in dot release and will rename to 'extend'
 
     desc "SERVICE-NAME/ID set-required-attributes-and-converge", "Interactive dialog to set required attributes that are not currently set", :hide => true
     def set_required_attributes_and_converge(context_params)
-      response = set_required_attributes_converge_aux(context_params, opts = {})
+      begin
+        response = set_required_attributes_converge_aux(context_params)
+      rescue DTK::Client::DtkError::InteractiveWizardError => e
+        @@invalidate_map << :service
+        @@invalidate_map << :assembly
+
+        # if skip correction wizzard still go to newly created service instance
+        if instance_name = (context_params.get_forwarded_options()||{})[:instance_name]
+          MainContext.get_context.change_context(["/service/#{instance_name}"])
+        end
+
+        raise e
+      end
 
       @@invalidate_map << :service
       @@invalidate_map << :assembly

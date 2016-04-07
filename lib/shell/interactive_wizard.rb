@@ -177,7 +177,7 @@ module DTK
         rescue Interrupt => e
           puts
           # TODO: Provide original error here
-          raise DTK::Client::DtkError, "You have decided to skip correction wizard.#{additional_message}"
+          raise DTK::Client::DtkError::InteractiveWizardError, "You have decided to skip correction wizard.#{additional_message}"
         end
 
         return user_provided_params

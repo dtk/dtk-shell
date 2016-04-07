@@ -94,15 +94,21 @@ module DTK
           super(:client)
         end
       end
+
       class Server < InternalError
         def initialize(error_msg,opts={})
           super(error_msg,opts.merge(:where => :server))
         end
         def self.label(*args)
           super(:server)
-          end
+        end
       end
 
+      class InteractiveWizardError < self
+        def initialize(error_msg, opts={})
+          super(error_msg, opts)
+        end
+      end
     end
   end
 end
