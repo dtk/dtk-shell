@@ -11,11 +11,11 @@ It's main purpose is to provide an easy to use interface for importing modules, 
 ---
 #### Sytstem requirements
 
-- Ruby 1.9.3 
+- Ruby 1.9.3
 - Unix OS
 
 ---
-#### Installation 
+#### Installation
 
 For DTK Client to work, following steps have to be done:
 
@@ -23,7 +23,7 @@ For DTK Client to work, following steps have to be done:
 - RSA Keys Generated
 
 To install DTK Client gem, execute:
- 
+
 `gem install dtk-client`
 
 ---
@@ -34,7 +34,7 @@ There are two ways for DTK Client to run
 - via an interactive shell (<tt>dtk-shell</tt>)
 - by executing DTK Client commands (ie. <tt>dtk service list</tt>)
 
-If it is the first time that the DTK Client is being used (by either of the ways), following prompts will appear: 
+If it is the first time that the DTK Client is being used (by either of the ways), following prompts will appear:
 
 ```
 Please enter the DTK server address (example: instance.dtk.io)
@@ -46,10 +46,10 @@ Password:
 
 ```
 After entering the correct data, following message will appear:
- 
+
 `SSH key 'dtk-client' added successfully!`
 
-This means that the DTK Server has successfully registered DTK Client and the client is ready for use. 
+This means that the DTK Server has successfully registered DTK Client and the client is ready for use.
 
 ---
 #### DTK Client configuration
@@ -83,15 +83,24 @@ Component and Service modules that are installed, or modules that are imported a
 ---
 
 ## Advanced features
+#### Development mode
+
+When using DTK Client in Development mode, gems from `Gemfile_dev` must be installed and used when running DTK Client or DTK Client Shell:
+
+```
+bundle install --gemfile Gemfile_dev
+BUNDLE_GEMFILE=Gemfile_dev bundle exec ruby ./bin/dtk-shell
+```
+
 #### DTK Repoman
 
-DTK Repoman is a Git based repository for publishing and installing component modules and service modules. DTK Repoman has it's own users, known as catalog users. The inital setup should register the DTK Client to the Public Catalog users. 
+DTK Repoman is a Git based repository for publishing and installing component modules and service modules. DTK Repoman has it's own users, known as catalog users. The inital setup should register the DTK Client to the Public Catalog users.
 
 Successfully registered DTK Client on DTK Repoman enables execution of commands such as:
 
 `dtk service-module list --remote` - lists service moduels on remote visible to the catalog user
 
-`dtk component-module install namespace/component-module-name` - install component module 
+`dtk component-module install namespace/component-module-name` - install component module
 
 Switching from public user to a commercial user can be done with `dtk account set-catalog-credentials`. This will initate a prompt for catalog username and password
 
