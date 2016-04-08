@@ -74,9 +74,11 @@ module DTK::Client
       # API descriptor
     end
 
-    desc "test-module", "DTK definitions for modeling/defining individual test components."
-    def test_module
-      # API descriptor
+    if ::DTK::Configuration.get(:development_mode)
+      desc "test-module", "DTK definitions for modeling/defining individual test components."
+      def test_module
+        # API descriptor
+      end
     end
 
     # desc "node", "Commands to list, query, and delete/destroy node instances."
