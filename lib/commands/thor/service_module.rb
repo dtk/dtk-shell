@@ -27,6 +27,7 @@ dtk_require_common_commands('thor/common')
 dtk_require_common_commands('thor/module')
 dtk_require_common_commands('thor/poller')
 dtk_require_common_commands('thor/assembly_template')
+dtk_require_common_commands('thor/pull_clone_changes')
 
 module DTK::Client
   class ServiceModule < CommandBaseThor
@@ -599,6 +600,7 @@ module DTK::Client
       if old_dir and (old_dir != module_final_dir)
         FileUtils.rm_rf(old_dir) unless namespace
       end
+
       DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{repo_obj.repo_dir}",:yellow) unless namespace
 
       response
