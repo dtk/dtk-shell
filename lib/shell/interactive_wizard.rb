@@ -138,7 +138,7 @@ module DTK
 
       # takes hash maps with description of missing params and
       # returns array of hash map with key, value for each missed param
-      def self.resolve_missing_params(param_list)
+      def self.resolve_missing_params(param_list, additional_message = nil)
         begin
           user_provided_params, checkup_hash = [], {}
 
@@ -177,7 +177,7 @@ module DTK
         rescue Interrupt => e
           puts
           # TODO: Provide original error here
-          raise DTK::Client::DtkError, "You have decided to skip correction wizard."
+          raise DTK::Client::DtkError::InteractiveWizardError, "You have decided to skip correction wizard.#{additional_message}"
         end
 
         return user_provided_params
