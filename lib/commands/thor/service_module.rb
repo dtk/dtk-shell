@@ -606,10 +606,10 @@ module DTK::Client
       response
     end
 
-    desc "SERVICE-MODULE-NAME/ID stage-target ASSEMBLY-NAME [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
+    desc "SERVICE-MODULE-NAME/ID stage-target ASSEMBLY-NAME [INSTANCE-NAME] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
-    method_option :parent_service, :type => :string, :aliases => '-t'
+    # method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string
