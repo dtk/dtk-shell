@@ -66,12 +66,6 @@ module DTK::Client
       end
 
       response = post(rest_url("#{module_type}/update_model_from_clone"), post_body)
-
-      if pull_changes = response.data(:pull_changes)
-        opts_pull = opts.merge(:local_branch => branch,:namespace => module_namespace)
-        Helper(:git_repo).pull_changes(module_type, module_name, opts_pull)
-      end
-
       return response unless response.ok?
 
       external_dependencies = response.data(:external_dependencies)
