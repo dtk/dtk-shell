@@ -156,7 +156,7 @@ module DTK
             puts "Please enter #{string_identifier}:"
             while line = Readline.readline(": ", true)
               id = param_info['id']
-              user_provided_params << {:id => id, :value => line}
+              user_provided_params << {:id => id, :value => line, :display_name => param_info['display_name']}
               checkup_hash[id] = {:value => line, :description => description}
               break
             end
