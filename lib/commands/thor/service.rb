@@ -484,7 +484,8 @@ TODO: will put in dot release and will rename to 'extend'
       list_tasks_aux(context_params)
     end
 
-    desc "SERVICE-NAME/ID list-violations", "Finds violations in the service that will prevent a converge operation."
+    desc "SERVICE-NAME/ID list-violations [ACTION] [--fix]", "Finds violations that must be corrected before converging the service or running the specified action."
+    method_option :fix, :aliases => '-f', :type => :boolean, :default => false, :banner => 'Run wizard to fix violations found'
     def list_violations(context_params)
       list_violations_aux(context_params)
     end

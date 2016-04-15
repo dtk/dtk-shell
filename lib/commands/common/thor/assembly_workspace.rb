@@ -123,9 +123,14 @@ module DTK::Client
     end
 
     def list_violations_aux(context_params)
-      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID],method_argument_names)
-      response = post rest_url("assembly/find_violations"),:assembly_id => assembly_or_workspace_id
-      response.render_table(:violation)
+      assembly_or_workspace_id, action = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :option_1],method_argument_names)
+      response = post rest_url("assembly/find_violations"), :assembly_id => assembly_or_workspace_id
+      ret = response.render_table(:violation)
+      if options.fix?
+        fix_violations(response) 
+      else
+        ret
+      end
     end
 
     def print_includes_aux(context_params)
