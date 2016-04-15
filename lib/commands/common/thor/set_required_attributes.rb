@@ -35,7 +35,7 @@ module DTK::Client
         param_bindings = DTK::Shell::InteractiveWizard.resolve_missing_params(missing_params, additional_message)
         post_body = {
           id_field => id,
-          :av_pairs_hash => param_bindings.inject(Hash.new){|h,r|h.merge((r[:display_name]||r[:id]) => r[:value])}
+          :av_pairs_hash => param_bindings.inject(Hash.new){|h,r|h.merge(r[:id] => r[:value])}
         }
         response = post rest_url("#{type}/set_attributes"), post_body
         return response unless response.ok?
