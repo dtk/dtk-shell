@@ -131,7 +131,7 @@ module DTK::Client
         :assembly_id => assembly_or_workspace_id
       }
       post_body.merge!(action: action) if action
-      post_body.merge!(detail: true) if options.fix?
+      post_body.merge!(ret_objects: true) if options.fix?
       response = post rest_url("assembly/find_violations"), post_body
       ret = response.render_table(:violation)
       if options.fix?
