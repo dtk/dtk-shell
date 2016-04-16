@@ -28,6 +28,9 @@ dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/list_diffs')
 dtk_require_common_commands('thor/action_result_handler')
 
+# TODO: convert dtk_require_common_commands to this form
+dtk_require('fix_violations')
+
 LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
 
 module DTK::Client
@@ -124,10 +127,17 @@ module DTK::Client
 
     def list_violations_aux(context_params)
       assembly_or_workspace_id, action = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID, :option_1],method_argument_names)
-      response = post rest_url("assembly/find_violations"), :assembly_id => assembly_or_workspace_id
+      post_body = {
+        :assembly_id => assembly_or_workspace_id
+      }
+      post_body.merge!(action: action) if action
+      post_body.merge!(detail: true) if options.fix?
+      response = post rest_url("assembly/find_violations"), post_body
       ret = response.render_table(:violation)
       if options.fix?
-        fix_violations(response) 
+        FixViolations.fix_violations(response.data) 
+        # TODO: stub
+        ret
       else
         ret
       end
