@@ -15,13 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-module DTK; module Client
+module DTK::Client
   class FixViolations::Violation
-    class RequiredUnsetAttribute
+    class IllegalAttributeValue
+      include FixMixin::SetAttribute
+ 
       def initialize(violation_hash)
         pp [:debug, self.class, violation_hash]
       end
     end
   end
-end; end
+end
 

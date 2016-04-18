@@ -28,9 +28,6 @@ dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/list_diffs')
 dtk_require_common_commands('thor/action_result_handler')
 
-# TODO: convert dtk_require_common_commands to this form
-dtk_require('fix_violations')
-
 LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
 
 module DTK::Client

@@ -15,22 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-module DTK; module Client
-  module FixViolations
-    class Violation
-      dtk_require('violation/required_unset_attribute')
-
-      def self.create?(violation_hash)
-        case violation_hash['type']
-          when 'required_unset_attribute'
-            RequiredUnsetAttribute.new(violation_hash)
-          else
-            pp [:debug, :untreated_violation, violation_hash]
-            nil
-        end
+module DTK::Client
+  class FixViolations::Violation
+    class RequiredUnsetAttribute
+      include FixMixin::SetAttribute
+      def initialize(violation_hash)
+        pp [:debug, self.class, violation_hash]
       end
-
     end
   end
-end; end
+end
+
 

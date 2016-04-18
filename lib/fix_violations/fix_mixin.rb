@@ -15,19 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-module DTK
-  module Client
-    module FixViolations
-      dtk_require('fix_violations/violation')
-
-      def self.fix_violations(violation_hash_array)
-        violation_hash_array.each do |violation_hash|
-          if violation = Violation.create?(violation_hash)
-            # TODO: render and query for violation
-          end
-        end
-      end
-
+module DTK::Client
+  module FixMixin
+    module SetAttribute
     end
   end
 end

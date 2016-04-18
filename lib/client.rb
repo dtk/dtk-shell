@@ -18,7 +18,7 @@
 require 'rubygems'
 
 begin
-  require File.expand_path("require_first", File.dirname(__FILE__))
+  require File.expand_path('require_first', File.dirname(__FILE__))
 
   if gem_only_available?
     # loads it only if there is no common folder, and gem is installed
@@ -26,10 +26,10 @@ begin
   end
 
   # Load DTK Common
-  dtk_require_dtk_common_core("dtk_common_core")
+  dtk_require_dtk_common_core('dtk_common_core')
 
   # Monkey Patching bundler to support loading specific Gemfile from dtk-client project's root - Ticket: DTK-585
-  dtk_require("config/configuration")
+  dtk_require('config/configuration')
 
   # we don't need Bundler.setup but will leave it commented just in case
   # TODO: This is temp solution which will not use bundler.setup when in dev mode
@@ -40,19 +40,19 @@ begin
     if Bundler.respond_to?(:start)
       Bundler.start
     end
-    dtk_require("bundler_monkey_patch")
+    dtk_require('bundler_monkey_patch')
   end
 
   ########
-  dtk_require("auxiliary")
-  dtk_require("core")
-  dtk_require("error")
-  dtk_require("dtk_constants")
-  dtk_require("commands")
-  dtk_require("view_processor")
-  dtk_require("search_hash")
-  dtk_require("dtk_logger")
+  dtk_require('auxiliary')
+  dtk_require('core')
+  dtk_require('error')
+  dtk_require('dtk_constants')
+  dtk_require('commands')
+  dtk_require('view_processor')
+  dtk_require('search_hash')
+  dtk_require('dtk_logger')
+  dtk_require('fix_violations')
 rescue SystemExit, Interrupt
-  #puts "DTK Client action canceled."
   exit(1)
 end
