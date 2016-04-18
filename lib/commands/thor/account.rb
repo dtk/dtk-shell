@@ -49,7 +49,7 @@ module DTK::Client
           :delete_ssh_key => {
             :field => "display_name",
             :url => "account/list_ssh_keys",
-            :opts => { :username => "#{::DTK::Client::Configurator.client_username}" }
+            :opts => { :username => "#{Configurator.client_username}" }
           }
         },
         :command => {
@@ -102,7 +102,7 @@ module DTK::Client
     desc "set-password", "Change password for your dtk user account"
     def set_password(context_params)
       old_pass_prompt, old_pass, new_pass_prompt, confirm_pass_prompt = nil
-      cred_file = ::DTK::Client::Configurator::CRED_FILE
+      cred_file = Configurator::CRED_FILE
       old_pass = parse_key_value_file(cred_file)[:password]
       username = parse_key_value_file(cred_file)[:username]
 
@@ -128,7 +128,7 @@ module DTK::Client
         response = post rest_url("account/set_password"), post_body
         return response unless response.ok?
 
-        ::DTK::Client::Configurator.regenerate_conf_file(cred_file, [['username', "#{username.to_s}"], ['password', "#{new_pass_prompt.to_s}"]], '')
+        Configurator.regenerate_conf_file(cred_file, [['username', "#{username.to_s}"], ['password', "#{new_pass_prompt.to_s}"]], '')
         OsUtil.print("Password changed successfully!", :yellow)
       else
         OsUtil.print("Entered passwords don't match!", :yellow)
@@ -138,7 +138,7 @@ module DTK::Client
 
     desc "list-ssh-keys", "Show list of key pairs that your account profile has saved"
     def list_ssh_keys(context_params)
-      post_body = {:username => ::DTK::Client::Configurator.client_username }
+      post_body = {:username => Configurator.client_username }
       response = post rest_url("account/list_ssh_keys"), post_body
       response.render_table(:account_ssh_keys)
     end
@@ -151,11 +151,11 @@ module DTK::Client
       response, matched, matched_username = Account.add_key(path_to_key, false, name)
 
       if matched
-        DTK::Client::OsUtil.print("Provided SSH pub key has already been added.", :yellow)
+        OsUtil.print("Provided SSH pub key has already been added.", :yellow)
       elsif matched_username
-        DTK::Client::OsUtil.print("User ('#{matched_username}') already exists.", :yellow)
+        OsUtil.print("User ('#{matched_username}') already exists.", :yellow)
       else
-        DTK::Client::Configurator.add_current_user_to_direct_access() if response.ok?
+        Configurator.add_current_user_to_direct_access() if response.ok?
       end
 
       if response.ok? && response.data(:repoman_registration_error)
@@ -200,7 +200,7 @@ module DTK::Client
 
     desc "set-catalog-credentials", "Sets catalog credentials"
     def set_catalog_credentials(context_params)
-      creds = DTK::Client::Configurator.enter_catalog_credentials()
+      creds = Configurator.enter_catalog_credentials()
 
       response = post rest_url("account/set_catalog_credentials"), { :username => creds[:username], :password => creds[:password], :validate => true }
       return response unless response.ok?
@@ -211,7 +211,7 @@ module DTK::Client
 
     desc "register-catalog-user", "Create your catalog user"
     def register_catalog_user(context_params)
-      body_params = DTK::Shell::InteractiveWizard.interactive_user_input([
+      body_params = Shell::InteractiveWizard.interactive_user_input([
        {:username => { :required => true} },
        {:password => { :type => :password }},
        {:repeat_password => { :type => :repeat_password }},

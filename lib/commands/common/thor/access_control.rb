@@ -60,7 +60,7 @@ module DTK::Client
         end
 
         puts "How should we resolve these dependencies: "
-        input = ::DTK::Shell::InteractiveWizard.text_input("(A)ll / (M)ain Module / (N)one ", true, /M|A|N/i)
+        input = Shell::InteractiveWizard.text_input("(A)ll / (M)ain Module / (N)one ", true, /M|A|N/i)
         if 'N'.eql?(input)
           return nil
         else
@@ -118,11 +118,11 @@ module DTK::Client
 
     def resolve_module_type
       case self
-        when DTK::Client::ComponentModule
+        when ComponentModule
           return :component_module
-        when DTK::Client::ServiceModule
+        when ServiceModule
           return :service_module
-        when DTK::Client::TestModule
+        when TestModule
           return :test_module
         else
           raise DtkError, "Module type cannot be resolved for this class (#{self})"

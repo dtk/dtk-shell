@@ -29,8 +29,6 @@ dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/assembly_workspace')
 dtk_require_common_commands('thor/action_result_handler')
 
-LOG_SLEEP_TIME   = DTK::Configuration.get(:tail_log_frequency)
-DEBUG_SLEEP_TIME = DTK::Configuration.get(:debug_task_frequency)
 
 module DTK::Client
   class Service < CommandBaseThor
@@ -233,7 +231,7 @@ module DTK::Client
         }
       }
 
-      if ::DTK::Configuration.get(:development_mode)
+      if DTK::Configuration.get(:development_mode)
         override_methods[:identifier_only][:node] << ['test-action-agent', "test-action-agent BASH-COMMAND-LINE", "Run bash command on test action agent"]
       end
 
@@ -908,7 +906,7 @@ TODO: will put in dot release and will rename to 'extend'
     def set_required_attributes_and_converge(context_params)
       begin
         response = set_required_attributes_converge_aux(context_params)
-      rescue DTK::Client::DtkError::InteractiveWizardError => e
+      rescue DtkError::InteractiveWizardError => e
         @@invalidate_map << :service
         @@invalidate_map << :assembly
 

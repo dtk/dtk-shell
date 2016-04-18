@@ -68,7 +68,7 @@ module DTK::Client
       iaas_properties.merge!(:keypair => keypair) if keypair
       if security_group
         if security_group.end_with?(',')
-          raise ::DTK::Client::DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ")
+          raise DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ")
         end
 
         security_groups = security_group.split(',')
@@ -80,7 +80,7 @@ module DTK::Client
         end
       end
 
-      result = DTK::Shell::InteractiveWizard::interactive_user_input(
+      result = Shell::InteractiveWizard::interactive_user_input(
         {'IAAS Credentials' => { :type => :group, :options => [
               {:key    => {}},
               {:secret => {}}
@@ -136,10 +136,10 @@ TODO: deprecated until this can be in sync with create-targets from target conte
 
       #TODO: data-driven check if legal provider type and then what options needed depending on provider type
       iaas_properties = Hash.new
-      DTK::Shell::InteractiveWizard.validate_region(region)
+      Shell::InteractiveWizard.validate_region(region)
 
       security_groups = []
-      raise ::DTK::Client::DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ") if security_group.end_with?(',')
+      raise DtkValidationError.new("Multiple security groups should be separated with ',' and without spaces between them (e.g. --security_groups gr1,gr2,gr3,...) ") if security_group.end_with?(',')
 
       security_groups = security_group.split(',')
       iaas_properties.merge!(:keypair => keypair)
@@ -220,7 +220,7 @@ TODO: deprecated until this can be in sync with create-targets from target conte
         provider_type, provider_name = composed_name.split(':')
 
         if (provider_type.nil? || provider_name.nil? || provider_type.empty? || provider_name.empty?)
-          raise ::DTK::Client::DtkValidationError.new("Provider name and type are required parameters and should be provided in format PROVIDER-TYPE:PROVIDER-NAME")
+          raise DtkValidationError.new("Provider name and type are required parameters and should be provided in format PROVIDER-TYPE:PROVIDER-NAME")
         end
 
         return [provider_type, provider_name]

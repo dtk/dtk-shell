@@ -18,6 +18,8 @@
 module DTK::Client
   class TaskStatus
     class RefreshMode < self
+      DEBUG_SLEEP_TIME = DTK::Configuration.get(:debug_task_frequency)
+
       def task_status(opts={})
         begin
           response = nil
@@ -71,3 +73,4 @@ module DTK::Client
     end
   end
 end
+

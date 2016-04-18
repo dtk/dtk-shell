@@ -19,31 +19,32 @@ require 'colorize'
 require 'readline'
 require 'highline/import'
 
-module DTK
+module DTK::Client
   module Shell
-
-
-    # we use interactive wizard to give user opertunity
     class InteractiveWizard
 
       PP_LINE_HEAD  = '--------------------------------- DATA ---------------------------------'
       PP_LINE       = '------------------------------------------------------------------------'
-      INVALID_INPUT = Client::OsUtil.colorize(" Input is not valid. ", :yellow)
-      EC2_REGIONS   = ['us-east-1','us-west-1','us-west-2','eu-west-1','sa-east-1','ap-northeast-1','ap-southeast-1','ap-southeast-2' ]
-
+      INVALID_INPUT = OsUtil.colorize(" Input is not valid. ", :yellow)
 
       def initialize
       end
 
-      def self.validate_region(region)
-        unless EC2_REGIONS.include? region
-          raise ::DTK::Client::DtkValidationError.new("Region '#{region}' is not EC2 region, use one of: #{EC2_REGIONS.join(',')}")
-        end
-      end
-
-      # Generic wizard which will return hash map based on metadata input
+      # InteractiveWizard.interactive_user_input is generic wizard which will return hash map based on metadata input
       #
-      # Example provided bellow
+      # Example of form of param 'wizard_params'
+      #
+      # wizard_params = [
+      #  {:target_name     => {}},
+      #  {:description     => {:optional => true }}
+      #  {:iaas_type       => { :type => :selection, :options => [:ec2] }},
+      #  {:aws_install    => { :type => :question,
+      #                        :question => "Do we have your permission to add necessery 'key-pair' and 'security-group' to your EC2 account?",
+      #                        :options => ["yes","no"],
+      #                        :required_options => ["yes"],
+      #                        :explanation => "This permission is necessary for creation of a custom target."
+      #                      }}
+      # ]
       #
       def self.interactive_user_input(wizard_dsl, recursion_call = false)
         results = {}
@@ -84,7 +85,7 @@ module DTK
                     options += "\t#{i+1}. #{o}\n"
                   end
                 end
-                options += DTK::Client::OsUtil.colorize("\t0. Skip\n", :yellow) if metadata[:skip_option]
+                options += OsUtil.colorize("\t0. Skip\n", :yellow) if metadata[:skip_option]
                 output = "Select '#{display_name}': \n\n #{options} \n "
                 validation_range_start = metadata[:skip_option] ? 0 : 1
                 validation = (validation_range_start..metadata[:options].size).to_a
@@ -100,7 +101,7 @@ module DTK
             if metadata[:required_options] && !metadata[:required_options].include?(input)
               # case where we have to give explicit permission, if answer is not affirmative
               # we terminate rest of the wizard
-              DTK::Client::OsUtil.print(" #{metadata[:explanation]}", :red)
+              OsUtil.print(" #{metadata[:explanation]}", :red)
               return nil
             end
 
@@ -115,19 +116,19 @@ module DTK
           return results
         rescue Interrupt => e
           puts
-          raise DTK::Client::DtkValidationError, "Exiting the wizard ..."
+          raise DtkValidationError, "Exiting the wizard ..."
         end
       end
 
       def self.text_input(output, is_required = false, validation_regex = nil, is_password = false)
         while line = ask("#{output}: ") { |q| q.echo = !is_password }
           if is_required && line.strip.empty?
-            puts Client::OsUtil.colorize("Field '#{output}' is required field. ", :red)
+            puts OsUtil.colorize("Field '#{output}' is required field. ", :red)
             next
           end
 
           if validation_regex && !validation_regex.match(line)
-            puts Client::OsUtil.colorize("Input is not valid, please enter it again. ", :red)
+            puts OsUtil.colorize("Input is not valid, please enter it again. ", :red)
             next
           end
 
@@ -150,8 +151,8 @@ module DTK
               else
                 "#{param_info['display_name']} (#{param_info['description']})"
               end
-            datatype_info = (param_info['datatype'] ? DTK::Client::OsUtil.colorize(" [#{param_info['datatype'].upcase}]", :yellow) : '')
-            string_identifier = DTK::Client::OsUtil.colorize(description, :green) + datatype_info
+            datatype_info = (param_info['datatype'] ? OsUtil.colorize(" [#{param_info['datatype'].upcase}]", :yellow) : '')
+            string_identifier = OsUtil.colorize(description, :green) + datatype_info
 
             puts "Please enter #{string_identifier}:"
             while line = Readline.readline(": ", true)
@@ -177,7 +178,7 @@ module DTK
         rescue Interrupt => e
           puts
           # TODO: Provide original error here
-          raise DTK::Client::DtkError::InteractiveWizardError, "You have decided to skip correction wizard.#{additional_message}"
+          raise DtkError::InteractiveWizardError, "You have decided to skip correction wizard.#{additional_message}"
         end
 
         return user_provided_params
@@ -190,7 +191,7 @@ module DTK
         user_information.each do |key,info|
           description = info[:description]
           value = info[:value]
-          printf "%48s : %s\n", DTK::Client::OsUtil.colorize(description, :green), DTK::Client::OsUtil.colorize(value, :yellow)
+          printf "%48s : %s\n", OsUtil.colorize(description, :green), OsUtil.colorize(value, :yellow)
         end
         puts PP_LINE
         puts
@@ -199,58 +200,13 @@ module DTK
   end
 end
 
-## EXAMPLE OF USAGE
-
-# Example 1. Creating target via wizard
 =begin
-    desc "create","Wizard that will guide you trough creation of target and target-template"
-    def create(context_params)
+TODO: remove deprecated
 
-      # we get existing templates
-      target_templates = post rest_url("target/list"), { :subtype => :template }
-
-      # ask user to select target template
-      wizard_params = [{:target_template => { :type => :selection, :options => target_templates['data'], :display_field => 'display_name', :skip_option => true }}]
-      target_template_selected = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
-      target_template_id = (target_template_selected[:target_template]||{})['id']
-
-      wizard_params = [
-        {:target_name     => {}},
-        {:description      => {:optional => true }}
-      ]
-
-      if target_template_id.nil?
-        # in case user has not selected template id we will needed information to create target
-        wizard_params.concat([
-          {:iaas_type       => { :type => :selection, :options => [:ec2] }},
-          {:aws_install     => { :type => :question,
-                                 :question => "Do we have your permission to add necessery 'key-pair' and 'security-group' to your EC2 account?",
-                                 :options => ["yes","no"],
-                                 :required_options => ["yes"],
-                                 :explanation => "This permission is necessary for creation of a custom target."
-                                }},
-          {:iaas_properties => { :type => :group, :options => [
-              {:key    => {}},
-              {:secret => {}},
-              {:region => {:type => :selection, :options => DTK::Shell::InteractiveWizard::EC2_REGIONS}},
-          ]}},
-        ])
+      def self.validate_region(region)
+        unless EC2_REGIONS.include? region
+          raise DtkValidationError.new("Region '#{region}' is not EC2 region, use one of: #{EC2_REGIONS.join(',')}")
+        end
       end
-
-      post_body = DTK::Shell::InteractiveWizard.interactive_user_input(wizard_params)
-      post_body ||= {}
-
-      # this means that user has not given permission so we skip request
-      return unless (target_template_id || post_body[:aws_install])
-
-      # in case user chose target ID
-      post_body.merge!(:target_template_id => target_template_id) if target_template_id
-
-
-      response = post rest_url("target/create"), post_body
-       # when changing context send request for getting latest targets instead of getting from cache
-      @@invalidate_map << :target
-
-      return response
-    end
+      EC2_REGIONS   = ['us-east-1','us-west-1','us-west-2','eu-west-1','sa-east-1','ap-northeast-1','ap-southeast-1','ap-southeast-2' ]
 =end
