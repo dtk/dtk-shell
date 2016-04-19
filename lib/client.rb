@@ -52,7 +52,7 @@ begin
   dtk_require('view_processor')
   dtk_require('search_hash')
   dtk_require('dtk_logger')
-  dtk_require('fix_violations')
+  dtk_require('violation')
 rescue SystemExit, Interrupt
   exit(1)
 end

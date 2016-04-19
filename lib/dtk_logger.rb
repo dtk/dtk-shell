@@ -58,6 +58,19 @@ class DtkLogger
     "#{DTK::Client::OsUtil.get_log_location()}/#{LOG_FILE_NAME}"
   end
 
+  LoggerMethods = [:debug, :info, :warn, :error, :fatal, :error_pp, :fatal_pp]
+  def self.method_missing(method, *args)
+    if LoggerMethods.include?(method)
+      instance.send(method, *args)
+    else
+      super(method, *args)
+    end
+  end
+
+  def self.respond_to?(method)
+    LoggerMethods.include?(method) or super(method)
+  end
+
   def debug(log_text, sttdout_out=false)
     puts log_text if sttdout_out || DEVELOPMENT_MODE
     @logger.debug(log_text) if log_created?

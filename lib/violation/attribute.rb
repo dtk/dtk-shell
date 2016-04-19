@@ -16,9 +16,18 @@
 # limitations under the License.
 #
 module DTK::Client
-  module FixMixin
-    module SetAttribute
+  class Violation
+    # represents a component, node, or assembly attribute
+    class Attribute
+      def initialize(attribute_hash)
+        # ref is the only one that is guarenteed ti ne present
+        @ref = attribute_hash['ref']
+        @datatype = attribute_hash['datatype']
+        @hidden = attribute_hash['hidden']
+        @legal_values = attribute_hash['legal_values']
+      end
     end
   end
 end
+
 

@@ -132,7 +132,7 @@ module DTK::Client
       response = post rest_url("assembly/find_violations"), post_body
       ret = response.render_table(:violation)
       if options.fix?
-        FixViolations.fix_violations(response.data) 
+        Violation.fix_violations(response.data) 
         # TODO: stub
         ret
       else

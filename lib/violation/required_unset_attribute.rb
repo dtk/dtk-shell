@@ -16,14 +16,15 @@
 # limitations under the License.
 #
 module DTK::Client
-  class FixViolations::Violation
-    class IllegalAttributeValue
-      include FixMixin::SetAttribute
- 
+  class Violation
+    class RequiredUnsetAttribute < self
+      include Fix::SetAttributeMixin
       def initialize(violation_hash)
-        pp [:debug, self.class, violation_hash]
+        initialize_set_attribute(violation_hash('attribute'))
+        pp [:debug, self, violation_hash]
       end
     end
   end
 end
+
 

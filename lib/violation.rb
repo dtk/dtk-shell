@@ -17,22 +17,41 @@
 #
 module DTK
   module Client
-    module FixViolations
-      dtk_require('fix_violations/fix_mixin')
-      # fix_mixin must be before violation
-      dtk_require('fix_violations/violation')
-
+    class Violation
+      dtk_require('violation/attribute')
+      dtk_require('violation/fix_mixin')
+      
+      # fix_mixin must be before th specfic violations
+      dtk_require('violation/required_unset_attribute')
+      dtk_require('violation/illegal_attribute_value')
+      
       def self.fix_violations(violation_hash_array)
         violation_objects = violation_hash_array.map { |violation_hash| Violation.create?(violation_hash) }.compact
         run_fix_wizard(violation_objects) unless violation_objects.empty?
       end
-
+      
       private
+      
+      def self.create?(violation_hash)
+        unless violation_type = violation_hash['type']
+          DtkLogger.error "No type in violation hash: #{violation_hash.inspect}"
+          return nil
+        end
+
+        case violation_type
+         when 'required_unset_attribute'
+          RequiredUnsetAttribute.new(violation_hash)
+         when 'illegal_attribute_value'
+          IllegalAttributeValue.new(violation_hash)
+         else
+          DtkLogger.error "untreated violation type '#{violation_type}'"
+          nil
+        end
+      end
 
       def self.run_fix_wizard(violation_objects)
         pp [:violation_objects, violation_objects]
       end
-
     end
   end
 end
