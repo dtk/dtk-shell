@@ -260,7 +260,7 @@ module DTK::Client
       module_info_aux(context_params)
     end
 
-    desc "SERVICE-MODULE-NAME/ID list-assemblies [-v VERSION]","List assemblies associated with service module."
+    desc "SERVICE-MODULE-NAME/ID list-assemblies [-v VERSION] [--remote]","List assemblies associated with service module."
     version_method_option
     method_option :remote, :type => :boolean, :default => false
     def list_assemblies(context_params)
@@ -295,12 +295,15 @@ module DTK::Client
         service_module_id = service_module_name
       end
 
+      remote = options.remote?
+      namespace = options.namespace
+
       # If user is on service level, list task can't have about value set
       if (context_params.last_entity_name == :"service-module") and about.nil?
-        action    = options.remote? ? "list_remote" : "list"
-        post_body = (options.remote? ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
+        action    = remote ? "list_remote" : "list"
+        post_body = (remote ? { :rsa_pub_key => SSHUtil.rsa_pub_key_content() } : {:detail_to_include => ["remotes"]})
         post_body[:diff] = options.diffs? ? options.diffs : {}
-        post_body.merge!(:module_namespace => options.namespace) if options.namespace
+        post_body.merge!(:module_namespace => namespace) if namespace
 
         if post_body[:detail_to_include]
           post_body[:detail_to_include] << 'versions' # if options.with_versions?
@@ -312,7 +315,7 @@ module DTK::Client
       # If user is on service identifier level, list task can't have '--remote' option.
       else
         # TODO: this is temp; will shortly support this
-        raise DTK::Client::DtkValidationError.new("Not supported '--remote' option when listing service module assemblies, component templates or modules", true) if options.remote?
+        # raise DTK::Client::DtkValidationError.new("Not supported '--remote' option when listing service module assemblies, component templates or modules", true) if options.remote?
         raise DTK::Client::DtkValidationError.new("Not supported type '#{about}' for list for current context level. Possible type options: 'assembly'", true) unless(about == "assembly" || about == "modules")
         post_body = { :service_module_id => service_module_id }
         if about
@@ -322,8 +325,18 @@ module DTK::Client
             data_type = :assembly_template_description
             action    = "list_assemblies"
             post_body.merge!(:version => version) if version
+
+            if remote
+              data_type   = :remote_assembly_template_description
+              action      = "list_remote_assemblies"
+              path_to_key = SSHUtil.default_rsa_pub_key_path()
+              rsa_pub_key = File.file?(path_to_key) && File.open(path_to_key){|f|f.read}.chomp
+
+              post_body.merge!(:remote_namespace => namespace) if namespace
+              post_body.merge!(:rsa_pub_key => rsa_pub_key)
+            end
           when "modules"
-            data_type        = options.remote? ? :component_remote : :component_module
+            data_type        = remote ? :component_remote : :component_module
             action           = "list_component_modules"
           else
             raise_validation_error_method_usage('list')
