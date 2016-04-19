@@ -19,9 +19,9 @@ module DTK
   module Client
     class Violation
       dtk_require('violation/attribute')
-      dtk_require('violation/fix_mixin')
+      dtk_require('violation/fix')
       
-      # fix_mixin must be before th specfic violations
+      # fix must be before the specific violations
       dtk_require('violation/required_unset_attribute')
       dtk_require('violation/illegal_attribute_value')
       
@@ -50,8 +50,21 @@ module DTK
       end
 
       def self.run_fix_wizard(violation_objects)
-        pp [:violation_objects, violation_objects]
+        violation_objects.each do |violation| 
+          result = process_until_fixed_or_skipped(violation) 
+          return if result.skip_all?
+        end
       end
+
+      def process_until_fixed_or_skipped(violation)
+        result = violation.get_input_and_appy_fix
+        if result.ok? or result.skip_current? or result.skip_all?
+          result
+        else
+          process_until_fixed_or_skipped(violation) 
+        end
+      end
+
     end
   end
 end
