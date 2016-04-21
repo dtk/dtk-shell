@@ -30,33 +30,34 @@ class DiskCacher
 
   # file name to hold cookies
   COOKIE_HOLDER_NAME = 'tempdtkstore'
+  FILE_DELIMITER = '--'
 
-  def initialize(cache_dir=DTK::Client::OsUtil.get_temp_location())
+  def initialize(cache_dir = DTK::Client::OsUtil.get_temp_location)
     @cache_dir = cache_dir
     @current_user = ::DTK::Client::Configurator.client_username
   end
 
-  def fetch(file_name, max_age=0, use_mock_up=true)
+  def fetch(file_name, max_age = 0, use_mock_up = true)
     file = Digest::MD5.hexdigest(file_name)
     # current user is important so that there are no clashes in writting to temp file
     # between multiple users on same machine
-    file_path = File.join(@cache_dir, "#{@current_user}::#{file}")
+    file_path = File.join(@cache_dir, "#{@current_user}#{FILE_DELIMITER}#{file}")
 
     # we check if the file -- a MD5 hexdigest of the URL -- exists
     #  in the dir. If it does and the data is fresh, we just read
     #  data from the file and return
     if File.exists? file_path
-      return File.new(file_path).read if Time.now-File.mtime(file_path)<max_age
+      return File.new(file_path).read if ((Time.now - File.mtime(file_path)) < max_age)
     end
 
     # if the file does not exist (or if the data is not fresh), we
     #  make an get request and save it to a file
     response_string = ""
-    @response = get rest_url("metadata/get_metadata/#{file_name}")
+    response = get rest_url("metadata/get_metadata/#{file_name}")
 
-    if (@response["status"] == "ok")
+    if (response["status"] == "ok")
       file = File.open(file_path, "w") do |data|
-        data << response_string = @response["data"]
+        data << response_string = response["data"]
       end
     end
 
@@ -66,12 +67,11 @@ class DiskCacher
   def save_cookie(cookie_content)
     file_path = File.join(@cache_dir, COOKIE_HOLDER_NAME)
     File.open(file_path, "w") do |file|
-      #data <<  cookie_content
       Marshal.dump(cookie_content, file)
     end
   end
 
-  def load_cookie()
+  def load_cookie
     file_path = File.join(@cache_dir, COOKIE_HOLDER_NAME)
     cookie_content = File.exists?(file_path) ? File.open(file_path) {|f| Marshal.load(f)} : nil
     cookie_content
