@@ -391,7 +391,14 @@ module DTK::Client
     method_option :component, :aliases => '-c'
     method_option :attribute, :aliases => '-a'
     def edit_attributes(context_params)
-      edit_attributes_aux(context_params)
+      response = edit_attributes_aux(context_params)
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+
+      response
     end
 
 =begin
@@ -643,7 +650,15 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :component_attribute, :aliases => '-c', :type => :boolean, :default => false
     method_option :node_attribute, :aliases => '-n', :type => :boolean, :default => false
     def set_attribute(context_params)
-      set_attribute_aux(context_params)
+      response = set_attribute_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+
+      response
     end
 
     desc "SERVICE-NAME/ID create-attribute ATTRIBUTE-NAME [VALUE] [--type DATATYPE] [--required] [--dynamic]", "Create a new attribute and optionally assign it a value."
@@ -695,7 +710,8 @@ TODO: will put in dot release and will rename to 'extend'
 
     # only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "SERVICE-NAME/ID add-component COMPONENT", "Add a component to the service."
+    desc "SERVICE-NAME/ID add-component COMPONENT [--auto-complete]", "Add a component to the service. Use --auto-complete to link components automatically"
+    method_option :auto_complete, :type => :boolean, :default => true
     def add_component(context_params)
       response = create_component_aux(context_params)
 
@@ -815,17 +831,102 @@ TODO: will put in dot release and will rename to 'extend'
       grep_aux(context_params)
     end
 
-    desc "stage ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION]", "Stage assembly in target."
+    desc "stage ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
     method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
-    method_option :node_size, :type => :string, :aliases => "--node-size"
-    method_option :os_type, :type => :string, :aliases => "--os-type"
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
-    #hidden options
+    #hidden option
     method_option "instance-bindings", :type => :string
-    method_option :settings, :type => :string, :aliases => '-s'
     def stage(context_params)
       stage_aux(context_params)
     end
 
+    desc "set-default-target INSTANCE-NAME/ID", "Set default target service instance."
+    def set_default_target(context_params)
+      set_default_target_aux(context_params)
+    end
+
+    desc "stage-target ASSEMBLY-TEMPLATE [INSTANCE-NAME] -t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
+    method_option :settings, :type => :string, :aliases => '-s'
+    method_option :auto_complete, :type => :boolean, :default => true
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option :parent_service, :type => :string, :aliases => '-t'
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    method_option :is_target, :type => :boolean, :default => true
+    def stage_target(context_params)
+      response = stage_aux(context_params)
+      return response unless response.ok?
+
+      # when changing context send request for getting latest assemblies instead of getting from cache
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      return response
+    end
+
+    desc "deploy-target ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-v VERSION] [--no-auto-complete] [--stream-results]", "Deploy assembly as target instance."
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    method_option :is_target, :type => :boolean, :default => true
+    # method_option :settings, :type => :string, :aliases => '-s'
+    def deploy_target(context_params)
+      response = deploy_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      response
+    end
+
+    desc "deploy ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Deploy assembly in target."
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option :parent_service, :type => :string, :aliases => '-t'
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    # method_option :settings, :type => :string, :aliases => '-s'
+    def deploy(context_params)
+      response = deploy_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      response
+    end
+
+    desc "SERVICE-NAME/ID set-required-attributes-and-converge", "Interactive dialog to set required attributes that are not currently set", :hide => true
+    def set_required_attributes_and_converge(context_params)
+      begin
+        response = set_required_attributes_converge_aux(context_params)
+      rescue DTK::Client::DtkError::InteractiveWizardError => e
+        @@invalidate_map << :service
+        @@invalidate_map << :assembly
+
+        # if skip correction wizzard still go to newly created service instance
+        if instance_name = (context_params.get_forwarded_options()||{})[:instance_name]
+          MainContext.get_context.change_context(["/service/#{instance_name}"])
+        end
+
+        raise e
+      end
+
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      # if instance_name = opts[:instance_name]
+      #   MainContext.get_context.change_context([instance_name])
+      # end
+
+      response
+    end
   end
 end

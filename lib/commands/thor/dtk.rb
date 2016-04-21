@@ -26,14 +26,18 @@ module DTK::Client
       ['component','attribute','utils','node','task','component-template','assembly','remotes']
     end
 
-    desc "workspace","Sandbox for development and testing"
-    def workspace
-      # API descriptor, SYM_LINK!
+    if ::DTK::Configuration.get(:development_mode)
+      desc "workspace","Sandbox for development and testing"
+      def workspace
+        # API descriptor, SYM_LINK!
+      end
     end
 
-    desc "target","Targets"
-    def target
-      # API descriptor, SYM_LINK!
+    if ::DTK::Configuration.get(:development_mode)
+      desc "target","Targets"
+      def target
+        # API descriptor, SYM_LINK!
+      end
     end
 
 
@@ -70,9 +74,11 @@ module DTK::Client
       # API descriptor
     end
 
-    desc "test-module", "DTK definitions for modeling/defining individual test components."
-    def test_module
-      # API descriptor
+    if ::DTK::Configuration.get(:development_mode)
+      desc "test-module", "DTK definitions for modeling/defining individual test components."
+      def test_module
+        # API descriptor
+      end
     end
 
     # desc "node", "Commands to list, query, and delete/destroy node instances."
@@ -85,9 +91,11 @@ module DTK::Client
     #   # API descriptor
     # end
 
-    desc "node-template", "Node Templates that map to machine images and containers."
-    def node_template
-      # API descriptor
+    if ::DTK::Configuration.get(:development_mode)
+      desc "node-template", "Node Templates that map to machine images and containers."
+      def node_template
+        # API descriptor
+      end
     end
 
     # desc "component-template","Commands to list and query component templates."
@@ -130,10 +138,11 @@ module DTK::Client
       end
     end
 
-
-    desc "provider", "Manage infrastructure providers and deployment targets (ie: EC2 and us-east)"
-    def provider
-      # API descriptor
+    if ::DTK::Configuration.get(:development_mode)
+      desc "provider", "Manage infrastructure providers and deployment targets (ie: EC2 and us-east)"
+      def provider
+        # API descriptor
+      end
     end
 
     # we do not need help here

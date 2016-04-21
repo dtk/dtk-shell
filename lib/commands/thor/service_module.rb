@@ -22,10 +22,12 @@ dtk_require_from_base("dtk_logger")
 dtk_require_from_base("util/os_util")
 dtk_require_from_base("commands/thor/assembly")
 dtk_require_from_base('command_helpers/service_importer')
+dtk_require_from_base('task_status')
 dtk_require_common_commands('thor/common')
 dtk_require_common_commands('thor/module')
 dtk_require_common_commands('thor/poller')
 dtk_require_common_commands('thor/assembly_template')
+dtk_require_common_commands('thor/pull_clone_changes')
 
 module DTK::Client
   class ServiceModule < CommandBaseThor
@@ -38,6 +40,7 @@ module DTK::Client
       include ModuleMixin
       include Poller
       include AssemblyTemplateMixin
+      include TaskStatusMixin
 
       def get_service_module_name(service_module_id)
         get_name_from_id_helper(service_module_id)
@@ -59,12 +62,122 @@ module DTK::Client
 
         return name, version
       end
+
+      def stage_aux(context_params)
+        if context_params.is_there_identifier?(:assembly)
+          service_module_id, service_module_name, assembly_template_name, name = context_params.retrieve_arguments([:service_module_id!, :service_module_name!, :assembly_name!, :option_2], method_argument_names)
+        else
+          service_module_id, service_module_name, assembly_template_name, name = context_params.retrieve_arguments([:service_module_id!, :service_module_name!, :option_1!, :option_2], method_argument_names)
+        end
+
+        post_body = { :assembly_id => assembly_template_name }
+
+        # special case when we need service module id
+        context_params.pure_cli_mode = true
+        post_body[:service_module_id] = service_module_id if context_params.pure_cli_mode
+
+        # using this to make sure cache will be invalidated after new assembly is created from other commands e.g.
+        # 'assembly-create', 'install' etc.
+        @@invalidate_map << :assembly
+
+        fwd_options       = context_params.get_forwarded_options()
+        in_target         = fwd_options[:in_target]||options["in-target"]
+        instance_bindings = options["instance-bindings"]
+        settings          = parse_service_settings(options["settings"])
+        node_size         = fwd_options[:node_size]||options.node_size
+        os_type           = fwd_options[:os_type]||options.os_type
+        version           = fwd_options[:version]||options.version
+        no_auto_complete  = fwd_options[:no_auto_complete]||options.no_auto_complete
+        parent_service    = fwd_options[:parent_service]||options.parent_service
+        is_target         = fwd_options[:is_target]||options.is_target?
+        do_not_encode     = fwd_options[:do_not_encode]
+        assembly_list     = Assembly.assembly_list()
+
+        if assembly_template_name.to_s =~ /^[0-9]+$/
+          assembly_template_name = DTK::Client::Assembly.get_assembly_template_name_for_service(assembly_template_name, service_module_name)
+          assembly_template_name, version = get_name_and_version_from_assembly_template(assembly_template_name)
+        else
+          namespace, module_name = get_namespace_and_name(service_module_name, ':')
+          assembly_template_name = "#{module_name}/#{assembly_template_name}"
+        end
+        assembly_template_name.gsub!(/(::)|(\/)/,'-') if assembly_template_name
+
+        if name
+          raise DTK::Client::DtkValidationError, "Unable to stage service with name '#{name}'. Service with specified name exists already!" if assembly_list.include?(name)
+        else
+          name = get_assembly_stage_name(assembly_list, assembly_template_name)
+        end
+
+        post_body.merge!(:target_id => in_target) if in_target
+        post_body.merge!(:name => name) if name
+        post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
+        post_body.merge!(:settings_json_form => JSON.generate(settings)) if settings
+        post_body.merge!(:node_size => node_size) if node_size
+        post_body.merge!(:os_type => os_type) if os_type
+        post_body.merge!(:version => version) if version
+        post_body.merge!(:service_module_name => service_module_name) if service_module_name
+        post_body.merge!(:no_auto_complete => no_auto_complete) if no_auto_complete
+        post_body.merge!(:parent_service => parent_service) if parent_service
+        post_body.merge!(:is_target => is_target) if is_target
+        post_body.merge!(:do_not_encode => do_not_encode) if do_not_encode
+
+        response = post rest_url("assembly/stage"), post_body
+      end
+
+      def deploy_aux(context_params)
+        forwarded_options = context_params.get_forwarded_options()
+        context_params.forward_options(forwarded_options.merge!(:do_not_encode => true))
+        stage_response = stage_aux(context_params)
+        return stage_response unless stage_response.ok?
+
+        if service_instance = stage_response.data['new_service_instance']
+          instance_name = service_instance['name']
+
+          DTK::Client::OsUtil.print("Service instance '/service/#{instance_name}' has been created!",:yellow)
+
+          new_context_params = DTK::Shell::ContextParams.new
+          new_context_params.add_context_to_params("service", "service")
+          new_context_params.add_context_name_to_params("service", "service", instance_name)
+          new_context_params.forward_options(:instance_name => instance_name)
+
+          response = ContextRouter.routeTask("service", "set_required_attributes_and_converge", new_context_params, @conn)
+
+          # change context to newly created service instance
+          MainContext.get_context.change_context(["/service/#{instance_name}"])
+
+          return response unless response.ok?
+
+          if forwarded_options['stream-results'] || options['stream-results']
+            forwarded_options = new_context_params.get_forwarded_options()
+            task_status_stream(instance_name) unless forwarded_options[:violations]
+          end
+
+          response
+        else
+          fail DtkError.new('Service instance is not staged properly, please try again!')
+        end
+      end
     end
 
     def self.extended_context()
       {
         :command => {
           :stage => {
+            :endpoint => "service_module",
+            :url => "service_module/list_assemblies",
+            :opts => {}
+          },
+          :stage_target => {
+            :endpoint => "service_module",
+            :url => "service_module/list_assemblies",
+            :opts => {}
+          },
+          :deploy_target => {
+            :endpoint => "service_module",
+            :url => "service_module/list_assemblies",
+            :opts => {}
+          },
+          :deploy => {
             :endpoint => "service_module",
             :url => "service_module/list_assemblies",
             :opts => {}
@@ -127,7 +240,11 @@ module DTK::Client
             # ["stage", "stage [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION]", "# Stage assembly in target."],
             # ["deploy","deploy [-v VERSION] [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
             # ["deploy","deploy [INSTANCE-NAME] [-t TARGET-NAME/ID] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
-            ["deploy","deploy [INSTANCE-NAME] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
+            # ["deploy","deploy [INSTANCE-NAME] [-m COMMIT-MSG]", "# Stage and deploy assembly in target."],
+            ["stage-target","stage-target [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "# Stage assembly as target instance."],
+            ["stage","stage [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "# Stage assembly in target."],
+            ["deploy-target","deploy-target [INSTANCE-NAME] [-v VERSION] [--no-auto-complete]", "# Deploy assembly as target instance."],
+            ["deploy","deploy [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "# Deploy assembly in target."],
             ["list-nodes","list-nodes", "# List all nodes for given assembly."],
             ["list-components","list-components", "# List all components for given assembly."],
             ["list-settings","list-settings", "# List all settings for given assembly."]
@@ -483,68 +600,43 @@ module DTK::Client
       if old_dir and (old_dir != module_final_dir)
         FileUtils.rm_rf(old_dir) unless namespace
       end
+
       DTK::Client::OsUtil.print("Module '#{new_module_name}' has been created and module directory moved to #{repo_obj.repo_dir}",:yellow) unless namespace
 
       response
     end
 
-    desc "SERVICE-MODULE-NAME/ID stage ASSEMBLY-NAME [INSTANCE-NAME] [-t TARGET-NAME/ID] [--node-size NODE-SIZE-SPEC] [--os-type OS-TYPE] [-v VERSION]", "Stage assembly in target."
+    desc "SERVICE-MODULE-NAME/ID stage-target ASSEMBLY-NAME [INSTANCE-NAME] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
+    method_option :settings, :type => :string, :aliases => '-s'
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    # method_option :parent_service, :type => :string, :aliases => '-t'
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    method_option :is_target, :type => :boolean, :default => true
+    def stage_target(context_params)
+      response = stage_aux(context_params)
+      return response unless response.ok?
+
+      # when changing context send request for getting latest assemblies instead of getting from cache
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      return response
+    end
+
+    desc "SERVICE-MODULE-NAME/ID stage ASSEMBLY-NAME [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
     method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
     method_option :settings, :type => :string, :aliases => '-s'
-    method_option :node_size, :type => :string, :aliases => "--node-size"
-    method_option :os_type, :type => :string, :aliases => "--os-type"
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     #hidden option
     method_option "instance-bindings", :type => :string
     def stage(context_params)
-      service_module_id, service_module_name, assembly_template_name, name = context_params.retrieve_arguments([:service_module_id!, :service_module_name!, :option_1!, :option_2], method_argument_names)
-      post_body = {
-        :assembly_id => assembly_template_name
-      }
-
-      # special case when we need service module id
-      context_params.pure_cli_mode = true
-      post_body[:service_module_id] = service_module_id if context_params.pure_cli_mode
-
-      # using this to make sure cache will be invalidated after new assembly is created from other commands e.g.
-      # 'assembly-create', 'install' etc.
-      @@invalidate_map << :assembly
-
-      fwd_options       = context_params.get_forwarded_options()
-      in_target         = fwd_options[:in_target]||options["in-target"]
-      instance_bindings = options["instance-bindings"]
-      settings          = parse_service_settings(options["settings"])
-      node_size         = fwd_options[:node_size]||options.node_size
-      os_type           = fwd_options[:os_type]||options.os_type
-      version           = fwd_options[:version]||options.version
-      assembly_list     = Assembly.assembly_list()
-
-      if assembly_template_name.to_s =~ /^[0-9]+$/
-        assembly_template_name = DTK::Client::Assembly.get_assembly_template_name_for_service(assembly_template_name, service_module_name)
-        assembly_template_name, version = get_name_and_version_from_assembly_template(assembly_template_name)
-      else
-        namespace, module_name = get_namespace_and_name(service_module_name, ':')
-        assembly_template_name = "#{module_name}/#{assembly_template_name}"
-      end
-      assembly_template_name.gsub!(/(::)|(\/)/,'-') if assembly_template_name
-
-      if name
-        raise DTK::Client::DtkValidationError, "Unable to stage service with name '#{name}'. Service with specified name exists already!" if assembly_list.include?(name)
-      else
-        name = get_assembly_stage_name(assembly_list, assembly_template_name)
-      end
-
-      post_body.merge!(:target_id => in_target) if in_target
-      post_body.merge!(:name => name) if name
-      post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
-      post_body.merge!(:settings_json_form => JSON.generate(settings)) if settings
-      post_body.merge!(:node_size => node_size) if node_size
-      post_body.merge!(:os_type => os_type) if os_type
-      post_body.merge!(:version => version) if version
-      post_body.merge!(:service_module_name => service_module_name) if service_module_name
-
-      response = post rest_url("assembly/stage"), post_body
+      response = stage_aux(context_params)
       return response unless response.ok?
+
       # when changing context send request for getting latest assemblies instead of getting from cache
       @@invalidate_map << :service
       @@invalidate_map << :assembly
@@ -714,6 +806,42 @@ module DTK::Client
     desc "SERVICE-MODULE-NAME/ID create-new-version VERSION", "Create new service module version"
     def create_new_version(context_params)
       create_new_version_aux(context_params)
+    end
+
+    desc "SERVICE-MODULE-NAME/ID deploy-target ASSEMBLY-NAME [INSTANCE-NAME] [-v VERSION] [--no-auto-complete] [--stream-results]", "Deploy assembly as target instance."
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    method_option :is_target, :type => :boolean, :default => true
+    # method_option :settings, :type => :string, :aliases => '-s'
+    def deploy_target(context_params)
+      response = deploy_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      response
+    end
+
+    desc "SERVICE-MODULE-NAME/ID deploy ASSEMBLY-NAME [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete] [--stream-results]", "Deploy assembly in target."
+    method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
+    method_option :parent_service, :type => :string, :aliases => '-t'
+    method_option 'stream-results', :aliases => '-s', :type => :boolean, :default => false, :desc => "Stream results"
+    version_method_option
+    #hidden options
+    method_option "instance-bindings", :type => :string
+    # method_option :settings, :type => :string, :aliases => '-s'
+    def deploy(context_params)
+      response = deploy_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :service
+      @@invalidate_map << :assembly
+
+      response
     end
 
     #

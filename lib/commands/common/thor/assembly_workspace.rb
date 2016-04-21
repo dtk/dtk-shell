@@ -237,7 +237,7 @@ module DTK::Client
       task_status_stream(assembly_or_workspace_id)
     end
 
-    def converge_aux(context_params,opts={})
+    def converge_aux(context_params, opts = {})
       assembly_or_workspace_id,task_action,task_params_string = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1,:option_2],method_argument_names)
 
       task_params = parse_params?(task_params_string)
@@ -248,7 +248,11 @@ module DTK::Client
       if response.data and response.data.size > 0
         error_message = "The following violations were found; they must be corrected before workspace can be converged"
         OsUtil.print(error_message, :red)
-        return response.render_table(:violation)
+        if opts[:are_there_violations]
+          return response.render_table(:violation), true
+        else
+          return response.render_table(:violation)
+        end
       end
 
       post_body = PostBody.new(
@@ -619,6 +623,7 @@ module DTK::Client
       }
 
       post_body.merge!(:namespace => namespace) if namespace
+      post_body.merge!(:auto_complete_links => options.auto_complete) if options.auto_complete?
       post rest_url("assembly/add_component"), post_body
     end
 
@@ -832,10 +837,6 @@ module DTK::Client
               msg = "It is ambiguous whether '#{ambiguous.join(', ')}' #{ambiguous.size == 1 ? 'is' : 'are'} node or component attribute(s). Run set-attribute again with one of options -c [--component-attribute] or -n [--node-attribute]."
               raise DtkError, msg
             end
-          elsif cardinality_prompt = r_data['cardinality_prompt']
-            return unless Console.confirmation_prompt("You are trying to lower node-group cardinality which will cause some node-group members to be deleted permanently. Are you sure"+'?')
-            post_body.merge!(:cardinality_confirmed => true)
-            response = post rest_url('assembly/set_attributes'), post_body
           end
         end
       end
@@ -1552,6 +1553,16 @@ module DTK::Client
     end
 
     def stage_aux(context_params)
+      new_context_params = get_deploy_or_stage_context(context_params, options)
+      ContextRouter.routeTask(:service_module, "stage", new_context_params, @conn)
+    end
+
+    def deploy_aux(context_params)
+      new_context_params = get_deploy_or_stage_context(context_params, options)
+      ContextRouter.routeTask(:service_module, "deploy", new_context_params, @conn)
+    end
+
+    def get_deploy_or_stage_context(context_params, options)
       assembly_template_name, instance_name = context_params.retrieve_arguments([:option_1!, :option_2], method_argument_names)
 
       service_module_name, assembly, assembly_name = assembly_template_name.split('/')
@@ -1569,19 +1580,59 @@ module DTK::Client
       new_context_params.method_arguments = [assembly_name]
       new_context_params.method_arguments << instance_name if instance_name
 
-      fwd_opts  = {}
-      in_target = options["in-target"]
-      node_size = options.node_size
-      os_type   = options.os_type
-      version   = options.version
+      fwd_opts         = {}
+      in_target        = options["in-target"]
+      node_size        = options.node_size
+      os_type          = options.os_type
+      version          = options.version
+      no_auto_complete = options.no_auto_complete
+      is_target        = options.is_target?
+      parent_service   = options.parent_service
+      do_not_encode    = options.do_not_encode
+      stream_results   = options['stream-results']
 
       fwd_opts.merge!(:in_target => in_target) if in_target
       fwd_opts.merge!(:node_size => node_size) if node_size
       fwd_opts.merge!(:os_type => os_type) if os_type
       fwd_opts.merge!(:version => version) if version
+      fwd_opts.merge!(:no_auto_complete => no_auto_complete) if no_auto_complete
+      fwd_opts.merge!(:is_target => is_target) if is_target
+      fwd_opts.merge!(:parent_service => parent_service) if parent_service
+      fwd_opts.merge!(:do_not_encode => do_not_encode) if do_not_encode
+      fwd_opts.merge!('stream-results' => stream_results) if stream_results
       new_context_params.forward_options(fwd_opts)
 
-      response = ContextRouter.routeTask(:service_module, "stage", new_context_params, @conn)
+      new_context_params
+    end
+
+    def set_default_target_aux(context_params)
+      target_instance_name = context_params.retrieve_arguments([:option_1!], method_argument_names)
+      post_body = {
+        :assembly_id => target_instance_name
+      }
+      post rest_url("assembly/set_default_target"), post_body
+    end
+
+    def set_required_attributes_converge_aux(context_params, opts = {})
+      assembly_or_workspace_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID], method_argument_names)
+
+      message             = " You will have to converge service instance manually!"
+      attributes_response = set_required_attributes_aux(assembly_or_workspace_id, :assembly, :instance, message)
+      return attributes_response if attributes_response.is_a?(Response) && !attributes_response.ok?
+
+      response, violations = converge_aux(context_params, { :are_there_violations => true })
+      return response unless response.ok?
+
+      if violations
+        forwarded_options = context_params.get_forwarded_options()
+        context_params.forward_options(forwarded_options.merge!(:violations => true))
+      else
+        instance_name        = "/service/#{context_params.get_forwarded_options[:instance_name]}"
+        opts[:instance_name] = instance_name
+        DTK::Client::OsUtil.print("Service instance '#{instance_name}' deployment has been started. Changing context to '#{instance_name}'.", :green)
+      end
+
+      response
     end
   end
 end

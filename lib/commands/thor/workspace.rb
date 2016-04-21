@@ -324,7 +324,8 @@ module DTK::Client
 
     #only supported at node-level
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
-    desc "WORKSPACE-NAME/ID add-component COMPONENT", "Add a component to a workspace."
+    desc "WORKSPACE-NAME/ID add-component COMPONENT [--auto-complete]", "Add a component to a workspace. Use --auto-complete to link components automatically"
+    method_option :auto_complete, :type => :boolean, :default => true
     def add_component(context_params)
       response = create_component_aux(context_params)
       return response unless response.ok?
@@ -462,7 +463,16 @@ module DTK::Client
     method_option :component, :aliases => '-c'
     method_option :attribute, :aliases => '-a'
     def edit_attributes(context_params)
-      edit_attributes_aux(context_params)
+      response = edit_attributes_aux(context_params)
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      @@invalidate_map << :workspace
+      @@invalidate_map << :workspace_node
+
+      response
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/workspace>)
@@ -615,7 +625,17 @@ module DTK::Client
     method_option :component_attribute, :aliases => '-c', :type => :boolean, :default => false
     method_option :node_attribute, :aliases => '-n', :type => :boolean, :default => false
     def set_attribute(context_params)
-      set_attribute_aux(context_params)
+      response = set_attribute_aux(context_params)
+      return response unless response.ok?
+
+      @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      @@invalidate_map << :workspace
+      @@invalidate_map << :workspace_node
+
+      response
     end
 
     desc "WORKSPACE-NAME/ID set-required-attributes", "Interactive dialog to set required attributes that are not currently set"
