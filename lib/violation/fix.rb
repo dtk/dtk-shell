@@ -18,31 +18,8 @@
 module DTK::Client
   class Violation
     module Fix
-      r8_nested_require('fix', 'results')
-      r8_nested_require('fix', 'set_attribute_mixin')
-      class Result
-        def skipped?
-          kind_of?(Skipped)
-        end
-        def fixed?
-          kind_of?(Fixed)
-        end
-        def error?
-          kind_of?(Error)
-        end
-
-        class Skipped < self
-        end
-        class Fixed < self
-        end
-        class Error < self
-        end
-      end
-      module SetAttributeMixin
-        def initialize_set_attribute(attribute_hash)
-          @attribute = Attribute.new(attribute_hash)
-        end
-      end
+      dtk_require('fix/result')
+      dtk_require('fix/set_attribute_mixin')
     end
   end
 end

@@ -20,7 +20,7 @@ module DTK::Client
     class RequiredUnsetAttribute < self
       include Fix::SetAttributeMixin
       def initialize(violation_hash)
-        initialize_set_attribute(violation_hash('attribute'))
+        initialize_set_attribute(violation_hash['attribute'])
         pp [:debug, self, violation_hash]
       end
     end

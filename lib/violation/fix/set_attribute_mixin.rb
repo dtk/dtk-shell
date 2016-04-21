@@ -19,12 +19,6 @@ module DTK::Client
   class Violation
     module Fix
       module SetAttributeMixin
-        private
-
-        def initialize_set_attribute(attribute_hash)
-          @attribute = Attribute.new(attribute_hash)
-        end
-
         def get_input_and_appy_fix
           prompted_value = nil
           if @attribute.illegal_value?(value)
@@ -38,6 +32,12 @@ module DTK::Client
               Result.error
             end
           end
+        end
+
+        private
+
+        def initialize_set_attribute(attribute_hash)
+          @attribute = Attribute.new(attribute_hash)
         end
       end
     end

@@ -56,7 +56,7 @@ module DTK
         end
       end
 
-      def process_until_fixed_or_skipped(violation)
+      def self.process_until_fixed_or_skipped(violation)
         result = violation.get_input_and_appy_fix
         if result.ok? or result.skip_current? or result.skip_all?
           result
