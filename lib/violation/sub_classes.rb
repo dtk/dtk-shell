@@ -47,11 +47,12 @@ module DTK::Client
       end
 
       def get_input_and_apply_fix
+        result = nil
         @attributes.each do |attribute| 
           result = Fix::SetAttribute.get_input_and_apply_fix(attribute)
           return result if result.skip_all? or result.error?
         end
-        result
+        result.ok? ? Fix::Result.rerun_violation_check : result
       end
     end
   end

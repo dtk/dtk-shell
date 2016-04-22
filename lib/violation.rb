@@ -31,7 +31,11 @@ module DTK
       
       def self.fix_violations(violation_hash_array)
         violation_objects = violation_hash_array.map { |violation_hash| Violation.create?(violation_hash) }.compact
-        run_fix_wizard(violation_objects) unless violation_objects.empty?
+        if violation_objects.empty?
+          Fix::Result.ok
+        else
+          run_fix_wizard(violation_objects) 
+        end
       end
       
       private
@@ -56,19 +60,18 @@ module DTK
       end
 
       def self.run_fix_wizard(violation_objects)
+        rerun_violation_check = false
         violation_objects.each do |violation| 
-          result = process_until_fixed_or_skipped(violation) 
-          return if result.skip_all?
+          result = rerun_if_error(violation)
+          return result if result.skip_all?
+          rerun_violation_check = true if result.rerun_violation_check?
         end
+        rerun_violation_check ? Fix::Result.rerun_violation_check : Fix::Result.ok
       end
 
-      def self.process_until_fixed_or_skipped(violation)
+      def self.rerun_if_error(violation)
         result = violation.get_input_and_apply_fix
-        if result.ok? or result.skip_current? or result.skip_all?
-          result
-        else
-          process_until_fixed_or_skipped(violation) 
-        end
+        result.error? ? rerun_if_error(violation) : result
       end
 
     end

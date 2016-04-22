@@ -22,7 +22,8 @@ module DTK::Client
         def self.get_input_and_apply_fix(attribute)
           prompt_response = attribute.prompt_user_for_value
           if prompt_response.response_type == :skipped
-            return Result.skip_current
+            # TODO: may distinguish between skip current and skip all; no treating everything as skip all
+            return Result.skip_all
           end
           
           prompted_value = prompt_response.value

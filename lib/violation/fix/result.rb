@@ -19,7 +19,7 @@ module DTK::Client
   class Violation
     module Fix
       class Result
-        Types = [:ok, :error, :skip_current, :skip_all, :error]
+        Types = [:ok, :error, :skip_current, :skip_all, :error, :rerun_violation_check]
 
         def initialize(type)
           @type = type

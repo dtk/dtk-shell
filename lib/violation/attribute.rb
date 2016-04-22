@@ -36,6 +36,10 @@ module DTK::Client
         value_does_not_match_datatype?(value) or value_not_legal_type?(value)
       end
 
+      def set_and_propagate_value(value)
+        # TODO: stub
+      end
+
       private
       
       def fix_text
