@@ -18,14 +18,19 @@
 module DTK::Client
   class Violation
     module Fix
-      module SetAttributeMixin
-        def get_input_and_appy_fix
-          prompted_value = nil
-          if @attribute.illegal_value?(value)
+      module SetAttribute
+        def self.get_input_and_apply_fix(attribute)
+          prompt_response = attribute.prompt_user_for_value
+          if prompt_response.response_type == :skipped
+            return Result.skip_current
+          end
+          
+          prompted_value = prompt_response.value
+          if attribute.illegal_value?(prompted_value)
             Result.error
           else
             begin
-              @attribute.set_and_propagate_value(value)
+              attribute.set_and_propagate_value(prompted_value)
               Result.ok
             rescue => e
               DtkLogger.error_pp(e.message, e.backtrace)
@@ -33,12 +38,7 @@ module DTK::Client
             end
           end
         end
-
-        private
-
-        def initialize_set_attribute(attribute_hash)
-          @attribute = Attribute.new(attribute_hash)
-        end
+   
       end
     end
   end

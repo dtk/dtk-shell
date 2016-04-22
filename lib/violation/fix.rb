@@ -19,7 +19,7 @@ module DTK::Client
   class Violation
     module Fix
       dtk_require('fix/result')
-      dtk_require('fix/set_attribute_mixin')
+      dtk_require('fix/set_attribute')
     end
   end
 end

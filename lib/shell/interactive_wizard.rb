@@ -136,6 +136,21 @@ module DTK::Client
         end
       end
 
+      # response_type can be
+      #   :value_provided
+      #   :skipped
+      PromptResponse = Struct.new(:response_type, :value)
+      def self.prompt_user_for_value(prompt_msg)
+        value = nil
+        puts "#{prompt_msg}:"
+        begin 
+          value = Readline.readline(": ", true)
+          response_type = :value_provided
+         rescue Interrupt 
+          response_type = :skipped
+        end
+        PromptResponse.new(response_type, value)
+      end
 
       # takes hash maps with description of missing params and
       # returns array of hash map with key, value for each missed param
@@ -175,9 +190,7 @@ module DTK::Client
             break if 'yes'.eql? line
           end
 
-        rescue Interrupt => e
-          puts
-          # TODO: Provide original error here
+         rescue Interrupt => e
           raise DtkError::InteractiveWizardError, "You have decided to skip correction wizard.#{additional_message}"
         end
 

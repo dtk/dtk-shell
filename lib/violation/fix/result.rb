@@ -19,20 +19,20 @@ module DTK::Client
   class Violation
     module Fix
       class Result
-        Types = [:ok, :error, :skip_current, :error]
+        Types = [:ok, :error, :skip_current, :skip_all, :error]
 
         def initialize(type)
           @type = type
         end
 
-        def self.method_missing?(method, *args)
-          is_type?(method) ? new(type) : super
+        def self.method_missing(method, *args)
+          is_type?(method) ? new(method) : super
         end
         def self.respond_to?(method)
           !!is_type?(method) 
         end
 
-        def method_missing?(method, *args)
+        def method_missing(method, *args)
           if type = is_type_with_question_mark?(method)
             type == @type
           else
@@ -50,7 +50,7 @@ module DTK::Client
         end
 
         def is_type_with_question_mark?(method)
-          if method.to_s =~ /(^.+)[$]$/
+          if method.to_s =~ /(^.+)[?]$/
             type = $1.to_sym
             self.class.is_type?(type)
           end

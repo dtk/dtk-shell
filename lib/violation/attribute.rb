@@ -20,12 +20,40 @@ module DTK::Client
     # represents a component, node, or assembly attribute
     class Attribute
       def initialize(attribute_hash)
-        # ref is the only one that is guarenteed ti ne present
-        @ref = attribute_hash['ref']
-        @datatype = attribute_hash['datatype']
-        @hidden = attribute_hash['hidden']
+        # ref is the only key that is guarenteed to be present
+        @ref          = attribute_hash['ref']
+        @datatype     = attribute_hash['datatype']
+        @hidden       = attribute_hash['hidden']
         @legal_values = attribute_hash['legal_values']
+        @fix_text     = attribute_hash['fix_text'] 
       end
+
+      def prompt_user_for_value
+        Shell::InteractiveWizard.prompt_user_for_value(fix_text)
+      end
+
+      def illegal_value?(value)
+        value_does_not_match_datatype?(value) or value_not_legal_type?(value)
+      end
+
+      private
+      
+      def fix_text
+        @fix_text ||= "Enter value for attribute '#{@ref}'"
+      end
+
+      def value_does_not_match_datatype?(value)
+        if @datatype
+          # TODO: put in datatype test
+        end
+      end
+
+      def value_not_legal_type?(value)
+        if @legal_values
+          ! @legal_values.include?(value)
+        end
+      end
+
     end
   end
 end

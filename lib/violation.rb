@@ -22,8 +22,12 @@ module DTK
       dtk_require('violation/fix')
       
       # fix must be before the specific violations
-      dtk_require('violation/required_unset_attribute')
-      dtk_require('violation/illegal_attribute_value')
+      dtk_require('violation/sub_classes')
+
+      def initialize(violation_hash)
+        @description = violation_hash['description']
+      end
+      private :initialize
       
       def self.fix_violations(violation_hash_array)
         violation_objects = violation_hash_array.map { |violation_hash| Violation.create?(violation_hash) }.compact
@@ -43,6 +47,8 @@ module DTK
           RequiredUnsetAttribute.new(violation_hash)
          when 'illegal_attribute_value'
           IllegalAttributeValue.new(violation_hash)
+         when 'invalid_credentials'
+          InvalidCredentials.new(violation_hash)
          else
           DtkLogger.error "untreated violation type '#{violation_type}'"
           nil
@@ -57,7 +63,7 @@ module DTK
       end
 
       def self.process_until_fixed_or_skipped(violation)
-        result = violation.get_input_and_appy_fix
+        result = violation.get_input_and_apply_fix
         if result.ok? or result.skip_current? or result.skip_all?
           result
         else
