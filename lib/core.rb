@@ -302,6 +302,14 @@ module DTK
         # from this point @conn is not valid, since there are no cookies set
         Session.instance.conn.logout
       end
+
+      # opts can have key
+      #   :command_class
+      def self.post(route, body, opts = {})
+        command_class = opts[:command_class] || Class
+        conn = Session.instance.conn
+        conn.post(command_class, conn.rest_url(route), body)
+      end
     end
 
     class Conn

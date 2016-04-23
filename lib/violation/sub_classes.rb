@@ -18,30 +18,30 @@
 module DTK::Client
   class Violation
     class IllegalAttributeValue < self
-      def initialize(violation_hash)
+      def initialize(service_id, violation_hash)
         super
         @attribute = Attribute.new(violation_hash['attribute'])
       end
 
       def get_input_and_apply_fix
-        Fix::SetAttribute.get_input_and_apply_fix(@attribute)
+        Fix::SetAttribute.get_input_and_apply_fix(@service_id, @attribute)
       end
     end
 
     class RequiredUnsetAttribute < self
-      def initialize(violation_hash)
+      def initialize(service_id, violation_hash)
         super
         @attribute = Attribute.new(violation_hash['attribute'])
       end
 
       def get_input_and_apply_fix
-        Fix::SetAttribute.get_input_and_apply_fix(@attribute)
+        Fix::SetAttribute.get_input_and_apply_fix(@service_id, @attribute)
       end
 
     end
 
     class InvalidCredentials < self
-      def initialize(violation_hash)
+      def initialize(service_id, violation_hash)
         super
         @attributes = violation_hash['fix_hashes'].map { |hash|  Attribute.new(hash['attribute']) } 
       end
@@ -49,7 +49,7 @@ module DTK::Client
       def get_input_and_apply_fix
         result = nil
         @attributes.each do |attribute| 
-          result = Fix::SetAttribute.get_input_and_apply_fix(attribute)
+          result = Fix::SetAttribute.get_input_and_apply_fix(@service_id, attribute)
           return result if result.skip_all? or result.error?
         end
         result.ok? ? Fix::Result.rerun_violation_check : result

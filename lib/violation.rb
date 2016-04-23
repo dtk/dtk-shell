@@ -24,13 +24,14 @@ module DTK
       # fix must be before the specific violations
       dtk_require('violation/sub_classes')
 
-      def initialize(violation_hash)
+      def initialize(service_id, violation_hash)
+        @service_id  = service_id
         @description = violation_hash['description']
       end
       private :initialize
       
-      def self.fix_violations(violation_hash_array)
-        violation_objects = violation_hash_array.map { |violation_hash| Violation.create?(violation_hash) }.compact
+      def self.fix_violations(service_id, violation_hash_array)
+        violation_objects = violation_hash_array.map { |violation_hash| Violation.create?(service_id, violation_hash) }.compact
         if violation_objects.empty?
           Fix::Result.ok
         else
@@ -40,7 +41,7 @@ module DTK
       
       private
       
-      def self.create?(violation_hash)
+      def self.create?(service_id, violation_hash)
         unless violation_type = violation_hash['type']
           DtkLogger.error "No type in violation hash: #{violation_hash.inspect}"
           return nil
@@ -48,11 +49,11 @@ module DTK
 
         case violation_type
          when 'required_unset_attribute'
-          RequiredUnsetAttribute.new(violation_hash)
+          RequiredUnsetAttribute.new(service_id, violation_hash)
          when 'illegal_attribute_value'
-          IllegalAttributeValue.new(violation_hash)
+          IllegalAttributeValue.new(service_id, violation_hash)
          when 'invalid_credentials'
-          InvalidCredentials.new(violation_hash)
+          InvalidCredentials.new(service_id, violation_hash)
          else
           DtkLogger.error "untreated violation type '#{violation_type}'"
           nil

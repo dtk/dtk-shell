@@ -133,7 +133,7 @@ module DTK::Client
       violation_table_form = response.render_table(:violation)
       if options.fix?
         violation_table_form.render_data
-        result = Violation.fix_violations(response.data) 
+        result = Violation.fix_violations(assembly_or_workspace_id, response.data) 
         if result.rerun_violation_check?
           list_violations_aux(context_params)
         else

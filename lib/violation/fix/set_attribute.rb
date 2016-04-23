@@ -19,10 +19,10 @@ module DTK::Client
   class Violation
     module Fix
       module SetAttribute
-        def self.get_input_and_apply_fix(attribute)
+        def self.get_input_and_apply_fix(service_id, attribute)
           prompt_response = attribute.prompt_user_for_value
           if prompt_response.response_type == :skipped
-            # TODO: may distinguish between skip current and skip all; no treating everything as skip all
+            # TODO: may distinguish between skip current and skip all; now treating everything as skip all
             return Result.skip_all
           end
           
@@ -30,13 +30,7 @@ module DTK::Client
           if attribute.illegal_value?(prompted_value)
             Result.error
           else
-            begin
-              attribute.set_and_propagate_value(prompted_value)
-              Result.ok
-            rescue => e
-              DtkLogger.error_pp(e.message, e.backtrace)
-              Result.error
-            end
+            attribute.set_attribute(service_id, prompted_value)
           end
         end
    

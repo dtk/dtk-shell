@@ -36,8 +36,14 @@ module DTK::Client
         value_does_not_match_datatype?(value) or value_not_legal_type?(value)
       end
 
-      def set_and_propagate_value(value)
-        # TODO: stub
+      def set_attribute(service_id, value)
+        post_body = {
+          :assembly_id => service_id,
+          :pattern     => @ref,
+          :value       => value
+        }
+        response = Session.post('assembly/set_attributes', post_body)
+        response.ok? ? Fix::Result.ok : Fix::Result.error
       end
 
       private
