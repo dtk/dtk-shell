@@ -63,16 +63,21 @@ module DTK
       def self.run_fix_wizard(violation_objects)
         rerun_violation_check = false
         violation_objects.each do |violation| 
-          result = rerun_if_error(violation)
+          result = run_and_repeat_when_error(violation)
           return result if result.skip_all?
           rerun_violation_check = true if result.rerun_violation_check?
         end
         rerun_violation_check ? Fix::Result.rerun_violation_check : Fix::Result.ok
       end
 
-      def self.rerun_if_error(violation)
+      def self.run_and_repeat_when_error(violation)
         result = violation.get_input_and_apply_fix
-        result.error? ? rerun_if_error(violation) : result
+        if result.error? 
+          result.render_error_msg
+          run_and_repeat_when_error(violation) 
+        else
+          result
+        end
       end
 
     end

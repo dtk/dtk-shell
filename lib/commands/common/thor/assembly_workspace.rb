@@ -133,16 +133,14 @@ module DTK::Client
       post_body.merge!(ret_objects: true) if options.fix?
       response = post rest_url("assembly/find_violations"), post_body
       violation_table_form = response.render_table(:violation)
-      if options.fix?
-        violation_table_form.render_data
-        result = Violation.fix_violations(assembly_or_workspace_id, response.data) 
-        if result.rerun_violation_check?
-          list_violations_aux(context_params)
-        else
-          Response::Ok.new
-        end
-      else
+      unless options.fix? and !response.data.empty?
         violation_table_form
+      else
+        OsUtil.print("The following violations were found:", :red)
+        violation_table_form.render_data
+        OsUtil.print("Answer the following prompts to correct the violations:", :yellow)
+        result = Violation.fix_violations(assembly_or_workspace_id, response.data) 
+        result.rerun_violation_check? ? list_violations_aux(context_params) : Response::Ok.new
       end
     end
 

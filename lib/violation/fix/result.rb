@@ -19,14 +19,25 @@ module DTK::Client
   class Violation
     module Fix
       class Result
+        dtk_require('result/error')
+
         Types = [:ok, :error, :skip_current, :skip_all, :error, :rerun_violation_check]
+
+        def self.create(type, *args)
+          case type
+            when :error then Error.new(*args)
+            else new(type)
+          end
+        end
 
         def initialize(type)
           @type = type
         end
+        private :initialize
+
 
         def self.method_missing(method, *args)
-          is_type?(method) ? new(method) : super
+          is_type?(method) ? create(method, *args) : super
         end
         def self.respond_to?(method)
           !!is_type?(method) 
