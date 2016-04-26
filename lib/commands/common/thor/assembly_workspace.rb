@@ -27,12 +27,14 @@ dtk_require_common_commands('thor/edit')
 dtk_require_common_commands('thor/purge_clone')
 dtk_require_common_commands('thor/list_diffs')
 dtk_require_common_commands('thor/action_result_handler')
+dtk_require_common_commands('thor/assembly_template')
 
 LOG_SLEEP_TIME_W   = DTK::Configuration.get(:tail_log_frequency)
 
 module DTK::Client
   module AssemblyWorkspaceMixin
     include ListDiffsMixin
+    include AssemblyTemplateMixin
 
     REQ_ASSEMBLY_OR_WS_ID = [:service_id!, :workspace_id!]
 
@@ -1649,6 +1651,19 @@ module DTK::Client
       end
 
       response
+    end
+
+    def create_workspace_aux(context_params)
+      workspace_name = context_params.retrieve_arguments([:option_1], method_argument_names)
+      post_body      = {}
+
+      if workspace_name
+        assembly_list = Assembly.assembly_list()
+        raise DTK::Client::DtkValidationError, "Unable to create workspace with name '#{workspace_name}'. Service or workspace with specified name exists already!" if assembly_list.include?(workspace_name)
+        post_body.merge!(:workspace_name => workspace_name)
+      end
+
+      post rest_url("assembly/create_workspace"), post_body
     end
   end
 end
