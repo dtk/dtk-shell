@@ -265,6 +265,11 @@ module DTK::Client
     method_option :remote, :type => :boolean, :default => false
     def list_assemblies(context_params)
       context_params.method_arguments = ["assembly"]
+
+      if version = options.version
+        check_version_format(options.version) if !version.eql?('master') && !version.eql?('base')
+      end
+
       list(context_params)
     end
 
