@@ -16,24 +16,17 @@
 # limitations under the License.
 #
 module DTK::Client
-  class Violation
-    module Fix
-      module SetAttribute
-        def self.get_input_and_apply_fix(service_id, attribute)
-          prompt_response = attribute.prompt_user_for_value
-          if prompt_response.response_type == :skipped
-            # TODO: may distinguish between skip current and skip all; now treating everything as skip all
-            return Result.skip_all
-          end
-          
-          prompted_value = prompt_response.value
-          if error_msg = attribute.illegal_value?(prompted_value)
-            Result.error :error_msg => error_msg
-          else
-            attribute.set_attribute(service_id, prompted_value)
-          end
+  module Violation::Fix
+    class Result
+      class Error < self
+        def initialize(opts = {})
+          super(:error)
+          @error_msg = opts[:error_msg]
         end
-   
+
+        def render_error_msg
+          OsUtil.print(@error_msg, :red) if @error_msg
+        end
       end
     end
   end

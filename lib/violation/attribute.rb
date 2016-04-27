@@ -32,6 +32,7 @@ module DTK::Client
         Shell::InteractiveWizard.prompt_user_for_value(fix_text)
       end
 
+      # Returns error message if an error
       def illegal_value?(value)
         value_does_not_match_datatype?(value) or value_not_legal_type?(value)
       end
@@ -58,12 +59,16 @@ module DTK::Client
         end
       end
 
+      LegalValueIdent = 2
       def value_not_legal_type?(value)
-        if @legal_values
-          ! @legal_values.include?(value)
+        return nil unless @legal_values and ! @legal_values.include?(value)
+        error_msg = "Illegal value; value must be one of:"
+        @legal_values.each do |legal_value|
+          error_msg << "\n#{' ' * LegalValueIdent}#{legal_value}"
         end
+        error_msg
       end
-
+      
     end
   end
 end
