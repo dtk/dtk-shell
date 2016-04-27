@@ -349,7 +349,8 @@ module DTK
         # if do cd .. from workspace/workspace identifier go directly to root not to workspace
         if active_context_copy.name_list.include?("workspace")
           count_workspaces = active_context_copy.name_list.inject(Hash.new(0)) {|h,i| h[i] += 1; h }
-          active_context_copy.pop_context(1) if count_workspaces['workspace']==1
+          # don't need this since we can have workspace service instance
+          # active_context_copy.pop_context(1) if count_workspaces['workspace']==1
         end
 
         # we add active commands array to begining, using dup to avoid change by ref.
