@@ -927,7 +927,8 @@ TODO: will put in dot release and will rename to 'extend'
       response
     end
 
-    desc "create-workspace [WORKSPACE-NAME]", "Create workspace"
+    desc "create-workspace [WORKSPACE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID]", "Create workspace"
+    method_option :parent_service, :type => :string, :aliases => '-t'
     def create_workspace(context_params)
       response = create_workspace_aux(context_params)
 

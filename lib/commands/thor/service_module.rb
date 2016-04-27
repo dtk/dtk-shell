@@ -625,7 +625,6 @@ module DTK::Client
     desc "SERVICE-MODULE-NAME/ID stage-target ASSEMBLY-NAME [INSTANCE-NAME] [-v VERSION] [--no-auto-complete]", "Stage assembly as target instance."
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
-    # method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
     #hidden options
     method_option "instance-bindings", :type => :string

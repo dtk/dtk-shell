@@ -1651,9 +1651,12 @@ module DTK::Client
 
     def create_workspace_aux(context_params)
       workspace_name = context_params.retrieve_arguments([:option_1], method_argument_names)
-      post_body      = {}
+      parent_service = options.parent_service
 
+      post_body = {}
+      post_body.merge!(:parent_service => parent_service) if parent_service
       if workspace_name
+        # TODO: DTK-2551: Aldin put the check to see if name conflicts on server side
         assembly_list = Assembly.assembly_list()
         raise DTK::Client::DtkValidationError, "Unable to create workspace with name '#{workspace_name}'. Service or workspace with specified name exists already!" if assembly_list.include?(workspace_name)
         post_body.merge!(:workspace_name => workspace_name)
