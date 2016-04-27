@@ -1597,7 +1597,6 @@ module DTK::Client
       new_context_params.method_arguments << instance_name if instance_name
 
       fwd_opts         = {}
-      in_target        = options["in-target"]
       node_size        = options.node_size
       os_type          = options.os_type
       version          = options.version
@@ -1607,7 +1606,6 @@ module DTK::Client
       do_not_encode    = options.do_not_encode
       stream_results   = options['stream-results']
 
-      fwd_opts.merge!(:in_target => in_target) if in_target
       fwd_opts.merge!(:node_size => node_size) if node_size
       fwd_opts.merge!(:os_type => os_type) if os_type
       fwd_opts.merge!(:version => version) if version

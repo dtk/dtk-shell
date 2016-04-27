@@ -81,7 +81,6 @@ module DTK::Client
         @@invalidate_map << :assembly
 
         fwd_options       = context_params.get_forwarded_options()
-        in_target         = fwd_options[:in_target]||options["in-target"]
         instance_bindings = options["instance-bindings"]
         settings          = parse_service_settings(options["settings"])
         node_size         = fwd_options[:node_size]||options.node_size
@@ -108,7 +107,6 @@ module DTK::Client
           name = get_assembly_stage_name(assembly_list, assembly_template_name)
         end
 
-        post_body.merge!(:target_id => in_target) if in_target
         post_body.merge!(:name => name) if name
         post_body.merge!(:instance_bindings => instance_bindings) if instance_bindings
         post_body.merge!(:settings_json_form => JSON.generate(settings)) if settings
@@ -644,7 +642,6 @@ module DTK::Client
     end
 
     desc "SERVICE-MODULE-NAME/ID stage ASSEMBLY-NAME [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
-    method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
     method_option :settings, :type => :string, :aliases => '-s'
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
     method_option :parent_service, :type => :string, :aliases => '-t'
