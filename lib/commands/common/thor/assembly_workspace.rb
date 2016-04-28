@@ -1597,7 +1597,6 @@ module DTK::Client
       new_context_params.method_arguments << instance_name if instance_name
 
       fwd_opts         = {}
-      in_target        = options["in-target"]
       node_size        = options.node_size
       os_type          = options.os_type
       version          = options.version
@@ -1607,7 +1606,6 @@ module DTK::Client
       do_not_encode    = options.do_not_encode
       stream_results   = options['stream-results']
 
-      fwd_opts.merge!(:in_target => in_target) if in_target
       fwd_opts.merge!(:node_size => node_size) if node_size
       fwd_opts.merge!(:os_type => os_type) if os_type
       fwd_opts.merge!(:version => version) if version
@@ -1653,9 +1651,12 @@ module DTK::Client
 
     def create_workspace_aux(context_params)
       workspace_name = context_params.retrieve_arguments([:option_1], method_argument_names)
-      post_body      = {}
+      parent_service = options.parent_service
 
+      post_body = {}
+      post_body.merge!(:parent_service => parent_service) if parent_service
       if workspace_name
+        # TODO: DTK-2551: Aldin put the check to see if name conflicts on server side
         assembly_list = Assembly.assembly_list()
         raise DTK::Client::DtkValidationError, "Unable to create workspace with name '#{workspace_name}'. Service or workspace with specified name exists already!" if assembly_list.include?(workspace_name)
         post_body.merge!(:workspace_name => workspace_name)

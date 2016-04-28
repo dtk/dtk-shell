@@ -832,7 +832,6 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     desc "stage ASSEMBLY-TEMPLATE [INSTANCE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID] [-v VERSION] [--no-auto-complete]", "Stage assembly in target."
-    method_option "in-target", :aliases => "-t", :type => :string, :banner => "TARGET-NAME/ID", :desc => "Target (id) to create assembly in"
     method_option :no_auto_complete, :type => :boolean, :default => false, :aliases => '--no-ac'
     method_option :parent_service, :type => :string, :aliases => '-t'
     version_method_option
@@ -929,7 +928,8 @@ TODO: will put in dot release and will rename to 'extend'
       response
     end
 
-    desc "create-workspace [WORKSPACE-NAME]", "Create workspace"
+    desc "create-workspace [WORKSPACE-NAME] [-t PARENT-SERVICE-INSTANCE-NAME/ID]", "Create workspace"
+    method_option :parent_service, :type => :string, :aliases => '-t'
     def create_workspace(context_params)
       response = create_workspace_aux(context_params)
       return response unless response.ok?
