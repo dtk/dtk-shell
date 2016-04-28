@@ -670,7 +670,9 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     # using ^^ before NODE-NAME to remove this command from assembly/assembly_id/node/node_id but show in assembly/assembly_id
-    desc "SERVICE-NAME/ID create-node ^^NODE-NAME NODE-TEMPLATE", "Add (stage) a new node in the service."
+    desc "SERVICE-NAME/ID create-node ^^NODE-NAME [-i IMAGE] [-s SIZE]", "Add (stage) a new node in the service."
+    method_option :image, :aliases => '-i', :type => :string
+    method_option :instance_size, :aliases => '-s', :type => :string
     def create_node(context_params)
       response = create_node_aux(context_params)
       return response unless response.ok?
