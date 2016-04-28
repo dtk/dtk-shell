@@ -18,6 +18,7 @@
 require 'rest_client'
 require 'json'
 require 'colorize'
+require 'yaml'
 
 dtk_require_from_base('dtk_logger')
 dtk_require_from_base('util/os_util')
@@ -931,9 +932,17 @@ TODO: will put in dot release and will rename to 'extend'
     desc "create-workspace [WORKSPACE-NAME]", "Create workspace"
     def create_workspace(context_params)
       response = create_workspace_aux(context_params)
+      return response unless response.ok?
 
       @@invalidate_map << :service
       @@invalidate_map << :assembly
+
+      yaml_response = YAML.load(response.data)
+      if workspace_instance = yaml_response['new_workspace_instance']
+        MainContext.get_context.change_context(["/service/#{workspace_instance['name']}"])
+      else
+        fail DtkError.new('Workspace instance is not staged properly, please try again!')
+      end
 
       response
     end
