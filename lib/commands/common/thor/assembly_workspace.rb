@@ -910,7 +910,7 @@ module DTK::Client
     end
 
     def create_node_aux(context_params)
-      assembly_or_workspace_id, assembly_node_name = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!],method_argument_names)
+      assembly_or_workspace_id, assembly_node_name = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!], method_argument_names)
 
       post_body = {
         :assembly_id => assembly_or_workspace_id,
@@ -923,7 +923,7 @@ module DTK::Client
     end
 
     def create_node_group_aux(context_params)
-      assembly_or_workspace_id, node_group_name, node_template_identifier = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!,:option_2!],method_argument_names)
+      assembly_or_workspace_id, node_group_name = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!], method_argument_names)
       cardinality = options.cardinality
 
       # default value for cardinality is 1 (if user does not specify otherwise)
@@ -933,11 +933,13 @@ module DTK::Client
       end
 
       post_body = {
-        :assembly_id              => assembly_or_workspace_id,
-        :cardinality              => options.cardinality,
-        :node_group_name       => node_group_name,
-        :node_template_identifier => node_template_identifier
+        :assembly_id     => assembly_or_workspace_id,
+        :cardinality     => options.cardinality,
+        :node_group_name => node_group_name
       }
+      post_body.merge!(:image => options.image) if options.image?
+      post_body.merge!(:instance_size => options.instance_size) if options.instance_size?
+
       post rest_url("assembly/add_node_group"), post_body
     end
 

@@ -688,7 +688,9 @@ TODO: will put in dot release and will rename to 'extend'
       OsUtil.print(message, :yellow)
     end
 
-    desc "SERVICE-NAME/ID create-node-group ^^NODE-GROUP-NAME NODE-TEMPLATE [-n CARDINALITY]", "Add (stage) a new node group in the service."
+    desc "SERVICE-NAME/ID create-node-group ^^NODE-GROUP-NAME [-i IMAGE] [-s SIZE] [-n CARDINALITY]", "Add (stage) a new node group in the service."
+    method_option :image, :aliases => '-i', :type => :string
+    method_option :instance_size, :aliases => '-s', :type => :string
     method_option :cardinality, :aliases => '-n', :type => :string, :default => 1
     def create_node_group(context_params)
       response = create_node_group_aux(context_params)
