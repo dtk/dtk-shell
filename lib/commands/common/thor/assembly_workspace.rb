@@ -212,6 +212,7 @@ module DTK::Client
         :task_action? => task_action,
         :task_params? => task_params
       )
+      post_body.merge!(:noop_if_no_action => opts[:noop_if_no_action]) if opts[:noop_if_no_action]
       response = post rest_url("assembly/exec"), post_body
       return response unless response.ok?
 
@@ -1033,6 +1034,16 @@ module DTK::Client
           node_id = node_name = 'assembly_wide'
         end
       end
+
+      # TODO: need cleanup
+      # first execute .delete action on component if exist, and then delete from object model
+      full_path = context_params.retrieve_arguments([:option_1!])
+      new_context_params = DTK::Shell::ContextParams.new
+      new_context_params.add_context_to_params(:service, :service)
+      new_context_params.add_context_name_to_params(:service, :service, assembly_or_workspace_id)
+      new_context_params.method_arguments = ["#{full_path}.delete"]
+      resp = exec_aux(new_context_params, { :noop_if_no_action => true })
+      return resp unless resp.ok?
 
       post_body = {
         :assembly_id => assembly_or_workspace_id,
