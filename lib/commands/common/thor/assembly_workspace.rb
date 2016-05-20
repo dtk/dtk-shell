@@ -1016,7 +1016,7 @@ module DTK::Client
       response
     end
 
-    def delete_component_aux(context_params)
+    def delete_component_aux(context_params, opts = {})
       assembly_or_workspace_id, node_id, node_name, component_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id, :node_name, :option_1!],method_argument_names)
 
       unless options.force?
@@ -1035,26 +1035,58 @@ module DTK::Client
         end
       end
 
-      # TODO: need cleanup
-      # first execute .delete action on component if exist, and then delete from object model
-      full_path = context_params.retrieve_arguments([:option_1!])
-      new_context_params = DTK::Shell::ContextParams.new
-      new_context_params.add_context_to_params(:service, :service)
-      new_context_params.add_context_name_to_params(:service, :service, assembly_or_workspace_id)
-      new_context_params.method_arguments = ["#{full_path}.delete"]
-      resp = exec_aux(new_context_params, { :noop_if_no_action => true })
-      return resp unless resp.ok?
+      task_action = "#{component_id}.delete"
+      task_params_string = nil
+      # support 'converge' task action as synonym for 'create'
+      task_action = 'create' if task_action && task_action.eql?('converge')
 
-      post_body = {
-        :assembly_id => assembly_or_workspace_id,
+      # parse params and return format { 'p_name1' => 'p_value1' , 'p_name2' => 'p_value2' }
+      task_params = parse_params?(task_params_string)||{}
+
+      # match if sent node/component
+      if task_action_match = task_action.match(/(^[\w\-\:]*)\/(.*)/)
+        node, task_action = $1, $2
+        task_params.merge!("node" => node)
+      end
+
+      post_body = PostBody.new(
+        :assembly_id  => assembly_or_workspace_id,
+        :commit_msg?  => options.commit_msg,
+        :task_action? => task_action,
+        :task_params? => task_params,
         :component_id => component_id
-      }
-
-      # delete component by name (e.g. delete-component dtk_java)
+      )
+      post_body.merge!(:noop_if_no_action => opts[:noop_if_no_action])# if opts[:noop_if_no_action]
       post_body.merge!(:cmp_full_name => "#{node_name}/#{component_id}") if (node_name && !(component_id.to_s =~ /^[0-9]+$/))
       post_body.merge!(:node_id => node_id) if node_id
 
-      response = post(rest_url("assembly/delete_component"),post_body)
+      # response = post rest_url("assembly/exec"), post_body
+      response = post(rest_url("assembly/delete_component_using_workflow"), post_body)
+      return response unless response.ok?
+
+      response_data = response.data
+
+      if violations = response_data['violations']
+        OsUtil.print("The following violations were found; they must be corrected before workspace can be converged", :red)
+        resp = DTK::Client::Response.new(:assembly, { "status" => 'ok', "data" => violations })
+        return opts[:internal_trigger] ? { :violations => resp } : resp.render_table(:violation)
+      end
+
+      if confirmation_message = response_data["confirmation_message"]
+        return unless Console.confirmation_prompt("Workspace service is stopped, do you want to start it"+'?')
+
+        response = post rest_url("assembly/exec"), post_body.merge!(:start_assembly => true, :skip_violations => true)
+        return response unless response.ok?
+
+        response_data = response.data
+      end
+
+      if message = response_data["message"]
+        OsUtil.print(message, :yellow)
+        return
+      end
+
+      return Response::Ok.new()
     end
 
     def get_netstats_aux(context_params)
