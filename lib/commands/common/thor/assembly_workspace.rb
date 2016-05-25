@@ -1024,8 +1024,10 @@ module DTK::Client
         return unless Console.confirmation_prompt("Are you sure you want to delete #{what} '#{component_id}'"+'?')
       end
 
+      full_path = nil
       if node_id.nil? && !(component_id.to_s =~ /^[0-9]+$/)
         if component_id.to_s.include?('/')
+          full_path = component_id.clone
           cmp_match = component_id.match(/([\w-]*)\/(.*)/)
           node_id, component_id = cmp_match[1], cmp_match[2]
           node_name = node_id
@@ -1035,7 +1037,7 @@ module DTK::Client
         end
       end
 
-      task_action = "#{component_id}.delete"
+      task_action = "#{full_path}.delete"
       task_params_string = nil
       # support 'converge' task action as synonym for 'create'
       task_action = 'create' if task_action && task_action.eql?('converge')
