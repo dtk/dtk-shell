@@ -42,6 +42,21 @@ module DTK::Client
       get_name_from_id_helper(assembly_or_workspace_id)
     end
 
+    def get_assembly_id(assembly_name)
+      assembly_id = nil
+      list = CommandBaseThor.get_cached_response(:service, "assembly/list", {})
+
+      list.data.each do |item|
+        if item["display_name"] == assembly_name
+          assembly_id = item["id"]
+          break
+        end
+      end
+
+      raise DtkError,"[ERROR] Illegal name (#{assembly_name}) for service." unless assembly_id
+      assembly_id
+    end
+
     def start_aux(context_params)
       if context_params.is_there_identifier?(:node)
         mapping = [REQ_ASSEMBLY_OR_WS_ID,:node_id]
@@ -305,6 +320,46 @@ module DTK::Client
       end
 
       Response::Ok.new()
+    end
+
+    def delete_and_destroy_aux(context_params)
+      assembly_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
+
+      if assembly_name.to_s =~ /^[0-9]+$/
+        assembly_id = assembly_name
+      else
+        assembly_id = get_assembly_id(assembly_name)
+      end
+
+      unless options.force?
+        # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
+        # used form "+'?' because ?" confused emacs ruby rendering
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy service '#{assembly_name}' and its nodes"+'?')
+      end
+
+      unsaved_modules = check_if_unsaved_cmp_module_changes(assembly_id)
+      unless unsaved_modules.empty?
+        return unless Console.confirmation_prompt("Deleting this service will cause unsaved changes in component module(s) '#{unsaved_modules.join(',')}' to be lost. Do you still want to proceed"+'?')
+      end
+
+      assembly_changed = check_if_unsaved_assembly_changes(assembly_id, assembly_name)
+      if assembly_changed == true
+        return unless Console.confirmation_prompt("You made some changes in assembly or it's workflow that will be lost if you delete this service. Do you still want to proceed"+'?')
+      end
+
+      # purge local clone
+      response = purge_clone_aux(:all,:assembly_module => {:assembly_name => assembly_name})
+      return response unless response.ok?
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :subtype => :instance
+      }
+
+      action = options.legacy? ? 'delete' : 'delete_using_workflow'
+      response = post rest_url("assembly/#{action}"), post_body
+
+      response
     end
 
     def parse_params?(params_string)
