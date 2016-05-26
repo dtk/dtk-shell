@@ -1069,6 +1069,8 @@ module DTK::Client
         :assembly_id => assembly_or_workspace_id,
         :node_id => node_id
       }
+      action = options.legacy? ? 'delete_node_group' : 'delete_node_group_using_workflow'
+      # response = post(rest_url("assembly/#{action}"),post_body)
       response = post(rest_url("assembly/delete_node_group"),post_body)
       response
     end
