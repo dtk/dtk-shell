@@ -251,6 +251,7 @@ module DTK::Client
     end
 
     desc "SERVICE-NAME/ID stop [NODE-NAME]", "Stops all the service nodes. A single node can be selected."
+    method_option :legacy, :aliases => '--legacy', :type => :boolean, :default => false
     def stop(context_params)
       stop_aux(context_params)
     end

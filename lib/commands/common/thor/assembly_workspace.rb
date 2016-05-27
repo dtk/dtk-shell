@@ -1541,8 +1541,8 @@ module DTK::Client
         :assembly_id => workspace_id,
         :node_pattern => node_pattern_filter
       }
-
-      response = post rest_url("assembly/stop"), post_body
+      action = options.legacy? ? 'stop' : 'stop_using_workflow'
+      response = post rest_url("assembly/#{action}"), post_body
       return response unless response.ok?()
       raise DtkValidationError, response.data(:errors).first if response.data(:errors)
 
