@@ -607,8 +607,11 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :legacy, :aliases => '--legacy', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
       response = delete_and_destroy_aux(context_params)
-      @@invalidate_map << :service
       @@invalidate_map << :assembly
+      @@invalidate_map << :assembly_node
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      @@invalidate_map << :service_module
       response
     end
 
