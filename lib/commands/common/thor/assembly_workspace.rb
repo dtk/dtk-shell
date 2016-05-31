@@ -595,7 +595,14 @@ module DTK::Client
           end
          (options.mode || :snapshot).to_sym
         end
-      response = task_status_aux(mode,assembly_or_workspace_id,:assembly,:summarize => options.summarize?)
+
+      response = task_status_aux(mode, assembly_or_workspace_id, :assembly, :summarize => options.summarize?)
+
+      # when executing delete-and-destroy <service_instance> and delete successfully switch to base service context
+      if response.ok? && response.data && response.data.first['change_context']
+        MainContext.get_context.change_context(["/service/"])
+        return Response::Ok.new()
+      end
 
       if mode == :stream
         #no response if ok

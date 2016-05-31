@@ -29,6 +29,7 @@ module DTK::Client
             
             # stop pulling when top level task succeds, fails or timeout
             if response and response.data and response.data.first
+              return response if response.data.first["change_context"]
               #TODO: may fix in server, but now top can have non executing state but a concurrent branch can execute; so
               #chanding bloew for time being
               #break unless response.data.first["status"].eql? "executing"

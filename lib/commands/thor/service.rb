@@ -439,7 +439,10 @@ TODO: will put in dot release and will rename to 'extend'
     # TODO: leaving --wait in for backwards compatability
     method_option :wait, :type => :boolean, :default => false
     def task_status(context_params)
-      task_status_aw_aux(context_params)
+      response = task_status_aw_aux(context_params)
+      @@invalidate_map << :service
+      @@invalidate_map << :service_node
+      response
     end
 
     desc "SERVICE-NAME/ID task-action-detail", "Get the task info of the running or last running service task."
