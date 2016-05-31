@@ -602,9 +602,9 @@ TODO: will put in dot release and will rename to 'extend'
       link_attributes_aux(context_params)
     end
 
-    desc "delete-and-destroy NAME/ID [-y]", "Delete service instance, terminating any nodes that have been spun up."
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    method_option :legacy, :aliases => '--legacy', :type => :boolean, :default => false
+    desc "delete-and-destroy NAME/ID [-y] [--force]", "Delete service instance, terminating any nodes that have been spun up."
+    method_option :y, :aliases => '-y', :type => :boolean, :default => false
+    method_option :force, :aliases => '-f', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
       response = delete_and_destroy_aux(context_params)
       @@invalidate_map << :assembly
@@ -696,9 +696,9 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     # using ^^ before NODE-NAME to remove this command from assembly/assembly_id/node/node_id but show in assembly/assembly_id
-    desc "SERVICE-NAME/ID delete-node ^^NODE-NAME [-y]","Delete node, terminating it if the node has been spun up."
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
-    method_option :legacy, :aliases => '--legacy', :type => :boolean, :default => false
+    desc "SERVICE-NAME/ID delete-node ^^NODE-NAME [-y] [--force]","Delete node, terminating it if the node has been spun up."
+    method_option :y, :aliases => '-y', :type => :boolean, :default => false
+    method_option :force, :aliases => '-f', :type => :boolean, :default => false
     def delete_node(context_params)
       response = delete_node_aux(context_params)
 
@@ -712,8 +712,9 @@ TODO: will put in dot release and will rename to 'extend'
       return response
     end
 
-    desc "SERVICE-NAME/ID delete-node-group ^^NODE-NAME [-y]","Delete node group and all nodes that are part of that group."
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    desc "SERVICE-NAME/ID delete-node-group ^^NODE-NAME [-y] [--force]","Delete node group and all nodes that are part of that group."
+    method_option :y, :aliases => '-y', :type => :boolean, :default => false
+    method_option :force, :aliases => '-f', :type => :boolean, :default => false
     def delete_node_group(context_params)
       response = delete_node_group_aux(context_params)
 
@@ -750,8 +751,9 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "SERVICE-NAME/ID delete-component COMPONENT-NAME [-y]","Delete component from the service."
-    method_option :force, :aliases => '-y', :type => :boolean, :default => false
+    desc "SERVICE-NAME/ID delete-component COMPONENT-NAME [-y] [--force]","Delete component from the service."
+    method_option :y, :aliases => '-y', :type => :boolean, :default => false
+    method_option :force, :aliases => '-f', :type => :boolean, :default => false
     def delete_component(context_params)
       response = delete_component_aux(context_params)
 

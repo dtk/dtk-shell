@@ -331,7 +331,7 @@ module DTK::Client
         assembly_id = get_assembly_id(assembly_name)
       end
 
-      unless options.force?
+      if !options.force? && !options.y?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
         # used form "+'?' because ?" confused emacs ruby rendering
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy service '#{assembly_name}' and its nodes"+'?')
@@ -356,7 +356,7 @@ module DTK::Client
         :subtype => :instance
       }
 
-      action = options.legacy? ? 'delete' : 'delete_using_workflow'
+      action = options.force? ? 'delete' : 'delete_using_workflow'
       response = post rest_url("assembly/#{action}"), post_body
 
       response
@@ -1042,7 +1042,7 @@ module DTK::Client
 
     def delete_node_aux(context_params)
       assembly_or_workspace_id, node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
-      unless options.force?
+      if !options.force? && !options.y?
         what = "node"
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{node_id}'"+'?')
       end
@@ -1052,7 +1052,7 @@ module DTK::Client
         :node_id => node_id
       }
 
-      action = options.legacy? ? 'delete_node' : 'delete_node_using_workflow'
+      action = options.force? ? 'delete_node' : 'delete_node_using_workflow'
       response = post(rest_url("assembly/#{action}"),post_body)
       response
     end
@@ -1060,7 +1060,7 @@ module DTK::Client
     def delete_node_group_aux(context_params)
       assembly_or_workspace_id, node_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:option_1!],method_argument_names)
 
-      unless options.force?
+      if !options.force? && !options.y?
         what = "node"
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy #{what} '#{node_id}'"+'?')
       end
@@ -1069,7 +1069,7 @@ module DTK::Client
         :assembly_id => assembly_or_workspace_id,
         :node_id => node_id
       }
-      action = options.legacy? ? 'delete_node_group' : 'delete_node_group_using_workflow'
+      action = options.force? ? 'delete_node_group' : 'delete_node_group_using_workflow'
       response = post(rest_url("assembly/#{action}"),post_body)
       response
     end
@@ -1077,7 +1077,7 @@ module DTK::Client
     def delete_component_aux(context_params, opts = {})
       assembly_or_workspace_id, node_id, node_name, component_id = context_params.retrieve_arguments([REQ_ASSEMBLY_OR_WS_ID,:node_id, :node_name, :option_1!],method_argument_names)
 
-      unless options.force?
+      if !options.force? && !options.y?
         what = "component"
         return unless Console.confirmation_prompt("Are you sure you want to delete #{what} '#{component_id}'"+'?')
       end
@@ -1120,7 +1120,8 @@ module DTK::Client
       post_body.merge!(:node_id => node_id) if node_id
 
       # response = post rest_url("assembly/exec"), post_body
-      response = post(rest_url("assembly/delete_component_using_workflow"), post_body)
+      action = options.force? ? 'delete_component' : 'delete_component_using_workflow'
+      response = post(rest_url("assembly/#{action}"), post_body)
       return response unless response.ok?
 
       response_data = response.data
