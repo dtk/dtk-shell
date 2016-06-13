@@ -1115,6 +1115,8 @@ module DTK::Client
         task_params.merge!("node" => node)
       end
 
+      task_params['node'] ||= node_name
+
       post_body = PostBody.new(
         :assembly_id  => assembly_or_workspace_id,
         :commit_msg?  => options.commit_msg,
