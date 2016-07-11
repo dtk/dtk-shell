@@ -647,7 +647,7 @@ module DTK::Client
       if !response.ok? && response.is_a?(Response::Error::Usage) && !forward_options[:service_importer]
         if errors = response['errors']
           if error_msg = errors.first['message']
-            OsUtil.print(errors.first['message'], :red)
+            OsUtil.print_warning(errors.first['message'])
             return
           end
         end
