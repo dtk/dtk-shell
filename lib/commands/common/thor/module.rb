@@ -143,7 +143,7 @@ module DTK::Client
           raise DtkError, "You are not allowed to delete 'base' version while other versions exist!" if ret_version.eql?('base')
           version = ret_version
         else
-          raise DtkError, "There are no versions created for #{module_type} '#{module_name}'!"
+          raise DtkError, "There are no versions created for #{module_type} '#{module_name}'!" unless method_opts[:no_error_msg]
         end
       end
 
