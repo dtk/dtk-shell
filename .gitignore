@@ -9,3 +9,4 @@ Gemfile.lock
 sftp-config*.json
 .remote-sync.json
 *DS_Store
+.vscode/
