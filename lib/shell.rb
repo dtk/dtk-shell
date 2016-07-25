@@ -159,6 +159,12 @@ def execute_shell_command(line, prompt)
     if ('cc' == cmd)
       # in case there is no params we just reload command
       args << "/" if args.empty?
+
+      if args.length >= 2
+       temp = args.join(" ").to_s
+       args = [temp]
+      end
+
       prompt = MainContext.get_context.change_context(args, cmd)
     elsif ('popc' == cmd)
         MainContext.get_context.dirs.shift()
