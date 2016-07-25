@@ -268,8 +268,8 @@ module DTK::Client
       :banner => "DESCRIPTION"
     def create_assembly(context_params)
       if options.description?
-         slice = context_params.method_arguments.slice!(2,context_params.method_arguments.length)
-         slice = slice.join(" ")
+        slice = context_params.method_arguments.slice!(2,context_params.method_arguments.length)
+        slice = slice.join(" ")
       end
 
       assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)

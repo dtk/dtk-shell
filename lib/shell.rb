@@ -161,8 +161,8 @@ def execute_shell_command(line, prompt)
       args << "/" if args.empty?
 
       if args.length >= 2
-       temp = args.join(" ").to_s
-       args = [temp]
+        temp = args.join(" ").to_s
+        args = [temp]
       end
 
       prompt = MainContext.get_context.change_context(args, cmd)
