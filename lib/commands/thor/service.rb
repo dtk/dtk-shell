@@ -267,6 +267,11 @@ module DTK::Client
       :type => :string,
       :banner => "DESCRIPTION"
     def create_assembly(context_params)
+      if options.description?
+         slice = context_params.method_arguments.slice!(2,context_params.method_arguments.length)
+         slice = slice.join(" ")
+      end
+
       assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
 
       # need default_namespace for create-assembly because need to check if local service-module directory existst in promote_assembly_aux
@@ -275,7 +280,11 @@ module DTK::Client
       default_namespace = resp.data
 
       opts = {:default_namespace => default_namespace}
-      opts.merge!(:description => options.description) if options.description
+      if description = options.description
+        description = "#{description} #{slice}" unless slice.empty?
+        opts.merge!(:description => description)
+      end
+
       response = promote_assembly_aux(:create,assembly_id,service_module_name,assembly_template_name,opts)
       return response unless response.ok?
 
