@@ -274,7 +274,6 @@ module DTK::Client
       end
 
       assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
-
       # need default_namespace for create-assembly because need to check if local service-module directory existst in promote_assembly_aux
       resp = post rest_url("namespace/default_namespace_name")
       return resp unless resp.ok?
