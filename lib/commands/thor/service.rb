@@ -268,8 +268,9 @@ module DTK::Client
       :banner => "DESCRIPTION"
     def create_assembly(context_params)
       if options.description?
-         slice = context_params.method_arguments.slice!(2,context_params.method_arguments.length)
-         slice = slice.join(" ")
+         if context_params.method_arguments.length > 2
+           raise DtkError, "The number of arguments is invalid. If you are using -m with multiple words please put them under quotation marks"
+         end
       end
 
       assembly_id, service_module_name, assembly_template_name = context_params.retrieve_arguments([:service_id!,:option_1!,:option_2!],method_argument_names)
@@ -281,7 +282,7 @@ module DTK::Client
 
       opts = {:default_namespace => default_namespace}
       if description = options.description
-        description = "#{description} #{slice}" unless slice.empty?
+        description = "#{description}"
         opts.merge!(:description => description)
       end
 
