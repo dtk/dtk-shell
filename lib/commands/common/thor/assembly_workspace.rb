@@ -975,6 +975,10 @@ module DTK::Client
     def create_node_aux(context_params)
       assembly_or_workspace_id, assembly_node_name = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!], method_argument_names)
 
+      if assembly_node_name.match(" ")
+        raise DtkError, "Please remove spaces from node name."
+      end
+
       post_body = {
         :assembly_id => assembly_or_workspace_id,
         :assembly_node_name => assembly_node_name
