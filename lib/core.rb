@@ -27,7 +27,7 @@ require 'pp'
 # Development Gems
 if ::DTK::Configuration.get(:development_mode)
   require 'ap'
-  require 'looksee'
+  # require 'looksee'
 end
 
 #TODO: for testing; fix by pass in commadn line argument

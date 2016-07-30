@@ -6,10 +6,10 @@ Gem::Specification.new do |gem|
   gem.email         = ["rich@reactor8.com"]
   gem.description   = %q{The DTK Client is a command line tool to interact with your DTK Server and DTK Service Catalog instance(s).}
   gem.summary       = %q{DTK CLI client for DTK server interaction.}
-  gem.homepage      = "https://github.com/rich-reactor8/dtk-client"
+  gem.homepage      = "https://github.com/rich-reactor8/dtk-shell"
   gem.licenses      = ["Apache-2.0"]
 
-  gem.files = %w(README.md Gemfile Gemfile_dev dtk-client.gemspec)
+  gem.files = %w(README.md Gemfile Gemfile_dev dtk-shell.gemspec)
   gem.files += Dir.glob("bin/**/*")
   gem.files += Dir.glob("lib/**/*")
   gem.files += Dir.glob("puppet/**/*")
@@ -18,7 +18,7 @@ Gem::Specification.new do |gem|
 
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
-  gem.name          = "dtk-client"
+  gem.name          = "dtk-shell"
   gem.require_paths = ["lib"]
   gem.version       = DtkClient::VERSION
 
