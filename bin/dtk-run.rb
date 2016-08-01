@@ -68,7 +68,7 @@ end
 
 # special case for when no params are provided use help method
 if (entity_name == 'help' || entity_name.nil?)
-  entity_name = 'dtk'
+  entity_name = 'dtk-run'
   args = ['help']
 else
   args = entries
