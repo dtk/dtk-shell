@@ -240,7 +240,13 @@ module DTK::Client
       end
 
       if confirmation_message = response_data["confirmation_message"]
-        return unless Console.confirmation_prompt("Workspace service is stopped, do you want to start it"+'?')
+        message_text = 
+          if confirmation_message_text = response_data["confirmation_message_text"]
+             confirmation_message_text
+          else
+            "Workspace service is stopped, do you want to start it"
+          end
+        return unless Console.confirmation_prompt("#{message_text}"+'?')
 
         response = post rest_url("assembly/exec"), post_body.merge!(:start_assembly => true, :skip_violations => true)
         return response unless response.ok?
