@@ -982,7 +982,7 @@ module DTK::Client
       assembly_or_workspace_id, assembly_node_name = context_params.retrieve_arguments([[:service_id, :workspace_id!],:option_1!], method_argument_names)
 
       if assembly_node_name.match("/") || assembly_node_name.match(" ")
-        raise DtkError("Node name is ill-formed (contains empty or / characters)")
+        raise DtkError, "Node name is ill-formed (contains empty or / characters)"
       end
 
       post_body = {
