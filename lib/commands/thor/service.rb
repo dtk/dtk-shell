@@ -193,13 +193,13 @@ module DTK::Client
             ['get-netstats',"get-netstats","# Get netstats."],
             ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
             ['grep',"grep LOG-PATH NODE-ID-PATTERN GREP-PATTERN [--first]","# Grep log from multiple nodes. --first option returns first match (latest log entry)."],
-            ['tail',"tail NODE-NAME LOG-PATH [REGEX-PATTERN] [--more]","# Tail log from specified node."]
+            ['tail',"tail LOG-PATH NODE-NAME [REGEX-PATTERN] [--more]","# Tail log from specified node. CTRL+C to quit."]
           ],
           :node_utils => [
             ['get-netstats',"get-netstats","# Get netstats."],
             ['get-ps',"get-ps [--filter PATTERN]","# Get ps."],
             ['grep',"grep LOG-PATH GREP-PATTERN [--first]","# Grep log from node. --first option returns first match (latest log entry)."],
-            ['tail',"tail LOG-PATH [REGEX-PATTERN] [--more]","# Tail log from node."]
+            ['tail',"tail LOG-PATH [REGEX-PATTERN] [--more]","# Tail log from node. CTRL+C to quit."]
           ]
         },
         :identifier_only => {
@@ -807,7 +807,7 @@ TODO: will put in dot release and will rename to 'extend'
     end
 
     # using HIDE_FROM_BASE to hide this command from base context (dtk:/assembly>)
-    desc "HIDE_FROM_BASE tail NODE-NAME LOG-PATH [REGEX-PATTERN] [--more]","Tail specified number of lines from log"
+    desc "HIDE_FROM_BASE tail LOG-PATH NODE-NAME [REGEX-PATTERN] [--more]","Tail specified number of lines from log. CTRL+C to quit."
     method_option :more, :type => :boolean, :default => false
     def tail(context_params)
       tail_aux(context_params)
