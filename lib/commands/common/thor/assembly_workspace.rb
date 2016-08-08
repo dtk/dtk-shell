@@ -1356,7 +1356,7 @@ module DTK::Client
         mapping = [REQ_ASSEMBLY_OR_WS_ID,:option_1!,:option_2!,:option_3]
       end
 
-      assembly_or_workspace_id,node_identifier,log_path,grep_option = context_params.retrieve_arguments(mapping,method_argument_names)
+      assembly_or_workspace_id,log_path,node_identifier,grep_option = context_params.retrieve_arguments(mapping,method_argument_names)
 
       last_line = nil
       begin
