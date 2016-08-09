@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-require File.expand_path('../lib/dtk-client/version', __FILE__)
+require File.expand_path('../lib/dtk-shell/version', __FILE__)
 
 Gem::Specification.new do |gem|
   gem.authors       = ["Rich PELAVIN"]
@@ -20,7 +20,7 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.name          = "dtk-shell"
   gem.require_paths = ["lib"]
-  gem.version       = DtkClient::VERSION
+  gem.version       = DtkShell::VERSION
 
   gem.add_dependency 'mime-types','~> 1.25'
   gem.add_dependency 'bundler','>= 1.2.4'
