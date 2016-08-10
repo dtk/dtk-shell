@@ -32,7 +32,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'dtk-common-core','0.9.0'
   gem.add_dependency 'git','1.2.9'
   gem.add_dependency 'colorize','~> 0.5.8'
-  gem.add_dependency 'highline', '1.6.16'
+  gem.add_dependency 'highline', '1.7.8'
   gem.add_dependency 'awesome_print', '1.1.0'
 
   # gem.add_dependency 'rb-readline', '0.5.0'
