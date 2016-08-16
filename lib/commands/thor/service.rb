@@ -657,7 +657,6 @@ TODO: will put in dot release and will rename to 'extend'
     method_option :instance_size, :aliases => '-s', :type => :string
     def create_node(context_params)
       response = create_node_aux(context_params)
-      return response unless response.ok?
 
       @@invalidate_map << :assembly
       @@invalidate_map << :assembly_node
@@ -665,6 +664,8 @@ TODO: will put in dot release and will rename to 'extend'
       @@invalidate_map << :service_node
       @@invalidate_map << :workspace
       @@invalidate_map << :workspace_node
+
+      return response unless response.ok?
 
       message = "Created node '#{response.data["display_name"]}'."
       OsUtil.print(message, :yellow)
