@@ -614,9 +614,10 @@ TODO: will put in dot release and will rename to 'extend'
       link_attributes_aux(context_params)
     end
 
-    desc "delete-and-destroy NAME/ID [-y] [--force]", "Delete service instance, terminating any nodes that have been spun up."
+    desc "delete-and-destroy NAME/ID [-y] [--force] [-r]", "Delete service instance, terminating any nodes that have been spun up."
     method_option :y, :aliases => '-y', :type => :boolean, :default => false
     method_option :force, :aliases => '-f', :type => :boolean, :default => false
+    method_option :r, :aliases => '-r', :type => :boolean, :default => false
     def delete_and_destroy(context_params)
       response = delete_and_destroy_aux(context_params)
       @@invalidate_map << :assembly

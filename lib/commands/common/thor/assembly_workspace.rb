@@ -328,7 +328,57 @@ module DTK::Client
       Response::Ok.new()
     end
 
+    def check_if_target(service_instance_list, assembly_name)
+      service_instance_list.each do |v|
+        if v['target'] == assembly_name && assembly_name != v['display_name']
+          return true
+        end
+      end
+      return false
+    end
+
     def delete_and_destroy_aux(context_params)
+      assembly_id, node_id, component_id, attribute_id, assembly_name =context_params.retrieve_arguments([:service_id,:node_id,:component_id,:attribute_id,:option_1],method_argument_names)
+
+      post_body = {
+        :assembly_id => assembly_id,
+        :node_id => node_id,
+        :component_id => component_id,
+        :subtype     => 'instance'
+      }
+
+      post_body = { :subtype  => 'instance', :detail_level => 'nodes',:include_namespaces => true}
+      post_body[:about] = assembly_name
+      rest_endpoint = "assembly/list"
+
+      response = post rest_url(rest_endpoint), post_body
+      service_instance_list = response.data
+
+      if check_if_target(service_instance_list, assembly_name)
+        if options.r
+          return unless Console.confirmation_prompt("Are you sure you want to delete and destroy target and its service instances"+'?')
+
+          service_instance_list.each do |v|
+          if v['target'] == assembly_name && assembly_name != v['display_name']
+            response = purge_clone_aux(:all,:assembly_module => {:assembly_name => v['assembly_name']})
+            return response unless response.ok?
+
+            post_body = {
+              :assembly_id => v['id'],
+              :subtype => :instance
+            }
+
+            action = options.force? ? 'delete' : 'delete_using_workflow'
+            response = post rest_url("assembly/#{action}"), post_body
+
+            response
+          end
+         end
+        else
+          raise DtkValidationError, "Please use flag -r to remove '#{assembly_name}' target, which has service instances."
+        end
+      end
+
       assembly_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       if assembly_name.to_s =~ /^[0-9]+$/
@@ -337,7 +387,7 @@ module DTK::Client
         assembly_id = get_assembly_id(assembly_name)
       end
 
-      if !options.force? && !options.y?
+      if !options.force? && !options.y? && !options.r?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
         # used form "+'?' because ?" confused emacs ruby rendering
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy service '#{assembly_name}' and its nodes"+'?')
