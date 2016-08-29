@@ -328,6 +328,15 @@ module DTK::Client
       Response::Ok.new()
     end
 
+    def check_if_target(service_instance_list, assembly_name)
+      service_instance_list.each do |v|
+        if v['target'] == assembly_name && assembly_name != v['display_name']
+          return true
+        end
+      end
+      return false
+    end
+
     def delete_and_destroy_aux(context_params)
       assembly_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
@@ -337,10 +346,12 @@ module DTK::Client
         assembly_id = get_assembly_id(assembly_name)
       end
 
-      if !options.force? && !options.y?
+      if !options.force? && !options.y? && !options.r?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
         # used form "+'?' because ?" confused emacs ruby rendering
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy service '#{assembly_name}' and its nodes"+'?')
+      elsif options.r?
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy target service instance '#{assembly_name}' and its service instances recursively"+'?')
       end
 
       unsaved_modules = check_if_unsaved_cmp_module_changes(assembly_id)
@@ -359,7 +370,8 @@ module DTK::Client
 
       post_body = {
         :assembly_id => assembly_id,
-        :subtype => :instance
+        :subtype => :instance,
+        :recursive => options.r
       }
 
       action = options.force? ? 'delete' : 'delete_using_workflow'
