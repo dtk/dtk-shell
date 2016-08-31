@@ -359,8 +359,9 @@ module DTK::Client
 
       post_body = {
         :assembly_id => assembly_id,
-        :subtype => :instance
+        :subtype     => :instance
       }
+      post_body.merge!(:recursive => options.recursive) if options.recursive?
 
       action = options.force? ? 'delete' : 'delete_using_workflow'
       response = post rest_url("assembly/#{action}"), post_body
