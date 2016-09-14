@@ -337,14 +337,15 @@ module DTK::Client
         assembly_id = get_assembly_id(assembly_name)
       end
 
-      if options.recursive? && !options.y?
-        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy target instance and its associated service instances"+'?')
-      end
+      if !options.force? && !options.y?
+        msg =
+          if options.recursive?
+            "Are you sure you want to delete and destroy target instance and its associated service instances"
+          else
+            "Are you sure you want to delete and destroy service '#{assembly_name}' and its nodes"
+          end
 
-      if !options.force? && !options.y? && !options.recursive?
-        # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
-        # used form "+'?' because ?" confused emacs ruby rendering
-        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy service '#{assembly_name}' and its nodes"+'?')
+        return unless Console.confirmation_prompt(msg+'?')
       end
 
       unsaved_modules = check_if_unsaved_cmp_module_changes(assembly_id)
