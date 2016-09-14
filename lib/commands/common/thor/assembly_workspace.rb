@@ -329,6 +329,9 @@ module DTK::Client
     end
 
     def delete_and_destroy_aux(context_params)
+      require 'debugger'
+      Debugger.start
+      debugger
       assembly_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       if assembly_name.to_s =~ /^[0-9]+$/
@@ -337,7 +340,11 @@ module DTK::Client
         assembly_id = get_assembly_id(assembly_name)
       end
 
-      if !options.force? && !options.y?
+      if options.recursive?
+        return unless Console.confirmation_prompt("Are you sure you want to delete and destroy target instance and its associated service instances"+'?')
+      end
+
+      if !options.force? && !options.y? && !options.recursive?
         # Ask user if really want to delete assembly, if not then return to dtk-shell without deleting
         # used form "+'?' because ?" confused emacs ruby rendering
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy service '#{assembly_name}' and its nodes"+'?')
