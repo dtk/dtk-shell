@@ -329,9 +329,6 @@ module DTK::Client
     end
 
     def delete_and_destroy_aux(context_params)
-      require 'debugger'
-      Debugger.start
-      debugger
       assembly_name = context_params.retrieve_arguments([:option_1!],method_argument_names)
 
       if assembly_name.to_s =~ /^[0-9]+$/
@@ -340,7 +337,7 @@ module DTK::Client
         assembly_id = get_assembly_id(assembly_name)
       end
 
-      if options.recursive?
+      if options.recursive? && !options.y?
         return unless Console.confirmation_prompt("Are you sure you want to delete and destroy target instance and its associated service instances"+'?')
       end
 
