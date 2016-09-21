@@ -7,7 +7,12 @@ gemspec
 # development gems which are not included in production Gemfile
 gem 'rspec','~>3.0.0'
 gem 'awesome_print','~> 1.1.0'
-gem 'looksee'
+case RUBY_VERSION
+  when /1.*/, /2.0.*/
+    gem 'looksee', '3.1.0'
+  else
+    gem 'looksee', '4.0.0'
+end
 
 gem 'ruby-debug','0.10.4' if RUBY_VERSION == '1.8.7'
 gem 'debugger','>= 1.6.5' if RUBY_VERSION == '1.9.3'
