@@ -22,14 +22,14 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = DtkShell::VERSION
 
-  gem.add_dependency 'mime-types','~> 1.25'
+  gem.add_dependency 'mime-types','~> 2.99.3'
   gem.add_dependency 'bundler','>= 1.2.4'
   gem.add_dependency 'json_pure' ,'1.7.4'
   gem.add_dependency 'diff-lcs','1.2.0'
   gem.add_dependency 'hirb','~> 0.7.0'
   gem.add_dependency 'thor','~> 0.15.4'
   gem.add_dependency 'erubis','~> 2.7.0'
-  gem.add_dependency 'dtk-common-core','0.9.0'
+  gem.add_dependency 'dtk-common-core','0.10.0'
   gem.add_dependency 'git','1.2.9'
   # gem.add_dependency 'colorize','~> 0.5.8'
   gem.add_dependency 'colorize', '0.7.7'
