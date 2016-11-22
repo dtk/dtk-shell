@@ -1,11 +1,11 @@
-DTK Client
+Dtk Client
 ==============================
 
 
 #### Description
 
 
-DTK Client is a Ruby based CLI interface for communication with the DTK Server.
+Dtk Client is a Ruby bas  ed CLI interface for communication with the Dtk Server.
 It's main purpose is to provide an easy to use interface for importing modules, browsing modules repository and deploying assemblies and topologies.
 
 ---
@@ -17,30 +17,30 @@ It's main purpose is to provide an easy to use interface for importing modules, 
 ---
 #### Installation
 
-For DTK Client to work, following steps have to be done:
+For Dtk Client to work, following steps have to be done:
 
 - Git User set up
 - RSA Keys Generated
 
-To install DTK Client gem, execute:
+To install Dtk Client gem, execute:
 
 `gem install dtk-client`
 
 ---
 #### Initial setup
 
-There are two ways for DTK Client to run
+There are two ways for Dtk Client to run
 
 - via an interactive shell (<tt>dtk-shell</tt>)
-- by executing DTK Client commands (ie. <tt>dtk service list</tt>)
+- by executing Dtk Client commands (ie. <tt>dtk service list</tt>)
 
-If it is the first time that the DTK Client is being used (by either of the ways), following prompts will appear:
+If it is the first time that the Dtk Client is being used (by either of the ways), following prompts will appear:
 
 ```
-Please enter the DTK server address (example: instance.dtk.io)
+Please enter the Dtk server address (example: instance.dtk.io)
 Server address:
 
-Please enter your DTK login details
+Please enter your Dtk login details
 Username:
 Password:
 
@@ -49,14 +49,14 @@ After entering the correct data, following message will appear:
 
 `SSH key 'dtk-client' added successfully!`
 
-This means that the DTK Server has successfully registered DTK Client and the client is ready for use.
+This means that the Dtk Server has successfully registered Dtk Client and the client is ready for use.
 
 ---
-#### DTK Client configuration
+#### Dtk Client configuration
 
-All of the DTK Configuration, installed component and service modules as well as client logs are located in `~/dtk`.
+All of the Dtk Configuration, installed component and service modules as well as client logs are located in `~/dtk`.
 
-DTK Client configuration options, such as development option, verbose calls to DTK Server, log options and Client user credentials, can be configured in `~/dtk/client.conf`:
+Dtk Client configuration options, such as development option, verbose calls to Dtk Server, log options and Client user credentials, can be configured in `~/dtk/client.conf`:
 
 ```
 debug_task_frequency=5            # assembly - frequency between requests (seconds)
@@ -85,18 +85,18 @@ Component and Service modules that are installed, or modules that are imported a
 ## Advanced features
 #### Development mode
 
-When using DTK Client in Development mode, gems from `Gemfile_dev` must be installed and used when running DTK Client or DTK Client Shell:
+When using Dtk Client in Development mode, gems from `Gemfile_dev` must be installed and used when running Dtk Client or Dtk Client Shell:
 
 ```
 bundle install --gemfile Gemfile_dev
 BUNDLE_GEMFILE=Gemfile_dev bundle exec ruby ./bin/dtk-shell
 ```
 
-#### DTK Repoman
+#### Dtk Repoman
 
-DTK Repoman is a Git based repository for publishing and installing component modules and service modules. DTK Repoman has it's own users, known as catalog users. The inital setup should register the DTK Client to the Public Catalog users.
+Dtk Repoman is a Git based repository for publishing and installing component modules and service modules. Dtk Repoman has it's own users, known as catalog users. The inital setup should register the Dtk Client to the Public Catalog users.
 
-Successfully registered DTK Client on DTK Repoman enables execution of commands such as:
+Successfully registered Dtk Client on Dtk Repoman enables execution of commands such as:
 
 `dtk service-module list --remote` - lists service moduels on remote visible to the catalog user
 
